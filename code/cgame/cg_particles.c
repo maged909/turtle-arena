@@ -1900,15 +1900,19 @@ void CG_ParticleSparks (vec3_t org, vec3_t vel, int duration, float x, float y, 
 	p->vel[1] = vel[1];
 	p->vel[2] = vel[2];
 
+#ifndef IOQ3ZTM // Don't overrind vel
 	p->accel[0] = p->accel[1] = p->accel[2] = 0;
 
 	p->vel[0] += (crandom() * 4);
 	p->vel[1] += (crandom() * 4);
 	p->vel[2] += (20 + (crandom() * 10)) * speed;	
+#endif
 
 	p->accel[0] = crandom () * 4;
 	p->accel[1] = crandom () * 4;
-	
+#ifdef IOQ3ZTM // Use speed
+	p->accel[2] = speed;
+#endif
 }
 
 void CG_ParticleDust (centity_t *cent, vec3_t origin, vec3_t dir)

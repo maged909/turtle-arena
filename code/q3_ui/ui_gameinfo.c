@@ -444,6 +444,7 @@ char *UI_GetBotInfoByName( const char *name ) {
 // single player game info
 //
 
+#ifndef TA_SP
 /*
 ===============
 UI_GetBestScore
@@ -704,6 +705,7 @@ int UI_GetCurrentGame( void ) {
 	}
 	return atoi( Info_ValueForKey( info, "num" ) );
 }
+#endif
 
 
 /*
@@ -714,6 +716,9 @@ Clears the scores and sets the difficutly level
 ===============
 */
 void UI_NewGame( void ) {
+#ifdef TA_SP
+	// ZTM: TODO: Reset single player gameplay data
+#else
 	trap_Cvar_Set( "g_spScores1", "" );
 	trap_Cvar_Set( "g_spScores2", "" );
 	trap_Cvar_Set( "g_spScores3", "" );
@@ -721,6 +726,7 @@ void UI_NewGame( void ) {
 	trap_Cvar_Set( "g_spScores5", "" );
 	trap_Cvar_Set( "g_spAwards", "" );
 	trap_Cvar_Set( "g_spVideos", "" );
+#endif
 }
 
 
@@ -764,6 +770,16 @@ int UI_GetNumBots( void ) {
 }
 
 
+#ifdef TA_SP
+/*
+===============
+UI_SPUnlock_f
+===============
+*/
+void UI_SPUnlock_f( void ) {
+	trap_Print("Sorry, there is nothing to get by cheating at the moment.\n");
+}
+#else
 /*
 ===============
 UI_SPUnlock_f
@@ -817,6 +833,7 @@ void UI_SPUnlockMedals_f( void ) {
 
 	trap_Print( "All levels unlocked at 100\n" );
 }
+#endif
 
 
 /*
@@ -828,6 +845,9 @@ void UI_InitGameinfo( void ) {
 
 	UI_InitMemory();
 	UI_LoadArenas();
+#ifdef TA_ITEMSYS
+	BG_InitItemInfo();
+#endif
 	UI_LoadBots();
 
 	uis.demoversion = qfalse;

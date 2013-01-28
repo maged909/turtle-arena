@@ -56,10 +56,18 @@ void EA_Attack(int client);
 void EA_Respawn(int client);
 void EA_Talk(int client);
 void EA_Gesture(int client);
+#ifdef TA_HOLDSYS
+void EA_Use(int client, int holdable);
+#else
 void EA_Use(int client);
+#endif
 
 //regular elementary actions
+#if defined TA_WEAPSYS_EX && !defined TA_WEAPSYS_EX_COMPAT
+void EA_DropWeapon(int client);
+#else
 void EA_SelectWeapon(int client, int weapon);
+#endif
 void EA_Jump(int client);
 void EA_DelayedJump(int client);
 void EA_Move(int client, vec3_t dir, float speed);

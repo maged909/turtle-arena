@@ -55,6 +55,14 @@ SETUP MENU
 #define ID_SAVE					15
 #define ID_DEFAULTS				16
 #define ID_BACK					17
+#ifdef TURTLEARENA // LONG_CREDITS
+#define ID_CREDITS				18
+#endif
+#ifdef TA_SP
+#define ID_REPLAYS				19
+#define ID_CINEMATICS			20
+#define ID_MODS					21
+#endif
 
 
 typedef struct {
@@ -63,10 +71,20 @@ typedef struct {
 	menutext_s		banner;
 	menubitmap_s	framel;
 	menubitmap_s	framer;
+#ifndef TA_MISC
 	menutext_s		setupplayers;
+#endif
 	menutext_s		setupcontrols;
 	menutext_s		setupsystem;
 	menutext_s		game;
+#ifdef TURTLEARENA // LONG_CREDITS
+	menutext_s		credits;
+#endif
+#ifdef TA_SP
+	menutext_s		replays;
+//	menutext_s		cinematics;
+	menutext_s		mods;
+#endif
 //	menutext_s		load;
 //	menutext_s		save;
 	menutext_s		defaults;
@@ -113,9 +131,11 @@ static void UI_SetupMenu_Event( void *ptr, int event ) {
 	}
 
 	switch( ((menucommon_s*)ptr)->id ) {
+#ifndef TA_MISC
 	case ID_CUSTOMIZEPLAYER:
 		UI_SelectPlayerMenu(UI_PlayerSettingsMenu, "PLAYER SETTINGS");
 		break;
+#endif
 
 	case ID_CUSTOMIZECONTROLS:
 		UI_SelectPlayerMenu(UI_ControlsMenu, "CONTROLS");
@@ -128,6 +148,26 @@ static void UI_SetupMenu_Event( void *ptr, int event ) {
 	case ID_GAME:
 		UI_PreferencesMenu();
 		break;
+
+#ifdef TURTLEARENA // LONG_CREDITS
+	case ID_CREDITS:
+		UI_LongCreditMenu();
+		break;
+#endif
+
+#ifdef TA_SP
+	case ID_REPLAYS:
+		UI_DemosMenu();
+		break;
+
+//	case ID_CINEMATICS:
+//		UI_CinematicsMenu();
+//		break;
+
+	case ID_MODS:
+		UI_ModsMenu();
+		break;
+#endif
 
 //	case ID_LOAD:
 //		UI_LoadConfigMenu();
@@ -166,8 +206,12 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.banner.generic.type				= MTYPE_BTEXT;
 	setupMenuInfo.banner.generic.x					= 320;
 	setupMenuInfo.banner.generic.y					= 16;
+#ifdef TA_SP // New menus
+	setupMenuInfo.banner.string						= "OPTIONS";
+#else
 	setupMenuInfo.banner.string						= "SETUP";
-	setupMenuInfo.banner.color						= color_white;
+#endif
+	setupMenuInfo.banner.color						= text_banner_color;
 	setupMenuInfo.banner.style						= UI_CENTER;
 
 	setupMenuInfo.framel.generic.type				= MTYPE_BITMAP;
@@ -186,13 +230,22 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.framer.width  					= 256;
 	setupMenuInfo.framer.height  					= 334;
 
+#ifdef TA_SP
+	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
+		numItems = 7; // 9
+	} else {
+		numItems = 3;
+	}
+#else
 	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
 		numItems = 5; // 7
 	} else {
 		numItems = 4;
 	}
+#endif
 
 	y = (SCREEN_HEIGHT - numItems*SETUP_MENU_VERTICAL_SPACING) / 2;
+#ifndef TA_MISC
 	setupMenuInfo.setupplayers.generic.type			= MTYPE_PTEXT;
 	setupMenuInfo.setupplayers.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	setupMenuInfo.setupplayers.generic.x				= 320;
@@ -200,18 +253,23 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.setupplayers.generic.id			= ID_CUSTOMIZEPLAYER;
 	setupMenuInfo.setupplayers.generic.callback		= UI_SetupMenu_Event; 
 	setupMenuInfo.setupplayers.string				= (UI_MaxSplitView() == 1) ? "PLAYER": "PLAYERS";
-	setupMenuInfo.setupplayers.color					= color_red;
+	setupMenuInfo.setupplayers.color					= text_big_color;
 	setupMenuInfo.setupplayers.style					= UI_CENTER;
 
 	y += SETUP_MENU_VERTICAL_SPACING;
+#endif
 	setupMenuInfo.setupcontrols.generic.type		= MTYPE_PTEXT;
 	setupMenuInfo.setupcontrols.generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	setupMenuInfo.setupcontrols.generic.x			= 320;
 	setupMenuInfo.setupcontrols.generic.y			= y;
 	setupMenuInfo.setupcontrols.generic.id			= ID_CUSTOMIZECONTROLS;
 	setupMenuInfo.setupcontrols.generic.callback	= UI_SetupMenu_Event; 
+#ifdef TA_MISC
+	setupMenuInfo.setupcontrols.string				= "Controls";
+#else
 	setupMenuInfo.setupcontrols.string				= "CONTROLS";
-	setupMenuInfo.setupcontrols.color				= color_red;
+#endif
+	setupMenuInfo.setupcontrols.color				= text_big_color;
 	setupMenuInfo.setupcontrols.style				= UI_CENTER;
 
 	y += SETUP_MENU_VERTICAL_SPACING;
@@ -221,8 +279,12 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.setupsystem.generic.y				= y;
 	setupMenuInfo.setupsystem.generic.id			= ID_SYSTEMCONFIG;
 	setupMenuInfo.setupsystem.generic.callback		= UI_SetupMenu_Event; 
+#ifdef TA_MISC
+	setupMenuInfo.setupsystem.string				= "System";
+#else
 	setupMenuInfo.setupsystem.string				= "SYSTEM";
-	setupMenuInfo.setupsystem.color					= color_red;
+#endif
+	setupMenuInfo.setupsystem.color					= text_big_color;
 	setupMenuInfo.setupsystem.style					= UI_CENTER;
 
 	y += SETUP_MENU_VERTICAL_SPACING;
@@ -232,11 +294,66 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.game.generic.y					= y;
 	setupMenuInfo.game.generic.id					= ID_GAME;
 	setupMenuInfo.game.generic.callback				= UI_SetupMenu_Event; 
+#ifdef TA_MISC
+	setupMenuInfo.game.string						= "Game Options";
+#else
 	setupMenuInfo.game.string						= "GAME OPTIONS";
-	setupMenuInfo.game.color						= color_red;
+#endif
+	setupMenuInfo.game.color						= text_big_color;
 	setupMenuInfo.game.style						= UI_CENTER;
 
 	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
+#ifdef TA_SP
+		// Moved here from q3 main menu.
+		y += SETUP_MENU_VERTICAL_SPACING;
+		setupMenuInfo.replays.generic.type				= MTYPE_PTEXT;
+		setupMenuInfo.replays.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+		setupMenuInfo.replays.generic.x					= 320;
+		setupMenuInfo.replays.generic.y					= y;
+		setupMenuInfo.replays.generic.id				= ID_REPLAYS;
+		setupMenuInfo.replays.generic.callback			= UI_SetupMenu_Event; 
+		setupMenuInfo.replays.string					= "Replays";
+		setupMenuInfo.replays.color						= text_big_color;
+		setupMenuInfo.replays.style						= UI_CENTER;
+
+/*
+		y += SETUP_MENU_VERTICAL_SPACING;
+		setupMenuInfo.cinematics.generic.type			= MTYPE_PTEXT;
+		setupMenuInfo.cinematics.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+		setupMenuInfo.cinematics.generic.x				= 320;
+		setupMenuInfo.cinematics.generic.y				= y;
+		setupMenuInfo.cinematics.generic.id				= ID_CINEMATICS;
+		setupMenuInfo.cinematics.generic.callback		= UI_SetupMenu_Event; 
+		setupMenuInfo.cinematics.string					= "Cinematics";
+		setupMenuInfo.cinematics.color					= text_big_color;
+		setupMenuInfo.cinematics.style					= UI_CENTER;
+*/
+
+		y += SETUP_MENU_VERTICAL_SPACING;
+		setupMenuInfo.mods.generic.type		= MTYPE_PTEXT;
+		setupMenuInfo.mods.generic.flags	= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+		setupMenuInfo.mods.generic.x		= 320;
+		setupMenuInfo.mods.generic.y		= y;
+		setupMenuInfo.mods.generic.id		= ID_MODS;
+		setupMenuInfo.mods.generic.callback	= UI_SetupMenu_Event; 
+		setupMenuInfo.mods.string			= "Mods";
+		setupMenuInfo.mods.color			= text_big_color;
+		setupMenuInfo.mods.style			= UI_CENTER;
+#endif
+
+#ifdef TURTLEARENA // LONG_CREDITS
+		y += SETUP_MENU_VERTICAL_SPACING;
+		setupMenuInfo.credits.generic.type				= MTYPE_PTEXT;
+		setupMenuInfo.credits.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+		setupMenuInfo.credits.generic.x					= 320;
+		setupMenuInfo.credits.generic.y					= y;
+		setupMenuInfo.credits.generic.id				= ID_CREDITS;
+		setupMenuInfo.credits.generic.callback			= UI_SetupMenu_Event; 
+		setupMenuInfo.credits.string					= "Credits";
+		setupMenuInfo.credits.color						= text_big_color;
+		setupMenuInfo.credits.style						= UI_CENTER;
+#endif
+
 #if 0
 		y += SETUP_MENU_VERTICAL_SPACING;
 		setupMenuInfo.load.generic.type					= MTYPE_PTEXT;
@@ -246,7 +363,7 @@ static void UI_SetupMenu_Init( void ) {
 		setupMenuInfo.load.generic.id					= ID_LOAD;
 		setupMenuInfo.load.generic.callback				= UI_SetupMenu_Event; 
 		setupMenuInfo.load.string						= "LOAD";
-		setupMenuInfo.load.color						= color_red;
+		setupMenuInfo.load.color						= text_big_color;
 		setupMenuInfo.load.style						= UI_CENTER;
 
 		y += SETUP_MENU_VERTICAL_SPACING;
@@ -257,7 +374,7 @@ static void UI_SetupMenu_Init( void ) {
 		setupMenuInfo.save.generic.id					= ID_SAVE;
 		setupMenuInfo.save.generic.callback				= UI_SetupMenu_Event; 
 		setupMenuInfo.save.string						= "SAVE";
-		setupMenuInfo.save.color						= color_red;
+		setupMenuInfo.save.color						= text_big_color;
 		setupMenuInfo.save.style						= UI_CENTER;
 #endif
 
@@ -268,8 +385,12 @@ static void UI_SetupMenu_Init( void ) {
 		setupMenuInfo.defaults.generic.y				= y;
 		setupMenuInfo.defaults.generic.id				= ID_DEFAULTS;
 		setupMenuInfo.defaults.generic.callback			= UI_SetupMenu_Event; 
+#ifdef TA_MISC
+		setupMenuInfo.defaults.string					= "Defaults";
+#else
 		setupMenuInfo.defaults.string					= "DEFAULTS";
-		setupMenuInfo.defaults.color					= color_red;
+#endif
+		setupMenuInfo.defaults.color					= text_big_color;
 		setupMenuInfo.defaults.style					= UI_CENTER;
 	}
 
@@ -287,11 +408,21 @@ static void UI_SetupMenu_Init( void ) {
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.banner );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.framel );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.framer );
+#ifndef TA_MISC
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupplayers );
+#endif
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupcontrols );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupsystem );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.game );
 	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
+#ifdef TA_SP
+		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.replays );
+//		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.cinematics );
+		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.mods );
+#endif
+#ifdef TURTLEARENA // LONG_CREDITS
+		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.credits );
+#endif
 //		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.load );
 //		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.save );
 		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.defaults );

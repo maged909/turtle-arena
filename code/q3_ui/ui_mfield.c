@@ -40,7 +40,12 @@ x, y, are in pixels
 */
 void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color ) {
 	int		len;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	size_t	val;
+	int		basex;
+#else
 	int		charw;
+#endif
 	int		drawLen;
 	int		prestep;
 	int		cursorChar;
@@ -73,6 +78,28 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color ) {
 	memcpy( str, edit->buffer + prestep, drawLen );
 	str[ drawLen ] = 0;
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	basex = x;
+	for (val = 0; val < strlen(str)+1; val++)
+	{
+		if (str[val] != '\0') {
+			x += UI_DrawChar( x, y, str[val], style, color );
+		}
+
+		// draw cursor if we have focus
+		if ((style & UI_PULSE) && val == ( edit->cursor - prestep ))
+		{
+			if ( trap_Key_GetOverstrikeMode() ) {
+				cursorChar = 11;
+			} else {
+				cursorChar = 10;
+			}
+
+			UI_DrawChar( basex - Com_FontCharLeftOffset( UI_FontForStyle(style), cursorChar, 0 ), y, cursorChar, (style & ~(UI_PULSE|UI_CENTER|UI_RIGHT))|UI_BLINK, color );
+		}
+		basex = x;
+	}
+#else
 	UI_DrawString( x, y, str, style, color );
 
 	// draw the cursor
@@ -114,6 +141,7 @@ void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color ) {
 	}
 	
 	UI_DrawChar( x + ( edit->cursor - prestep ) * charw, y, cursorChar, style & ~(UI_CENTER|UI_RIGHT), color );
+#endif
 }
 
 /*
@@ -305,9 +333,19 @@ void MenuField_Init( menufield_s* m ) {
 	int	l;
 	int	w;
 	int	h;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
+
+	font = UI_FontForStyle( m->generic.flags );
+
+	w = font->shaderCharWidth;
+	h = Com_FontCharHeight(font, 0);
+	l = Com_FontStringWidth(font, m->generic.name, 0) + w;
+#endif
 
 	MField_Clear( &m->field );
 
+#ifndef IOQ3ZTM // FONT_REWRITE
 	if (m->generic.flags & QMF_SMALLFONT)
 	{
 		w = SMALLCHAR_WIDTH;
@@ -325,7 +363,14 @@ void MenuField_Init( menufield_s* m ) {
 	else {
 		l = 0;
 	}
+#endif
 
+#ifdef IOQ3ZTM
+	if (m->generic.flags & QMF_LEFT_JUSTIFY) {
+		m->generic.left = m->generic.x;
+		m->generic.x += l;
+	} else
+#endif
 	m->generic.left   = m->generic.x - l;
 	m->generic.top    = m->generic.y;
 	m->generic.right  = m->generic.x + w + m->field.widthInChars*w;
@@ -345,10 +390,23 @@ void MenuField_Draw( menufield_s *f )
 	int		style;
 	qboolean focus;
 	float	*color;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
+
+	font = UI_FontForStyle( f->generic.flags );
+#endif
 
 	x =	f->generic.x;
 	y =	f->generic.y;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	w = font->shaderCharWidth;
 
+	if (f->generic.flags & QMF_SMALLFONT) {
+		style = UI_SMALLFONT;
+	} else {
+		style = UI_BIGFONT;
+	}
+#else
 	if (f->generic.flags & QMF_SMALLFONT)
 	{
 		w = SMALLCHAR_WIDTH;
@@ -359,6 +417,8 @@ void MenuField_Draw( menufield_s *f )
 		w = BIGCHAR_WIDTH;
 		style = UI_BIGFONT;
 	}	
+#endif
+
 
 	if (Menu_ItemAtCursor( f->generic.parent ) == f) {
 		focus = qtrue;

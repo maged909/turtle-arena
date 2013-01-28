@@ -62,7 +62,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define LTG_PATROL					9	//patrol
 #define LTG_GETITEM					10	//get an item
 #define LTG_KILL					11	//kill someone
+#ifdef MISSIONPACK_HARVESTER
 #define LTG_HARVEST					12	//harvest skulls
+#endif
 #define LTG_ATTACKENEMYBASE			13	//attack the enemy base
 #define LTG_MAKELOVE_UNDER			14
 #define LTG_MAKELOVE_ONTOP			15
@@ -76,7 +78,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define TEAM_GETITEM_TIME			60	//1 minute
 #define	TEAM_KILL_SOMEONE			180	//3 minute to kill someone
 #define TEAM_ATTACKENEMYBASE_TIME	600	//10 minutes
+#ifdef MISSIONPACK_HARVESTER
 #define TEAM_HARVEST_TIME			120	//2 minutes
+#endif
 #define CTF_GETFLAG_TIME			600	//10 minutes ctf get flag time
 #define CTF_RUSHBASE_TIME			120	//2 minutes ctf rush base time
 #define CTF_RETURNFLAG_TIME			180	//3 minutes to return the flag
@@ -155,6 +159,9 @@ typedef struct bot_state_s
 	int lastkilledby;								//player that last killed this bot
 	int botdeathtype;								//the death type of the bot
 	int enemydeathtype;								//the death type of the enemy
+#ifdef TA_WEAPSYS
+	int botdeathweapon;								//the missile that killed the bot
+#endif
 	int botsuicide;									//true when the bot suicides
 	int enemysuicide;								//true when the enemy of the bot suicides
 	int setupcount;									//true when the bot has just been setup
@@ -179,8 +186,12 @@ typedef struct bot_state_s
 	float check_time;								//time to check for nearby items
 	float stand_time;								//time the bot is standing still
 	float lastchat_time;							//time the bot last selected a chat
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 	float kamikaze_time;							//time to check for kamikaze usage
+#endif
+#ifndef TURTLEARENA // POWERS
 	float invulnerability_time;						//time to check for invulnerability usage
+#endif
 	float standfindenemy_time;						//time to find enemy while standing
 	float attackstrafe_time;						//time the bot is strafing in one dir
 	float attackcrouch_time;						//time the bot will stop crouching
@@ -193,11 +204,15 @@ typedef struct bot_state_s
 	float defendaway_range;							//max travel time away from defend area
 	float rushbaseaway_time;						//time away from rushing to the base
 	float attackaway_time;							//time away from attacking the enemy base
+#ifdef MISSIONPACK_HARVESTER
 	float harvestaway_time;							//time away from harvesting
+#endif
 	float ctfroam_time;								//time the bot is roaming in ctf
 	float killedenemy_time;							//time the bot killed the enemy
 	float arrive_time;								//time arrived (at companion)
+#ifndef TURTLEARENA // DROWNING
 	float lastair_time;								//last time the bot had air
+#endif
 	float teleport_time;							//last time the bot teleported
 	float camp_time;								//last time camped
 	float weaponchange_time;						//time the bot started changing weapons
@@ -211,7 +226,9 @@ typedef struct bot_state_s
 	vec3_t enemyvelocity;							//enemy velocity 0.5 secs ago during battle
 	vec3_t enemyorigin;								//enemy origin 0.5 secs ago during battle
 	//
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 	int kamikazebody;								//kamikaze body
+#endif
 	int proxmines[MAX_PROXMINES];
 	int numproxmines;
 	//
@@ -219,7 +236,9 @@ typedef struct bot_state_s
 	int ms;											//move state of the bot
 	int gs;											//goal state of the bot
 	int cs;											//chat state of the bot
+#ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 	int ws;											//weapon state of the bot
+#endif
 	//
 	int enemy;										//enemy entity number
 	int lastenemyareanum;							//last reachability area the enemy was in

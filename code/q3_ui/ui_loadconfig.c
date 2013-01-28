@@ -59,7 +59,11 @@ LOAD CONFIG MENU
 #define ID_RIGHT			14
 
 #define ARROWS_WIDTH		128
+#ifdef TA_DATA
+#define ARROWS_HEIGHT		64
+#else
 #define ARROWS_HEIGHT		48
+#endif
 
 
 typedef struct {
@@ -135,7 +139,7 @@ static void LoadConfig_MenuInit( void ) {
 	s_configs.banner.generic.x		= 320;
 	s_configs.banner.generic.y		= 16;
 	s_configs.banner.string			= "LOAD CONFIG";
-	s_configs.banner.color			= color_white;
+	s_configs.banner.color			= text_banner_color;
 	s_configs.banner.style			= UI_CENTER;
 
 	s_configs.framel.generic.type	= MTYPE_BITMAP;
@@ -236,7 +240,9 @@ static void LoadConfig_MenuInit( void ) {
 		if (!Q_stricmp(configname +  len - 4,".cfg"))
 			configname[len-4] = '\0';
 
+#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
 		Q_strupr(configname);
+#endif
 
 		configname += len + 1;
 	}

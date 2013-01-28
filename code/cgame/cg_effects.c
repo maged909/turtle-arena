@@ -67,9 +67,17 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 
 		le = CG_AllocLocalEntity();
 		le->leFlags = LEF_PUFF_DONT_SCALE;
+#ifdef IOQ3ZTM // BUBBLES
+		le->leType = LE_BUBBLE;
+#else
 		le->leType = LE_MOVE_SCALE_FADE;
+#endif
 		le->startTime = cg.time;
+#ifdef IOQ3ZTM // BUBBLES // try to make it to the water surface
+		le->endTime = cg.time + 8000 + random() * 250;
+#else
 		le->endTime = cg.time + 1000 + random() * 250;
+#endif
 		le->lifeRate = 1.0 / ( le->endTime - le->startTime );
 
 		re = &le->refEntity;
@@ -77,7 +85,11 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 
 		re->reType = RT_SPRITE;
 		re->rotation = 0;
+#ifdef IOQ3ZTM // BUBBLES
+		re->radius = 2 + random() * 2;
+#else
 		re->radius = 3;
+#endif
 		re->customShader = cgs.media.waterBubbleShader;
 		re->shaderRGBA[0] = 0xff;
 		re->shaderRGBA[1] = 0xff;
@@ -91,11 +103,60 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 		VectorCopy( move, le->pos.trBase );
 		le->pos.trDelta[0] = crandom()*5;
 		le->pos.trDelta[1] = crandom()*5;
+#ifdef IOQ3ZTM // BUBBLES // Always move up.
+		le->pos.trDelta[2] = 8 + random()*5;
+#else
 		le->pos.trDelta[2] = crandom()*5 + 6;
+#endif
 
 		VectorAdd (move, vec, move);
 	}
 }
+
+#ifdef TA_WEAPSYS
+/*
+==================
+CG_BulletBubbleTrail
+
+Bullets shot underwater
+
+returns qfalse if no impact marks should be added.
+==================
+*/
+qboolean CG_BulletBubbleTrail( vec3_t start, vec3_t end, int skipNum ) {
+	trace_t		tr;
+	int sourceContentType, destContentType;
+
+	CG_Trace( &tr, start, NULL, NULL, end, skipNum, MASK_SHOT );
+
+	sourceContentType = CG_PointContents( start, 0 );
+	destContentType = CG_PointContents( tr.endpos, 0 );
+
+	// do a complete bubble trail if necessary
+	if ( sourceContentType == destContentType ) {
+		if ( sourceContentType & CONTENTS_WATER ) {
+			CG_BubbleTrail( start, tr.endpos, 32 );
+		}
+	// bubble trail from water into air
+	} else if ( sourceContentType & CONTENTS_WATER ) {
+		trace_t trace;
+
+		trap_CM_BoxTrace( &trace, end, start, NULL, NULL, 0, CONTENTS_WATER );
+		CG_BubbleTrail( start, trace.endpos, 32 );
+	// bubble trail from air into water
+	} else if ( destContentType & CONTENTS_WATER ) {
+		trace_t trace;
+
+		trap_CM_BoxTrace( &trace, start, end, NULL, NULL, 0, CONTENTS_WATER );
+		CG_BubbleTrail( tr.endpos, trace.endpos, 32 );
+	}
+
+	if (  tr.surfaceFlags & SURF_NOIMPACT ) {
+		return qfalse;
+	}
+	return qtrue;
+}
+#endif
 
 /*
 =====================
@@ -195,14 +256,14 @@ void CG_SpawnEffect( vec3_t org ) {
 	re->reType = RT_MODEL;
 	re->shaderTime = cg.time / 1000.0f;
 
-#ifndef MISSIONPACK
+#if !defined MISSIONPACK && !defined TURTLEARENA
 	re->customShader = cgs.media.teleportEffectShader;
 #endif
 	re->hModel = cgs.media.teleportEffectModel;
 	AxisClear( re->axis );
 
 	VectorCopy( org, re->origin );
-#ifdef MISSIONPACK
+#if defined MISSIONPACK || defined TURTLEARENA // Center teleport effect model Z
 	re->origin[2] += 16;
 #else
 	re->origin[2] -= 24;
@@ -211,12 +272,18 @@ void CG_SpawnEffect( vec3_t org ) {
 
 
 #ifdef MISSIONPACK
+#ifndef TURTLEARENA // POWERS
 /*
 ===============
 CG_LightningBoltBeam
 ===============
 */
-void CG_LightningBoltBeam( vec3_t start, vec3_t end ) {
+#ifdef TA_WEAPSYS
+void CG_LightningBoltBeam( projectileInfo_t *wi, vec3_t start, vec3_t end )
+#else
+void CG_LightningBoltBeam( vec3_t start, vec3_t end )
+#endif
+{
 	localEntity_t	*le;
 	refEntity_t		*beam;
 
@@ -233,9 +300,16 @@ void CG_LightningBoltBeam( vec3_t start, vec3_t end ) {
 	VectorCopy( end, beam->oldorigin );
 
 	beam->reType = RT_LIGHTNING;
+#ifdef TA_WEAPSYS
+	beam->customShader = wi->trailShader[0];
+	beam->radius = wi->trailRadius;
+#else
 	beam->customShader = cgs.media.lightningShader;
+#endif
 }
+#endif
 
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 /*
 ==================
 CG_KamikazeEffect
@@ -266,6 +340,7 @@ void CG_KamikazeEffect( vec3_t org ) {
 	VectorCopy( org, re->origin );
 
 }
+#endif
 
 /*
 ==================
@@ -279,10 +354,17 @@ void CG_ObeliskExplode( vec3_t org, int entityNum ) {
 	// create an explosion
 	VectorCopy( org, origin );
 	origin[2] += 64;
+#ifdef TA_DATA // EXP_SCALE
+	le = CG_MakeExplosion( origin, NULL,
+						   cgs.media.smokeModel,
+						   0,
+						   600, qfalse );
+#else
 	le = CG_MakeExplosion( origin, vec3_origin,
 						   cgs.media.dishFlashModel,
 						   cgs.media.rocketExplosionShader,
 						   600, qtrue );
+#endif
 	le->light = 300;
 	le->lightColor[0] = 1;
 	le->lightColor[1] = 0.75;
@@ -311,6 +393,7 @@ void CG_ObeliskPain( vec3_t org ) {
 }
 
 
+#ifndef TURTLEARENA // POWERS
 /*
 ==================
 CG_InvulnerabilityImpact
@@ -384,7 +467,7 @@ void CG_InvulnerabilityJuiced( vec3_t org ) {
 
 	trap_S_StartSound (org, ENTITYNUM_NONE, CHAN_BODY, cgs.media.invulnerabilityJuicedSound );
 }
-
+#endif
 #endif
 
 /*
@@ -447,6 +530,69 @@ void CG_ScorePlum( int client, vec3_t org, int score ) {
 	AnglesToAxis( angles, re->axis );
 }
 
+#ifdef TURTLEARENA // NIGHTS_ITEMS
+/*
+==================
+CG_ChainPlum
+==================
+*/
+void CG_ChainPlum( int client, vec3_t org, int score, int chain, qboolean bonus ) {
+	localEntity_t	*le;
+	refEntity_t		*re;
+	vec3_t			angles;
+	static vec3_t lastPos;
+
+	if (cg_scorePlum.integer == 0) {
+		return;
+	}
+
+	le = CG_AllocLocalEntity();
+	le->leFlags = 0;
+	le->leType = LE_CHAINPLUM;
+	le->startTime = cg.time;
+	le->endTime = cg.time + 4000;
+	le->lifeRate = 1.0 / ( le->endTime - le->startTime );
+
+	
+	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
+
+	// score
+#if 1
+	le->radius = score;
+#else
+	le->radius = chain;
+	if (le->radius > 10) {
+		// max score mult
+		le->radius = 10;
+	}
+	le->radius *= 10; // Assume 10 points for each link-item
+	if (bonus) {
+		le->radius *= 2;
+	}
+#endif
+
+	// chain
+	le->bounceFactor = chain;
+
+	VectorCopy( org, le->pos.trBase );
+	if (org[2] >= lastPos[2] - 20 && org[2] <= lastPos[2] + 20) {
+		le->pos.trBase[2] -= 20;
+	}
+
+	//CG_Printf( "Plum origin %i %i %i -- %i\n", (int)org[0], (int)org[1], (int)org[2], (int)Distance(org, lastPos));
+	VectorCopy(org, lastPos);
+
+
+	re = &le->refEntity;
+
+	re->reType = RT_SPRITE;
+	re->radius = 16;
+
+	VectorClear(angles);
+	AnglesToAxis( angles, re->axis );
+}
+#endif
+
 
 /*
 ====================
@@ -466,6 +612,11 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 	}
 
 	// skew the time a bit so they aren't all in sync
+#ifdef TA_WEAPSYS
+	if (msec < 63)
+		offset = rand() & 3;
+	else
+#endif
 	offset = rand() & 63;
 
 	ex = CG_AllocLocalEntity();
@@ -476,6 +627,12 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 		ex->refEntity.rotation = rand() % 360;
 		VectorScale( dir, 16, tmpVec );
 		VectorAdd( tmpVec, origin, newOrigin );
+
+#ifdef TA_WEAPSYS // SPR_EXP_SCALE
+		// Allow sprite explosion to be different sizes.
+		ex->radius = 30;
+		ex->refEntity.radius = 42;
+#endif
 	} else {
 		ex->leType = LE_EXPLOSION;
 		VectorCopy( origin, newOrigin );
@@ -488,6 +645,11 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 			VectorCopy( dir, ex->refEntity.axis[0] );
 			RotateAroundDirection( ex->refEntity.axis, ang );
 		}
+#ifdef TA_ENTSYS // EXP_SCALE
+		// Allow explosions to be different sizes.
+		ex->radius = 1.0f;
+		ex->refEntity.radius = 4.0f; // 0.0f
+#endif
 	}
 
 	ex->startTime = cg.time - offset;
@@ -508,7 +670,59 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 	return ex;
 }
 
+#ifdef TA_ENTSYS // EXP_SCALE
+/*
+================
+CG_ExplosionEffect
+================
+*/
+void CG_ExplosionEffect(vec3_t origin, int radius, int entity)
+{
+	qhandle_t		mod;
+	qhandle_t		shader;
+	qboolean		isSprite;
+	sfxHandle_t		sfx;
+	int				duration;
+	vec3_t			lightColor;
+	vec3_t			dir;
+	localEntity_t	*le;
 
+#ifdef TA_DATA
+	mod = cgs.media.smokeModel;
+	shader = 0;
+	isSprite = qfalse;
+#else
+	mod = cgs.media.dishFlashModel;
+	shader = cgs.media.rocketExplosionShader;
+	isSprite = qtrue;
+#endif
+	sfx = cgs.media.sfx_rockexp;
+	duration = 1250;
+	VectorSet( lightColor, 1, 0.75f, 0 );
+	VectorSet( dir, 0, 0, 1 ); // up
+
+	if ( sfx ) {
+		trap_S_StartSound( origin, ENTITYNUM_WORLD, CHAN_AUTO, sfx );
+	}
+
+	//
+	// create the explosion
+	//
+	if ( mod ) {
+		le = CG_MakeExplosion( origin, dir, mod, shader, duration, isSprite );
+		le->light = radius;
+		VectorCopy( lightColor, le->lightColor );
+
+		// Sprite explosion scaling, starts at "exp_base" and adds "exp_add" using time scaling.
+		//		so the bigest it will be is "exp_base"+"exp_add".
+		le->radius = (radius/10.f)*0.2f;
+		le->refEntity.radius = (radius/10.f)*0.8f;
+	}
+}
+#endif
+
+#ifndef TA_WEAPSYS
+#ifndef NOBLOOD
 /*
 =================
 CG_Bleed
@@ -537,13 +751,21 @@ void CG_Bleed( vec3_t origin, int entityNum ) {
 	ex->refEntity.customShader = cgs.media.bloodExplosionShader;
 
 	// don't show player's own blood in view
-	if ( CG_LocalClientPlayerStateForClientNum(entityNum) && (!cg.snap || cg.snap->numPSs <= 1) ) {
+	if ( CG_LocalClientPlayerStateForClientNum(entityNum) && (!cg.snap || cg.snap->numPSs <= 1)
+#ifdef IOQ3ZTM // Show player their own blood in third person
+		&& !cg.renderingThirdPerson
+#endif
+		)
+	{
 		ex->refEntity.renderfx |= RF_ONLY_MIRROR;
 	}
 }
+#endif
+#endif
 
 
 
+#ifndef NOTRATEDM // No gibs.
 /*
 ==================
 CG_LaunchGib
@@ -587,9 +809,17 @@ Generated a bunch of gibs launching out from the bodies location
 void CG_GibPlayer( vec3_t playerOrigin ) {
 	vec3_t	origin, velocity;
 
+#ifdef IOQ3ZTM // ZTM: Have cg_gibs disable ALL gibs.
+	// allow gibs to be turned off
+	if ( !cg_blood.integer || !cg_gibs.integer ) {
+		// ZTM: TODO: Have a smoke explosion (so body isn't just gone)?
+		return;
+	}
+#else
 	if ( !cg_blood.integer ) {
 		return;
 	}
+#endif
 
 	VectorCopy( playerOrigin, origin );
 	velocity[0] = crandom()*GIB_VELOCITY;
@@ -601,10 +831,12 @@ void CG_GibPlayer( vec3_t playerOrigin ) {
 		CG_LaunchGib( origin, velocity, cgs.media.gibBrain );
 	}
 
+#ifndef IOQ3ZTM
 	// allow gibs to be turned off for speed
 	if ( !cg_gibs.integer ) {
 		return;
 	}
+#endif
 
 	VectorCopy( playerOrigin, origin );
 	velocity[0] = crandom()*GIB_VELOCITY;
@@ -738,4 +970,4 @@ void CG_BigExplode( vec3_t playerOrigin ) {
 	velocity[2] = EXP_JUMP + crandom()*EXP_VELOCITY;
 	CG_LaunchExplode( origin, velocity, cgs.media.smoke2 );
 }
-
+#endif

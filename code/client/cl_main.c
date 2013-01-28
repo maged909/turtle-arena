@@ -127,6 +127,18 @@ cvar_t	*cl_guidServerUniq;
 
 cvar_t	*cl_consoleKeys;
 
+#ifdef IOQ3ZTM // USE_FREETYPE
+cvar_t  *cl_consoleFont;
+cvar_t  *cl_consoleFontSize;
+cvar_t  *cl_consoleFontKerning;
+#endif
+
+#ifdef IOQ3ZTM // ANALOG
+cvar_t	*cl_thirdPerson[MAX_SPLITVIEW];
+cvar_t	*cl_thirdPersonAngle[MAX_SPLITVIEW];
+cvar_t	*cl_thirdPersonAnalog[MAX_SPLITVIEW];
+#endif
+
 cvar_t	*cl_rate;
 
 clientActive_t		cl;
@@ -1588,7 +1600,12 @@ void CL_Disconnect( qboolean showMainMenu ) {
 #endif
 
 	// Stop recording any video
-	if( CL_VideoRecording( ) ) {
+#ifdef IOQ3ZTM // IOQ3BUGFIX: It can record the main menu, etc, when not playing demo.
+	if( clc.demoplaying && CL_VideoRecording( ) )
+#else
+	if( CL_VideoRecording( ) )
+#endif
+	{
 		// Finish rendering current frame
 		SCR_UpdateScreen( );
 		CL_CloseAVI( );
@@ -1769,6 +1786,10 @@ CL_Disconnect_f
 void CL_Disconnect_f( void ) {
 	SCR_StopCinematic();
 	Cvar_Set("ui_singlePlayerActive", "0");
+#ifdef TA_SP
+	Cvar_Set("savegame_loading", "0");
+	Cvar_Set("savegame_filename", "");
+#endif
 	if ( clc.state != CA_DISCONNECTED && clc.state != CA_CINEMATIC ) {
 		Com_Error (ERR_DISCONNECT, "Disconnected from server");
 	}
@@ -1785,6 +1806,10 @@ void CL_Reconnect_f( void ) {
 	if ( !strlen( cl_reconnectArgs ) )
 		return;
 	Cvar_Set("ui_singlePlayerActive", "0");
+#ifdef TA_SP
+	Cvar_Set("savegame_loading", "0");
+	Cvar_Set("savegame_filename", "");
+#endif
 	Cbuf_AddText( va("connect %s\n", cl_reconnectArgs ) );
 }
 
@@ -1823,6 +1848,10 @@ void CL_Connect_f( void ) {
 	Q_strncpyz( cl_reconnectArgs, Cmd_Args(), sizeof( cl_reconnectArgs ) );
 
 	Cvar_Set("ui_singlePlayerActive", "0");
+#ifdef TA_SP
+	Cvar_Set("savegame_loading", "0");
+	Cvar_Set("savegame_filename", "");
+#endif
 
 	// fire a message off to the motd server
 	CL_RequestMotd();
@@ -2507,6 +2536,12 @@ void CL_InitServerInfo( serverInfo_t *server, netadr_t *address ) {
 	server->game[0] = '\0';
 	server->gameType = 0;
 	server->netType = 0;
+#ifdef IOQ3ZTM // IOQ3BUGFIX: Why aren't all fields initialized here?
+	server->clients = 0;
+	//server->visible = qfalse; // ZTM: Don't touch?
+	server->g_humanplayers = 0;
+	server->g_needpass = 0;
+#endif
 }
 
 #define MAX_SERVERSPERPACKET	256
@@ -2984,7 +3019,12 @@ void CL_Frame ( int msec ) {
 	// if recording an avi, lock to a fixed fps
 	if ( CL_VideoRecording( ) && cl_aviFrameRate->integer && msec) {
 		// save the current screen
-		if ( clc.state == CA_ACTIVE || cl_forceavidemo->integer) {
+#ifdef IOQ3ZTM // IOQ3BUGFIX: It can record the main menu, etc, when not playing demo.
+		if ( !clc.demoplaying || clc.state == CA_ACTIVE || cl_forceavidemo->integer )
+#else
+		if ( clc.state == CA_ACTIVE || cl_forceavidemo->integer)
+#endif
+		{
 			CL_TakeVideoFrame( );
 
 			// fixed time for next frame'
@@ -3125,6 +3165,41 @@ void CL_ShutdownRef( void ) {
 	Com_Memset( &re, 0, sizeof( re ) );
 }
 
+#ifdef TA_DATA
+/*
+==========
+CL_DrawPicFullScreen
+
+Draw shader fullscreen (including in widescreen), in widescreen center shader
+and repeat horizontally without changing the aspect.
+==========
+*/
+void CL_DrawPicFullScreen(qhandle_t hShader)
+{
+	float x = 0, y = 0, w = cls.glconfig.vidWidth, h = cls.glconfig.vidHeight;
+	const float picX = SCREEN_WIDTH;
+	const float picY = SCREEN_HEIGHT;
+	float scale = h / picY; // scale shader to fit vertically
+	float s1, t1, s2, t2;
+	float sDelta, tDelta;
+
+	// Get aspect correct coords
+	s1 = x/(picX * scale);
+	t1 = y/(picY * scale);
+	s2 = (x+w)/(picX * scale);
+	t2 = (y+h)/(picY * scale);
+
+	// Center pic
+	sDelta = (1.0f - s2) / 2.0f;
+	tDelta = (1.0f - t2) / 2.0f;
+	s1 += sDelta;
+	s2 += sDelta;
+	t1 += tDelta;
+	t2 += tDelta;
+
+	re.DrawStretchPic( x, y, w, h, s1, t1, s2, t2, hShader );
+}
+#else
 /*
 ==========
 CL_DrawCenteredPic
@@ -3145,6 +3220,7 @@ void CL_DrawCenteredPic(qhandle_t hShader)
 
 	re.DrawStretchPic( x, y, w, h, 0, 0, 1, 1, hShader );
 }
+#endif
 
 /*
 ============
@@ -3160,7 +3236,11 @@ void CL_DrawLoadingScreenFrame( stereoFrame_t stereoFrame, qhandle_t hShader )
 	re.DrawStretchPic( 0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader );
 	re.SetColor( NULL );
 
+#ifdef TA_DATA
+	CL_DrawPicFullScreen( hShader );
+#else
 	CL_DrawCenteredPic( hShader );
+#endif
 }
 
 /*
@@ -3171,6 +3251,10 @@ CL_DrawLoadingScreen
 void CL_DrawLoadingScreen( void ) {
 	qhandle_t hShader;
 
+#ifdef TA_DATA
+	// get loading shader
+	hShader = re.RegisterShaderNoMip("clientLoading");
+#else
 	// Q3A menu background logo
 	if (cls.glconfig.hardwareType == GLHW_RAGEPRO ) {
 		// the blend effect turns to shit with the normal 
@@ -3178,6 +3262,7 @@ void CL_DrawLoadingScreen( void ) {
 	} else {
 		hShader = re.RegisterShaderNoMip("menuback");
 	}
+#endif
 
 	// if running in stereo, we need to draw the frame twice
 	if ( cls.glconfig.stereoEnabled || Cvar_VariableIntegerValue( "r_anaglyphMode" ) ) {
@@ -3212,7 +3297,15 @@ void CL_InitRenderer( void ) {
 	}
 
 	// load character sets
+#ifdef IOQ3ZTM // FONT_REWRITE
+	SCR_LoadFont(&cls.fontTiny, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 8, 8, 0);
+	SCR_LoadFont(&cls.fontSmall, cl_consoleFont->string, "gfx/2d/bigchars", cl_consoleFontSize->integer,
+			cl_consoleFontSize->integer*0.66f, cl_consoleFontKerning->value);
+	SCR_LoadFont(&cls.fontBig, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 16, 0);
+	//SCR_LoadFont(&cls.fontGiant, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 48, 32, 0);
+#else
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
+#endif
 	cls.consoleShader = re.RegisterShader( "console" );
 	g_console_field_width = cls.glconfig.vidWidth / SMALLCHAR_WIDTH - 2;
 	g_consoleField.widthInChars = g_console_field_width;
@@ -3355,6 +3448,9 @@ void CL_InitRef( void ) {
 	ri.Cvar_SetValue = Cvar_SetValue;
 	ri.Cvar_CheckRange = Cvar_CheckRange;
 	ri.Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+	ri.Cvar_VariableStringBuffer = Cvar_VariableStringBuffer;
+#endif
 
 	// cinematic stuff
 
@@ -3364,6 +3460,12 @@ void CL_InitRef( void ) {
   
 	ri.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	ri.CL_MaxSplitView = CL_MaxSplitView;
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+	ri.CL_GetMapMessage = CL_GetMapMessage;
+	ri.CL_GetClientLocation = CL_GetClientLocation;
+	ri.zlib_compress = compress;
+	ri.zlib_crc32 = crc32;
+#endif
 
 	ri.IN_Init = IN_Init;
 	ri.IN_Shutdown = IN_Shutdown;
@@ -3375,6 +3477,12 @@ void CL_InitRef( void ) {
 	ri.Sys_GLimpSafeInit = Sys_GLimpSafeInit;
 	ri.Sys_GLimpInit = Sys_GLimpInit;
 	ri.Sys_LowPhysicalMemory = Sys_LowPhysicalMemory;
+
+#ifdef TA_GAME_MODELS
+	// XXX
+	extern void SV_UpdateUserinfos(void);
+	ri.ServerUpdateUserinfos = SV_UpdateUserinfos;
+#endif
 
 	ret = GetRefAPI( REF_API_VERSION, &ri );
 
@@ -3401,14 +3509,34 @@ void CL_InitRef( void ) {
 void CL_SetModel_f( void ) {
 	char	*arg;
 	char	name[256];
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+	char	head[256];
+#endif
 
 	arg = Cmd_Argv( 1 );
 	if (arg[0]) {
 		Cvar_Set( "model", arg );
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+		arg = Cmd_Argv( 2 );
+		if (arg[0])
+			Cvar_Set( "headmodel", arg );
+		else
+			Cvar_Set( "headmodel", "" );
+#else
 		Cvar_Set( "headmodel", arg );
+#endif
 	} else {
 		Cvar_VariableStringBuffer( "model", name, sizeof(name) );
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+		Cvar_VariableStringBuffer( "headmodel", head, sizeof(head) );
+		if (Q_stricmp(name, head) == 0) {
+			Com_Printf("player model is set to %s\n", name);
+		} else {
+			Com_Printf("player model is set to %s, player head model is set to %s\n", name, head);
+		}
+#else
 		Com_Printf("model is set to %s\n", name);
+#endif
 	}
 }
 
@@ -3429,11 +3557,13 @@ void CL_Video_f( void )
   char  filename[ MAX_OSPATH ];
   int   i, last;
 
+#ifndef IOQ3ZTM // IOQ3BUGFIX: It can record the main menu, etc, when not playing demo.
   if( !clc.demoplaying )
   {
     Com_Printf( "The video command can only be used when playing back demos\n" );
     return;
   }
+#endif
 
   if( Cmd_Argc( ) == 2 )
   {
@@ -3580,7 +3710,9 @@ void CL_Init( void ) {
 		cl_yawspeed[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_yawspeed"), "140", CVAR_ARCHIVE);
 		cl_pitchspeed[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_pitchspeed"), "140", CVAR_ARCHIVE);
 		cl_anglespeedkey[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_anglespeedkey"), "1.5", 0);
+#ifndef TURTLEARENA // ALWAYS_RUN
 		cl_run[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_run"), "1", CVAR_ARCHIVE);
+#endif
 	}
 
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "30", CVAR_ARCHIVE );
@@ -3605,7 +3737,11 @@ void CL_Init( void ) {
 	cl_cURLLib = Cvar_Get("cl_cURLLib", DEFAULT_CURL_LIB, CVAR_ARCHIVE);
 #endif
 
+#ifdef IOQ3ZTM // USE_FREETYPE
+	cl_conXOffset = Cvar_Get ("cl_conXOffset", "10", 0);
+#else
 	cl_conXOffset = Cvar_Get ("cl_conXOffset", "0", 0);
+#endif
 #ifdef MACOS_X
 	// In game video is REALLY slow in Mac OS X right now due to driver slowness
 	cl_inGameVideo = Cvar_Get ("r_inGameVideo", "0", CVAR_ARCHIVE);
@@ -3656,6 +3792,19 @@ void CL_Init( void ) {
 
 	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE);
+#ifdef IOQ3ZTM // USE_FREETYPE
+	cl_consoleFont = Cvar_Get ("cl_consoleFont", "fonts/mplus-1mn-regular.ttf", CVAR_ARCHIVE);
+	cl_consoleFontSize = Cvar_Get ("cl_consoleFontSize", "16", CVAR_ARCHIVE);
+	cl_consoleFontKerning = Cvar_Get ("cl_consoleFontKerning", "0", CVAR_ARCHIVE);
+#endif
+
+#ifdef IOQ3ZTM // ANALOG
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		cl_thirdPerson[i] = Cvar_Get (Com_LocalClientCvarName(i, "cg_thirdPerson"), "1", 0);
+		cl_thirdPersonAngle[i] = Cvar_Get (Com_LocalClientCvarName(i, "cg_thirdPersonAngle"), "0", 0);
+		cl_thirdPersonAnalog[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_thirdPersonAnalog"), "0", CVAR_ARCHIVE);
+	}
+#endif
 
 	// select which local client (using bits) should join a server on connect
 	Cvar_Get ("cl_localClients", "1", 0 );
@@ -3680,7 +3829,11 @@ void CL_Init( void ) {
 	cl_voipVADThreshold = Cvar_Get ("cl_voipVADThreshold", "0.25", CVAR_ARCHIVE);
 
 	// This is a protocol version number.
+#ifdef IOQ3ZTM // Default voip to off in client
+	cl_voip = Cvar_Get ("cl_voip", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE);
+#else
 	cl_voip = Cvar_Get ("cl_voip", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE);
+#endif
 	Cvar_CheckRange( cl_voip, 0, 1, qtrue );
 #endif
 
@@ -3723,7 +3876,11 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("showip", CL_ShowIP_f );
 	Cmd_AddCommand ("fs_openedList", CL_OpenedPK3List_f );
 	Cmd_AddCommand ("fs_referencedList", CL_ReferencedPK3List_f );
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+	Cmd_AddCommand ("player", CL_SetModel_f );
+#else
 	Cmd_AddCommand ("model", CL_SetModel_f );
+#endif
 	Cmd_AddCommand ("video", CL_Video_f );
 	Cmd_AddCommand ("stopvideo", CL_StopVideo_f );
 	CL_InitRef();
@@ -4658,3 +4815,57 @@ void CL_ShowIP_f(void) {
 	Sys_ShowIP();
 }
 
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+/*
+=================
+CL_GetMapMessage
+=================
+*/
+void CL_GetMapMessage(char *buf, int bufLength)
+{
+	int		offset;
+
+	offset = cl.gameState.stringOffsets[CS_MESSAGE];
+	if (!offset) {
+		if( bufLength ) {
+			Q_strncpyz( buf, "Unknown", bufLength);
+		}
+		return;
+	}
+
+	Q_strncpyz( buf, cl.gameState.stringData+offset, bufLength);
+}
+
+/*
+=================
+CL_GetClientLocation
+=================
+*/
+#ifdef TA_SPLITVIEW
+qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum)
+#else
+qboolean CL_GetClientLocation(char *buf, int bufLength)
+#endif
+{
+#ifdef TA_SPLITVIEW
+	sharedPlayerState_t *ps;
+#endif
+
+	if (!cl.snap.valid || cl.snap.lcIndex[localClientNum] == -1) {
+		Q_strncpyz(buf, "Unknown", bufLength);
+		return qfalse;
+	}
+
+#ifdef TA_SPLITVIEW
+	ps = DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[localClientNum] );
+	snprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)ps->origin[0],
+			(int)ps->origin[1], (int)ps->origin[2],
+			(int)(ps->viewangles[YAW]+360)%360);
+#else
+	snprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)cl.snap.ps.origin[0],
+			(int)cl.snap.ps.origin[1], (int)cl.snap.ps.origin[2],
+			(int)(cl.snap.ps.viewangles[YAW]+360)%360);
+#endif
+	return qtrue;
+}
+#endif

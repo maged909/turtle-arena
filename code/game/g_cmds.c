@@ -75,12 +75,19 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 		perfect = ( cl->ps.persistant[PERS_RANK] == 0 && cl->ps.persistant[PERS_KILLED] == 0 ) ? 1 : 0;
 
 		Com_sprintf (entry, sizeof(entry),
-			" %i %i %i %i %i %i %i %i %i %i %i %i %i %i", level.sortedClients[i],
+#ifdef TURTLEARENA // AWARDS
+			" %i %i %i %i %i %i %i %i %i %i %i",
+#else
+			" %i %i %i %i %i %i %i %i %i %i %i %i %i %i",
+#endif			
+			level.sortedClients[i],
 			cl->ps.persistant[PERS_SCORE], ping, (level.time - cl->pers.enterTime)/60000,
 			scoreFlags, g_entities[level.sortedClients[i]].s.powerups, accuracy, 
+#ifndef TURTLEARENA // AWARDS
 			cl->ps.persistant[PERS_IMPRESSIVE_COUNT],
 			cl->ps.persistant[PERS_EXCELLENT_COUNT],
 			cl->ps.persistant[PERS_GAUNTLET_FRAG_COUNT], 
+#endif
 			cl->ps.persistant[PERS_DEFEND_COUNT], 
 			cl->ps.persistant[PERS_ASSIST_COUNT], 
 			perfect,
@@ -247,6 +254,9 @@ void Cmd_Give_f (gentity_t *ent)
 	qboolean	give_all;
 	gentity_t		*it_ent;
 	trace_t		trace;
+#ifdef TA_WEAPSYS
+	int weapGroup;
+#endif
 
 	if ( !CheatsOk( ent ) ) {
 		return;
@@ -259,6 +269,22 @@ void Cmd_Give_f (gentity_t *ent)
 	else
 		give_all = qfalse;
 
+#ifdef TA_HOLDSYS
+	if (give_all || Q_stricmp( name, "holdable") == 0)
+	{
+		// Skip HI_NONE
+		for ( i = 1 ; i < BG_NumHoldableItems() ; i++ ) {
+			ent->client->ps.holdable[i] = MAX_SHURIKENS;
+		}
+		// Change to first holdable.
+		if (!ent->client->ps.holdableIndex) {
+			ent->client->ps.holdableIndex = 1;
+		}
+		if (!give_all)
+			return;
+	}
+#endif
+
 	if (give_all || Q_stricmp( name, "health") == 0)
 	{
 		ent->health = ent->client->ps.stats[STAT_MAX_HEALTH];
@@ -266,23 +292,69 @@ void Cmd_Give_f (gentity_t *ent)
 			return;
 	}
 
+#ifdef TA_WEAPSYS
+	// \give wp_bo
+	weapGroup = BG_WeaponGroupIndexForName(name);
+	if (weapGroup) {
+#ifdef TA_WEAPSYS_EX
+		ent->client->ps.stats[STAT_PENDING_WEAPON] = weapGroup;
+#else
+		ent->client->ps.stats[STAT_WEAPONS] |= (1<<weapGroup);
+#endif
+	}
+#endif
+
+#ifdef TA_WEAPSYS_EX
+	// \give weapon1
+	// The above will give WP_KATANAS
+	if (Q_strncmp(name, "weapon", 6) == 0 && isdigit(name[6]))
+	{
+		int w;
+		w = atoi(&name[6]);
+		if (w == WP_DEFAULT)
+			w = ent->client->ps.stats[STAT_DEFAULTWEAPON];
+		if (w < WP_NONE || w >= BG_NumWeaponGroups())
+			return;
+
+		ent->client->ps.stats[STAT_PENDING_WEAPON] = w;
+	}
+#else
 	if (give_all || Q_stricmp(name, "weapons") == 0)
 	{
-		ent->client->ps.stats[STAT_WEAPONS] = (1 << WP_NUM_WEAPONS) - 1 - 
-			( 1 << WP_GRAPPLING_HOOK ) - ( 1 << WP_NONE );
+		ent->client->ps.stats[STAT_WEAPONS] =
+#ifdef TA_WEAPSYS
+		(1 << BG_NumWeaponGroups()) - 1
+#else
+		(1 << WP_NUM_WEAPONS) - 1
+#endif
+#if !defined IOQ3ZTM && !defined TA_WEAPSYS // Give grapple too.
+			- ( 1 << WP_GRAPPLING_HOOK )
+#endif
+			- ( 1 << WP_NONE );
 		if (!give_all)
 			return;
 	}
+#endif
 
 	if (give_all || Q_stricmp(name, "ammo") == 0)
 	{
+#ifdef TA_WEAPSYS_EX
+		if (BG_WeapUseAmmo(ent->client->ps.weapon)) {
+			ent->client->ps.stats[STAT_AMMO] = 999;
+		}
+#else
 		for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
+#ifdef TA_WEAPSYS
+			if (BG_WeapUseAmmo(i))
+#endif
 			ent->client->ps.ammo[i] = 999;
 		}
+#endif
 		if (!give_all)
 			return;
 	}
 
+#ifndef TURTLEARENA // NOARMOR
 	if (give_all || Q_stricmp(name, "armor") == 0)
 	{
 		ent->client->ps.stats[STAT_ARMOR] = 200;
@@ -290,7 +362,9 @@ void Cmd_Give_f (gentity_t *ent)
 		if (!give_all)
 			return;
 	}
+#endif
 
+#ifndef TURTLEARENA // AWARDS
 	if (Q_stricmp(name, "excellent") == 0) {
 		ent->client->ps.persistant[PERS_EXCELLENT_COUNT]++;
 		return;
@@ -303,6 +377,7 @@ void Cmd_Give_f (gentity_t *ent)
 		ent->client->ps.persistant[PERS_GAUNTLET_FRAG_COUNT]++;
 		return;
 	}
+#endif
 	if (Q_stricmp(name, "defend") == 0) {
 		ent->client->ps.persistant[PERS_DEFEND_COUNT]++;
 		return;
@@ -496,19 +571,46 @@ Let everyone know about a team change
 */
 void BroadcastTeamChange( gclient_t *client, int oldTeam )
 {
+#ifdef TA_MISC
+#define BCAST_CMD "print"
+#else
+#define BCAST_CMD "cp"
+#endif
+
+#ifdef IOQ3ZTM
+	if ( client->sess.sessionTeam == oldTeam )
+		return;
+
+	if ( client->sess.sessionTeam == TEAM_SPECTATOR )
+#else
 	if ( client->sess.sessionTeam == TEAM_RED ) {
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " joined the red team.\n\"",
+		trap_SendServerCommand( -1, va(BCAST_CMD " \"%s" S_COLOR_WHITE " joined the red team.\n\"",
 			client->pers.netname) );
 	} else if ( client->sess.sessionTeam == TEAM_BLUE ) {
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " joined the blue team.\n\"",
+		trap_SendServerCommand( -1, va(BCAST_CMD " \"%s" S_COLOR_WHITE " joined the blue team.\n\"",
 		client->pers.netname));
-	} else if ( client->sess.sessionTeam == TEAM_SPECTATOR && oldTeam != TEAM_SPECTATOR ) {
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " joined the spectators.\n\"",
+	} else if ( client->sess.sessionTeam == TEAM_SPECTATOR && oldTeam != TEAM_SPECTATOR )
+#endif
+	{
+		trap_SendServerCommand( -1, va(BCAST_CMD " \"%s" S_COLOR_WHITE " joined the spectators.\n\"",
 		client->pers.netname));
 	} else if ( client->sess.sessionTeam == TEAM_FREE ) {
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " joined the battle.\n\"",
+#ifdef TA_MISC
+		trap_SendServerCommand( -1, va(BCAST_CMD " \"%s" S_COLOR_WHITE " joined the game.\n\"",
 		client->pers.netname));
+#else
+		trap_SendServerCommand( -1, va(BCAST_CMD " \"%s" S_COLOR_WHITE " joined the battle.\n\"",
+		client->pers.netname));
+#endif
 	}
+#ifdef IOQ3ZTM
+	else {
+		trap_SendServerCommand( -1, va(BCAST_CMD " \"%s" S_COLOR_WHITE " joined the %s team.\n\"",
+		client->pers.netname, TeamNameInColor(client->sess.sessionTeam)));
+	}
+#endif
+
+#undef BCAST_CMD
 }
 
 /*
@@ -543,10 +645,22 @@ void SetTeam( gentity_t *ent, const char *s ) {
 		team = TEAM_SPECTATOR;
 		specState = SPECTATOR_FOLLOW;
 		specClient = -2;
-	} else if ( !Q_stricmp( s, "spectator" ) || !Q_stricmp( s, "s" ) ) {
+	}
+#ifdef TA_SP
+	else if (( !Q_stricmp( s, "spectator" ) || !Q_stricmp( s, "s" ) )
+			&& !g_singlePlayer.integer)
+#else
+	else if ( !Q_stricmp( s, "spectator" ) || !Q_stricmp( s, "s" ) )
+#endif
+	{
 		team = TEAM_SPECTATOR;
 		specState = SPECTATOR_FREE;
-	} else if ( g_gametype.integer >= GT_TEAM ) {
+	} else if ( g_gametype.integer >= GT_TEAM
+#ifdef TA_SP // SP_BOSS
+			|| (g_gametype.integer == GT_SINGLE_PLAYER && (ent->r.svFlags & SVF_BOT))
+#endif
+		)
+	{
 		// if running a team game, assign player to one of the teams
 		specState = SPECTATOR_NOT;
 		if ( !Q_stricmp( s, "red" ) || !Q_stricmp( s, "r" ) ) {
@@ -616,7 +730,11 @@ void SetTeam( gentity_t *ent, const char *s ) {
 		// Kill him (makes sure he loses flags, etc)
 		ent->flags &= ~FL_GODMODE;
 		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+#ifdef IOQ3ZTM // SWITCH_TEAM
+		player_die (ent, ent, ent, 100000, MOD_SUICIDE_TEAM_CHANGE);
+#else
 		player_die (ent, ent, ent, 100000, MOD_SUICIDE);
+#endif
 
 	}
 
@@ -663,6 +781,26 @@ to free floating spectator mode
 =================
 */
 void StopFollowing( gentity_t *ent ) {
+#ifdef IOQ3ZTM // PEAKING
+	if (ent->client->sess.sessionTeam != TEAM_SPECTATOR)
+	{
+		int flags;
+
+		flags = (ent->client->savedPS.eFlags & ~(EF_VOTED | EF_TEAMVOTED)) | (ent->client->ps.eFlags & (EF_VOTED | EF_TEAMVOTED));
+		ent->client->ps = ent->client->savedPS;
+		ent->client->ps.pm_flags &= ~PMF_FOLLOW;
+		ent->client->ps.eFlags = flags;
+
+		ent->client->ps.clientNum = ent - g_entities;
+		ent->client->sess.spectatorState = SPECTATOR_NOT;
+		ent->client->sess.spectatorClient = ent->client->ps.clientNum;
+		ent->r.svFlags &= ~SVF_BOT;
+		return;
+	}
+#endif
+#ifdef IOQ3ZTM // SPECTATOR
+	SetClientViewAngle(ent, ent->client->ps.viewangles);
+#endif
 	ent->client->ps.persistant[ PERS_TEAM ] = TEAM_SPECTATOR;	
 	ent->client->sess.sessionTeam = TEAM_SPECTATOR;	
 	ent->client->sess.spectatorState = SPECTATOR_FREE;
@@ -718,6 +856,22 @@ void Cmd_Team_f( gentity_t *ent ) {
 }
 
 
+#ifdef IOQ3ZTM // PEAKING
+/*
+=================
+G_AllowPeaking
+=================
+*/
+qboolean G_AllowPeaking(void)
+{
+#ifdef TA_SP
+	if (g_gametype.integer == GT_SINGLE_PLAYER)
+		return qtrue;
+#endif
+	return (g_gametype.integer >= GT_TEAM);
+}
+#endif
+
 /*
 =================
 Cmd_Follow_f
@@ -750,6 +904,15 @@ void Cmd_Follow_f( gentity_t *ent ) {
 		return;
 	}
 
+#ifdef IOQ3ZTM // PEAKING
+	// Only view player on your team
+	if (G_AllowPeaking() && ent->client->sess.sessionTeam != TEAM_SPECTATOR) {
+		if ( level.clients[ i ].sess.sessionTeam != ent->client->sess.sessionTeam ) {
+			return;
+		}
+	}
+#endif
+
 	// don't follow one of their local players
 	if ( level.clients[ i ].pers.connectionNum == ent->client->pers.connectionNum ) {
 		return;
@@ -761,8 +924,18 @@ void Cmd_Follow_f( gentity_t *ent ) {
 		ent->client->sess.losses++;
 	}
 
+#ifdef IOQ3ZTM // PEAKING
+	if (ent->client->sess.spectatorState == SPECTATOR_NOT) {
+		ent->client->savedPS = ent->client->ps;
+	}
+#endif
+
 	// first set them to spectator
-	if ( ent->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if (
+#ifdef IOQ3ZTM // PEAKING
+	!G_AllowPeaking() &&
+#endif
+	ent->client->sess.sessionTeam != TEAM_SPECTATOR ) {
 		SetTeam( ent, "spectator" );
 	}
 
@@ -784,8 +957,20 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 		&& ent->client->sess.sessionTeam == TEAM_FREE ) {
 		ent->client->sess.losses++;
 	}
+
+#ifdef IOQ3ZTM // PEAKING
+	if (ent->client->sess.spectatorState == SPECTATOR_NOT) {
+		ent->client->savedPS = ent->client->ps;
+	}
+#endif
+
 	// first set them to spectator
-	if ( ent->client->sess.spectatorState == SPECTATOR_NOT ) {
+#ifdef IOQ3ZTM // PEAKING
+	if (!G_AllowPeaking() && ent->client->sess.sessionTeam != TEAM_SPECTATOR)
+#else
+	if ( ent->client->sess.spectatorState == SPECTATOR_NOT )
+#endif
+	{
 		SetTeam( ent, "spectator" );
 	}
 
@@ -814,6 +999,19 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 			clientnum = level.maxclients - 1;
 		}
 
+#ifdef IOQ3ZTM // PEAKING
+		if (clientnum == ent - level.gentities ) {
+			if (G_AllowPeaking() && ent->client->sess.sessionTeam != TEAM_SPECTATOR
+				&& ent->client->sess.spectatorState == SPECTATOR_FOLLOW ) {
+				// Switch to yourself
+				StopFollowing(ent);
+				return;
+			} else {
+				continue;
+			}
+		}
+#endif
+
 		// can only follow connected clients
 		if ( level.clients[ clientnum ].pers.connected != CON_CONNECTED ) {
 			continue;
@@ -823,6 +1021,15 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 		if ( level.clients[ clientnum ].sess.sessionTeam == TEAM_SPECTATOR ) {
 			continue;
 		}
+
+#ifdef IOQ3ZTM // PEAKING
+		// Only view players on your team
+		if (ent->client->sess.sessionTeam != TEAM_SPECTATOR) {
+			if ( level.clients[ clientnum ].sess.sessionTeam != ent->client->sess.sessionTeam ) {
+				continue;
+			}
+		}
+#endif
 
 		// don't follow one of their local players
 		if ( level.clients[ clientnum ].pers.connectionNum == ent->client->pers.connectionNum ) {
@@ -1205,6 +1412,7 @@ static void Cmd_VoiceTaunt_f( gentity_t *ent ) {
 		who = g_entities + ent->client->lastkilled_client;
 		if (who->client) {
 			// who is the person I just killed
+#ifndef TURTLEARENA // WEAPONS // MOD
 			if (who->client->lasthurt_mod == MOD_GAUNTLET) {
 				if (!(who->r.svFlags & SVF_BOT)) {
 					G_Voice( ent, who, SAY_TELL, VOICECHAT_KILLGAUNTLET, qfalse );	// and I killed them with a gauntlet
@@ -1212,7 +1420,9 @@ static void Cmd_VoiceTaunt_f( gentity_t *ent ) {
 				if (!(ent->r.svFlags & SVF_BOT)) {
 					G_Voice( ent, ent, SAY_TELL, VOICECHAT_KILLGAUNTLET, qfalse );
 				}
-			} else {
+			} else
+#endif
+			{
 				if (!(who->r.svFlags & SVF_BOT)) {
 					G_Voice( ent, who, SAY_TELL, VOICECHAT_KILLINSULT, qfalse );	// and I killed them with something else
 				}
@@ -1312,7 +1522,11 @@ void Cmd_Where_f( gentity_t *ent ) {
 
 static const char *gameNames[] = {
 	"Free For All",
+#ifdef TA_MISC // tournament to duel
+	"Duel",
+#else
 	"Tournament",
+#endif
 	"Single Player",
 	"Team Deathmatch",
 	"Capture the Flag",
@@ -1331,6 +1545,9 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	int		i;
 	char	arg1[MAX_STRING_TOKENS];
 	char	arg2[MAX_STRING_TOKENS];
+#ifdef IOQ3ZTM // CALLVOTE_TEST_INT
+	qboolean arg2IsInteger = qfalse;
+#endif
 
 	if ( !g_allowVote.integer ) {
 		trap_SendServerCommand( ent-g_entities, "print \"Voting not allowed here.\n\"" );
@@ -1354,6 +1571,7 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	trap_Argv( 1, arg1, sizeof( arg1 ) );
 	trap_Argv( 2, arg2, sizeof( arg2 ) );
 
+#ifndef IOQ3ZTM // CALLVOTE_TEST_INT
 	// check for command separators in arg2
 	for( c = arg2; *c; ++c) {
 		switch(*c) {
@@ -1365,21 +1583,63 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 			break;
 		}
 	}
+#endif
 
 	if ( !Q_stricmp( arg1, "map_restart" ) ) {
 	} else if ( !Q_stricmp( arg1, "nextmap" ) ) {
 	} else if ( !Q_stricmp( arg1, "map" ) ) {
 	} else if ( !Q_stricmp( arg1, "g_gametype" ) ) {
+#ifdef IOQ3ZTM // CALLVOTE_TEST_INT
+		arg2IsInteger = qtrue;
+#endif
 	} else if ( !Q_stricmp( arg1, "kick" ) ) {
 	} else if ( !Q_stricmp( arg1, "kicknum" ) ) {
+#ifdef IOQ3ZTM // CALLVOTE_TEST_INT
+		arg2IsInteger = qtrue;
+#endif
 	} else if ( !Q_stricmp( arg1, "g_doWarmup" ) ) {
+#ifdef IOQ3ZTM // CALLVOTE_TEST_INT
+		arg2IsInteger = qtrue;
+#endif
 	} else if ( !Q_stricmp( arg1, "timelimit" ) ) {
+#ifdef IOQ3ZTM // CALLVOTE_TEST_INT
+		arg2IsInteger = qtrue;
+#endif
+#ifdef NOTRATEDM // frag to score
+	} else if ( !Q_stricmp( arg1, "scorelimit" ) ) {
+#else
 	} else if ( !Q_stricmp( arg1, "fraglimit" ) ) {
+#endif
+#ifdef IOQ3ZTM // CALLVOTE_TEST_INT
+		arg2IsInteger = qtrue;
+#endif
 	} else {
 		trap_SendServerCommand( ent-g_entities, "print \"Invalid vote string.\n\"" );
+#ifdef NOTRATEDM // frag to score
+		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <clientnum>, g_doWarmup, timelimit <time>, scorelimit <score>.\n\"" );
+#else
 		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <clientnum>, g_doWarmup, timelimit <time>, fraglimit <frags>.\n\"" );
+#endif
 		return;
 	}
+
+#ifdef IOQ3ZTM // CALLVOTE_TEST_INT
+	// check for command separators in arg2 and non-digits in integer strings
+	for( c = arg2; *c; ++c) {
+		if (arg2IsInteger && !isdigit(*c)) {
+			trap_SendServerCommand( ent-g_entities, "print \"Invalid vote string (requires integer).\n\"" );
+			return;
+		}
+		switch(*c) {
+			case '\n':
+			case '\r':
+			case ';':
+				trap_SendServerCommand( ent-g_entities, "print \"Invalid vote string.\n\"" );
+				return;
+			break;
+		}
+	}
+#endif
 
 	// if there is still a vote to be executed
 	if ( level.voteExecuteTime ) {
@@ -1390,7 +1650,11 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	// special case for g_gametype, check for bad values
 	if ( !Q_stricmp( arg1, "g_gametype" ) ) {
 		i = atoi( arg2 );
-		if( i == GT_SINGLE_PLAYER || i < 0 || i >= GT_MAX_GAME_TYPE) {
+		if(
+#ifndef TA_SP
+		i == GT_SINGLE_PLAYER ||
+#endif
+		i < 0 || i >= GT_MAX_GAME_TYPE) {
 			trap_SendServerCommand( ent-g_entities, "print \"Invalid gametype.\n\"" );
 			return;
 		}
@@ -1725,6 +1989,25 @@ void Cmd_Stats_f( gentity_t *ent ) {
 */
 }
 
+#ifdef TA_MISC // DROP_FLAG
+/*
+=================
+Cmd_DropFlag_f
+
+Drop CTF Flag and/or other gametype specific items
+=================
+*/
+void Cmd_DropFlag_f( gentity_t *ent ) {
+	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+		return;
+	}
+	if (ent->health <= 0) {
+		return;
+	}
+	TossClientGametypeItems(ent);
+}
+#endif
+
 /*
 =================
 ClientCommand
@@ -1866,6 +2149,10 @@ void ClientCommand( int connectionNum ) {
 		Cmd_SetViewpos_f( ent );
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
+#ifdef TA_MISC // DROP_FLAG
+	else if (Q_stricmp (cmd, "dropflag") == 0)
+		Cmd_DropFlag_f( ent );
+#endif
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", buf ) );
 }

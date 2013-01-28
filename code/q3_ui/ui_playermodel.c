@@ -30,6 +30,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 #include "ui_local.h"
 
+#ifndef TA_MISC
+
 #define MODEL_BACK0			"menu/art/back_0"
 #define MODEL_BACK1			"menu/art/back_1"
 #define MODEL_SELECT		"menu/art/opponents_select"
@@ -37,9 +39,17 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MODEL_FRAMEL		"menu/art/frame1_l"
 #define MODEL_FRAMER		"menu/art/frame1_r"
 #define MODEL_PORTS			"menu/art/player_models_ports"
+#ifdef TA_DATA
+#define MODEL_ARROWS		"menu/art/arrows_horz_0"
+#define MODEL_ARROWSL		"menu/art/arrows_horz_left"
+#define MODEL_ARROWSR		"menu/art/arrows_horz_right"
+#define MODEL_ARROWS_WIDTH 128
+#define MODEL_ARROWS_HEIGHT 64
+#else
 #define MODEL_ARROWS		"menu/art/gs_arrows_0"
 #define MODEL_ARROWSL		"menu/art/gs_arrows_l"
 #define MODEL_ARROWSR		"menu/art/gs_arrows_r"
+#endif
 
 #define LOW_MEMORY			(5 * 1024 * 1024)
 
@@ -192,7 +202,14 @@ static void PlayerModel_UpdateModel( void )
 	VectorClear( moveangles );
 
 	UI_PlayerInfo_SetModel( &s_playermodel.playerinfo, s_playermodel.modelskin );
+#ifdef TA_WEAPSYS
+	UI_PlayerInfo_SetInfo( &s_playermodel.playerinfo,
+			BG_LegsStandForWeapon(&s_playermodel.playerinfo.playercfg, s_playermodel.playerinfo.weapon),
+			BG_TorsoStandForWeapon(s_playermodel.playerinfo.weapon), viewangles, moveangles,
+			s_playermodel.playerinfo.weapon, qfalse );
+#else
 	UI_PlayerInfo_SetInfo( &s_playermodel.playerinfo, LEGS_IDLE, TORSO_STAND, viewangles, moveangles, WP_MACHINEGUN, qfalse );
+#endif
 }
 
 /*
@@ -203,9 +220,19 @@ PlayerModel_SaveChanges
 static void PlayerModel_SaveChanges( void )
 {
 	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin );
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), "" );
+#else
 	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.modelskin );
+#endif
+#ifndef IOQ3ZTM_NO_TEAM_MODEL
 	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_model"), s_playermodel.modelskin );
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_headmodel"), "" );
+#else
 	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_headmodel"), s_playermodel.modelskin );
+#endif
+#endif
 }
 
 /*
@@ -257,6 +284,9 @@ static sfxHandle_t PlayerModel_MenuKey( int key )
 	{
 		case K_KP_LEFTARROW:
 		case K_LEFTARROW:
+#ifdef TA_MISC // MENU: Right Mouse button = left arrow
+		case K_MOUSE2:
+#endif
 			m = Menu_ItemAtCursor(&s_playermodel.menu);
 			picnum = m->id - ID_PLAYERPIC0;
 			if (picnum >= 0 && picnum <= 15)
@@ -302,7 +332,9 @@ static sfxHandle_t PlayerModel_MenuKey( int key )
 			}
 			break;
 			
+#ifndef TA_MISC // MENU: Right Mouse button = left arrow
 		case K_MOUSE2:
+#endif
 		case K_ESCAPE:
 			PlayerModel_SaveChanges();
 			break;
@@ -408,9 +440,11 @@ static void PlayerModel_BuildList( void )
 	int		j;
 	int		dirlen;
 	int		filelen;
+#ifndef TA_SP
 	qboolean precache;
 
 	precache = trap_Cvar_VariableValue("com_buildscript");
+#endif
 
 	s_playermodel.modelpage = 0;
 	s_playermodel.nummodels = 0;
@@ -446,9 +480,11 @@ static void PlayerModel_BuildList( void )
 				//	return;
 			}
 
+#ifndef TA_SP
 			if( precache ) {
 				trap_S_RegisterSound( va( "sound/player/announce/%s_wins.wav", skinname), qfalse );
 			}
+#endif
 		}
 	}	
 
@@ -552,9 +588,13 @@ static void PlayerModel_MenuInit( int localClient )
 
 	s_playermodel.banner.generic.type  = MTYPE_BTEXT;
 	s_playermodel.banner.generic.x     = 320;
+#if defined TA_DATA && defined IOQ3ZTM // FONT_REWRITE // ZTM: HACK?: Text is too low, goes behind model select grid
+	s_playermodel.banner.generic.y     = 8;
+#else
 	s_playermodel.banner.generic.y     = 16;
+#endif
 	s_playermodel.banner.string = s_playermodel.bannerString;
-	s_playermodel.banner.color         = color_white;
+	s_playermodel.banner.color         = text_banner_color;
 	s_playermodel.banner.style         = UI_CENTER;
 
 	s_playermodel.framel.generic.type  = MTYPE_BITMAP;
@@ -594,7 +634,9 @@ static void PlayerModel_MenuInit( int localClient )
 			s_playermodel.pics[k].width  		   = 64;
 			s_playermodel.pics[k].height  		   = 64;
 			s_playermodel.pics[k].focuspic         = MODEL_SELECTED;
+#ifndef TA_DATA
 			s_playermodel.pics[k].focuscolor       = colorRed;
+#endif
 
 			s_playermodel.picbuttons[k].generic.type	 = MTYPE_BITMAP;
 			s_playermodel.picbuttons[k].generic.flags    = QMF_LEFT_JUSTIFY|QMF_NODEFAULTINIT|QMF_PULSEIFFOCUS;
@@ -609,7 +651,9 @@ static void PlayerModel_MenuInit( int localClient )
 			s_playermodel.picbuttons[k].width  		     = 128;
 			s_playermodel.picbuttons[k].height  		 = 128;
 			s_playermodel.picbuttons[k].focuspic  		 = MODEL_SELECT;
+#ifndef TA_DATA
 			s_playermodel.picbuttons[k].focuscolor  	 = colorRed;
+#endif
 
 			x += 64+6;
 		}
@@ -653,8 +697,13 @@ static void PlayerModel_MenuInit( int localClient )
 	s_playermodel.arrows.generic.flags		= QMF_INACTIVE;
 	s_playermodel.arrows.generic.x			= 125;
 	s_playermodel.arrows.generic.y			= 340;
+#ifdef TA_DATA
+	s_playermodel.arrows.width				= MODEL_ARROWS_WIDTH;
+	s_playermodel.arrows.height				= MODEL_ARROWS_HEIGHT;
+#else
 	s_playermodel.arrows.width				= 128;
 	s_playermodel.arrows.height				= 32;
+#endif
 
 	s_playermodel.left.generic.type			= MTYPE_BITMAP;
 	s_playermodel.left.generic.flags		= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -662,18 +711,32 @@ static void PlayerModel_MenuInit( int localClient )
 	s_playermodel.left.generic.id			= ID_PREVPAGE;
 	s_playermodel.left.generic.x			= 125;
 	s_playermodel.left.generic.y			= 340;
+#ifdef TA_DATA
+	s_playermodel.left.width  				= MODEL_ARROWS_WIDTH/2;
+	s_playermodel.left.height  				= MODEL_ARROWS_HEIGHT;
+#else
 	s_playermodel.left.width  				= 64;
 	s_playermodel.left.height  				= 32;
+#endif
 	s_playermodel.left.focuspic				= MODEL_ARROWSL;
 
 	s_playermodel.right.generic.type	    = MTYPE_BITMAP;
 	s_playermodel.right.generic.flags		= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_playermodel.right.generic.callback	= PlayerModel_MenuEvent;
 	s_playermodel.right.generic.id			= ID_NEXTPAGE;
+#ifdef TA_DATA
+	s_playermodel.right.generic.x			= 125+MODEL_ARROWS_WIDTH/2;
+#else
 	s_playermodel.right.generic.x			= 125+61;
+#endif
 	s_playermodel.right.generic.y			= 340;
+#ifdef TA_DATA
+	s_playermodel.right.width  				= MODEL_ARROWS_WIDTH/2;
+	s_playermodel.right.height  			= MODEL_ARROWS_HEIGHT;
+#else
 	s_playermodel.right.width  				= 64;
 	s_playermodel.right.height  		    = 32;
+#endif
 	s_playermodel.right.focuspic			= MODEL_ARROWSR;
 
 	s_playermodel.back.generic.type	    = MTYPE_BITMAP;
@@ -745,4 +808,5 @@ void UI_PlayerModelMenu(int localClient) {
 	Menu_SetCursorToItem( &s_playermodel.menu, &s_playermodel.pics[s_playermodel.selectedmodel % MAX_MODELSPERPAGE] );
 }
 
+#endif
 

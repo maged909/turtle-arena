@@ -45,6 +45,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CONTENTS_NOTTEAM2		0x0100
 #define CONTENTS_NOBOTCLIP		0x0200
 
+#ifdef TA_WEAPSYS // XREAL
+// ZTM: Used for shootable projectiles.
+#define CONTENTS_SHOOTABLE		0x0400	// Tr3B: used for game entities that can be destroyed like railgun spheres
+#endif
+
 #define	CONTENTS_AREAPORTAL		0x8000
 
 #define	CONTENTS_PLAYERCLIP		0x10000
@@ -86,3 +91,14 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SURF_ALPHASHADOW		0x10000	// do per-pixel light shadow casting in q3map
 #define	SURF_NODLIGHT			0x20000	// don't dlight even if solid (solid lava, skies)
 #define SURF_DUST				0x40000 // leave a dust trail when walking on this surface
+
+#ifdef TA_MISC // MATERIALS
+// MT_DIRT
+#define SURF_DIRT				0x80000
+#define SURF_GRASS				0x100000
+#define SURF_WOOD				0x200000
+#define SURF_STONE				0x400000
+#define SURF_SPARKS				0x800000
+#define SURF_GLASS				0x1000000
+#define SURF_METAL				0x2000000
+#endif

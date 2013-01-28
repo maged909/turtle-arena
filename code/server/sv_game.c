@@ -33,6 +33,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../botlib/botlib.h"
 
+#ifdef TA_GAME_MODELS
+#ifdef IOQ3ZTM // BONES
+#include "../renderer/tr_types.h"
+#endif
+#endif
+
 botlib_export_t	*botlib_export;
 
 // these functions must be used instead of pointer arithmetic, because
@@ -312,6 +318,20 @@ static int	FloatAsInt( float f ) {
 	return fi.i;
 }
 
+#ifdef TA_GAME_MODELS
+qhandle_t	RE_RegisterModel( const char *name );
+int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame,
+					 float frac, const char *tagName );
+#ifdef IOQ3ZTM // BONES
+int RE_JointIndexForName(qhandle_t handle, const char *jointName);
+qboolean RE_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
+qboolean RE_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int legsFrame, int legsOldFrame, float legsBacklerp,
+								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
+								int headFrame, int headOldFrame, float headBacklerp);
+void R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
+#endif
+#endif
+
 /*
 ====================
 SV_GameSystemCalls
@@ -541,6 +561,27 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
 
+#ifdef TA_GAME_MODELS
+	case G_REGISTERMODEL:
+		return RE_RegisterModel( VMA(1) );
+	case G_LERPTAG:
+		return R_LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
+
+#ifdef IOQ3ZTM // BONES
+	case G_JOINTINDEXFORNAME:
+		return RE_JointIndexForName(args[1], VMA(2));
+	case G_SETUPSKELETON:
+		return RE_SetupSkeleton(args[1], VMA(2), args[3], args[4], VMF(5));
+	case G_SETUPPLAYERSKELETON:
+		return RE_SetupPlayerSkeleton(args[1], VMA(2), args[3], args[4], VMF(5),
+										args[6], args[7], VMF(8),
+										args[9], args[10], VMF(11));
+	case G_MAKESKELETONABSOLUTE:
+		R_MakeSkeletonAbsolute(VMA(1), VMA(2));
+		return 0;
+#endif
+#endif
+
 		//====================================
 
 	case BOTLIB_SETUP:
@@ -555,7 +596,11 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_START_FRAME:
 		return botlib_export->BotLibStartFrame( VMF(1) );
 	case BOTLIB_LOAD_MAP:
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+		return botlib_export->BotLibLoadMap( VMA(1), /*(bot_shareditem_t *)*/VMA(2) );
+#else
 		return botlib_export->BotLibLoadMap( VMA(1) );
+#endif
 	case BOTLIB_UPDATENTITY:
 		return botlib_export->BotLibUpdateEntity( args[1], VMA(2) );
 	case BOTLIB_TEST:
@@ -648,7 +693,11 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ea.EA_Attack( args[1] );
 		return 0;
 	case BOTLIB_EA_USE:
+#ifdef TA_HOLDSYS
+		botlib_export->ea.EA_Use( args[1], args[2] );
+#else
 		botlib_export->ea.EA_Use( args[1] );
+#endif
 		return 0;
 	case BOTLIB_EA_RESPAWN:
 		botlib_export->ea.EA_Respawn( args[1] );
@@ -675,9 +724,15 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ea.EA_MoveRight( args[1] );
 		return 0;
 
+#if defined TA_WEAPSYS_EX && !defined TA_WEAPSYS_EX_COMPAT // BOTLIB
+	case BOTLIB_EA_DROP_WEAPON:
+		botlib_export->ea.EA_DropWeapon( args[1] );
+		return 0;
+#else
 	case BOTLIB_EA_SELECT_WEAPON:
 		botlib_export->ea.EA_SelectWeapon( args[1], args[2] );
 		return 0;
+#endif
 	case BOTLIB_EA_JUMP:
 		botlib_export->ea.EA_Jump( args[1] );
 		return 0;
@@ -821,7 +876,11 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ai.BotSetAvoidGoalTime( args[1], args[2], VMF(3));
 		return 0;
 	case BOTLIB_AI_INIT_LEVEL_ITEMS:
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+		Com_Printf("BOTLIB_AI_INIT_LEVEL_ITEMS is unsupported!\n");
+#else
 		botlib_export->ai.BotInitLevelItems();
+#endif
 		return 0;
 	case BOTLIB_AI_UPDATE_ENTITY_ITEMS:
 		botlib_export->ai.BotUpdateEntityItems();
@@ -878,6 +937,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ai.BotInitMoveState( args[1], VMA(2) );
 		return 0;
 
+#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
 	case BOTLIB_AI_CHOOSE_BEST_FIGHT_WEAPON:
 		return botlib_export->ai.BotChooseBestFightWeapon( args[1], VMA(2) );
 	case BOTLIB_AI_GET_WEAPON_INFO:
@@ -893,6 +953,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AI_RESET_WEAPON_STATE:
 		botlib_export->ai.BotResetWeaponState( args[1] );
 		return 0;
+#endif
 
 	case BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION:
 		return botlib_export->ai.GeneticParentsAndChildSelection(args[1], VMA(2), VMA(3), VMA(4), VMA(5));

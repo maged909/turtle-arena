@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
-	<Workspace title="Spearmint workspace">
+	<Workspace title="Turtle Arena workspace">
 		<Project filename="bspc.cbp" />
 		<Project filename="quake3.cbp" active="1" />
 		<Project filename="game.cbp" />

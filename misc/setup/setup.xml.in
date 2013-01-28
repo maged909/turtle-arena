@@ -1,8 +1,8 @@
 <?xml version="1.0" standalone="yes"?>
-<install product="ioquake3"
-	desc="ioquake3"
+<install product="turtlearena"
+	desc="Turtle Arena"
 	version="VERSION"
-	update_url="http://www.ioquake3.org/updates.txt"
+	update_url="http://ztm.x10hosting.com/ta/updates.txt"
 	promptbinaries="yes"
 	reinstall="yes"
 	nopromptoverwrite="yes"
@@ -16,119 +16,71 @@
   <component name="Default" version="VERSION" default="yes">
 ifelse(HAVE_X86_64,yes,dnl
     <option install="true" arch="x86_64">
-     ioq3 x86_64 binaries
-     <binary libc="any" symlink="ioquake3" icon="quake3.png" name="ioquake3">ioquake3</binary>
+     Turtle Arena x86_64 binaries
+     <binary libc="any" symlink="turtlearena" icon="turtlearena.png" name="turtlearena">turtlearena</binary>
      <files>
-       ioquake3.x86_64.tar
+       turtlearena.x86_64.tar
      </files>
      <help>you need the binaries to play the game</help>
     </option>
 )dnl
 ifelse(HAVE_I386,yes,dnl
     <option install="true" if="|(x86,x86_64)">
-     ioq3 x86 (32 bit) binaries
-     <binary libc="any" symlink="ioquake3" icon="quake3.png" name="ioquake3">ioquake3</binary>
+     Turtle Arena x86 (32 bit) binaries
+     <binary libc="any" symlink="turtlearena" icon="turtlearena.png" name="turtlearena">turtlearena</binary>
      <files>
-       ioquake3.i386.tar
+       turtlearena.i386.tar
      </files>
      <help>you need the binaries to play the game</help>
     </option>
 )dnl
 ifelse(HAVE_PPC,yes,dnl
     <option install="true" if="|(ppc,ppc64)">
-     <binary libc="any" symlink="ioquake3" icon="quake3.png" name="ioquake3">ioquake3</binary>
-     ioq3 ppc binaries
+     <binary libc="any" symlink="turtlearena" icon="turtlearena.png" name="turtlearena">turtlearena</binary>
+     Turtle Arena ppc binaries
      <files>
-       ioquake3.ppc.tar
+       turtlearena.ppc.tar
      </files>
      <help>you need the binaries to play the game</help>
     </option>
 )dnl
 ifelse(HAVE_PPC64,yes,dnl
     <option install="true" arch="ppc64">
-     <binary libc="any" symlink="ioquake3" icon="quake3.png" name="ioquake3">ioquake3</binary>
-     ioq3 ppc64 binaries
+     <binary libc="any" symlink="turtlearena" icon="turtlearena.png" name="turtlearena">turtlearena</binary>
+     Turtle Arena ppc64 binaries
      <files>
-       ioquake3.ppc64.tar
+       turtlearena.ppc64.tar
      </files>
      <help>you need the binaries to play the game</help>
     </option>
 )dnl
+    <option install="true">
+     Music
+     <files>
+       base/assets2-music.pk3
+     </files>
+    </option>
     <option install="true">
      Desktop menu entries
      <files mode="0755">
        xdg-desktop-menu
      </files>
      <files>
-       ioquake3.desktop.in
+       turtlearena.desktop.in
      </files>
     </option>
 
     <option install="true" show="false">
       shared data
       <files>
-	quake3.png
-	COPYING
-	voip-readme.txt
+	base/assets0.pk3
+	base/assets1-qvms.pk3
+	turtlearena.png
+	CODE_LICENSE
+	CC-BY-SA-3.0
+	COPYRIGHTS
+	CREDITS
       </files>
     </option>
   </component>
-ifelse(HAVE_PATCHPK3,yes,dnl
-
-  <component name="Quake III Arena" version="VERSION">
-    <eula>
-      id_patch_pk3s_Q3A_EULA.txt
-    </eula>
-
-   <option install="true">
-     Quake III Arena Point Release 1.32 data files
-     <files path="baseq3">
-       idpatchpk3s.tar
-     </files>
-   </option>
-
-   <option>
-     <help>
-       If you don't select this you need to copy pak0.pk3 to the baseq3 directory manually.
-     </help>
-     Quake III Arena CDROM data
-     <files cdromid="CD 1" path="baseq3"
-       md5sum="1197ca3df1e65f3c380f8abc10ca43bf"
-       size="458M" mode="0664">
-       Quake3/baseq3/pak0.pk3
-     </files>
-   </option>
-  </component>
-
-  <component name="Quake III Team Arena" version="VERSION">
-    <eula>
-      id_patch_pk3s_Q3A_EULA.txt
-    </eula>
-
-   <option install="true">
-     Quake III Team Arena Point Release 1.32 data files
-     <files path="missionpack">
-       idtapatchpk3s.tar
-     </files>
-   </option>
-   <option>
-     <help>
-       If you don't select this you need to copy the TA pak0.pk3 to the missionpack directory manually.
-     </help>
-     Quake III Team Arena CDROM data
-     <files cdromid="CD 2" path="missionpack" size="336M"
-       md5sum="e8ba9e3bf06210930bc0e7fdbcdd01c2" mode="0644">
-       Setup/missionpack/pak0.pk3
-     </files>
-   </option>
-  </component>
-
-  <cdrom id="CD 1" name="Quake 3 Arena installation CD">
-    Quake3/baseq3/pak0.pk3
-  </cdrom>
-  <cdrom id="CD 2" name="Quake 3 Team Arena installation CD">
-    Setup/missionpack/pak0.pk3
-  </cdrom>
-)dnl
-
 </install>

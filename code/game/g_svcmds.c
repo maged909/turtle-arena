@@ -371,6 +371,16 @@ void	Svcmd_EntityList_f (void) {
 		case ET_GRAPPLE:
 			G_Printf("ET_GRAPPLE          ");
 			break;
+#ifdef TA_ENTSYS
+		case ET_MISCOBJECT:
+			G_Printf("ET_MISCOBJECT       ");
+			break;
+#endif
+#ifdef TA_NPCSYS
+		case ET_NPC:
+			G_Printf("ET_NPC              ");
+			break;
+#endif
 		default:
 			G_Printf("%3i                 ", check->s.eType);
 			break;
@@ -457,6 +467,26 @@ void	Svcmd_ListIPs_f( void ) {
 	trap_Cmd_ExecuteText( EXEC_NOW, "g_banIPs\n" );
 }
 
+#ifdef TA_SP
+/*
+===================
+Svcmd_Savegame_f
+===================
+*/
+void Svcmd_Savegame_f(void) {
+	char savegame[MAX_QPATH];
+
+	if ( trap_Argc() < 2 ) {
+		G_Printf("Usage: savegame <savename>\n");
+		return;
+	}
+
+	trap_Argv( 1, savegame, sizeof( savegame ) );
+
+	G_SaveGame(savegame);
+}
+#endif
+
 #if 0
 /*
 ===================
@@ -474,7 +504,9 @@ struct svcmd
   qboolean dedicated;
   void     ( *function )( void );
 } svcmds[ ] = {
+#ifndef TA_SP
   { "abort_podium", qfalse, Svcmd_AbortPodium_f },
+#endif
   { "addbot", qfalse, Svcmd_AddBot_f },
   { "addip", qfalse, Svcmd_AddIP_f },
   { "botlist", qfalse, Svcmd_BotList_f },
@@ -483,6 +515,9 @@ struct svcmd
   { "game_memory", qfalse, Svcmd_GameMem_f },
   { "listip", qfalse, Svcmd_ListIPs_f },
   { "removeip", qfalse, Svcmd_RemoveIP_f },
+#ifdef TA_SP
+  { "savegame", qfalse, Svcmd_Savegame_f },
+#endif
   //{ "say", qtrue, Svcmd_Say_f },
 };
 

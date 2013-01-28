@@ -68,6 +68,7 @@ LAN_LoadCachedServers
 ====================
 */
 void LAN_LoadCachedServers( void ) {
+#ifndef TURTLEARENA // Don't cache servers, just always get new list.
 	int size;
 	fileHandle_t fileIn;
 	cls.numglobalservers = cls.numfavoriteservers = 0;
@@ -85,6 +86,7 @@ void LAN_LoadCachedServers( void ) {
 		}
 		FS_FCloseFile(fileIn);
 	}
+#endif
 }
 
 /*
@@ -93,6 +95,7 @@ LAN_SaveServersToCache
 ====================
 */
 void LAN_SaveServersToCache( void ) {
+#ifndef TURTLEARENA // Don't cache servers, just always get new list.
 	int size;
 	fileHandle_t fileOut = FS_SV_FOpenFileWrite("servercache.dat");
 	FS_Write(&cls.numglobalservers, sizeof(int), fileOut);
@@ -102,6 +105,7 @@ void LAN_SaveServersToCache( void ) {
 	FS_Write(&cls.globalServers, sizeof(cls.globalServers), fileOut);
 	FS_Write(&cls.favoriteServers, sizeof(cls.favoriteServers), fileOut);
 	FS_FCloseFile(fileOut);
+#endif
 }
 
 
@@ -410,6 +414,30 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 			res = Q_stricmp( server1->mapName, server2->mapName );
 			break;
 		case SORT_CLIENTS:
+#ifdef IOQ3ZTM // G_HUMANPLAYERS
+			{
+				int clients1, clients2;
+
+				if (!Cvar_VariableIntegerValue("ui_browserShowBots")) {
+					clients1 = server1->g_humanplayers;
+					clients2 = server2->g_humanplayers;
+				}
+				else {
+					clients1 = server1->clients;
+					clients2 = server2->clients;
+				}
+
+				if (clients1 < clients2) {
+					res = -1;
+				}
+				else if (clients1 > clients2) {
+					res = 1;
+				}
+				else {
+					res = 0;
+				}
+			}
+#else
 			if (server1->clients < server2->clients) {
 				res = -1;
 			}
@@ -419,6 +447,7 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 			else {
 				res = 0;
 			}
+#endif
 			break;
 		case SORT_GAME:
 			if (server1->gameType < server2->gameType) {
@@ -854,8 +883,18 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_R_ADDREFENTITYTOSCENE:
+#ifdef IOQ3ZTM // BONES
+		re.AddRefEntityToScene( VMA(1), NULL );
+#else
 		re.AddRefEntityToScene( VMA(1) );
+#endif
 		return 0;
+
+#ifdef IOQ3ZTM // BONES
+	case UI_R_ADDREFENTITYTOSCENE_CUSTOMSKELETON:
+		re.AddRefEntityToScene( VMA(1), VMA(2) );
+		return 0;
+#endif
 
 	case UI_R_ADDPOLYTOSCENE:
 		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
@@ -1076,7 +1115,19 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 	case UI_MEMORY_REMAINING:
 		return Hunk_MemoryRemaining();
 
-
+#ifdef IOQ3ZTM // BONES
+	case UI_R_JOINTINDEXFORNAME:
+		return re.JointIndexForName(args[1], VMA(2));
+	case UI_R_SETUPSKELETON:
+		return re.SetupSkeleton(args[1], VMA(2), args[3], args[4], VMF(5));
+	case UI_R_SETUPPLAYERSKELETON:
+		return re.SetupPlayerSkeleton(args[1], VMA(2), args[3], args[4], VMF(5),
+										args[6], args[7], VMF(8),
+										args[9], args[10], VMF(11));
+	case UI_R_MAKESKELETONABSOLUTE:
+		re.MakeSkeletonAbsolute(VMA(1), VMA(2));
+		return 0;
+#endif
 
 	case UI_S_STOPBACKGROUNDTRACK:
 		S_StopBackgroundTrack();

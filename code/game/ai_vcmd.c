@@ -130,7 +130,7 @@ void BotVoiceChat_Offense(bot_state_t *bs, int client, int mode) {
 		BotVoiceChat_GetFlag(bs, client, mode);
 		return;
 	}
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HARVESTER
 	if (gametype == GT_HARVESTER) {
 		//
 		bs->decisionmaker = client;
@@ -179,7 +179,11 @@ BotVoiceChat_Defend
 */
 void BotVoiceChat_Defend(bot_state_t *bs, int client, int mode) {
 #ifdef MISSIONPACK
-	if ( gametype == GT_OBELISK || gametype == GT_HARVESTER) {
+	if ( gametype == GT_OBELISK
+#ifdef MISSIONPACK_HARVESTER
+	|| gametype == GT_HARVESTER
+#endif
+	) {
 		//
 		switch(BotTeam(bs)) {
 			case TEAM_RED: memcpy(&bs->teamgoal, &redobelisk, sizeof(bot_goal_t)); break;

@@ -710,6 +710,206 @@ void S_StopMusic_f( void )
 
 //=============================================================================
 
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+typedef struct
+{
+	char name[MAX_QPATH];
+
+	char intro[MAX_QPATH];
+	char loop[MAX_QPATH];
+
+	float volume; // Multiply by normal volume
+
+} musicDef_t;
+
+#define MAX_MUSICDEFS 128
+musicDef_t musicDefs[MAX_MUSICDEFS];
+
+void S_GetMusicForIntro(char *intro, char *loop, float *volume)
+{
+	int i;
+	char name[MAX_QPATH];
+
+	if (!intro || !*intro) {
+		return;
+	}
+
+	// if loop is specified don't use music script?
+	//if (loop && *loop && strcmp(intro, loop) != 0) {
+	//	return;
+	//}
+
+	COM_StripExtension(intro, name, sizeof(name));
+
+	for (i = 0; i < MAX_MUSICDEFS; i++)
+	{
+		if (!musicDefs[i].name[0]) {
+			break;
+		}
+
+		if (Q_stricmp(musicDefs[i].name, name) == 0) {
+			strncpy(intro, musicDefs[i].intro, MAX_QPATH);
+
+			if (musicDefs[i].loop[0]) {
+				strncpy(loop, musicDefs[i].loop, MAX_QPATH);
+			} else {
+				strncpy(loop, intro, MAX_QPATH);
+			}
+
+			if (volume) {
+				*volume = musicDefs[i].volume;
+			}
+			break;
+		}
+	}
+}
+
+void S_LoadMusicFile(const char *filename)
+{
+	char *buffer;
+	char *p;
+	char *token;
+	musicDef_t *musicDef;
+	int i;
+
+	FS_ReadFile( filename, (void **)&buffer );
+
+	if ( !buffer ) {
+		Com_Printf("Warning: Couldn't load %s", filename );
+		return;
+	}
+
+	p = buffer;
+
+	while (1)
+	{
+		musicDef = NULL;
+		for (i = 0; i < MAX_MUSICDEFS; i++)
+		{
+			if (!musicDefs[i].name[0]) {
+				musicDef = &musicDefs[i];
+				break;
+			}
+		}
+
+		if (!musicDef) {
+			Com_Printf("Warning: Out of musicDefs in %s!\n", filename);
+			return;
+		}
+
+		token = COM_ParseExt( &p, qtrue );
+		if ( token[0] == 0 ) {
+			break;
+		}
+
+		// token is name
+		COM_StripExtension(token, musicDef->name, sizeof(musicDef->name));
+
+		token = COM_ParseExt(&p, qtrue);
+		if(token[0] != '{' && token[1] != '\0')
+		{
+			Com_Printf("%s:%s Missing begining bracket\n", filename, musicDef->name);
+			break;
+		}
+
+		// Set defaults
+		musicDef->volume = 1.0f;
+
+		// Parse keywords
+		while (1)
+		{
+			token = COM_ParseExt( &p, qtrue );
+			if ( token[0] == 0 ) {
+				Com_Printf("%s:%s Missing ending bracket!\n", filename, musicDef->name);
+				break;
+			}
+			else if(token[0] == '}' && token[1] == '\0')
+			{
+				// end of musicdef
+				break;
+			}
+
+			if ( Q_stricmp(token, "intro") == 0 ) {
+				token = COM_ParseExt( &p, qtrue );
+				if ( token[0] == 0 ) {
+					Com_Printf("%s:%s Missing ending bracket!\n", filename, musicDef->name);
+					break;
+				}
+
+				Q_strncpyz(musicDef->intro, token, sizeof(musicDef->intro));
+				continue;
+			}
+			else if ( Q_stricmp(token, "loop") == 0 ) {
+				token = COM_ParseExt( &p, qtrue );
+				if ( token[0] == 0 ) {
+					Com_Printf("%s:%s Missing ending bracket!\n", filename, musicDef->name);
+					break;
+				}
+
+				Q_strncpyz(musicDef->loop, token, sizeof(musicDef->loop));
+				continue;
+			}
+			else if ( Q_stricmp(token, "volume") == 0 ) {
+				token = COM_ParseExt( &p, qtrue );
+				if ( token[0] == 0 ) {
+					Com_Printf("%s:%s Missing ending bracket!\n", filename, musicDef->name);
+					break;
+				}
+
+				// Limit to 0.1 to 3.0...
+				musicDef->volume = Com_Clamp(0.1f, 3.0f, atof(token));
+				continue;
+			}
+
+			Com_Printf("%s:%s Unknown token %s!\n", filename, musicDef->name, token);
+		}
+		Com_DPrintf("Loaded %s from %s!\n",  musicDef->name, filename);
+	}
+}
+
+/*
+====================
+ScanAndLoadShaderFiles
+
+Init music scripts. Finds and loads all .music files
+=====================
+*/
+#define	MAX_MUSIC_FILES	4096
+void S_InitMusicDefs(void)
+{
+	char **musicFiles;
+	int numMusicFiles;
+	int i;
+
+	// Clean memory
+	memset(musicDefs, 0, sizeof(musicDefs));
+
+	// Load from music/musiclist.txt and music/*.music
+	S_LoadMusicFile("music/musiclist.txt");
+
+	// scan for music files
+	musicFiles = FS_ListFiles( "music", ".music", &numMusicFiles );
+
+	if ( !musicFiles || !numMusicFiles ) {
+		// Music files are optional
+		return;
+	}
+
+	if ( numMusicFiles > MAX_MUSIC_FILES ) {
+		numMusicFiles = MAX_MUSIC_FILES;
+	}
+
+	// load and parse shader files
+	for ( i = 0; i < numMusicFiles; i++ )
+	{
+		char filename[MAX_QPATH];
+
+		Com_sprintf( filename, sizeof( filename ), "music/%s", musicFiles[i] );
+		S_LoadMusicFile(filename);
+	}
+}
+#endif
+
 /*
 =================
 S_Init
@@ -723,7 +923,7 @@ void S_Init( void )
 	Com_Printf( "------ Initializing Sound ------\n" );
 
 	s_volume = Cvar_Get( "s_volume", "0.8", CVAR_ARCHIVE );
-	s_musicVolume = Cvar_Get( "s_musicvolume", "0.25", CVAR_ARCHIVE );
+	s_musicVolume = Cvar_Get( "s_musicvolume", "0.5", CVAR_ARCHIVE );
 	s_muted = Cvar_Get("s_muted", "0", CVAR_ROM);
 	s_doppler = Cvar_Get( "s_doppler", "1", CVAR_ARCHIVE );
 	s_backend = Cvar_Get( "s_backend", "", CVAR_ROM );
@@ -767,6 +967,10 @@ void S_Init( void )
 		} else {
 			Com_Printf( "Sound initialization failed.\n" );
 		}
+
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+		S_InitMusicDefs();
+#endif
 	}
 
 	Com_Printf( "--------------------------------\n");

@@ -196,23 +196,9 @@ typedef struct
 // Only requires paks for gamenames which are used (and aren't flagged as optional).
 const purePak_t com_purePaks[] =
 {
-	// pak3 and pak7 only contain qvms, which are over-ridden by qvms in pak8
-	{BASEQ3, "pak0", 4204185745u, 0},
-	{BASEQ3, "pak1", 4193093146u, 0},
-	{BASEQ3, "pak2", 2353701282u, 0},
-	{BASEQ3, "pak3", 3321918099u, PAK_OPTIONAL},
-	{BASEQ3, "pak4", 2809125413u, 0},
-	{BASEQ3, "pak5", 1185311901u, 0},
-	{BASEQ3, "pak6", 750524939u, 0},
-	{BASEQ3, "pak7", 2842227859u, PAK_OPTIONAL},
-	{BASEQ3, "pak8", 3662040954u, 0},
-
-	{"demoq3", "pak0", 1042450890u, 0},
-
-	{BASETA, "pak0", 946490770u, 0},
-	{BASETA, "pak1", 1414087181u, 0},
-	{BASETA, "pak2", 409244605u, 0},
-	{BASETA, "pak3", 648653547u, 0},
+	{BASEGAME, "assets0", 2030282223u, 0},
+	{BASEGAME, "assets1-qvms", 32394176u, 0},
+	{BASEGAME, "assets2-music", 1273935545u, PAK_OPTIONAL},
 
 	{NULL, NULL, 0, 0}
 };
@@ -1254,6 +1240,19 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						   !FS_IsExt(filename, ".bot", len) &&
 						   !FS_IsExt(filename, ".arena", len) &&
 						   !FS_IsExt(filename, ".menu", len) &&
+#ifdef IOQ3ZTM // USE_FREETYPE
+						   !FS_IsExt(filename, ".ttf", len) &&
+						   !FS_IsExt(filename, ".otf", len) &&
+#endif
+#ifdef TA_ITEMSYS
+						   !FS_IsExt(filename, ".item", len) &&
+#ifdef TA_WEAPSYS
+						   !FS_IsExt(filename, ".weap", len) &&
+#endif
+#endif
+#ifdef TA_NPCSYS
+						   !FS_IsExt(filename, ".npc", len) &&
+#endif
 						   Q_stricmp(filename, "game.qvm") != 0 &&
 						   !strstr(filename, "levelshots"))
 						{
@@ -1319,6 +1318,9 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 			   !FS_IsExt(filename, ".game", len) &&		// menu files
 			   !FS_IsExt(filename, ".dat", len) &&		// for journal files
 			   !strstr(filename, "fonts") &&
+#ifdef IOQ3ZTM // Allow custom music on pure servers
+			   !strstr(filename, "music") &&
+#endif
 			   !FS_IsDemoExt(filename, len))			// demos
 			{
 				*file = 0;
@@ -2490,7 +2492,11 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 
 	if (Q_stricmp(extension, "$videos") == 0)
 	{
-		const char *extensions[] = { "RoQ", "roq" };
+		const char *extensions[] = { "RoQ", "roq"
+#if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
+			, "ogm", "ogv"
+#endif
+			};
 		int extNamesSize = ARRAY_LEN(extensions);
 		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
 	}
@@ -2734,6 +2740,18 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 					nDescLen = fread(descPath, 1, 48, file);
 					if (nDescLen >= 0) {
 						descPath[nDescLen] = '\0';
+#ifdef IOQ3ZTM // Remove newline from description.txt
+						nDescLen--;
+
+						// Remove \n, \r\n, and \r
+						if (nDescLen >= 0 && descPath[nDescLen] == '\n') {
+							descPath[nDescLen] = '\0';
+							nDescLen--;
+						}
+						if (nDescLen >= 0 && descPath[nDescLen] == '\r') {
+							descPath[nDescLen] = '\0';
+						}
+#endif
 					}
 					FS_FCloseFile(descHandle);
 				} else {
@@ -3394,6 +3412,37 @@ qboolean FS_BaseFileExists( const char *file )
 	return qfalse;
 }
 
+#ifdef IOQ3ZTM // PORTABLE_APP
+/*
+================
+FS_PortableMode
+
+Save data in "setting", if there is a settings/portable file that contains "yes".
+================
+*/
+qboolean FS_PortableMode(void)
+{
+	FILE *f;
+	char *testpath;
+	char buf[4];
+
+	testpath = FS_BuildOSPath( fs_basepath->string, "settings", "portable" );
+
+	f = fopen( testpath, "rb" );
+	if (f) {
+		if (fread(buf, sizeof(buf), 1, f) != 1) {
+			// Read error
+			buf[0] = '\0';
+		}
+		fclose( f );
+	} else {
+		return qfalse;
+	}
+
+	return (buf[0] && Q_stricmpn(buf, "yes", 3) == 0);
+}
+#endif
+
 /*
 ================
 FS_Startup
@@ -3412,6 +3461,18 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
 	fs_basegame = Cvar_Get ("fs_basegame", "", CVAR_INIT );
+#ifdef IOQ3ZTM // PORTABLE_APP
+	if (FS_PortableMode())
+	{
+		static char settings[ MAX_OSPATH ] = { 0 };
+
+		strcpy(settings, fs_basepath->string);
+		strcat(settings, "/settings");
+
+		homePath = settings;
+	}
+	else
+#endif
 	homePath = Sys_DefaultHomePath();
 	if (!homePath || !homePath[0]) {
 		homePath = fs_basepath->string;

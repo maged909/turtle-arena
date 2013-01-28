@@ -111,7 +111,9 @@ void AAS_InitSettings(void)
 	aassettings.rs_startwalkoffledge		= LibVarValue("rs_startwalkoffledge", "70");
 	aassettings.rs_startjump				= LibVarValue("rs_startjump", "300");
 	aassettings.rs_rocketjump				= LibVarValue("rs_rocketjump", "500");
+#ifndef TA_WEAPSYS
 	aassettings.rs_bfgjump					= LibVarValue("rs_bfgjump", "500");
+#endif
 	aassettings.rs_jumppad					= LibVarValue("rs_jumppad", "250");
 	aassettings.rs_aircontrolledjumppad		= LibVarValue("rs_aircontrolledjumppad", "300");
 	aassettings.rs_funcbob					= LibVarValue("rs_funcbob", "300");
@@ -351,6 +353,7 @@ float AAS_RocketJumpZVelocity(vec3_t origin)
 	//rocket radius damage is 120 (p_weapon.c: Weapon_RocketLauncher_Fire)
 	return AAS_WeaponJumpZVelocity(origin, 120);
 } //end of the function AAS_RocketJumpZVelocity
+#ifndef TA_WEAPSYS
 //===========================================================================
 //
 // Parameter:			-
@@ -362,6 +365,7 @@ float AAS_BFGJumpZVelocity(vec3_t origin)
 	//bfg radius damage is 1000 (p_weapon.c: weapon_bfg_fire)
 	return AAS_WeaponJumpZVelocity(origin, 120);
 } //end of the function AAS_BFGJumpZVelocity
+#endif
 //===========================================================================
 // applies ground friction to the given velocity
 //
@@ -371,6 +375,7 @@ float AAS_BFGJumpZVelocity(vec3_t origin)
 //===========================================================================
 void AAS_Accelerate(vec3_t velocity, float frametime, vec3_t wishdir, float wishspeed, float accel)
 {
+#ifndef TURTLEARENA // Use proper acceleration
 	// q2 style
 	int			i;
 	float		addspeed, accelspeed, currentspeed;
@@ -388,6 +393,24 @@ void AAS_Accelerate(vec3_t velocity, float frametime, vec3_t wishdir, float wish
 	for (i=0 ; i<3 ; i++) {
 		velocity[i] += accelspeed*wishdir[i];	
 	}
+#else
+	// proper way (avoids strafe jump maxspeed bug), but feels bad
+	vec3_t		wishVelocity;
+	vec3_t		pushDir;
+	float		pushLen;
+	float		canPush;
+
+	VectorScale( wishdir, wishspeed, wishVelocity );
+	VectorSubtract( wishVelocity, velocity, pushDir );
+	pushLen = VectorNormalize( pushDir );
+
+	canPush = accel*frametime*wishspeed;
+	if (canPush > pushLen) {
+		canPush = pushLen;
+	}
+
+	VectorMA( velocity, canPush, pushDir, velocity );
+#endif
 } //end of the function AAS_Accelerate
 //===========================================================================
 // applies ground friction to the given velocity

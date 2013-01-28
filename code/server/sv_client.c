@@ -1376,6 +1376,32 @@ void SV_UserinfoChanged( player_t *player ) {
 
 }
 
+#ifdef TA_GAME_MODELS
+/*
+==================
+SV_UpdateUserinfo
+
+Called when models are no longer valid,
+game needs to re-register them
+==================
+*/
+void SV_UpdateUserinfos(void) {
+	int i;
+
+	if (!gvm) {
+		return;
+	}
+
+	for (i = 0; i < sv_maxclients->integer; i++) {
+		if (svs.clients[i].state != CS_ACTIVE) {
+			continue;
+		}
+
+		// call prog code to reload player model
+		VM_Call( gvm, GAME_CLIENT_USERINFO_CHANGED, i );
+	}
+}
+#endif
 
 /*
 ==================

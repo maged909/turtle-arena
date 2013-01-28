@@ -263,6 +263,401 @@ void CG_ClearClipRegion( void ) {
 }
 
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+/*
+=================
+UI_DrawFontProportionalString
+=================
+*/
+void UI_DrawFontProportionalString( font_t *font,
+#ifndef TA_DATA
+				font_t *fontGlow,
+#endif
+				int x, int y, const char* str, int style, vec4_t color )
+{
+	vec4_t	drawcolor;
+	int		width;
+
+	switch( style & UI_FORMATMASK ) {
+		case UI_CENTER:
+			width = Com_FontStringWidth(font, str, 0);
+			x -= width / 2;
+			break;
+
+		case UI_RIGHT:
+			width = Com_FontStringWidth(font, str, 0);
+			x -= width;
+			break;
+
+		case UI_LEFT:
+		default:
+			break;
+	}
+
+	if ( style & UI_DROPSHADOW ) {
+		drawcolor[0] = drawcolor[1] = drawcolor[2] = 0;
+		drawcolor[3] = color[3];
+		CG_DrawFontStringColor( font, x+2, y+2, str, drawcolor );
+	}
+
+	if ( style & UI_INVERSE ) {
+		drawcolor[0] = color[0] * 0.8;
+		drawcolor[1] = color[1] * 0.8;
+		drawcolor[2] = color[2] * 0.8;
+		drawcolor[3] = color[3];
+		CG_DrawFontStringColor( font, x, y, str, drawcolor );
+		return;
+	}
+
+	if ( style & UI_PULSE ) {
+		drawcolor[0] = color[0] * 0.8;
+		drawcolor[1] = color[1] * 0.8;
+		drawcolor[2] = color[2] * 0.8;
+		drawcolor[3] = color[3];
+		CG_DrawFontStringColor( font, x, y, str, color );
+
+#ifdef TURTLEARENA // ZTM: This is like the UI Main menu text drawing, but its not.
+        // ZTM: hack-ish thing to do?...
+        // text_color_highlight is UI local...
+		drawcolor[0] = 1.00f;//text_color_highlight[0];
+		drawcolor[1] = 0.43f;//text_color_highlight[1];
+		drawcolor[2] = 0.00f;//text_color_highlight[2];
+#else
+		drawcolor[0] = color[0];
+		drawcolor[1] = color[1];
+		drawcolor[2] = color[2];
+#endif
+		drawcolor[3] = 0.5 + 0.5 * sin( cg.time / PULSE_DIVISOR );
+#ifdef TA_DATA
+		CG_DrawFontStringColor( font, x, y, str, drawcolor );
+#else
+		CG_DrawFontStringColor( fontGlow, x, y, str, drawcolor );
+#endif
+		return;
+	}
+
+	CG_DrawFontStringColor( font, x, y, str, color );
+}
+
+qboolean CG_LoadFont(font_t *font, const char *ttfName, const char *shaderName, int pointSize,
+			int shaderCharWidth, float fontKerning)
+{
+	font->fontInfo.name[0] = 0;
+	font->fontShader = 0;
+	font->pointSize = pointSize;
+	font->kerning = fontKerning;
+
+	font->shaderCharWidth = shaderCharWidth;
+
+	if (ttfName[0] != '\0') {
+		trap_R_RegisterFont(ttfName, pointSize, &font->fontInfo);
+
+		if (font->fontInfo.name[0]) {
+			return qtrue;
+		}
+	}
+
+	if (shaderName[0] != '\0') {
+		font->fontShader = trap_R_RegisterShaderNoMip(shaderName);
+
+		if (font->fontShader) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+** CG_DrawFontChar
+** Characters are drawn at native screen resolution, unless adjustFrom640 is set to qtrue
+*/
+void CG_DrawFontChar( font_t *font, float scale, float x, float y, int ch, qboolean adjustFrom640 )
+{
+	float	ax, ay, aw, ah;
+	float	useScale;
+
+	if (!font) {
+		return;
+	}
+
+	ch &= 0xff;
+
+    if (ch == ' ') {
+		return;
+	}
+
+#if 0 // SCR_DrawChar
+	if ( y < -font->pointSize ) {
+		return;
+	}
+#endif
+
+	useScale = Com_FontScale( font, scale );
+
+    if (font->fontInfo.name[0]) {
+		glyphInfo_t *glyph;
+		float yadj;
+		float xadj;
+
+		y += Com_FontCharHeight( font, scale );
+
+		glyph = &font->fontInfo.glyphs[ch];
+
+		yadj = useScale * glyph->top;
+		xadj = useScale * glyph->left;
+
+		ax = x+xadj;
+		ay = y-yadj;
+		aw = useScale * glyph->imageWidth;
+		ah = useScale * glyph->imageHeight;
+
+		if (adjustFrom640) {
+			CG_AdjustFrom640( &ax, &ay, &aw, &ah );
+		}
+
+		trap_R_DrawStretchPic( ax, ay, aw, ah,
+						   glyph->s, glyph->t,
+						   glyph->s2, glyph->t2,
+						   glyph->glyph );
+    } else {
+		int row, col;
+		float frow, fcol;
+		float size;
+
+#if 1 // SCR_DrawChar
+		if ( y < -font->pointSize ) {
+			return;
+		}
+#endif
+
+		size = useScale * font->pointSize;
+
+		ax = x;
+		ay = y;
+		aw = size;
+		ah = size;
+
+		if (adjustFrom640) {
+			CG_AdjustFrom640( &ax, &ay, &aw, &ah );
+		}
+
+		row = ch>>4;
+		col = ch&15;
+
+		frow = row*0.0625;
+		fcol = col*0.0625;
+		size = 0.0625;
+
+		trap_R_DrawStretchPic( ax, ay, aw, ah,
+						   fcol, frow,
+						   fcol + size, frow + size,
+						   font->fontShader );
+    }
+}
+
+/*
+==================
+CG_DrawFontStringExt
+
+Draws a multi-colored string with a optional drop shadow, optionally forcing
+to a fixed color.
+==================
+*/
+void CG_DrawFontStringExt( font_t *font, float scale, float x, float y, const char *string, const float *setColor, qboolean forceColor,
+		qboolean noColorEscape, int drawShadow, qboolean adjustFrom640, float adjust, int limit, float *maxX )
+{
+	vec4_t		color;
+	vec4_t		black;
+	const char	*s;
+	float		xx;
+	int			cnt;
+	int			maxChars;
+	float		max;
+
+	if (!font || !string || !*string) {
+		return;
+	}
+
+	if (maxX) {
+		max = *maxX;
+	} else {
+		max = 0;
+	}
+
+	if (adjust <= 0) {
+		adjust = 0;
+	}
+
+	maxChars = strlen(string);
+	if (limit > 0 && maxChars > limit) {
+		maxChars = limit;
+	}
+
+	if (scale <= 0) {
+		// Use auto scale based on font size
+		scale = font->pointSize / 48.0f;
+	}
+
+	if (x == CENTER_X) {
+		// center aligned
+		float w;
+
+		w = Com_FontStringWidthExt(font, string, scale, limit, qtrue);
+		x = (SCREEN_WIDTH - w) * 0.5f;
+	} else if (x < 0) {
+		// right aligned, offset by x
+		float w;
+
+		w = Com_FontStringWidthExt(font, string, scale, limit, qtrue);
+		x = SCREEN_WIDTH + x - w;
+	}
+
+	// draw the colored text
+	s = string;
+	xx = x;
+	cnt = 0;
+	Vector4Copy(setColor, color);
+	trap_R_SetColor( color );
+	while ( *s && cnt < maxChars) {
+#if 1 // SCR_DrawStringExt // Is one way better then the other?
+		if ( !noColorEscape && Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				Com_Memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
+				color[3] = setColor[3];
+				trap_R_SetColor( color );
+			}
+			s += 2;
+			continue;
+		}
+#else // SCR_DrawSmallStringExt
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				Com_Memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
+				color[3] = setColor[3];
+				trap_R_SetColor( color );
+			}
+			if ( !noColorEscape ) {
+				s += 2;
+				continue;
+			}
+		}
+#endif
+
+		if (maxX && x + Com_FontCharWidth(font, *s, 0 ) > max) {
+			*maxX = 0;
+			break;
+		}
+
+		if (drawShadow != 0)
+		{
+			float offset = drawShadow;
+
+			// draw the drop shadow
+			black[0] = black[1] = black[2] = 0;
+			black[3] = color[3];
+			trap_R_SetColor( black );
+
+			CG_DrawFontChar( font, scale, xx+offset, y+offset, *s, adjustFrom640 );
+
+			trap_R_SetColor( color );
+		}
+
+        CG_DrawFontChar( font, scale, xx, y, *s, adjustFrom640 );
+        xx += Com_FontCharWidth( font, *s, scale ) + adjust * scale;
+        if (maxX) {
+			*maxX = xx;
+        }
+        cnt++;
+		s++;
+	}
+	trap_R_SetColor( NULL );
+}
+
+void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
+		qboolean forceColor, qboolean shadow, int charWidth, int charHeight, int maxChars )
+{
+	font_t *font;
+	float scale;
+	float maxX = x + maxChars * charWidth;
+
+	if (charWidth >= GIANTCHAR_WIDTH && charHeight >= GIANTCHAR_HEIGHT) {
+		font = &cgs.media.fontGiant;
+	} else if (charWidth >= BIGCHAR_WIDTH && charHeight >= BIGCHAR_HEIGHT) {
+		font = &cgs.media.fontBig;
+	} else if (charWidth >= SMALLCHAR_WIDTH && charHeight >= SMALLCHAR_HEIGHT) {
+		font = &cgs.media.fontSmall;
+	} else {
+		font = &cgs.media.fontTiny;
+	}
+
+	scale = charHeight / 48.0f;
+
+	CG_DrawFontStringExt( font, scale, x, y, string, setColor, forceColor,
+		qfalse, shadow ? 2 : 0, qtrue, 0, maxChars, maxX > x ? &maxX : NULL );
+}
+
+void CG_DrawFontString( font_t *font, int x, int y, const char *s, float alpha ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	CG_DrawFontStringExt( font, 0, x, y, s, color, qfalse, qfalse, 2, qtrue, 0, 0, NULL );
+}
+
+void CG_DrawFontStringColor( font_t *font, int x, int y, const char *s, vec4_t color ) {
+	CG_DrawFontStringExt( font, 0, x, y, s, color, qtrue, qfalse, 2, qtrue, 0, 0, NULL );
+}
+
+void CG_DrawGiantString( int x, int y, const char *s, float alpha ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	CG_DrawFontStringExt( &cgs.media.fontGiant, 0, x, y, s, color, qfalse, qfalse, 2, qtrue, 0, 0, NULL );
+}
+
+void CG_DrawGiantStringColor( int x, int y, const char *s, vec4_t color ) {
+	CG_DrawFontStringExt( &cgs.media.fontGiant, 0, x, y, s, color, qtrue, qfalse, 2, qtrue, 0, 0, NULL );
+}
+
+// Keep big and small for compatiblity
+void CG_DrawBigString( int x, int y, const char *s, float alpha ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	CG_DrawFontStringExt( &cgs.media.fontBig, 0, x, y, s, color, qfalse, qfalse, 2, qtrue, 0, 0, NULL );
+}
+
+void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color ) {
+	CG_DrawFontStringExt( &cgs.media.fontBig, 0, x, y, s, color, qtrue, qfalse, 2, qtrue, 0, 0, NULL );
+}
+
+void CG_DrawSmallString( int x, int y, const char *s, float alpha ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	CG_DrawFontStringExt( &cgs.media.fontSmall, 0, x, y, s, color, qfalse, qfalse, 0, qtrue, 0, 0, NULL );
+}
+
+void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color ) {
+	CG_DrawFontStringExt( &cgs.media.fontSmall, 0, x, y, s, color, qtrue, qfalse, 0, qtrue, 0, 0, NULL );
+}
+
+void CG_DrawTinyString( int x, int y, const char *s, float alpha ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	CG_DrawFontStringExt( &cgs.media.fontTiny, 0, x, y, s, color, qfalse, qfalse, 0, qtrue, 0, 0, NULL );
+}
+
+void CG_DrawTinyStringColor( int x, int y, const char *s, vec4_t color ) {
+	CG_DrawFontStringExt( &cgs.media.fontTiny, 0, x, y, s, color, qtrue, qfalse, 0, qtrue, 0, 0, NULL );
+}
+#else
 /*
 ===============
 CG_DrawChar
@@ -322,6 +717,19 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 	if (maxChars <= 0)
 		maxChars = 32767; // do them all!
 
+	if (x == CENTER_X) {
+		float w;
+
+		w = CG_DrawStrlen(string) * charWidth;
+		x = (SCREEN_WIDTH - w) * 0.5f;
+	} else if (x < 0) {
+		// right aligned, offset by x
+		float w;
+
+		w = CG_DrawStrlen(string) * charWidth;
+		x = SCREEN_WIDTH + x - w;
+	}
+
 	// draw the drop shadow
 	if (shadow) {
 		color[0] = color[1] = color[2] = 0;
@@ -365,6 +773,18 @@ void CG_DrawStringExt( int x, int y, const char *string, const float *setColor,
 	trap_R_SetColor( NULL );
 }
 
+void CG_DrawGiantString( int x, int y, const char *s, float alpha ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	CG_DrawStringExt( x, y, s, color, qfalse, qtrue, GIANTCHAR_WIDTH, GIANTCHAR_HEIGHT, 0 );
+}
+
+void CG_DrawGiantStringColor( int x, int y, const char *s, vec4_t color ) {
+	CG_DrawStringExt( x, y, s, color, qtrue, qtrue, GIANTCHAR_WIDTH, GIANTCHAR_HEIGHT, 0 );
+}
+
 void CG_DrawBigString( int x, int y, const char *s, float alpha ) {
 	float	color[4];
 
@@ -388,6 +808,19 @@ void CG_DrawSmallString( int x, int y, const char *s, float alpha ) {
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color ) {
 	CG_DrawStringExt( x, y, s, color, qtrue, qfalse, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0 );
 }
+
+void CG_DrawTinyString( int x, int y, const char *s, float alpha ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	CG_DrawStringExt( x, y, s, color, qfalse, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+}
+
+void CG_DrawTinyStringColor( int x, int y, const char *s, vec4_t color ) {
+	CG_DrawStringExt( x, y, s, color, qtrue, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+}
+#endif
 
 /*
 =================
@@ -508,6 +941,68 @@ float *CG_FadeColor( int startMsec, int totalMsec ) {
 	return color;
 }
 
+#ifdef TURTLEARENA // NIGHTS_ITEMS
+/*
+================
+CG_ColorForChain
+================
+*/
+void CG_ColorForChain(int chain, vec3_t color)
+{
+	int index;
+
+	// Minus one to skip 0 so that 1,2,3,4,5 are one color, instead of 5 being a different color
+	//  5 numbers in a row are the same color,
+	//  limit to colors 0 though 11
+	index = ((chain-1) / 5) % 12;
+
+	switch (index)
+	{
+		case 0: // orange
+			VectorSet( color, 1, 0.5f, 0 );
+			break;
+		case 1: // light blue
+			VectorSet( color, 0, 0.5f, 1 );
+			break;
+		case 2: // green
+			VectorSet( color, 0, 1, 0 );
+			break;
+		case 3: // cyen
+			VectorSet( color, 0, 1, 1 );
+			break;
+		case 4: // pink
+			VectorSet( color, 1, 0, 0.5f );
+			break;
+
+		case 5: // red
+			VectorSet( color, 1, 0, 0 );
+			break;
+		case 6: // blue
+			VectorSet( color, 0, 0, 1 );
+			break;
+		case 7: // Lime
+			VectorSet( color, 0.5f, 1, 0 );
+			break;
+		case 8: // Vivid green
+			VectorSet( color, 0, 1, 0.5f );
+			break;
+		case 9: // purple
+			VectorSet( color, 0.5f, 0, 1 );
+			break;
+
+		case 10: // yellow
+			VectorSet( color, 1, 1, 0 );
+			break;
+		case 11: // magenta
+			VectorSet( color, 1, 0, 1 );
+			break;
+
+		default: // white
+			VectorSet( color, 1, 1, 1 );
+			break;
+	}
+}
+#endif
 
 /*
 ================
@@ -539,9 +1034,13 @@ float *CG_TeamColor( int team ) {
 CG_GetColorForHealth
 =================
 */
+#ifdef TURTLEARENA // NOARMOR
+void CG_GetColorForHealth( int health, vec4_t hcolor ) {
+#else
 void CG_GetColorForHealth( int health, int armor, vec4_t hcolor ) {
 	int		count;
 	int		max;
+#endif
 
 	// calculate the total points of damage that can
 	// be sustained at the current health / armor level
@@ -550,12 +1049,14 @@ void CG_GetColorForHealth( int health, int armor, vec4_t hcolor ) {
 		hcolor[3] = 1;
 		return;
 	}
+#ifndef TURTLEARENA // NOARMOR
 	count = armor;
 	max = health * ARMOR_PROTECTION / ( 1.0 - ARMOR_PROTECTION );
 	if ( max < count ) {
 		count = max;
 	}
 	health += count;
+#endif
 
 	// set the color based on health
 	hcolor[0] = 1.0;
@@ -584,8 +1085,12 @@ CG_ColorForHealth
 */
 void CG_ColorForHealth( vec4_t hcolor ) {
 
+#ifdef TURTLEARENA // NOARMOR
+	CG_GetColorForHealth( cg.cur_ps->stats[STAT_HEALTH], hcolor );
+#else
 	CG_GetColorForHealth( cg.cur_ps->stats[STAT_HEALTH], 
 		cg.cur_ps->stats[STAT_ARMOR], hcolor );
+#endif
 }
 
 
@@ -704,6 +1209,7 @@ static int	propMap[128][3] = {
 {0, 0, -1}		// DEL
 };
 
+#ifndef IOQ3ZTM // FONT_REWRITE
 static int propMapB[26][3] = {
 {11, 12, 33},
 {49, 12, 31},
@@ -831,6 +1337,7 @@ void UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color
 
 	UI_DrawBannerString2( x, y, str, color );
 }
+#endif
 
 
 int UI_ProportionalStringWidth( const char* str ) {
@@ -905,9 +1412,15 @@ UI_ProportionalSizeScale
 =================
 */
 float UI_ProportionalSizeScale( int style ) {
+#ifdef IOQ3ZTM // FONT_REWRITE
+	if (style & UI_SMALLFONT) {
+		return (float)cgs.media.fontPropSmall.pointSize / (float)cgs.media.fontPropBig.pointSize;
+	}
+#else
 	if(  style & UI_SMALLFONT ) {
 		return 0.75;
 	}
+#endif
 
 	return 1.00;
 }
@@ -922,6 +1435,38 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	vec4_t	drawcolor;
 	int		width;
 	float	sizeScale;
+	qhandle_t charsetProp;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
+#ifndef TA_DATA
+	font_t *fontGlow;
+#endif
+
+	if (style & UI_SMALLFONT) {
+		font = &cgs.media.fontPropSmall;
+#ifndef TA_DATA
+		fontGlow = &cgs.media.fontPropGlowSmall;
+#endif
+	} else {
+		font = &cgs.media.fontPropBig;
+#ifndef TA_DATA
+		fontGlow = &cgs.media.fontPropGlowBig;
+#endif
+	}
+
+	if (font->fontInfo.name[0]) {
+		UI_DrawFontProportionalString(font,
+#ifndef TA_DATA
+				fontGlow,
+#endif
+				x, y, str, style, color);
+		return;
+	}
+
+	charsetProp = font->fontShader;
+#else
+	charsetProp = cgs.media.charsetProp;
+#endif
 
 	sizeScale = UI_ProportionalSizeScale( style );
 
@@ -944,7 +1489,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	if ( style & UI_DROPSHADOW ) {
 		drawcolor[0] = drawcolor[1] = drawcolor[2] = 0;
 		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x+2, y+2, str, drawcolor, sizeScale, cgs.media.charsetProp );
+		UI_DrawProportionalString2( x+2, y+2, str, drawcolor, sizeScale, charsetProp );
 	}
 
 	if ( style & UI_INVERSE ) {
@@ -952,7 +1497,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 		drawcolor[1] = color[1] * 0.8;
 		drawcolor[2] = color[2] * 0.8;
 		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, cgs.media.charsetProp );
+		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, charsetProp );
 		return;
 	}
 
@@ -961,15 +1506,29 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 		drawcolor[1] = color[1] * 0.8;
 		drawcolor[2] = color[2] * 0.8;
 		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x, y, str, color, sizeScale, cgs.media.charsetProp );
+		UI_DrawProportionalString2( x, y, str, color, sizeScale, charsetProp );
 
+#ifdef TURTLEARENA // ZTM: This is like the UI Main menu text drawing, but its not.
+        // ZTM: hack-ish thing to do?...
+        // text_color_highlight is UI local...
+		drawcolor[0] = 1.00f;//text_color_highlight[0];
+		drawcolor[1] = 0.43f;//text_color_highlight[1];
+		drawcolor[2] = 0.00f;//text_color_highlight[2];
+#else
 		drawcolor[0] = color[0];
 		drawcolor[1] = color[1];
 		drawcolor[2] = color[2];
+#endif
 		drawcolor[3] = 0.5 + 0.5 * sin( cg.time / PULSE_DIVISOR );
+#ifdef TA_DATA
+		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, charsetProp );
+#elif defined IOQ3ZTM // FONT_REWRITE
+		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, fontGlow->fontShader );
+#else
 		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, cgs.media.charsetPropGlow );
+#endif
 		return;
 	}
 
-	UI_DrawProportionalString2( x, y, str, color, sizeScale, cgs.media.charsetProp );
+	UI_DrawProportionalString2( x, y, str, color, sizeScale, charsetProp );
 }

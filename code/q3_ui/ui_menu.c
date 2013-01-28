@@ -41,6 +41,11 @@ MAIN MENU
 
 
 #define ID_SINGLEPLAYER			10
+#ifdef TA_SP
+#define ID_ARCADE				11
+#define ID_MULTIPLAYER			12
+#define ID_SETUP				13
+#else
 #define ID_MULTIPLAYER			11
 #define ID_SETUP				12
 #define ID_DEMOS				13
@@ -49,27 +54,42 @@ MAIN MENU
 #define ID_TEAMARENA			15
 #endif
 #define ID_MODS					16
+#endif
 #define ID_EXIT					17
 
+#ifdef TURTLEARENA // BANNER_IMAGE
+#define ART_BANNER_IMAGE				"menu/art/titlebanner"
+#else
 #define MAIN_BANNER_MODEL				"models/mapobjects/banner/banner5.md3"
+#endif
 #define MAIN_MENU_VERTICAL_SPACING		34
 
 
 typedef struct {
 	menuframework_s	menu;
 
+#ifdef TURTLEARENA // BANNER_IMAGE
+	menubitmap_s	banner_image;
+#endif
 	menutext_s		singleplayer;
+#ifdef TA_SP // ARCADE
+	menutext_s		arcade;
+#endif
 	menutext_s		multiplayer;
 	menutext_s		setup;
+#ifndef TA_SP
 	menutext_s		demos;
 	menutext_s		cinematics;
 #ifndef MISSIONPACK
 	menutext_s		teamArena;
 #endif
 	menutext_s		mods;
+#endif
 	menutext_s		exit;
 
+#ifndef TURTLEARENA // BANNER_IMAGE
 	qhandle_t		bannerModel;
+#endif
 } mainmenu_t;
 
 
@@ -77,7 +97,14 @@ static mainmenu_t s_main;
 
 typedef struct {
 	menuframework_s menu;	
+#ifdef IOQ3ZTM
+	char errorMessage[256];
+#else
 	char errorMessage[4096];
+#endif
+#ifdef TURTLEARENA // BANNER_IMAGE
+	menubitmap_s	banner_image;
+#endif
 } errorMessage_t;
 
 static errorMessage_t s_errorMessage;
@@ -109,17 +136,32 @@ void Main_MenuEvent (void* ptr, int event) {
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_SINGLEPLAYER:
+#ifdef TA_SP
+		UI_SPMenu();
+#else
 		UI_SPLevelMenu();
+#endif
 		break;
 
+#ifdef TA_SP // ARCADE
+	case ID_ARCADE:
+		UI_StartServerMenu(qfalse);
+		break;
+#endif
+
 	case ID_MULTIPLAYER:
+#ifdef TA_MISC
+		UI_MultiplayerMenu();
+#else
 		UI_ArenaServersMenu();
+#endif
 		break;
 
 	case ID_SETUP:
 		UI_SetupMenu();
 		break;
 
+#ifndef TA_SP
 	case ID_DEMOS:
 		UI_DemosMenu();
 		break;
@@ -138,9 +180,14 @@ void Main_MenuEvent (void* ptr, int event) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
 		break;
 #endif
+#endif
 
 	case ID_EXIT:
+#ifdef TA_MISC
+		UI_ConfirmMenu( "Exit Game?", 0, MainMenu_ExitAction );
+#else
 		UI_ConfirmMenu( "EXIT GAME?", 0, MainMenu_ExitAction );
+#endif
 		break;
 	}
 }
@@ -152,7 +199,9 @@ MainMenu_Cache
 ===============
 */
 void MainMenu_Cache( void ) {
+#ifndef TURTLEARENA // BANNER_IMAGE
 	s_main.bannerModel = trap_R_RegisterModel( MAIN_BANNER_MODEL );
+#endif
 }
 
 sfxHandle_t ErrorMessage_Key(int key)
@@ -170,14 +219,19 @@ TTimo: this function is common to the main menu and errorMessage menu
 */
 
 static void Main_MenuDraw( void ) {
+#ifndef TURTLEARENA // BANNER_IMAGE
 	refdef_t		refdef;
 	refEntity_t		ent;
 	vec3_t			origin;
 	vec3_t			angles;
 	float			adjust;
 	float			x, y, w, h;
+#endif
+#ifndef TURTLEARENA
 	vec4_t			color = {0.5, 0, 0, 1};
+#endif
 
+#ifndef TURTLEARENA // BANNER_IMAGE
 	// setup the refdef
 
 	memset( &refdef, 0, sizeof( refdef ) );
@@ -224,10 +278,21 @@ static void Main_MenuDraw( void ) {
 	trap_R_AddRefEntityToScene( &ent );
 
 	trap_R_RenderScene( &refdef );
+#endif
 	
 	if (strlen(s_errorMessage.errorMessage))
 	{
+#ifdef TURTLEARENA // BANNER_IMAGE
+		// standard menu drawing
+		Menu_Draw( &s_errorMessage.menu );
+
+		UI_DrawProportionalString_AutoWrapped( 320, 224+SMALLCHAR_HEIGHT*2, 600, 20, s_errorMessage.errorMessage, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+#else
 		UI_DrawProportionalString_AutoWrapped( 320, 192, 600, 20, s_errorMessage.errorMessage, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+#endif
+#ifdef IOQ3ZTM
+		UI_DrawProportionalString( 320, 480-SMALLCHAR_HEIGHT*4, "Press any key", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+#endif
 	}
 	else
 	{
@@ -235,12 +300,14 @@ static void Main_MenuDraw( void ) {
 		Menu_Draw( &s_main.menu );		
 	}
 
+#ifndef TURTLEARENA // Legal stuff...
 	if (uis.demoversion) {
 		UI_DrawProportionalString( 320, 372, "DEMO      FOR MATURE AUDIENCES      DEMO", UI_CENTER|UI_SMALLFONT, color );
 		UI_DrawString( 320, 400, "Quake III Arena(c) 1999-2000, Id Software, Inc.  All Rights Reserved", UI_CENTER|UI_SMALLFONT, color );
 	} else {
 		UI_DrawString( 320, 450, "Quake III Arena(c) 1999-2000, Id Software, Inc.  All Rights Reserved", UI_CENTER|UI_SMALLFONT, color );
 	}
+#endif
 }
 
 
@@ -284,13 +351,15 @@ and that local cinematics are killed
 */
 void UI_MainMenu( void ) {
 	int		y;
+#ifndef TA_SP
 #ifndef MISSIONPACK
 	qboolean teamArena = qfalse;
+#endif
 #endif
 	int		style = UI_CENTER | UI_DROPSHADOW;
 
 	trap_Cvar_Set( "sv_killserver", "1" );
-
+	
 	memset( &s_main, 0 ,sizeof(mainmenu_t) );
 	memset( &s_errorMessage, 0 ,sizeof(errorMessage_t) );
 
@@ -304,7 +373,24 @@ void UI_MainMenu( void ) {
 		s_errorMessage.menu.key = ErrorMessage_Key;
 		s_errorMessage.menu.fullscreen = qtrue;
 		s_errorMessage.menu.wrapAround = qtrue;
+#ifndef TA_DATA
 		s_errorMessage.menu.showlogo = qtrue;		
+#endif
+#ifdef IOQ3ZTM
+		s_errorMessage.menu.noEscape = qtrue;
+#endif
+
+#ifdef TURTLEARENA // BANNER_IMAGE
+		s_errorMessage.banner_image.generic.type				= MTYPE_BITMAP;
+		s_errorMessage.banner_image.generic.name				= ART_BANNER_IMAGE;
+		s_errorMessage.banner_image.generic.flags				= QMF_CENTER_JUSTIFY|QMF_INACTIVE;
+		s_errorMessage.banner_image.generic.x					= 320;
+		s_errorMessage.banner_image.generic.y					= 32;
+		s_errorMessage.banner_image.width  						= 512;
+		s_errorMessage.banner_image.height  					= 256;
+
+		Menu_AddItem( &s_errorMessage.menu,	&s_errorMessage.banner_image );
+#endif
 
 		trap_Key_SetCatcher( KEYCATCH_UI );
 		uis.menusp = 0;
@@ -313,21 +399,62 @@ void UI_MainMenu( void ) {
 		return;
 	}
 
+#ifdef TA_MISC
+	trap_S_StopBackgroundTrack();
+	trap_S_StartBackgroundTrack("music/menu.ogg", NULL);
+#endif
+
 	s_main.menu.draw = Main_MenuDraw;
 	s_main.menu.fullscreen = qtrue;
 	s_main.menu.wrapAround = qtrue;
+#ifndef TA_DATA
 	s_main.menu.showlogo = qtrue;
+#endif
+#ifdef IOQ3ZTM
+	s_main.menu.noEscape = qtrue;
+#endif
 
+#ifdef TURTLEARENA // BANNER_IMAGE
+	s_main.banner_image.generic.type				= MTYPE_BITMAP;
+	s_main.banner_image.generic.name				= ART_BANNER_IMAGE;
+	s_main.banner_image.generic.flags				= QMF_CENTER_JUSTIFY|QMF_INACTIVE;
+	s_main.banner_image.generic.x					= 320;
+	s_main.banner_image.generic.y					= 32;
+	s_main.banner_image.width  						= 512;
+	s_main.banner_image.height  					= 256;
+#endif
+
+#ifdef TA_SP
+	y = 480 - (MAIN_MENU_VERTICAL_SPACING * 6);
+#else
 	y = 134;
+#endif
 	s_main.singleplayer.generic.type		= MTYPE_PTEXT;
 	s_main.singleplayer.generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_main.singleplayer.generic.x			= 320;
 	s_main.singleplayer.generic.y			= y;
 	s_main.singleplayer.generic.id			= ID_SINGLEPLAYER;
 	s_main.singleplayer.generic.callback	= Main_MenuEvent; 
+#ifdef TA_SP // Moved to MAIN GAME Menu.
+	s_main.singleplayer.string				= "Main Game";
+#else
 	s_main.singleplayer.string				= "SINGLE PLAYER";
-	s_main.singleplayer.color				= color_red;
+#endif
+	s_main.singleplayer.color				= text_big_color;
 	s_main.singleplayer.style				= style;
+
+#ifdef TA_SP // ARCADE
+	y += MAIN_MENU_VERTICAL_SPACING;
+	s_main.arcade.generic.type				= MTYPE_PTEXT;
+	s_main.arcade.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_main.arcade.generic.x					= 320;
+	s_main.arcade.generic.y					= y;
+	s_main.arcade.generic.id				= ID_ARCADE;
+	s_main.arcade.generic.callback			= Main_MenuEvent; 
+	s_main.arcade.string					= "Arcade Mode";
+	s_main.arcade.color						= text_big_color;
+	s_main.arcade.style						= style;
+#endif
 
 	y += MAIN_MENU_VERTICAL_SPACING;
 	s_main.multiplayer.generic.type			= MTYPE_PTEXT;
@@ -336,8 +463,12 @@ void UI_MainMenu( void ) {
 	s_main.multiplayer.generic.y			= y;
 	s_main.multiplayer.generic.id			= ID_MULTIPLAYER;
 	s_main.multiplayer.generic.callback		= Main_MenuEvent; 
+#ifdef TA_MISC
+	s_main.multiplayer.string				= "Multiplayer";
+#else
 	s_main.multiplayer.string				= "MULTIPLAYER";
-	s_main.multiplayer.color				= color_red;
+#endif
+	s_main.multiplayer.color				= text_big_color;
 	s_main.multiplayer.style				= style;
 
 	y += MAIN_MENU_VERTICAL_SPACING;
@@ -347,10 +478,15 @@ void UI_MainMenu( void ) {
 	s_main.setup.generic.y					= y;
 	s_main.setup.generic.id					= ID_SETUP;
 	s_main.setup.generic.callback			= Main_MenuEvent; 
+#ifdef TA_SP // Moved to OPTIONS Menu.
+	s_main.setup.string						= "Options";
+#else
 	s_main.setup.string						= "SETUP";
-	s_main.setup.color						= color_red;
+#endif
+	s_main.setup.color						= text_big_color;
 	s_main.setup.style						= style;
 
+#ifndef TA_SP // Moved to OPTIONS Menu.
 	y += MAIN_MENU_VERTICAL_SPACING;
 	s_main.demos.generic.type				= MTYPE_PTEXT;
 	s_main.demos.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -359,7 +495,7 @@ void UI_MainMenu( void ) {
 	s_main.demos.generic.id					= ID_DEMOS;
 	s_main.demos.generic.callback			= Main_MenuEvent; 
 	s_main.demos.string						= "DEMOS";
-	s_main.demos.color						= color_red;
+	s_main.demos.color						= text_big_color;
 	s_main.demos.style						= style;
 
 	y += MAIN_MENU_VERTICAL_SPACING;
@@ -370,7 +506,7 @@ void UI_MainMenu( void ) {
 	s_main.cinematics.generic.id			= ID_CINEMATICS;
 	s_main.cinematics.generic.callback		= Main_MenuEvent; 
 	s_main.cinematics.string				= "CINEMATICS";
-	s_main.cinematics.color					= color_red;
+	s_main.cinematics.color					= text_big_color;
 	s_main.cinematics.style					= style;
 
 #ifndef MISSIONPACK
@@ -384,7 +520,7 @@ void UI_MainMenu( void ) {
 		s_main.teamArena.generic.id				= ID_TEAMARENA;
 		s_main.teamArena.generic.callback		= Main_MenuEvent; 
 		s_main.teamArena.string					= "TEAM ARENA";
-		s_main.teamArena.color					= color_red;
+		s_main.teamArena.color					= text_big_color;
 		s_main.teamArena.style					= style;
 	}
 #endif
@@ -398,9 +534,10 @@ void UI_MainMenu( void ) {
 		s_main.mods.generic.id				= ID_MODS;
 		s_main.mods.generic.callback		= Main_MenuEvent; 
 		s_main.mods.string					= "MODS";
-		s_main.mods.color					= color_red;
+		s_main.mods.color					= text_big_color;
 		s_main.mods.style					= style;
 	}
+#endif
 
 	y += MAIN_MENU_VERTICAL_SPACING;
 	s_main.exit.generic.type				= MTYPE_PTEXT;
@@ -409,13 +546,24 @@ void UI_MainMenu( void ) {
 	s_main.exit.generic.y					= y;
 	s_main.exit.generic.id					= ID_EXIT;
 	s_main.exit.generic.callback			= Main_MenuEvent; 
+#ifdef TA_MISC
+	s_main.exit.string						= "Exit";
+#else
 	s_main.exit.string						= "EXIT";
-	s_main.exit.color						= color_red;
+#endif
+	s_main.exit.color						= text_big_color;
 	s_main.exit.style						= style;
 
+#ifdef TURTLEARENA // BANNER_IMAGE
+	Menu_AddItem( &s_main.menu,	&s_main.banner_image );
+#endif
 	Menu_AddItem( &s_main.menu,	&s_main.singleplayer );
+#ifdef TA_SP // ARCADE
+	Menu_AddItem( &s_main.menu,	&s_main.arcade );
+#endif
 	Menu_AddItem( &s_main.menu,	&s_main.multiplayer );
 	Menu_AddItem( &s_main.menu,	&s_main.setup );
+#ifndef TA_SP // Moved to PLAY Menu.
 	Menu_AddItem( &s_main.menu,	&s_main.demos );
 	Menu_AddItem( &s_main.menu,	&s_main.cinematics );
 #ifndef MISSIONPACK
@@ -426,6 +574,7 @@ void UI_MainMenu( void ) {
 	if ( !uis.demoversion ) {
 		Menu_AddItem( &s_main.menu,	&s_main.mods );
 	}
+#endif
 	Menu_AddItem( &s_main.menu,	&s_main.exit );             
 
 	trap_Key_SetCatcher( KEYCATCH_UI );

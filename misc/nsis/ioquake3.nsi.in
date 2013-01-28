@@ -1,20 +1,20 @@
-; NSIS description file for Spearmint installer
+; NSIS description file for Turtle Arena installer
 ;
 ; you have to copy SDL.dll and OpenAL32.dll here manually
 
 !define VERSION "XXXVERSIONXXX"
 !define RELEASE "XXXRELEASEXXX"
 
-!define MODDIR "baseq3"
-!define MODDIR2 "missionpack"
-!define PUBLISHER "The Spearmint Team"
-!define URL "http://github.com/zturtleman/spearmint/"
+!define MODDIR "base"
+; !define MODDIR2 "missionpack"
+!define PUBLISHER "The Turtle Arena Team"
+!define URL "http://turtlearena.googlecode.com/"
 
-!define GAMENAME "Spearmint"
-!define CLIENT "spearmint.x86.exe"
-!define SERVER "spearmint-server.x86.exe"
-!define GAMEDIR "Spearmint"
-!define GAMEKEY "spearmint"
+!define GAMENAME "Turtle Arena"
+!define CLIENT "turtlearena.x86.exe"
+!define SERVER "turtlearena-server.x86.exe"
+!define GAMEDIR "Turtle Arena"
+!define GAMEKEY "turtlearena"
 
 !define MULTIUSER_MUI
 !define MULTIUSER_EXECUTIONLEVEL Highest
@@ -53,7 +53,7 @@ OutFile "XXXFILENAMEXXX"
 ;Pages
 
 !insertmacro MULTIUSER_PAGE_INSTALLMODE
-;!insertmacro MUI_PAGE_LICENSE "../../COPYING.txt"
+;!insertmacro MUI_PAGE_LICENSE "../../../COPYING.txt"
 !define MUI_COMPONENTSPAGE_NODESC
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
@@ -106,12 +106,15 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   File "../../build/release-mingw32-x86/renderer_rend2_x86.dll"
 !endif
 
-  File "../../COPYING.txt"
-  File "/oname=README.txt" "../../README"
-  File "../../id-readme.txt"
-  File "../../voip-readme.txt"
+  File "CODE_LICENSE.txt"
+  File "CC-BY-SA-3.0.txt"
+  File "COPYRIGHTS.txt"
+  File "CREDITS.txt"
+  File "README.txt"
 
   SetOutPath "$INSTDIR\${MODDIR}"
+  File "XXXASSETPATHXXX/assets0.pk3"
+  File "XXXASSETPATHXXX/assets1-qvms.pk3"
   File "../../build/release-mingw32-x86/${MODDIR}/cgamex86.dll"
   File "../../build/release-mingw32-x86/${MODDIR}/gamex86.dll"
   File "../../build/release-mingw32-x86/${MODDIR}/uix86.dll"
@@ -139,6 +142,14 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
 SectionEnd
 
 ; Optional section (can be disabled by the user)
+Section "Music"
+
+  SetOutPath "$INSTDIR\${MODDIR}"
+
+  File "XXXASSETPATHXXX/assets2-music.pk3"
+
+SectionEnd
+
 Section "Start Menu Shortcuts"
 
   CreateDirectory "$SMPROGRAMS\${GAMENAME}"
@@ -178,6 +189,9 @@ Section "Uninstall"
   DeleteRegKey SHCTX "Software\${GAMEKEY}"
 
   ; Remove files and uninstaller
+  Delete $INSTDIR\${MODDIR}\assets0.pk3
+  Delete $INSTDIR\${MODDIR}\assets1-qvms.pk3
+  Delete $INSTDIR\${MODDIR}\assets2-music.pk3
   Delete $INSTDIR\${MODDIR}\cgamex86.dll
   Delete $INSTDIR\${MODDIR}\gamex86.dll
   Delete $INSTDIR\${MODDIR}\uix86.dll
@@ -193,10 +207,11 @@ Section "Uninstall"
   Delete $INSTDIR\renderer_rend2_x86.dll
 !endif
 
-  Delete $INSTDIR\COPYING.txt
+  Delete $INSTDIR\CODE_LICENSE.txt
+  Delete $INSTDIR\CC-BY-SA-3.0.txt
+  Delete $INSTDIR\COPYRIGHTS.txt
+  Delete $INSTDIR\CREDITS.txt
   Delete $INSTDIR\README.txt
-  Delete $INSTDIR\id-readme.txt
-  Delete $INSTDIR\voip-readme.txt
 
   Delete $INSTDIR\SDL.dll
 !ifndef USE_INTERNAL_SPEEX

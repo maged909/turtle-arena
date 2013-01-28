@@ -194,6 +194,11 @@ void UI_LoadArenas( void ) {
 			if( strstr( type, "tourney" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_TOURNAMENT);
 			}
+#ifdef TA_SP
+			if( strstr( type, "single" ) ) {
+				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_SINGLE_PLAYER);
+			}
+#endif
 			if( strstr( type, "ctf" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_CTF);
 			}
@@ -203,9 +208,11 @@ void UI_LoadArenas( void ) {
 			if( strstr( type, "overload" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_OBELISK);
 			}
+#ifdef MISSIONPACK_HARVESTER
 			if( strstr( type, "harvester" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_HARVESTER);
 			}
+#endif
 		} else {
 			uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_FFA);
 		}

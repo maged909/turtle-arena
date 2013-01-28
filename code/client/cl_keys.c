@@ -424,6 +424,14 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 	int		cursorChar;
 	char	str[MAX_STRING_CHARS];
 	int		i;
+#ifdef IOQ3ZTM // FONT_REWITE
+	font_t	*font;
+
+	if (size == SMALLCHAR_WIDTH)
+		font = &cls.fontSmall;
+	else
+		font = &cls.fontBig;
+#endif
 
 	drawLen = edit->widthInChars - 1; // - 1 so there is always a space for the cursor
 	len = strlen( edit->buffer );
@@ -454,6 +462,12 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 	str[ drawLen ] = 0;
 
 	// draw it
+#ifdef IOQ3ZTM // FONT_REWRITE
+	float	color[4];
+
+	color[0] = color[1] = color[2] = color[3] = 1.0;
+	SCR_DrawFontStringExt(font, x, y, str, color, qfalse, noColorEscape, (size == BIGCHAR_WIDTH), qfalse, 0);
+#else
 	if ( size == SMALLCHAR_WIDTH ) {
 		float	color[4];
 
@@ -463,6 +477,7 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 		// draw big string with drop shadow
 		SCR_DrawBigString( x, y, str, 1.0, noColorEscape );
 	}
+#endif
 
 	// draw the cursor
 	if ( showCursor ) {
@@ -470,6 +485,15 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 			return;		// off blink
 		}
 
+#ifdef IOQ3ZTM // FONT_REWITE
+		if (font->fontInfo.name[0]) {
+			if ( key_overstrikeMode ) {
+				cursorChar = '_';
+			} else {
+				cursorChar = '|';
+			}
+		} else
+#endif
 		if ( key_overstrikeMode ) {
 			cursorChar = 11;
 		} else {
@@ -478,14 +502,24 @@ void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int size, q
 
 		i = drawLen - strlen( str );
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+		float strWidth = 0;
+		int id;
+		for (id = 0; id < (edit->cursor - prestep - i); i++) {
+			strWidth += Com_FontCharWidth( font, str[i], 0 );
+		}
+		// ignore the cursor character's left offset
+		strWidth -= Com_FontCharLeftOffset( font, cursorChar, 0 );
+		SCR_DrawFontChar(font, x + strWidth, y, cursorChar, qfalse);
+#else
 		if ( size == SMALLCHAR_WIDTH ) {
 			SCR_DrawSmallChar( x + ( edit->cursor - prestep - i ) * size, y, cursorChar );
 		} else {
 			str[0] = cursorChar;
 			str[1] = 0;
 			SCR_DrawBigString( x + ( edit->cursor - prestep - i ) * size, y, str, 1.0, qfalse );
-
 		}
+#endif
 	}
 }
 

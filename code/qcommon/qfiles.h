@@ -360,14 +360,14 @@ typedef struct {
 } mdrFrame_t;
 
 typedef struct {
-        unsigned char Comp[24]; // MC_COMP_BYTES is in MatComp.h, but don't want to couple
+	unsigned char Comp[24]; // MC_COMP_BYTES is in MatComp.h, but don't want to couple
 } mdrCompBone_t;
 
 typedef struct {
-        vec3_t          bounds[2];		// bounds of all surfaces of all LOD's for this frame
-        vec3_t          localOrigin;		// midpoint of bounds, used for sphere cull
-        float           radius;			// dist from localOrigin to corner
-        mdrCompBone_t   bones[1];		// [numBones]
+	vec3_t          bounds[2];		// bounds of all surfaces of all LOD's for this frame
+	vec3_t          localOrigin;		// midpoint of bounds, used for sphere cull
+	float           radius;			// dist from localOrigin to corner
+	mdrCompBone_t   bones[1];		// [numBones]
 } mdrCompFrame_t;
 
 typedef struct {
@@ -377,8 +377,8 @@ typedef struct {
 } mdrLOD_t;
 
 typedef struct {
-        int                     boneIndex;
-        char            name[32];
+	int			boneIndex;
+	char		name[32];
 } mdrTag_t;
 
 typedef struct {
@@ -396,8 +396,8 @@ typedef struct {
 	int			numLODs;
 	int			ofsLODs;
 
-        int                     numTags;
-        int                     ofsTags;
+	int			numTags;
+	int			ofsTags;
 
 	int			ofsEnd;				// end of file
 } mdrHeader_t;
@@ -430,7 +430,9 @@ typedef struct {
 
 #define	MAX_MAP_AREAS		0x100	// MAX_MAP_AREA_BYTES in q_shared must match!
 #define	MAX_MAP_FOGS		0x100
+#ifndef IOQ3ZTM // ZTM: Unused.
 #define	MAX_MAP_PLANES		0x40000 // ZTM: NOTE: Using value from WolfET, it's only 0x20000 in Quake3/RTCW-MP.
+#endif
 #define	MAX_MAP_NODES		0x20000
 #define	MAX_MAP_BRUSHSIDES	0x100000 // ZTM: NOTE: Using value from WolfET, it's only 0x20000 in Quake3/RTCW-MP.
 #define	MAX_MAP_LEAFS		0x20000

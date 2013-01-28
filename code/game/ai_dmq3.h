@@ -46,6 +46,10 @@ void BotShutdownDeathmatchAI(void);
 void BotDeathmatchAI(bot_state_t *bs, float thinktime);
 //free waypoints
 void BotFreeWaypoints(bot_waypoint_t *wp);
+#ifdef TA_WEAPSYS // BOT_WEAP_WEIGHTS
+//bot weight for weapon
+int BotWeaponWeight(weapon_t w);
+#endif
 //choose a weapon
 void BotChooseWeapon(bot_state_t *bs);
 //setup movement stuff
@@ -70,7 +74,7 @@ qboolean EntityIsDead(aas_entityinfo_t *entinfo);
 qboolean EntityIsInvisible(aas_entityinfo_t *entinfo);
 //returns true if the entity is shooting
 qboolean EntityIsShooting(aas_entityinfo_t *entinfo);
-#ifdef MISSIONPACK
+#if defined MISSIONPACK && !defined TURTLEARENA // NO_KAMIKAZE_ITEM
 //returns true if this entity has the kamikaze
 qboolean EntityHasKamikaze(aas_entityinfo_t *entinfo);
 #endif
@@ -100,8 +104,14 @@ int BotWantsToRetreat(bot_state_t *bs);
 int BotWantsToChase(bot_state_t *bs);
 //returns true if the bot wants to help
 int BotWantsToHelp(bot_state_t *bs);
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 //returns true if the bot can and wants to rocketjump
 int BotCanAndWantsToRocketJump(bot_state_t *bs);
+#endif
+#ifdef TURTLEARENA // HOLD_SHURIKEN
+// returns holdableNum of shuriken bot wants to use, or 0 if does not want to use shuriken.
+int BotWantUseShuriken(bot_state_t *bs, int target, aas_entityinfo_t *entinfo);
+#endif
 // returns true if the bot has a persistant powerup and a weapon
 int BotHasPersistantPowerupAndWeapon(bot_state_t *bs);
 //returns true if the bot wants to and goes camping
@@ -157,16 +167,23 @@ void BotCTFRetreatGoals(bot_state_t *bs);
 //
 #ifdef MISSIONPACK
 int Bot1FCTFCarryingFlag(bot_state_t *bs);
+#ifdef MISSIONPACK_HARVESTER
 int BotHarvesterCarryingCubes(bot_state_t *bs);
+#endif
 void Bot1FCTFSeekGoals(bot_state_t *bs);
 void Bot1FCTFRetreatGoals(bot_state_t *bs);
 void BotObeliskSeekGoals(bot_state_t *bs);
 void BotObeliskRetreatGoals(bot_state_t *bs);
+#ifdef MISSIONPACK_HARVESTER
 void BotGoHarvest(bot_state_t *bs);
 void BotHarvesterSeekGoals(bot_state_t *bs);
 void BotHarvesterRetreatGoals(bot_state_t *bs);
 int BotTeamCubeCarrierVisible(bot_state_t *bs);
 int BotEnemyCubeCarrierVisible(bot_state_t *bs);
+#endif
+#endif
+#ifdef TA_WEAPSYS
+qboolean G_CanShootProx(weapon_t w);
 #endif
 //get a random alternate route goal towards the given base
 int BotGetAlternateRouteGoal(bot_state_t *bs, int base);
@@ -198,7 +215,9 @@ extern int gametype;		//game type
 extern int maxclients;		//maximum number of clients
 
 extern vmCvar_t bot_grapple;
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 extern vmCvar_t bot_rocketjump;
+#endif
 extern vmCvar_t bot_fastchat;
 extern vmCvar_t bot_nochat;
 extern vmCvar_t bot_testrchat;

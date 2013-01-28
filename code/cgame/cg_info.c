@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
+#ifndef TURTLEARENA // NO_LOADING_ICONS
 #define MAX_LOADING_PLAYER_ICONS	16
 #define MAX_LOADING_ITEM_ICONS		26
 
@@ -65,6 +66,7 @@ static void CG_DrawLoadingIcons( void ) {
 		CG_DrawPic( x, y, 32, 32, loadingItemIcons[n] );
 	}
 }
+#endif
 
 
 /*
@@ -79,6 +81,7 @@ void CG_LoadingString( const char *s ) {
 	trap_UpdateScreen();
 }
 
+#ifndef TURTLEARENA // NO_LOADING_ICONS
 /*
 ===================
 CG_LoadingItem
@@ -87,7 +90,11 @@ CG_LoadingItem
 void CG_LoadingItem( int itemNum ) {
 	gitem_t		*item;
 
+#ifdef TA_ITEMSYS
+	item = BG_ItemForItemNum(itemNum);
+#else
 	item = &bg_itemlist[itemNum];
+#endif
 	
 	if ( item->icon && loadingItemIconCount < MAX_LOADING_ITEM_ICONS ) {
 		loadingItemIcons[loadingItemIconCount++] = trap_R_RegisterShaderNoMip( item->icon );
@@ -140,6 +147,7 @@ void CG_LoadingClient( int clientNum ) {
 
 	CG_LoadingString( personality );
 }
+#endif
 
 
 /*
@@ -163,7 +171,11 @@ void CG_DrawInformation( void ) {
 	sysInfo = CG_ConfigString( CS_SYSTEMINFO );
 
 	s = Info_ValueForKey( info, "mapname" );
+#ifdef IOQ3ZTM
+	levelshot = trap_R_RegisterShaderNoMip( va( "levelshots/%s", s ) );
+#else
 	levelshot = trap_R_RegisterShaderNoMip( va( "levelshots/%s.tga", s ) );
+#endif
 	if ( !levelshot ) {
 		levelshot = trap_R_RegisterShaderNoMip( "menu/art/unknownmap" );
 	}
@@ -174,8 +186,10 @@ void CG_DrawInformation( void ) {
 	detail = trap_R_RegisterShader( "levelShotDetail" );
 	trap_R_DrawStretchPic( 0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight, 0, 0, 2.5, 2, detail );
 
+#ifndef TURTLEARENA // NO_LOADING_ICONS
 	// draw the icons of things as they are loaded
 	CG_DrawLoadingIcons();
+#endif
 
 	// the first 150 rows are reserved for the client connection
 	// screen to write into
@@ -243,10 +257,19 @@ void CG_DrawInformation( void ) {
 		s = "Free For All";
 		break;
 	case GT_SINGLE_PLAYER:
+#ifdef TA_SP
+		if (!cg_singlePlayerActive.integer)
+			s = "Cooperative";
+		else
+#endif
 		s = "Single Player";
 		break;
 	case GT_TOURNAMENT:
+#ifdef TA_MISC // tournament to duel
+		s = "Duel";
+#else
 		s = "Tournament";
+#endif
 		break;
 	case GT_TEAM:
 		s = "Team Deathmatch";
@@ -261,9 +284,11 @@ void CG_DrawInformation( void ) {
 	case GT_OBELISK:
 		s = "Overload";
 		break;
+#ifdef MISSIONPACK_HARVESTER
 	case GT_HARVESTER:
 		s = "Harvester";
 		break;
+#endif
 #endif
 	default:
 		s = "Unknown Gametype";
@@ -272,19 +297,38 @@ void CG_DrawInformation( void ) {
 	UI_DrawProportionalString( 320, y, s,
 		UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, colorWhite );
 	y += PROP_HEIGHT;
-		
-	value = atoi( Info_ValueForKey( info, "timelimit" ) );
-	if ( value ) {
-		UI_DrawProportionalString( 320, y, va( "timelimit %i", value ),
-			UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, colorWhite );
-		y += PROP_HEIGHT;
-	}
 
-	if (cgs.gametype < GT_CTF ) {
-		value = atoi( Info_ValueForKey( info, "fraglimit" ) );
+#ifdef TA_SP
+	if (cgs.gametype != GT_SINGLE_PLAYER) {
+#endif
+		value = atoi( Info_ValueForKey( info, "timelimit" ) );
 		if ( value ) {
+			UI_DrawProportionalString( 320, y, va( "timelimit %i", value ),
+				UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, colorWhite );
+			y += PROP_HEIGHT;
+		}
+#ifdef TA_SP
+	}
+#endif
+
+	if (
+#ifdef TA_SP
+	cgs.gametype != GT_SINGLE_PLAYER &&
+#endif
+	cgs.gametype < GT_CTF ) {
+#ifdef NOTRATEDM // frag to score
+		value = atoi( Info_ValueForKey( info, "scorelimit" ) );
+#else
+		value = atoi( Info_ValueForKey( info, "fraglimit" ) );
+#endif
+		if ( value ) {
+#ifdef NOTRATEDM // frag to score
+			UI_DrawProportionalString( 320, y, va( "scorelimit %i", value ),
+				UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, colorWhite );
+#else
 			UI_DrawProportionalString( 320, y, va( "fraglimit %i", value ),
 				UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, colorWhite );
+#endif
 			y += PROP_HEIGHT;
 		}
 	}

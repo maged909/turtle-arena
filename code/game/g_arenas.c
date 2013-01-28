@@ -34,11 +34,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "g_local.h"
 
-
+#ifndef TA_SP
 gentity_t	*podium1;
 gentity_t	*podium2;
 gentity_t	*podium3;
-
+#endif
 
 /*
 ==================
@@ -49,10 +49,14 @@ void UpdateTournamentInfo( void ) {
 	int			i;
 	gentity_t	*player;
 	int			playerClientNum;
+#ifdef TA_SP
+	int			n, msglen;
+#else
 	int			n, accuracy, perfect,	msglen;
 #ifdef MISSIONPACK
   int score1, score2;
 	qboolean won;
+#endif
 #endif
 	char		buf[32];
 	char		msg[MAX_STRING_CHARS];
@@ -78,19 +82,29 @@ void UpdateTournamentInfo( void ) {
 
 	if ( level.clients[playerClientNum].sess.sessionTeam == TEAM_SPECTATOR ) {
 #ifdef MISSIONPACK
+#ifdef TA_SP
+		Com_sprintf( msg, sizeof(msg), "postgame %i 0 0 %s 0 0", level.time, player->client->pers.playercfg.model );
+#else
 		Com_sprintf( msg, sizeof(msg), "postgame %i %i 0 0 0 0 0 0 0 0 0 0 0", level.numNonSpectatorClients, playerClientNum );
+#endif
 #else
 		Com_sprintf( msg, sizeof(msg), "postgame %i %i 0 0 0 0 0 0", level.numNonSpectatorClients, playerClientNum );
 #endif
 	}
 	else {
+#ifndef TA_SP
 		if( player->client->accuracy_shots ) {
 			accuracy = player->client->accuracy_hits * 100 / player->client->accuracy_shots;
 		}
 		else {
 			accuracy = 0;
 		}
-#ifdef MISSIONPACK
+#endif
+#ifdef TA_SP
+		Com_sprintf( msg, sizeof(msg), "postgame %i %i %i %s %i %i", level.time, level.teamScores[TEAM_RED], level.teamScores[TEAM_BLUE],
+					player->client->pers.playercfg.model, player->client->ps.persistant[PERS_SCORE],
+					player->client->ps.persistant[PERS_CAPTURES]);
+#elif defined MISSIONPACK
 		won = qfalse;
 		if (g_gametype.integer >= GT_CTF) {
 			score1 = level.teamScores[TEAM_RED];
@@ -142,7 +156,7 @@ void UpdateTournamentInfo( void ) {
 	trap_Cmd_ExecuteText( EXEC_APPEND, msg );
 }
 
-
+#ifndef TA_SP
 static gentity_t *SpawnModelOnVictoryPad( gentity_t *pad, vec3_t offset, gentity_t *ent, int place ) {
 	gentity_t	*body;
 	vec3_t		vec;
@@ -168,6 +182,13 @@ static gentity_t *SpawnModelOnVictoryPad( gentity_t *pad, vec3_t offset, gentity
 	body->s.event = 0;
 	body->s.pos.trType = TR_STATIONARY;
 	body->s.groundEntityNum = ENTITYNUM_WORLD;
+#ifdef TA_WEAPSYS
+	body->s.legsAnim = BG_LegsStandForPlayerState(&ent->client->ps, &ent->client->pers.playercfg);
+	body->s.torsoAnim = BG_TorsoStandForPlayerState(&ent->client->ps, &ent->client->pers.playercfg);
+	if( body->s.weapon == WP_NONE || body->s.weapon == WP_DEFAULT) {
+		body->s.weapon = ent->client->ps.stats[STAT_DEFAULTWEAPON];
+	}
+#else
 	body->s.legsAnim = LEGS_IDLE;
 	body->s.torsoAnim = TORSO_STAND;
 	if( body->s.weapon == WP_NONE ) {
@@ -176,6 +197,7 @@ static gentity_t *SpawnModelOnVictoryPad( gentity_t *pad, vec3_t offset, gentity
 	if( body->s.weapon == WP_GAUNTLET) {
 		body->s.torsoAnim = TORSO_STAND2;
 	}
+#endif
 	body->s.event = 0;
 	body->r.svFlags = ent->r.svFlags;
 	VectorCopy (ent->s.mins, body->s.mins);
@@ -210,20 +232,30 @@ static gentity_t *SpawnModelOnVictoryPad( gentity_t *pad, vec3_t offset, gentity
 static void CelebrateStop( gentity_t *player ) {
 	int		anim;
 
+#ifdef TA_WEAPSYS
+	anim = BG_TorsoStandForPlayerState(&player->client->ps, &player->client->pers.playercfg);
+#else
 	if( player->s.weapon == WP_GAUNTLET) {
 		anim = TORSO_STAND2;
 	}
 	else {
 		anim = TORSO_STAND;
 	}
+#endif
 	player->s.torsoAnim = ( ( player->s.torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
 }
 
 
+#ifndef TA_PLAYERSYS // PLAYERCFG_ANIMATION_TIMES
 #define	TIMER_GESTURE	(34*66+50)
+#endif
 static void CelebrateStart( gentity_t *player ) {
 	player->s.torsoAnim = ( ( player->s.torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | TORSO_GESTURE;
+#ifdef TA_PLAYERSYS // PLAYERCFG_ANIMATION_TIMES
+	player->nextthink = level.time + BG_AnimationTime(&player->client->pers.playercfg.animations[TORSO_GESTURE]);
+#else
 	player->nextthink = level.time + TIMER_GESTURE;
+#endif
 	player->think = CelebrateStop;
 
 	/*
@@ -381,3 +413,4 @@ void Svcmd_AbortPodium_f( void ) {
 		podium1->think = CelebrateStop;
 	}
 }
+#endif

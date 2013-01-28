@@ -129,6 +129,25 @@ int G_SoundIndex( char *name ) {
 	return G_FindConfigstringIndex (name, CS_SOUNDS, MAX_SOUNDS, qtrue);
 }
 
+#ifdef IOQ3ZTM // Particles
+// str should be
+// int  f f f   f f f   int         int   int
+// type origin origin2 numparticles turb snum
+// "1   0.1 0.4 11.55  0.1 0.4 11.55  256  1  1"
+// str will be parsed and used in CG_NewParticleArea
+// ZTM: I have no idea what they all do.
+//
+int G_ParticleAreaIndex( char *str ) {
+	return G_FindConfigstringIndex (str, CS_PARTICLES, MAX_PARTICLES_AREAS, qtrue);
+}
+#endif
+
+#ifdef TA_ENTSYS // MISC_OBJECT
+int G_StringIndex( char *name ) {
+	return G_FindConfigstringIndex (name, CS_STRINGS, MAX_STRINGS, qtrue);
+}
+#endif
+
 //=====================================================================
 
 
@@ -271,6 +290,47 @@ match (string)self.target and call their .use function
 
 ==============================
 */
+#ifdef TA_ENTSYS
+void G_UseTargets2( gentity_t *ent, gentity_t *activator, const char *target ) {
+	gentity_t		*t;
+
+	if ( !ent ) {
+		return;
+	}
+
+	if (ent->targetShaderName && ent->targetShaderNewName) {
+		float f = level.time * 0.001;
+		AddRemap(ent->targetShaderName, ent->targetShaderNewName, f);
+		trap_SetConfigstring(CS_SHADERSTATE, BuildShaderStateConfig());
+	}
+
+	if ( !target ) {
+		return;
+	}
+
+	t = NULL;
+	while ( (t = G_Find (t, FOFS(targetname), target)) != NULL ) {
+		if ( t == ent ) {
+			G_Printf ("WARNING: Entity used itself.\n");
+		} else {
+			if ( t->use ) {
+				t->use (t, ent, activator);
+			}
+		}
+		if ( !ent->inuse ) {
+			G_Printf("entity was removed while using targets\n");
+			return;
+		}
+	}
+}
+
+void G_UseTargets( gentity_t *ent, gentity_t *activator ) {
+	if ( !ent ) {
+		return;
+	}
+	G_UseTargets2(ent, activator, ent->target);
+}
+#else
 void G_UseTargets( gentity_t *ent, gentity_t *activator ) {
 	gentity_t		*t;
 	
@@ -303,7 +363,7 @@ void G_UseTargets( gentity_t *ent, gentity_t *activator ) {
 		}
 	}
 }
-
+#endif
 
 /*
 =============
@@ -405,6 +465,9 @@ float vectoyaw( const vec3_t vec ) {
 
 void G_InitGentity( gentity_t *e ) {
 	e->inuse = qtrue;
+#ifdef TA_WEAPSYS // XREAL
+	e->spawnTime = level.time;
+#endif
 	e->classname = "noclass";
 	e->s.number = e - g_entities;
 	e->r.ownerNum = ENTITYNUM_NONE;
@@ -566,8 +629,20 @@ void G_KillBox (gentity_t *ent) {
 	gentity_t	*hit;
 	vec3_t		mins, maxs;
 
+#ifdef TA_ENTSYS // BREAKABLE
+	if (!ent->client)
+	{
+		VectorAdd( ent->r.currentOrigin, ent->s.mins, mins );
+		VectorAdd( ent->r.currentOrigin, ent->s.maxs, maxs );
+	}
+	else
+	{
+#endif
 	VectorAdd( ent->client->ps.origin, ent->s.mins, mins );
 	VectorAdd( ent->client->ps.origin, ent->s.maxs, maxs );
+#ifdef TA_ENTSYS // BREAKABLE
+	}
+#endif
 	num = trap_EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
 
 	for (i=0 ; i<num ; i++) {
@@ -666,6 +741,240 @@ void G_SetOrigin( gentity_t *ent, vec3_t origin ) {
 
 	VectorCopy( origin, ent->r.currentOrigin );
 }
+
+#ifdef TA_WEAPSYS // XREAL r2785
+/*
+=================
+G_FindRadius
+
+Returns entities that have origins within a spherical area
+
+G_FindRadius (origin, radius)
+=================
+*/
+gentity_t *G_FindRadius(gentity_t *from, const vec3_t org, float rad)
+{
+	vec3_t	eorg;
+	vec3_t	targetOrg;
+	int		j;
+
+	if (!from)
+		from = g_entities;
+	else
+		from++;
+
+	for(; from < &g_entities[level.num_entities]; from++)
+	{
+		if(!from->inuse)
+			continue;
+
+		if (from-g_entities < MAX_CLIENTS) {
+			VectorCopy(from->client->ps.origin, targetOrg);
+			targetOrg[2] += from->client->ps.viewheight;
+		} else {
+			VectorCopy(from->r.currentOrigin, targetOrg);
+			targetOrg[2] += 40;
+		}
+
+		for(j = 0; j < 3; j++)
+			eorg[j] = org[j] - (targetOrg[j] + (from->s.mins[j] + from->s.maxs[j]) * 0.5);
+
+		if (VectorLength(eorg) > rad)
+			continue;
+
+		return from;
+	}
+
+	return NULL;
+}
+
+// Visiblilty check
+qboolean G_IsVisible(int skipEnt, const vec3_t start, const vec3_t goal)
+{
+	trace_t trace;
+
+	trap_Trace(&trace, start, NULL, NULL, goal, skipEnt, MASK_SHOT);
+
+	// Yes we can see it
+	if (trace.contents & CONTENTS_SOLID)
+		return qfalse;
+	else
+		return qtrue;
+}
+
+qboolean G_ValidTarget(gentity_t *source, gentity_t *target,
+		const vec3_t start, const vec3_t dir,
+		float range, float ang, int tests)
+{
+	vec3_t eorg;
+	int j;
+	vec3_t blipdir;
+	float angle;
+	float dist;
+	vec3_t targetOrg;
+
+	if (!target)
+		return qfalse;
+
+	if (!target->inuse)
+		return qfalse;
+
+	if (target == source)
+		return qfalse;
+
+	if (target->flags & FL_NOTARGET)
+		return qfalse;
+
+	// ZTM: Target players, overload base, and NPCs.
+	if (!target->client// && !target->takedamage
+#ifdef MISSIONPACK
+		&& !(source->client && target->pain == ObeliskPain
+			&& target->spawnflags != source->client->sess.sessionTeam)
+#endif
+#ifdef TA_NPCSYS
+		&& !(source->client && target->s.eType == ET_NPC)
+#endif
+	)
+		return qfalse;
+
+	if (target->health <= 0)
+		return qfalse;
+
+	if (target->client && target->client->sess.sessionTeam >= TEAM_SPECTATOR)
+		return qfalse;
+
+	if (OnSameTeam(target, source))
+		return qfalse;
+
+	if (target-g_entities < MAX_CLIENTS) {
+		VectorCopy(target->client->ps.origin, targetOrg);
+		targetOrg[2] += target->client->ps.viewheight;
+	} else {
+		VectorCopy(target->r.currentOrigin, targetOrg);
+		targetOrg[2] += (target->s.mins[2] + target->s.maxs[2])/2;
+	}
+
+	// Unneeded for target trace test, the trace found it so it is visable
+	if (tests >= 1)
+	{
+		if (!G_IsVisible(source->s.number, start, targetOrg))
+			return qfalse;
+	}
+	// G_FindTarget does its own dist/angle check, for best target.
+	if (tests >= 2)
+	{
+		for(j = 0; j < 3; j++) {
+			eorg[j] = start[j] - (targetOrg[j] + (target->s.mins[j] + target->s.maxs[j]) * 0.5);
+		}
+
+		dist = VectorLength(eorg);
+		if (dist > range)
+			return qfalse;
+
+		// Angle check
+		if (dist > 128.0f && ang < 360)
+		{
+			VectorSubtract(targetOrg, start, blipdir);
+
+			angle = AngleBetweenVectors(dir, blipdir);
+			if (angle > ang) {
+				return qfalse;
+			}
+		}
+	}
+
+	return qtrue;
+}
+
+/*
+=================
+G_FindTarget
+
+Returns entities that have origins within a spherical area
+=================
+*/
+gentity_t *G_FindTarget(gentity_t *source, const vec3_t start, const vec3_t dir,
+		float range, float ang)
+{
+	vec3_t			eorg;
+	int				j;
+	gentity_t		*target;
+	gentity_t		*besttarget;
+	float			bestdist, dist, angle;
+	vec3_t			blipdir;
+	//vec3_t			bestdir;
+	vec3_t			targetOrg;
+
+	besttarget = NULL;
+	bestdist = range;
+	VectorClear(blipdir);
+	//VectorClear(bestdir);
+
+	// First check if where we are aiming at something we can damage?
+	/*{
+		trace_t trace;
+		vec3_t goal;
+
+		// Use correct range.
+		VectorMA(start, range, dir, goal);
+
+		trap_Trace(&trace, start, NULL, NULL, goal, source->s.number, MASK_SHOT);
+
+		target = &g_entities[ trace.entityNum ];
+
+		if (G_ValidTarget(source, target, start, dir, range, ang, 0))
+		{
+			return target;
+		}
+	}*/
+
+	for (target = g_entities; target < &g_entities[level.num_entities]; target++)
+	{
+		if (!G_ValidTarget(source, target, start, dir, range, ang, 1))
+		{
+			continue;
+		}
+
+		if (target-g_entities < MAX_CLIENTS) {
+			VectorCopy(target->client->ps.origin, targetOrg);
+			targetOrg[2] += target->client->ps.viewheight;
+		} else {
+			VectorCopy(target->r.currentOrigin, targetOrg);
+			targetOrg[2] += (target->s.mins[2] + target->s.maxs[2])/2;
+		}
+
+		for(j = 0; j < 3; j++) {
+			eorg[j] = start[j] - (targetOrg[j] + (target->s.mins[j] + target->s.maxs[j]) * 0.5);
+		}
+
+		dist = VectorLength(eorg);
+		if (dist > bestdist)
+			continue;
+
+		// Angle check
+		if (dist > 128.0f && ang < 360)
+		{
+			VectorSubtract(targetOrg, start, blipdir);
+
+			// ZTM: Disabled best angle (for now), always shoot closest?
+			/* if (!besttarget || VectorLength(blipdir) < VectorLength(bestdir)) */
+			{
+				angle = AngleBetweenVectors(dir, blipdir);
+				if (angle > ang) {
+					continue;
+				}
+				//VectorCopy(blipdir, bestdir);
+			}
+		}
+
+		// We add it as our target
+		besttarget = target;
+		bestdist = dist;
+	}
+
+	return besttarget;
+}
+#endif
 
 /*
 ================

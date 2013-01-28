@@ -2,14 +2,14 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="Spearmint" />
+		<Option title="Turtle Arena" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/spearmint_release/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_release" />
+				<Option output="../../build/turtlearena_release/turtlearena.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/turtlearena_release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -29,6 +29,7 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -39,6 +40,7 @@
 					<Add library="user32" />
 					<Add library="advapi32" />
 					<Add library="winmm" />
+					<Add library="Psapi" />
 					<Add library="ws2_32" />
 					<Add library="SDLmain" />
 					<Add library="SDL" />
@@ -48,8 +50,8 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/spearmint_debug/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_debug" />
+				<Option output="../../build/turtlearena_debug/turtlearena.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/turtlearena_debug" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -70,6 +72,7 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -80,6 +83,7 @@
 					<Add library="user32" />
 					<Add library="advapi32" />
 					<Add library="winmm" />
+					<Add library="Psapi" />
 					<Add library="ws2_32" />
 					<Add library="SDLmain" />
 					<Add library="SDL" />
@@ -89,8 +93,8 @@
 			</Target>
 			<Target title="Release Linux i386">
 				<Option platforms="Unix;" />
-				<Option output="../../build/spearmint_release/spearmint.i386" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_release" />
+				<Option output="../../build/turtlearena_release/turtlearena.i386" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/turtlearena_release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -106,6 +110,7 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -116,8 +121,8 @@
 			</Target>
 			<Target title="Debug Linux i386">
 				<Option platforms="Unix;" />
-				<Option output="../../build/spearmint_debug/spearmint.i386" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_debug" />
+				<Option output="../../build/turtlearena_debug/turtlearena.i386" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/turtlearena_debug" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -134,6 +139,7 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -144,8 +150,8 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/spearmint_release/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_release" />
+				<Option output="../../build/turtlearena_release/turtlearena.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/turtlearena_release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -161,6 +167,7 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -171,8 +178,8 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/spearmint_debug/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/spearmint_debug" />
+				<Option output="../../build/turtlearena_debug/turtlearena.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/turtlearena_debug" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -189,6 +196,7 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
+					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -202,11 +210,36 @@
 			<Add option="-static" />
 			<Add option="-DRELATIVE_WIN32_ICON_PATH" />
 			<Add option="-DUSE_INTERNAL_JPEG" />
+			<Add option="-DNOTRATEDM" />
+			<Add option="-DNOBLOOD" />
+			<Add option="-DIOQ3ZTM" />
+			<Add option="-DIOQ3ZTM_NO_COMPAT" />
+			<Add option="-DIOQ3ZTM_NO_TEAM_MODEL" />
+			<Add option="-DTA_HOLDSYS" />
+			<Add option="-DTA_ITEMSYS" />
+			<Add option="-DTA_WEAPSYS" />
+			<Add option="-DTA_PLAYERSYS" />
+			<Add option="-DTA_SUPPORTQ3" />
+			<Add option="-DTA_ENTSYS" />
+			<Add option="-DTA_NPCSYS" />
+			<Add option="-DTA_PATHSYS" />
+			<Add option="-DTA_WEAPSYS_EX_COMPAT" />
+			<Add option="-DTA_BLOOM" />
+			<Add option="-DTA_SPLITVIEW" />
+			<Add option="-DTURTLEARENA" />
+			<Add option="-DTA_MISC" />
+			<Add option="-DTA_SP" />
+			<Add option="-DTA_HOLDABLE" />
+			<Add option="-DTA_WEAPSYS_EX" />
+			<Add option="-DTA_DATA" />
+			<Add option="-DNIGHTSMODE" />
+			<Add option="-DTA_GAME_MODELS" />
 			<Add directory="../../code/SDL12/include" />
 			<Add directory="../../code/libcurl" />
 			<Add directory="../../code/AL" />
 			<Add directory="../../code/libspeex/include" />
 			<Add directory="../../code/freetype-2.4.9/include" />
+			<Add directory="../../code/libtheora/include" />
 			<Add directory="../../code/libvorbis/include" />
 			<Add directory="../../code/libvorbis/lib" />
 			<Add directory="../../code/libogg/include" />
@@ -385,6 +418,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/client/cl_cin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/client/cl_cin_ogm.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/client/cl_console.c">
@@ -1116,6 +1152,9 @@
 		<Unit filename="../../code/renderer/tr_backend.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/renderer/tr_bloom.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/renderer/tr_bsp.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1277,10 +1316,17 @@
 		<Unit filename="../../code/zlib/adler32.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/zlib/compress.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/zlib/crc32.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/zlib/crc32.h" />
+		<Unit filename="../../code/zlib/deflate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/deflate.h" />
 		<Unit filename="../../code/zlib/inffast.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1294,6 +1340,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/zlib/inftrees.h" />
+		<Unit filename="../../code/zlib/trees.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/zlib/trees.h" />
 		<Unit filename="../../code/zlib/zconf.h" />
 		<Unit filename="../../code/zlib/zlib.h" />
 		<Unit filename="../../code/zlib/zutil.c">

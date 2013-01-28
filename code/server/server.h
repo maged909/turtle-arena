@@ -354,6 +354,9 @@ void SV_DirectConnect( netadr_t from );
 
 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg );
 void SV_UserinfoChanged( player_t *cl );
+#ifdef TA_GAME_MODELS
+void SV_UpdateUserinfos(void);
+#endif
 
 void SV_SetupPlayerEntity( player_t *player );
 void SV_PlayerEnterWorld( player_t *player, usercmd_t *cmd );

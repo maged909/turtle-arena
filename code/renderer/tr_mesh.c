@@ -374,7 +374,21 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
 				// the names have both been lowercased
 				if ( !strcmp( skin->surfaces[j]->name, surface->name ) ) {
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+					int index;
+
+					if (ent->e.skinFraction == 1.0f) {
+						index = skin->surfaces[j]->numShaders-1;
+					} else if (ent->e.skinFraction == 0.0f) {
+						index = 0;
+					} else { // >= 0 && < 1
+						index = (ent->e.skinFraction * skin->surfaces[j]->numShaders);
+					}
+
+					shader = skin->surfaces[j]->shaders[index];
+#else
 					shader = skin->surfaces[j]->shader;
+#endif
 					break;
 				}
 			}
@@ -401,7 +415,11 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			&& fogNum == 0
 			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) ) 
 			&& shader->sort == SS_OPAQUE ) {
+#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
+			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, qfalse, R_SortOrder(ent) );
+#else
 			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, qfalse );
+#endif
 		}
 
 		// projection shadows work fine with personal models
@@ -409,12 +427,20 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			&& fogNum == 0
 			&& (ent->e.renderfx & RF_SHADOW_PLANE )
 			&& shader->sort == SS_OPAQUE ) {
+#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
+			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, qfalse, R_SortOrder(ent) );
+#else
 			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, qfalse );
+#endif
 		}
 
 		// don't add third_person objects if not viewing through a portal
 		if ( !personalModel ) {
+#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
+			R_AddDrawSurf( (void *)surface, shader, fogNum, qfalse, R_SortOrder(ent) );
+#else
 			R_AddDrawSurf( (void *)surface, shader, fogNum, qfalse );
+#endif
 		}
 
 		surface = (md3Surface_t *)( (byte *)surface + surface->ofsEnd );

@@ -160,8 +160,10 @@ struct vm_s {
 	char		name[MAX_QPATH];
 	void	*searchPath;				// hint for FS_ReadFileDir()
 
+#ifndef NO_NATIVE_SUPPORT
 	// for dynamic linked modules
 	void		*dllHandle;
+#endif
 	intptr_t			(QDECL *entryPoint)( int callNum, ... );
 	void (*destroy)(vm_t* self);
 

@@ -36,8 +36,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define	JUMP_VELOCITY	270
 
+#if 1 // #ifndef TA_PLAYERSYS // PLAYERCFG_ANIMATION_TIMES // Doesn't work correctly?
 #define	TIMER_LAND		130
+#endif
+#ifndef TA_PLAYERSYS // PLAYERCFG_ANIMATION_TIMES
 #define	TIMER_GESTURE	(34*66+50)
+#endif
 
 #define	OVERCLIP		1.001f
 
@@ -53,6 +57,9 @@ typedef struct {
 	qboolean	walking;
 	qboolean	groundPlane;
 	trace_t		groundTrace;
+#ifdef IOQ3ZTM // LADDER
+	qboolean	ladder; // We'll use this to tell when the player is on a ladder
+#endif
 
 	float		impactSpeed;
 

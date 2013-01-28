@@ -73,6 +73,9 @@ typedef struct
 #define C_LOOKING		1
 #define C_WEAPONS		2
 #define C_MISC			3
+#ifdef IOQ3ZTM // NEW_CAM
+#define C_CAMERA		4
+#endif
 
 #define ID_MOVEMENT		100
 #define ID_LOOKING		101
@@ -82,12 +85,17 @@ typedef struct
 #define ID_BACK			105
 #define ID_SAVEANDEXIT	106
 #define ID_EXIT			107
+#ifdef IOQ3ZTM // NEW_CAM
+#define ID_CAMERA		108
+#endif
 
 enum {
 	// bindable actions
 	ID_SHOWSCORES,
 	ID_USEITEM,
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	ID_SPEED,
+#endif
 	ID_FORWARD,
 	ID_BACKPEDAL,
 	ID_MOVELEFT,
@@ -101,7 +109,13 @@ enum {
 	ID_LOOKDOWN,
 	ID_MOUSELOOK,
 	ID_CENTERVIEW,
+#ifdef TURTLEARENA // LOCKON
+	ID_LOCKON,
+#endif
+#ifndef TURTLEARENA // NOZOOM
 	ID_ZOOMVIEW,
+#endif
+#ifndef TA_WEAPSYS_EX
 	ID_WEAPON1,
 	ID_WEAPON2,
 	ID_WEAPON3,
@@ -116,21 +130,51 @@ enum {
 	ID_WEAPON12,
 	ID_WEAPON13,
 #endif
+#endif
 	ID_ATTACK,
+#ifdef TA_WEAPSYS_EX
+	ID_WEAPDROP,
+#else
 	ID_WEAPPREV,
 	ID_WEAPNEXT,
+#endif
 	ID_GESTURE,
 	ID_CHAT,
 	ID_CHAT2,
 	ID_CHAT3,
 	ID_CHAT4,
 	ID_TOGGLEMENU,
+#ifdef TA_HOLDSYS
+	ID_NEXTITEM,
+	ID_PREVITEM,
+#endif
+#ifdef TA_MISC // DROP_FLAG
+	ID_DROPFLAG,
+#endif
+#ifdef IOQ3ZTM
+	ID_VOTEYES,
+	ID_VOTENO,
+	ID_FOLLOWPLAYER,
+	ID_TAKESCREENSHOT,
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+	ID_CAMRESET,
+	ID_CAMTOGGLE,
+	ID_CAMRIGHT,
+	ID_CAMLEFT,
+	ID_CAMZOOMIN,
+	ID_CAMZOOMOUT,
+#endif
 
 	// all others
 	ID_FREELOOK,
 	ID_INVERTMOUSE,
+#ifndef TURTLEARENA // ALWAYS_RUN
 	ID_ALWAYSRUN,
+#endif
+#ifndef TA_WEAPSYS_EX
 	ID_AUTOSWITCH,
+#endif
 	ID_MOUSESPEED,
 	ID_SELECTJOY,
 	ID_JOYTHRESHOLD,
@@ -150,6 +194,7 @@ enum {
 	ANIM_TURNRIGHT,
 	ANIM_LOOKUP,
 	ANIM_LOOKDOWN,
+#ifndef TA_WEAPSYS_EX
 	ANIM_WEAPON1,
 	ANIM_WEAPON2,
 	ANIM_WEAPON3,
@@ -165,6 +210,7 @@ enum {
 	ANIM_WEAPON12,
 	ANIM_WEAPON13,
 #endif
+#endif // TA_WEAPSYS_EX
 	ANIM_ATTACK,
 	ANIM_GESTURE,
 	ANIM_DIE,
@@ -178,12 +224,20 @@ typedef struct
 	menutext_s			banner;
 	menubitmap_s		framel;
 	menubitmap_s		framer;
+#ifndef TA_MISC
 	menubitmap_s		player;
+#endif
 
 	menutext_s			movement;
 	menutext_s			looking;
 	menutext_s			weapons;
 	menutext_s			misc;
+#ifdef IOQ3ZTM // NEW_CAM
+	menutext_s			camera;
+#endif
+#ifdef IOQ3ZTM
+	menutext_s			defaults;
+#endif
 
 	menuaction_s		walkforward;
 	menuaction_s		backpedal;
@@ -194,7 +248,10 @@ typedef struct
 	menuaction_s		turnleft;
 	menuaction_s		turnright;
 	menuaction_s		sidestep;
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	menuaction_s		run;
+#endif
+#ifndef TA_WEAPSYS_EX
 	menuaction_s		machinegun;
 	menuaction_s		chainsaw;
 	menuaction_s		shotgun;
@@ -209,30 +266,67 @@ typedef struct
 	menuaction_s		proxylauncher;
 	menuaction_s		chaingun;
 #endif
+#endif
 	menuaction_s		attack;
+#ifdef TA_WEAPSYS_EX
+	menuaction_s		dropweapon;
+#else
 	menuaction_s		prevweapon;
 	menuaction_s		nextweapon;
+#endif
 	menuaction_s		lookup;
 	menuaction_s		lookdown;
 	menuaction_s		mouselook;
 	menuradiobutton_s	freelook;
 	menuaction_s		centerview;
+#ifdef TURTLEARENA // LOCKON
+	menuaction_s		lockon;
+#endif
+#ifndef TURTLEARENA // NOZOOM
 	menuaction_s		zoomview;
+#endif
 	menuaction_s		gesture;
 	menuradiobutton_s	invertmouse;
 	menuslider_s		sensitivity;
 	menuradiobutton_s	smoothmouse;
+#ifndef TURTLEARENA // ALWAYS_RUN
 	menuradiobutton_s	alwaysrun;
+#endif
 	menuaction_s		showscores;
+#ifndef TA_WEAPSYS_EX
 	menuradiobutton_s	autoswitch;
+#endif
+#ifdef TA_MISC // DROP_FLAG
+	menuaction_s		dropflag;
+#endif
 	menuaction_s		useitem;
+#ifdef TA_HOLDSYS/*2*/
+	menuaction_s		nextitem;
+	menuaction_s		previtem;
+#endif
+#ifndef TA_MISC
 	playerInfo_t		playerinfo;
+#endif
 	qboolean			changesmade;
 	menuaction_s		chat;
 	menuaction_s		chat2;
 	menuaction_s		chat3;
 	menuaction_s		chat4;
 	menuaction_s		togglemenu;
+#ifdef IOQ3ZTM
+	menuaction_s		voteYes;
+	menuaction_s		voteNo;
+	menuaction_s		followPlayer;
+	menuaction_s		takeScreenshot;
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+	menuaction_s		camreset;
+	menuaction_s		camtoggle;
+	menuaction_s		camright;
+	menuaction_s		camleft;
+	menuaction_s		camzoomin;
+	menuaction_s		camzoomout;
+#endif
 
 	menutext_s			selectjoy;
 	menuslider_s		joythreshold;
@@ -246,7 +340,9 @@ typedef struct
 	qboolean			playerChat;
 
 	menubitmap_s		back;
+#ifndef TA_MISC
 	menutext_s			name;
+#endif
 
 	int					localClient;
 	menucommon_s		***controls;
@@ -257,27 +353,54 @@ static controls_t s_controls;
 
 static qboolean waitingforkey = qfalse;
 
+#ifndef IOQ3ZTM
 static vec4_t controls_binding_color  = {1.00f, 0.43f, 0.00f, 1.00f};
+#endif
 
 static bind_t g_bindings[] = 
 {
 	{"+scores",			"show scores",		ID_SHOWSCORES,	ANIM_IDLE,		K_TAB,			-1,		-1, -1},
+#ifdef IOQ3ZTM
+	{"+button2",		"use item",			ID_USEITEM,		ANIM_IDLE,		K_ENTER,	K_MOUSE2,	-1, -1},
+#else
 	{"+button2",		"use item",			ID_USEITEM,		ANIM_IDLE,		K_ENTER,		-1,		-1, -1},
+#endif
+#ifdef TURTLEARENA // ALWAYS_RUN // NO_SPEED_KEY
+	{"+forward", 		"forward",			ID_FORWARD,		ANIM_RUN,		K_UPARROW,		-1,		-1, -1},
+#else
 	{"+speed", 			"run / walk",		ID_SPEED,		ANIM_RUN,		K_SHIFT,		-1,		-1,	-1},
 	{"+forward", 		"walk forward",		ID_FORWARD,		ANIM_WALK,		K_UPARROW,		-1,		-1, -1},
+#endif
 	{"+back", 			"backpedal",		ID_BACKPEDAL,	ANIM_BACK,		K_DOWNARROW,	-1,		-1, -1},
+#ifdef IOQ3ZTM
+	{"+moveleft", 		"step left",		ID_MOVELEFT,	ANIM_STEPLEFT,	'a',			-1,		-1, -1},
+	{"+moveright", 		"step right",		ID_MOVERIGHT,	ANIM_STEPRIGHT,	'd',			-1,		-1, -1},
+	{"+moveup",			"up / jump",		ID_MOVEUP,		ANIM_JUMP,		K_SPACE,		'/',	-1, -1},
+	{"+movedown",		"down / crouch",	ID_MOVEDOWN,	ANIM_CROUCH,	'c',			'.',	-1, -1},
+#else
 	{"+moveleft", 		"step left",		ID_MOVELEFT,	ANIM_STEPLEFT,	',',			-1,		-1, -1},
 	{"+moveright", 		"step right",		ID_MOVERIGHT,	ANIM_STEPRIGHT,	'.',			-1,		-1, -1},
 	{"+moveup",			"up / jump",		ID_MOVEUP,		ANIM_JUMP,		K_SPACE,		-1,		-1, -1},
 	{"+movedown",		"down / crouch",	ID_MOVEDOWN,	ANIM_CROUCH,	'c',			-1,		-1, -1},
+#endif
 	{"+left", 			"turn left",		ID_LEFT,		ANIM_TURNLEFT,	K_LEFTARROW,	-1,		-1, -1},
 	{"+right", 			"turn right",		ID_RIGHT,		ANIM_TURNRIGHT,	K_RIGHTARROW,	-1,		-1, -1},
 	{"+strafe", 		"sidestep / turn",	ID_STRAFE,		ANIM_IDLE,		K_ALT,			-1,		-1, -1},
 	{"+lookup", 		"look up",			ID_LOOKUP,		ANIM_LOOKUP,	K_PGDN,			-1,		-1, -1},
 	{"+lookdown", 		"look down",		ID_LOOKDOWN,	ANIM_LOOKDOWN,	K_DEL,			-1,		-1, -1},
+#ifdef IOQ3ZTM
+	{"+mlook", 			"mouse look",		ID_MOUSELOOK,	ANIM_IDLE,		'\\',			-1,		-1, -1},
+#else
 	{"+mlook", 			"mouse look",		ID_MOUSELOOK,	ANIM_IDLE,		'/',			-1,		-1, -1},
+#endif
 	{"centerview", 		"center view",		ID_CENTERVIEW,	ANIM_IDLE,		K_END,			-1,		-1, -1},
+#ifdef TURTLEARENA // LOCKON
+	{"+lockon", 		"lock-on",			ID_LOCKON,		ANIM_IDLE,		K_SHIFT,		-1,		-1, -1},
+#endif
+#ifndef TURTLEARENA // NOZOOM
 	{"+zoom", 			"zoom view",		ID_ZOOMVIEW,	ANIM_IDLE,		-1,				-1,		-1, -1},
+#endif
+#ifndef TA_WEAPSYS_EX
 	{"weapon 1",		"gauntlet",			ID_WEAPON1,		ANIM_WEAPON1,	'1',			-1,		-1, -1},
 	{"weapon 2",		"machinegun",		ID_WEAPON2,		ANIM_WEAPON2,	'2',			-1,		-1, -1},
 	{"weapon 3",		"shotgun",			ID_WEAPON3,		ANIM_WEAPON3,	'3',			-1,		-1, -1},
@@ -292,15 +415,53 @@ static bind_t g_bindings[] =
 	{"weapon 12",		"proximity mine",	ID_WEAPON12,	ANIM_WEAPON12,	-1,				-1,		-1, -1},
 	{"weapon 13",		"chain gun",		ID_WEAPON13,	ANIM_WEAPON13,	-1,				-1,		-1, -1},
 #endif
+#endif
+#ifdef IOQ3ZTM
+	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_CTRL,		K_MOUSE1,	-1, -1},
+#else
 	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_CTRL,			-1,		-1, -1},
+#endif
+#ifdef TA_WEAPSYS_EX
+	{"+button13",		"drop weapon",		ID_WEAPDROP,	ANIM_IDLE,		'e',			';',	-1, -1},
+#else
 	{"weapprev",		"prev weapon",		ID_WEAPPREV,	ANIM_IDLE,		'[',			-1,		-1, -1},
 	{"weapnext", 		"next weapon",		ID_WEAPNEXT,	ANIM_IDLE,		']',			-1,		-1, -1},
+#endif
+#ifdef IOQ3ZTM
+	{"+button3", 		"gesture",			ID_GESTURE,		ANIM_GESTURE,	-1,				-1,		-1, -1},
+#else
 	{"+button3", 		"gesture",			ID_GESTURE,		ANIM_GESTURE,	K_MOUSE3,		-1,		-1, -1},
+#endif
 	{"messagemode", 	"chat",				ID_CHAT,		ANIM_CHAT,		't',			-1,		-1, -1},
+#ifdef TA_MISC // team chat
+	{"messagemode2", 	"chat - team",		ID_CHAT2,		ANIM_CHAT,		'y',			-1,		-1, -1},
+#else
 	{"messagemode2", 	"chat - team",		ID_CHAT2,		ANIM_CHAT,		-1,				-1,		-1, -1},
+#endif
 	{"messagemode3", 	"chat - target",	ID_CHAT3,		ANIM_CHAT,		-1,				-1,		-1, -1},
 	{"messagemode4", 	"chat - attacker",	ID_CHAT4,		ANIM_CHAT,		-1,				-1,		-1, -1},
 	{"togglemenu", 		"toggle menu",		ID_TOGGLEMENU,	ANIM_IDLE,		K_ESCAPE,		-1,		-1, -1},
+#ifdef TA_HOLDSYS/*2*/
+	{"holdnext",		"next item",		ID_NEXTITEM,	ANIM_IDLE,		K_MWHEELUP,		']',	-1, -1},
+	{"holdprev",		"prev item",		ID_PREVITEM,	ANIM_IDLE,		K_MWHEELDOWN,	'[',	-1, -1},
+#endif
+#ifdef TA_MISC // DROP_FLAG
+	{"dropflag",		"drop flag",		ID_DROPFLAG,	ANIM_IDLE,		'f',			'\'',	-1, -1},
+#endif
+#ifdef IOQ3ZTM
+	{"vote yes",		"vote yes",			ID_VOTEYES,		ANIM_IDLE,		K_F1,			-1,		-1, -1},
+	{"vote no",			"vote no",			ID_VOTENO,		ANIM_IDLE,		K_F2,			-1,		-1, -1},
+	{"follownext",		"view another player",ID_FOLLOWPLAYER,ANIM_IDLE,	K_F12,			-1,		-1, -1},
+	{"screenshot",		"take screenshot",	ID_TAKESCREENSHOT,ANIM_IDLE,	K_F11,			-1,		-1, -1},
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+	{"camreset",		"reset camera",		ID_CAMRESET,	ANIM_IDLE,		K_KP_5,			-1,		-1, -1},
+	{"toggle cg_thirdperson","toggle third person",ID_CAMTOGGLE,ANIM_IDLE,	K_KP_HOME,		-1,		-1, -1},
+	{"+camright",		"turn camera right",ID_CAMRIGHT,	ANIM_IDLE,		K_KP_RIGHTARROW,-1,		-1, -1},
+	{"+camleft",		"turn camera left",	ID_CAMLEFT,		ANIM_IDLE,		K_KP_LEFTARROW,	-1,		-1, -1},
+	{"+camZoomIn",		"zoom in",			ID_CAMZOOMIN,	ANIM_IDLE,		K_KP_UPARROW,	-1,		-1, -1},
+	{"+camZoomOut",		"zoom out",			ID_CAMZOOMOUT,	ANIM_IDLE,		K_KP_DOWNARROW,	-1,		-1, -1},
+#endif
 	{(char*)NULL,		(char*)NULL,		0,				0,				-1,				-1,		-1,	-1},
 };
 
@@ -310,7 +471,9 @@ static bind_t g_bindings2[] =
 {
 	MINIBIND(ID_SHOWSCORES, -1, -1),
 	MINIBIND(ID_USEITEM, -1, -1),
+#ifndef TURTLEARENA // ALWAYS_RUN // NO_SPEED_KEY
 	MINIBIND(ID_SPEED, -1, -1),
+#endif
 	MINIBIND(ID_FORWARD, -1, -1),
 	MINIBIND(ID_BACKPEDAL, -1, -1),
 	MINIBIND(ID_MOVELEFT, -1, -1),
@@ -324,7 +487,13 @@ static bind_t g_bindings2[] =
 	MINIBIND(ID_LOOKDOWN, -1, -1),
 	MINIBIND(ID_MOUSELOOK, -1, -1),
 	MINIBIND(ID_CENTERVIEW, -1, -1),
+#ifdef TURTLEARENA // LOCKON
+	MINIBIND(ID_LOCKON, -1, -1),
+#endif
+#ifndef TURTLEARENA // NOZOOM
 	MINIBIND(ID_ZOOMVIEW, -1, -1),
+#endif
+#ifndef TA_WEAPSYS_EX
 	MINIBIND(ID_WEAPON1, -1, -1),
 	MINIBIND(ID_WEAPON2, -1, -1),
 	MINIBIND(ID_WEAPON3, -1, -1),
@@ -339,14 +508,40 @@ static bind_t g_bindings2[] =
 	MINIBIND(ID_WEAPON12, -1, -1),
 	MINIBIND(ID_WEAPON13, -1, -1),
 #endif
+#endif
 	MINIBIND(ID_ATTACK, -1, -1),
+#ifdef TA_WEAPSYS_EX
+	MINIBIND(ID_WEAPDROP, -1, -1),
+#else
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
+#endif
 	MINIBIND(ID_GESTURE, -1, -1),
 	MINIBIND(ID_CHAT, -1, -1),
 	MINIBIND(ID_CHAT2, -1, -1),
 	MINIBIND(ID_CHAT3, -1, -1),
 	MINIBIND(ID_CHAT4, -1, -1),
+#ifdef TA_HOLDSYS/*2*/
+	MINIBIND(ID_NEXTITEM, -1, -1),
+	MINIBIND(ID_PREVITEM, -1, -1),
+#endif
+#ifdef TA_MISC // DROP_FLAG
+	MINIBIND(ID_DROPFLAG, -1, -1),
+#endif
+#ifdef IOQ3ZTM
+	MINIBIND(ID_VOTEYES, -1, -1),
+	MINIBIND(ID_VOTENO, -1, -1),
+	MINIBIND(ID_FOLLOWPLAYER, -1, -1),
+	MINIBIND(ID_TAKESCREENSHOT, -1, -1),
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+	MINIBIND(ID_CAMRESET, -1, -1),
+	MINIBIND(ID_CAMTOGGLE, -1, -1),
+	MINIBIND(ID_CAMRIGHT, -1, -1),
+	MINIBIND(ID_CAMLEFT, -1, -1),
+	MINIBIND(ID_CAMZOOMIN, -1, -1),
+	MINIBIND(ID_CAMZOOMOUT, -1, -1),
+#endif
 	MINIBIND(0, -1, -1),
 };
 
@@ -354,7 +549,9 @@ static bind_t g_bindings3[] =
 {
 	MINIBIND(ID_SHOWSCORES, -1, -1),
 	MINIBIND(ID_USEITEM, -1, -1),
+#ifndef TURTLEARENA // ALWAYS_RUN // NO_SPEED_KEY
 	MINIBIND(ID_SPEED, -1, -1),
+#endif
 	MINIBIND(ID_FORWARD, -1, -1),
 	MINIBIND(ID_BACKPEDAL, -1, -1),
 	MINIBIND(ID_MOVELEFT, -1, -1),
@@ -368,7 +565,13 @@ static bind_t g_bindings3[] =
 	MINIBIND(ID_LOOKDOWN, -1, -1),
 	MINIBIND(ID_MOUSELOOK, -1, -1),
 	MINIBIND(ID_CENTERVIEW, -1, -1),
+#ifdef TURTLEARENA // LOCKON
+	MINIBIND(ID_LOCKON, -1, -1),
+#endif
+#ifndef TURTLEARENA // NOZOOM
 	MINIBIND(ID_ZOOMVIEW, -1, -1),
+#endif
+#ifndef TA_WEAPSYS_EX
 	MINIBIND(ID_WEAPON1, -1, -1),
 	MINIBIND(ID_WEAPON2, -1, -1),
 	MINIBIND(ID_WEAPON3, -1, -1),
@@ -383,14 +586,40 @@ static bind_t g_bindings3[] =
 	MINIBIND(ID_WEAPON12, -1, -1),
 	MINIBIND(ID_WEAPON13, -1, -1),
 #endif
+#endif
 	MINIBIND(ID_ATTACK, -1, -1),
+#ifdef TA_WEAPSYS_EX
+	MINIBIND(ID_WEAPDROP, -1, -1),
+#else
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
+#endif
 	MINIBIND(ID_GESTURE, -1, -1),
 	MINIBIND(ID_CHAT, -1, -1),
 	MINIBIND(ID_CHAT2, -1, -1),
 	MINIBIND(ID_CHAT3, -1, -1),
 	MINIBIND(ID_CHAT4, -1, -1),
+#ifdef TA_HOLDSYS/*2*/
+	MINIBIND(ID_NEXTITEM, -1, -1),
+	MINIBIND(ID_PREVITEM, -1, -1),
+#endif
+#ifdef TA_MISC // DROP_FLAG
+	MINIBIND(ID_DROPFLAG, -1, -1),
+#endif
+#ifdef IOQ3ZTM
+	MINIBIND(ID_VOTEYES, -1, -1),
+	MINIBIND(ID_VOTENO, -1, -1),
+	MINIBIND(ID_FOLLOWPLAYER, -1, -1),
+	MINIBIND(ID_TAKESCREENSHOT, -1, -1),
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+	MINIBIND(ID_CAMRESET, -1, -1),
+	MINIBIND(ID_CAMTOGGLE, -1, -1),
+	MINIBIND(ID_CAMRIGHT, -1, -1),
+	MINIBIND(ID_CAMLEFT, -1, -1),
+	MINIBIND(ID_CAMZOOMIN, -1, -1),
+	MINIBIND(ID_CAMZOOMOUT, -1, -1),
+#endif
 	MINIBIND(0, -1, -1),
 };
 
@@ -398,7 +627,9 @@ static bind_t g_bindings4[] =
 {
 	MINIBIND(ID_SHOWSCORES, -1, -1),
 	MINIBIND(ID_USEITEM, -1, -1),
+#ifndef TURTLEARENA // ALWAYS_RUN // NO_SPEED_KEY
 	MINIBIND(ID_SPEED, -1, -1),
+#endif
 	MINIBIND(ID_FORWARD, -1, -1),
 	MINIBIND(ID_BACKPEDAL, -1, -1),
 	MINIBIND(ID_MOVELEFT, -1, -1),
@@ -412,7 +643,13 @@ static bind_t g_bindings4[] =
 	MINIBIND(ID_LOOKDOWN, -1, -1),
 	MINIBIND(ID_MOUSELOOK, -1, -1),
 	MINIBIND(ID_CENTERVIEW, -1, -1),
+#ifdef TURTLEARENA // LOCKON
+	MINIBIND(ID_LOCKON, -1, -1),
+#endif
+#ifndef TURTLEARENA // NOZOOM
 	MINIBIND(ID_ZOOMVIEW, -1, -1),
+#endif
+#ifndef TA_WEAPSYS_EX
 	MINIBIND(ID_WEAPON1, -1, -1),
 	MINIBIND(ID_WEAPON2, -1, -1),
 	MINIBIND(ID_WEAPON3, -1, -1),
@@ -427,14 +664,40 @@ static bind_t g_bindings4[] =
 	MINIBIND(ID_WEAPON12, -1, -1),
 	MINIBIND(ID_WEAPON13, -1, -1),
 #endif
+#endif
 	MINIBIND(ID_ATTACK, -1, -1),
+#ifdef TA_WEAPSYS_EX
+	MINIBIND(ID_WEAPDROP, -1, -1),
+#else
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
+#endif
 	MINIBIND(ID_GESTURE, -1, -1),
 	MINIBIND(ID_CHAT, -1, -1),
 	MINIBIND(ID_CHAT2, -1, -1),
 	MINIBIND(ID_CHAT3, -1, -1),
 	MINIBIND(ID_CHAT4, -1, -1),
+#ifdef TA_HOLDSYS/*2*/
+	MINIBIND(ID_NEXTITEM, -1, -1),
+	MINIBIND(ID_PREVITEM, -1, -1),
+#endif
+#ifdef TA_MISC // DROP_FLAG
+	MINIBIND(ID_DROPFLAG, -1, -1),
+#endif
+#ifdef IOQ3ZTM
+	MINIBIND(ID_VOTEYES, -1, -1),
+	MINIBIND(ID_VOTENO, -1, -1),
+	MINIBIND(ID_FOLLOWPLAYER, -1, -1),
+	MINIBIND(ID_TAKESCREENSHOT, -1, -1),
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+	MINIBIND(ID_CAMRESET, -1, -1),
+	MINIBIND(ID_CAMTOGGLE, -1, -1),
+	MINIBIND(ID_CAMRIGHT, -1, -1),
+	MINIBIND(ID_CAMLEFT, -1, -1),
+	MINIBIND(ID_CAMZOOMIN, -1, -1),
+	MINIBIND(ID_CAMZOOMOUT, -1, -1),
+#endif
 	MINIBIND(0, -1, -1),
 };
 
@@ -448,15 +711,19 @@ bind_t *g_bindings_list[MAX_SPLITVIEW] =
 
 static configcvar_t g_configcvars[] =
 {
+#ifndef TURTLEARENA // ALWAYS_RUN
 	{"cl_run",			0,					0},
 	{"2cl_run",			0,					0},
 	{"3cl_run",			0,					0},
 	{"4cl_run",			0,					0},
+#endif
 	{"m_pitch",			0,					0},
+#ifndef TA_WEAPSYS_EX
 	{"cg_autoswitch",	0,					0},
 	{"2cg_autoswitch",	0,					0},
 	{"3cg_autoswitch",	0,					0},
 	{"4cg_autoswitch",	0,					0},
+#endif
 	{"sensitivity",		0,					0},
 	{"in_joystickThreshold",	0,			0},
 	{"2in_joystickThreshold",	0,			0},
@@ -469,8 +736,15 @@ static configcvar_t g_configcvars[] =
 
 static menucommon_s *g_movement_controls[] =
 {
+#ifdef TURTLEARENA // LOCKON
+	(menucommon_s *)&s_controls.lockon,
+#endif
+#ifndef TURTLEARENA // ALWAYS_RUN
 	(menucommon_s *)&s_controls.alwaysrun,     
-	(menucommon_s *)&s_controls.run,            
+#endif
+#ifndef TURTLEARENA // NO_SPEED_KEY
+	(menucommon_s *)&s_controls.run,    
+#endif        
 	(menucommon_s *)&s_controls.walkforward,
 	(menucommon_s *)&s_controls.backpedal,
 	(menucommon_s *)&s_controls.stepleft,      
@@ -485,6 +759,9 @@ static menucommon_s *g_movement_controls[] =
 
 static menucommon_s *g_weapons_controls[] = {
 	(menucommon_s *)&s_controls.attack,           
+#ifdef TA_WEAPSYS_EX
+	(menucommon_s *)&s_controls.dropweapon,
+#else
 	(menucommon_s *)&s_controls.nextweapon,
 	(menucommon_s *)&s_controls.prevweapon,
 	(menucommon_s *)&s_controls.autoswitch,    
@@ -502,6 +779,17 @@ static menucommon_s *g_weapons_controls[] = {
 	(menucommon_s *)&s_controls.proxylauncher,
 	(menucommon_s *)&s_controls.chaingun,
 #endif
+#endif
+#ifdef TA_MISC // DROP_FLAG
+	(menucommon_s *)&s_controls.dropflag,
+#endif
+#ifdef TA_MISC
+	(menucommon_s *)&s_controls.useitem,
+#endif
+#ifdef TA_HOLDSYS/*2*/
+	(menucommon_s *)&s_controls.nextitem,
+	(menucommon_s *)&s_controls.previtem,
+#endif
 	NULL,
 };
 
@@ -514,7 +802,9 @@ static menucommon_s *g_looking_controls[] = {
 	(menucommon_s *)&s_controls.mouselook,
 	(menucommon_s *)&s_controls.freelook,
 	(menucommon_s *)&s_controls.centerview,
+#ifndef TURTLEARENA // NOZOOM
 	(menucommon_s *)&s_controls.zoomview,
+#endif
 	(menucommon_s *)&s_controls.selectjoy,
 	(menucommon_s *)&s_controls.joythreshold,
 	NULL,
@@ -522,21 +812,44 @@ static menucommon_s *g_looking_controls[] = {
 
 static menucommon_s *g_misc_controls[] = {
 	(menucommon_s *)&s_controls.showscores, 
+#ifndef TA_MISC
 	(menucommon_s *)&s_controls.useitem,
+#endif
 	(menucommon_s *)&s_controls.gesture,
 	(menucommon_s *)&s_controls.chat,
 	(menucommon_s *)&s_controls.chat2,
 	(menucommon_s *)&s_controls.chat3,
 	(menucommon_s *)&s_controls.chat4,
+#ifdef IOQ3ZTM
+	(menucommon_s *)&s_controls.voteYes,
+	(menucommon_s *)&s_controls.voteNo,
+	(menucommon_s *)&s_controls.followPlayer,
+	(menucommon_s *)&s_controls.takeScreenshot,
+#endif
 	(menucommon_s *)&s_controls.togglemenu,
 	NULL,
 };
+
+#ifdef IOQ3ZTM // NEW_CAMERA
+static menucommon_s *g_camera_controls[] = {
+	(menucommon_s *)&s_controls.camreset,
+	(menucommon_s *)&s_controls.camtoggle,
+	(menucommon_s *)&s_controls.camright,
+	(menucommon_s *)&s_controls.camleft,
+	(menucommon_s *)&s_controls.camzoomin,
+	(menucommon_s *)&s_controls.camzoomout,
+	NULL,
+};
+#endif
 
 static menucommon_s **g_controls[] = {
 	g_movement_controls,
 	g_looking_controls,
 	g_weapons_controls,
 	g_misc_controls,
+#ifdef IOQ3ZTM // NEW_CAMERA
+	g_camera_controls,
+#endif
 	NULL
 };
 
@@ -544,7 +857,9 @@ static menucommon_s *g_looking_mini_controls[] = {
 	(menucommon_s *)&s_controls.lookup,
 	(menucommon_s *)&s_controls.lookdown,
 	(menucommon_s *)&s_controls.centerview,
+#ifndef TURTLEARENA // NOZOOM
 	(menucommon_s *)&s_controls.zoomview,
+#endif
 	(menucommon_s *)&s_controls.selectjoy,
 	(menucommon_s *)&s_controls.joythreshold,
 	NULL,
@@ -552,8 +867,15 @@ static menucommon_s *g_looking_mini_controls[] = {
 
 static menucommon_s *g_misc_mini_controls[] = {
 	(menucommon_s *)&s_controls.showscores,
+#ifndef TA_MISC
 	(menucommon_s *)&s_controls.useitem,
+#endif
 	(menucommon_s *)&s_controls.gesture,
+#ifdef IOQ3ZTM
+	(menucommon_s *)&s_controls.voteYes,
+	(menucommon_s *)&s_controls.voteNo,
+	(menucommon_s *)&s_controls.followPlayer,
+#endif
 	NULL,
 };
 
@@ -570,6 +892,9 @@ static menucommon_s *g_unused_controls[] = {
 	(menucommon_s *)&s_controls.chat2,
 	(menucommon_s *)&s_controls.chat3,
 	(menucommon_s *)&s_controls.chat4,
+#ifdef IOQ3ZTM
+	(menucommon_s *)&s_controls.takeScreenshot,
+#endif
 	NULL,
 };
 
@@ -578,6 +903,9 @@ static menucommon_s **g_mini_controls[] = {
 	g_looking_mini_controls,
 	g_weapons_controls,
 	g_misc_mini_controls,
+#ifdef IOQ3ZTM // NEW_CAMERA
+	g_camera_controls,
+#endif
 	g_unused_controls, // dummy controls that are not used but are disabled so they are not seen.
 	NULL
 };
@@ -657,6 +985,7 @@ static float Controls_GetCvarValue( char* name )
 }
 
 
+#ifndef TA_MISC
 /*
 =================
 Controls_UpdateModel
@@ -667,8 +996,14 @@ static void Controls_UpdateModel( int anim ) {
 	VectorClear( s_controls.playerMoveangles );
 	s_controls.playerViewangles[YAW] = 180 - 30;
 	s_controls.playerMoveangles[YAW] = s_controls.playerViewangles[YAW];
+#ifdef TA_WEAPSYS
+	s_controls.playerLegs		     = BG_LegsStandForWeapon(&s_controls.playerinfo.playercfg,
+												s_controls.playerinfo.playercfg.default_weapon);
+	s_controls.playerTorso			 = BG_TorsoStandForWeapon(s_controls.playerinfo.playercfg.default_weapon);
+#else
 	s_controls.playerLegs		     = LEGS_IDLE;
 	s_controls.playerTorso			 = TORSO_STAND;
+#endif
 	s_controls.playerWeapon			 = -1;
 	s_controls.playerChat			 = qfalse;
 
@@ -719,6 +1054,22 @@ static void Controls_UpdateModel( int anim ) {
 		s_controls.playerViewangles[PITCH] = 45;
 		break;
 
+#ifndef TA_WEAPSYS_EX
+#ifdef TA_WEAPSYS
+	case ANIM_WEAPON1:
+	case ANIM_WEAPON2:
+	case ANIM_WEAPON3:
+	case ANIM_WEAPON4:
+	case ANIM_WEAPON5:
+	case ANIM_WEAPON6:
+	case ANIM_WEAPON7:
+	case ANIM_WEAPON8:
+	case ANIM_WEAPON9:
+	case ANIM_WEAPON10:
+	// ZTM: TODO?: Support upto 16 weapons in menu?
+		s_controls.playerWeapon = anim - ANIM_WEAPON1 + 1;
+		break;
+#else
 	case ANIM_WEAPON1:
 		s_controls.playerWeapon = WP_GAUNTLET;
 		break;
@@ -758,6 +1109,8 @@ static void Controls_UpdateModel( int anim ) {
 	case ANIM_WEAPON10:
 		s_controls.playerWeapon = WP_GRAPPLING_HOOK;
 		break;
+#endif
+#endif
 
 #ifdef MISSIONPACK
 	case ANIM_WEAPON11:
@@ -797,6 +1150,7 @@ static void Controls_UpdateModel( int anim ) {
 
 	UI_PlayerInfo_SetInfo( &s_controls.playerinfo, s_controls.playerLegs, s_controls.playerTorso, s_controls.playerViewangles, s_controls.playerMoveangles, s_controls.playerWeapon, s_controls.playerChat );
 }
+#endif
 
 
 /*
@@ -829,10 +1183,19 @@ static void Controls_Update( void ) {
 	// position controls
 	y = ( SCREEN_HEIGHT - j * SMALLCHAR_HEIGHT ) / 2;
 	for( j = 0;	(control = controls[j]) ; j++, y += SMALLCHAR_HEIGHT ) {
+#ifdef TA_MISC
+		control->x      = 384;
+#else
 		control->x      = 320;
+#endif
 		control->y      = y;
+#ifdef TA_MISC
+		control->left   = control->x - 21*SMALLCHAR_WIDTH;
+		control->right  = control->x + 21*SMALLCHAR_WIDTH;
+#else
 		control->left   = 320 - 19*SMALLCHAR_WIDTH;
 		control->right  = 320 + 21*SMALLCHAR_WIDTH;
+#endif
 		control->top    = y;
 		control->bottom = y + SMALLCHAR_HEIGHT;
 	}
@@ -846,8 +1209,10 @@ static void Controls_Update( void ) {
 		// enable action item
 		((menucommon_s*)(s_controls.menu.items[s_controls.menu.cursor]))->flags &= ~QMF_GRAYED;
 
+#ifndef TA_MISC
 		// don't gray out player's name
 		s_controls.name.generic.flags &= ~QMF_GRAYED;
+#endif
 
 		return;
 	}
@@ -862,11 +1227,17 @@ static void Controls_Update( void ) {
 	s_controls.movement.generic.flags &= ~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
 	s_controls.weapons.generic.flags  &= ~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
 	s_controls.misc.generic.flags     &= ~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
+#ifdef IOQ3ZTM // NEW_CAM
+	s_controls.camera.generic.flags     &= ~(QMF_GRAYED|QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
+#endif
 
 	s_controls.looking.generic.flags  |= QMF_PULSEIFFOCUS;
 	s_controls.movement.generic.flags |= QMF_PULSEIFFOCUS;
 	s_controls.weapons.generic.flags  |= QMF_PULSEIFFOCUS;
 	s_controls.misc.generic.flags     |= QMF_PULSEIFFOCUS;
+#ifdef IOQ3ZTM // NEW_CAM
+	s_controls.camera.generic.flags     |= QMF_PULSEIFFOCUS;
+#endif
 
 	// set buttons
 	switch( s_controls.section ) {
@@ -889,6 +1260,13 @@ static void Controls_Update( void ) {
 		s_controls.misc.generic.flags &= ~QMF_PULSEIFFOCUS;
 		s_controls.misc.generic.flags |= (QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
 		break;
+
+#ifdef IOQ3ZTM // NEW_CAM
+	case C_CAMERA:
+		s_controls.camera.generic.flags &= ~QMF_PULSEIFFOCUS;
+		s_controls.camera.generic.flags |= (QMF_HIGHLIGHT|QMF_HIGHLIGHT_IF_FOCUS);
+		break;
+#endif
 	}
 }
 
@@ -966,8 +1344,13 @@ static void Controls_DrawKeyBinding( void *self )
 		}
 		else
 		{
+#ifdef IOQ3ZTM // ZTM: Use correct text_color_normal, in Q3 is was the same color.
+			UI_DrawString( x - SMALLCHAR_WIDTH, y, g_bindings[a->generic.id].label, UI_RIGHT|UI_SMALLFONT, text_color_normal );
+			UI_DrawString( x + SMALLCHAR_WIDTH, y, name, UI_LEFT|UI_SMALLFONT, text_color_normal );
+#else
 			UI_DrawString( x - SMALLCHAR_WIDTH, y, g_bindings[a->generic.id].label, UI_RIGHT|UI_SMALLFONT, controls_binding_color );
 			UI_DrawString( x + SMALLCHAR_WIDTH, y, name, UI_LEFT|UI_SMALLFONT, controls_binding_color );
+#endif
 		}
 	}
 }
@@ -1023,6 +1406,7 @@ static void Controls_StatusBar( void *self )
 }
 
 
+#ifndef TA_MISC
 /*
 =================
 Controls_DrawPlayer
@@ -1042,6 +1426,7 @@ static void Controls_DrawPlayer( void *self ) {
 	b = (menubitmap_s*) self;
 	UI_DrawPlayer( b->generic.x, b->generic.y, b->width, b->height, &s_controls.playerinfo, uis.realtime/2 );
 }
+#endif
 
 
 /*
@@ -1105,8 +1490,12 @@ static void Controls_GetConfig( void )
 		s_controls.freelook.curvalue     = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
 	}
 
+#ifndef TURTLEARENA // ALWAYS_RUN
 	s_controls.alwaysrun.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) ) );
+#endif
+#ifndef TA_WEAPSYS_EX
 	s_controls.autoswitch.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
+#endif
 	s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
 }
 
@@ -1142,8 +1531,12 @@ static void Controls_SetConfig( void )
 	}
 
 	if (s_controls.localClient != 0) {
+#ifndef TURTLEARENA // ALWAYS_RUN
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ), s_controls.alwaysrun.curvalue );
+#endif
+#ifndef TA_WEAPSYS_EX
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
+#endif
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
 		return;
 	}
@@ -1154,8 +1547,12 @@ static void Controls_SetConfig( void )
 		trap_Cvar_SetValue( "m_pitch", fabs( trap_Cvar_VariableValue( "m_pitch" ) ) );
 
 	trap_Cvar_SetValue( "m_filter", s_controls.smoothmouse.curvalue );
+#ifndef TURTLEARENA // ALWAYS_RUN
 	trap_Cvar_SetValue( "cl_run", s_controls.alwaysrun.curvalue );
+#endif
+#ifndef TA_WEAPSYS_EX
 	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
+#endif
 	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
 	trap_Cvar_SetValue( "in_joystickThreshold", s_controls.joythreshold.curvalue );
 	trap_Cvar_SetValue( "cl_freelook", s_controls.freelook.curvalue );
@@ -1180,13 +1577,27 @@ static void Controls_SetDefaults( void )
 		if (!g_bindings[i].label)
 			break;
 
+#ifdef IOQ3ZTM
+		if ( bindptr->defaultbind1 == -1 && bindptr->bind1 != -1 ) {
+			trap_Key_SetBinding( bindptr->bind1, "" );
+			bindptr->bind1 = -1;
+		}
+		if ( bindptr->defaultbind2 == -1 && bindptr->bind2 != -1 ) {
+			trap_Key_SetBinding( bindptr->bind2, "" );
+			bindptr->bind2 = -1;
+		}
+#endif
 		bindptr->bind1 = bindptr->defaultbind1;
 		bindptr->bind2 = bindptr->defaultbind2;
 	}
 
 	if (s_controls.localClient != 0) {
+#ifndef TURTLEARENA // ALWAYS_RUN
 		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) );
+#endif
+#ifndef TA_WEAPSYS_EX
 		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) );
+#endif
 		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystick"), 0);
 		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystickNo"), 0);
 		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) );
@@ -1195,8 +1606,12 @@ static void Controls_SetDefaults( void )
 
 	s_controls.invertmouse.curvalue  = Controls_GetCvarDefault( "m_pitch" ) < 0;
 	s_controls.smoothmouse.curvalue  = Controls_GetCvarDefault( "m_filter" );
+#ifndef TURTLEARENA // ALWAYS_RUN
 	s_controls.alwaysrun.curvalue    = Controls_GetCvarDefault( "cl_run" );
+#endif
+#ifndef TA_WEAPSYS_EX
 	s_controls.autoswitch.curvalue   = Controls_GetCvarDefault( "cg_autoswitch" );
+#endif
 	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
 	trap_Cvar_SetValue("in_joystick", 0);
 	trap_Cvar_SetValue("in_joystickNo", 0);
@@ -1227,7 +1642,9 @@ static sfxHandle_t Controls_MenuKey( int key )
 				key = -1;
 				break;
 		
+#ifndef TA_MISC // MENU: Right Mouse button = left arrow
 			case K_MOUSE2:
+#endif
 			case K_ESCAPE:
 				if (s_controls.changesmade)
 					Controls_SetConfig();
@@ -1398,6 +1815,16 @@ static void Controls_MenuEvent( void* ptr, int event )
 			}
 			break;
 
+#ifdef IOQ3ZTM // NEW_CAM
+		case ID_CAMERA:
+			if (event == QM_ACTIVATED)
+			{
+				s_controls.section = C_CAMERA; 
+				Controls_Update();
+			}
+			break;
+#endif
+
 		case ID_DEFAULTS:
 			if (event == QM_ACTIVATED)
 			{
@@ -1433,8 +1860,12 @@ static void Controls_MenuEvent( void* ptr, int event )
 		case ID_MOUSESPEED:
 		case ID_INVERTMOUSE:
 		case ID_SMOOTHMOUSE:
+#ifndef TURTLEARENA // ALWAYS_RUN
 		case ID_ALWAYSRUN:
+#endif
+#ifndef TA_WEAPSYS_EX
 		case ID_AUTOSWITCH:
+#endif
 		case ID_JOYTHRESHOLD:
 			if (event == QM_ACTIVATED)
 			{
@@ -1458,6 +1889,7 @@ Controls_ActionEvent
 */
 static void Controls_ActionEvent( void* ptr, int event )
 {
+#ifndef TA_MISC
 	if (event == QM_LOSTFOCUS)
 	{
 		Controls_UpdateModel( ANIM_IDLE );
@@ -1466,13 +1898,16 @@ static void Controls_ActionEvent( void* ptr, int event )
 	{
 		Controls_UpdateModel( g_bindings[((menucommon_s*)ptr)->id].anim );
 	}
-	else if ((event == QM_ACTIVATED) && !waitingforkey)
+	else
+#endif
+	if ((event == QM_ACTIVATED) && !waitingforkey)
 	{
 		waitingforkey = qtrue;
 		Controls_Update();
 	}
 }
 
+#ifndef TA_MISC
 /*
 =================
 Controls_InitModel
@@ -1493,15 +1928,45 @@ Controls_InitWeapons
 =================
 */
 static void Controls_InitWeapons( void ) {
+#ifndef TA_WEAPSYS_EX // Don't pre-load weapons in controls menu, there could be a lot that are not seen in menu...
 	gitem_t *	item;
+#ifdef TA_ITEMSYS
+	int i;
 
-	for ( item = bg_itemlist + 1 ; item->classname ; item++ ) {
+	for (i = BG_NumItems()-1; i > 0; i--)
+#else
+	for ( item = bg_itemlist + 1 ; item->classname ; item++ )
+#endif
+	{
+#ifdef TA_ITEMSYS
+		item = BG_ItemForItemNum(i);
+#endif
 		if ( item->giType != IT_WEAPON ) {
 			continue;
 		}
+#ifdef TA_WEAPSYS
+		// weap1
+		if (item->world_model[2]) {
+			trap_R_RegisterModel( item->world_model[2] );
+		}
+		else if (item->world_model[0]) {
+			trap_R_RegisterModel( item->world_model[0] );
+		}
+
+		// weap2
+		if (item->world_model[3]) {
+			trap_R_RegisterModel( item->world_model[3] );
+		}
+		else {
+			// uses weap1
+		}
+#else
 		trap_R_RegisterModel( item->world_model[0] );
+#endif
 	}
+#endif
 }
+#endif
 
 /*
 =================
@@ -1510,7 +1975,11 @@ Controls_MenuInit
 */
 static void Controls_MenuInit( int localClient )
 {
+#ifdef TA_MISC
+	static char bannertext[32];
+#else
 	static char playername[32];
+#endif
 	int			y;
 
 	// zero set all our globals
@@ -1535,6 +2004,10 @@ static void Controls_MenuInit( int localClient )
 
 	Controls_Cache();
 
+#ifdef TA_MISC
+	Com_sprintf(bannertext, sizeof (bannertext), "PLAYER %d CONTROLS", s_controls.localClient+1);
+#endif
+
 	s_controls.menu.key        = Controls_MenuKey;
 	s_controls.menu.wrapAround = qtrue;
 	s_controls.menu.fullscreen = qtrue;
@@ -1543,8 +2016,12 @@ static void Controls_MenuInit( int localClient )
 	s_controls.banner.generic.flags	= QMF_CENTER_JUSTIFY;
 	s_controls.banner.generic.x		= 320;
 	s_controls.banner.generic.y		= 16;
+#ifdef TA_MISC
+	s_controls.banner.string		= bannertext;
+#else
 	s_controls.banner.string		= "CONTROLS";
-	s_controls.banner.color			= color_white;
+#endif
+	s_controls.banner.color			= text_banner_color;
 	s_controls.banner.style			= UI_CENTER;
 
 	s_controls.framel.generic.type  = MTYPE_BITMAP;
@@ -1563,7 +2040,11 @@ static void Controls_MenuInit( int localClient )
 	s_controls.framer.width  	    = 256;
 	s_controls.framer.height  	    = 334;
 
+#ifdef IOQ3ZTM // NEW_CAM
+	y = 240 - 2.5f * PROP_HEIGHT;
+#else
 	y = 240 - 2 * PROP_HEIGHT;
+#endif
 
 	s_controls.looking.generic.type     = MTYPE_PTEXT;
 	s_controls.looking.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -1573,7 +2054,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.looking.generic.y	    = y;
 	s_controls.looking.string			= "LOOK";
 	s_controls.looking.style			= UI_RIGHT;
-	s_controls.looking.color			= color_red;
+	s_controls.looking.color			= text_big_color;
 
 	y += PROP_HEIGHT;
 	s_controls.movement.generic.type     = MTYPE_PTEXT;
@@ -1584,7 +2065,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.movement.generic.y	     = y;
 	s_controls.movement.string			= "MOVE";
 	s_controls.movement.style			= UI_RIGHT;
-	s_controls.movement.color			= color_red;
+	s_controls.movement.color			= text_big_color;
 
 	y += PROP_HEIGHT;
 	s_controls.weapons.generic.type	    = MTYPE_PTEXT;
@@ -1593,9 +2074,13 @@ static void Controls_MenuInit( int localClient )
 	s_controls.weapons.generic.callback	= Controls_MenuEvent;
 	s_controls.weapons.generic.x	    = 152;
 	s_controls.weapons.generic.y	    = y;
+#ifdef TA_MISC
+	s_controls.weapons.string			= "ITEMS";
+#else
 	s_controls.weapons.string			= "SHOOT";
+#endif
 	s_controls.weapons.style			= UI_RIGHT;
-	s_controls.weapons.color			= color_red;
+	s_controls.weapons.color			= text_big_color;
 
 	y += PROP_HEIGHT;
 	s_controls.misc.generic.type	 = MTYPE_PTEXT;
@@ -1606,7 +2091,33 @@ static void Controls_MenuInit( int localClient )
 	s_controls.misc.generic.y		 = y;
 	s_controls.misc.string			= "MISC";
 	s_controls.misc.style			= UI_RIGHT;
-	s_controls.misc.color			= color_red;
+	s_controls.misc.color			= text_big_color;
+
+#ifdef IOQ3ZTM // NEW_CAM
+	y += PROP_HEIGHT;
+	s_controls.camera.generic.type		= MTYPE_PTEXT;
+	s_controls.camera.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_controls.camera.generic.id		= ID_CAMERA;
+	s_controls.camera.generic.callback	= Controls_MenuEvent;
+	s_controls.camera.generic.x			= 152;
+	s_controls.camera.generic.y			= y;
+	s_controls.camera.string			= "CAMERA";
+	s_controls.camera.style				= UI_RIGHT;
+	s_controls.camera.color				= text_big_color;
+#endif
+
+#ifdef IOQ3ZTM
+	y += PROP_HEIGHT;
+	s_controls.defaults.generic.type		= MTYPE_PTEXT;
+	s_controls.defaults.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_controls.defaults.generic.id			= ID_DEFAULTS;
+	s_controls.defaults.generic.callback	= Controls_MenuEvent;
+	s_controls.defaults.generic.x			= 152;
+	s_controls.defaults.generic.y			= y;
+	s_controls.defaults.string				= "RESET";
+	s_controls.defaults.style				= UI_RIGHT;
+	s_controls.defaults.color				= text_big_color;
+#endif
 
 	s_controls.back.generic.type	 = MTYPE_BITMAP;
 	s_controls.back.generic.name     = ART_BACK0;
@@ -1619,6 +2130,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.back.height  		 = 64;
 	s_controls.back.focuspic         = ART_BACK1;
 
+#ifndef TA_MISC
 	s_controls.player.generic.type      = MTYPE_BITMAP;
 	s_controls.player.generic.flags     = QMF_INACTIVE;
 	s_controls.player.generic.ownerdraw = Controls_DrawPlayer;
@@ -1626,6 +2138,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.player.generic.y	        = -40;
 	s_controls.player.width	            = 32*10;
 	s_controls.player.height            = 56*10;
+#endif
 
 	s_controls.walkforward.generic.type	     = MTYPE_ACTION;
 	s_controls.walkforward.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
@@ -1681,12 +2194,15 @@ static void Controls_MenuInit( int localClient )
 	s_controls.sidestep.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.sidestep.generic.id        = ID_STRAFE;
 
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	s_controls.run.generic.type	     = MTYPE_ACTION;
 	s_controls.run.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.run.generic.callback  = Controls_ActionEvent;
 	s_controls.run.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.run.generic.id        = ID_SPEED;
+#endif
 
+#ifndef TA_WEAPSYS_EX
 	s_controls.chainsaw.generic.type	  = MTYPE_ACTION;
 	s_controls.chainsaw.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.chainsaw.generic.callback  = Controls_ActionEvent;
@@ -1760,6 +2276,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.chaingun.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.chaingun.generic.id        = ID_WEAPON13;
 #endif
+#endif
 
 	s_controls.attack.generic.type	    = MTYPE_ACTION;
 	s_controls.attack.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
@@ -1767,6 +2284,13 @@ static void Controls_MenuInit( int localClient )
 	s_controls.attack.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.attack.generic.id        = ID_ATTACK;
 
+#ifdef TA_WEAPSYS_EX
+	s_controls.dropweapon.generic.type	    = MTYPE_ACTION;
+	s_controls.dropweapon.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.dropweapon.generic.callback  = Controls_ActionEvent;
+	s_controls.dropweapon.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.dropweapon.generic.id        = ID_WEAPDROP;
+#else
 	s_controls.prevweapon.generic.type	    = MTYPE_ACTION;
 	s_controls.prevweapon.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.prevweapon.generic.callback  = Controls_ActionEvent;
@@ -1778,6 +2302,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.nextweapon.generic.callback  = Controls_ActionEvent;
 	s_controls.nextweapon.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.nextweapon.generic.id        = ID_WEAPNEXT;
+#endif
 
 	s_controls.lookup.generic.type	    = MTYPE_ACTION;
 	s_controls.lookup.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
@@ -1811,17 +2336,49 @@ static void Controls_MenuInit( int localClient )
 	s_controls.centerview.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.centerview.generic.id        = ID_CENTERVIEW;
 
+#ifdef TURTLEARENA // LOCKON
+	s_controls.lockon.generic.type	  = MTYPE_ACTION;
+	s_controls.lockon.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.lockon.generic.callback  = Controls_ActionEvent;
+	s_controls.lockon.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.lockon.generic.id        = ID_LOCKON;
+#endif
+
+#ifndef TURTLEARENA // NOZOOM
 	s_controls.zoomview.generic.type	  = MTYPE_ACTION;
 	s_controls.zoomview.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.zoomview.generic.callback  = Controls_ActionEvent;
 	s_controls.zoomview.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.zoomview.generic.id        = ID_ZOOMVIEW;
+#endif
+
+#ifdef TA_MISC // DROP_FLAG
+	s_controls.dropflag.generic.type		= MTYPE_ACTION;
+	s_controls.dropflag.generic.flags		= QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.dropflag.generic.callback	= Controls_ActionEvent;
+	s_controls.dropflag.generic.ownerdraw	= Controls_DrawKeyBinding;
+	s_controls.dropflag.generic.id			= ID_DROPFLAG;
+#endif
 
 	s_controls.useitem.generic.type	     = MTYPE_ACTION;
 	s_controls.useitem.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.useitem.generic.callback  = Controls_ActionEvent;
 	s_controls.useitem.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.useitem.generic.id        = ID_USEITEM;
+
+#ifdef TA_HOLDSYS/*2*/
+	s_controls.nextitem.generic.type	  = MTYPE_ACTION;
+	s_controls.nextitem.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.nextitem.generic.callback  = Controls_ActionEvent;
+	s_controls.nextitem.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.nextitem.generic.id        = ID_NEXTITEM;
+
+	s_controls.previtem.generic.type	  = MTYPE_ACTION;
+	s_controls.previtem.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.previtem.generic.callback  = Controls_ActionEvent;
+	s_controls.previtem.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.previtem.generic.id        = ID_PREVITEM;
+#endif
 
 	s_controls.showscores.generic.type	    = MTYPE_ACTION;
 	s_controls.showscores.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
@@ -1845,6 +2402,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.smoothmouse.generic.callback  = Controls_MenuEvent;
 	s_controls.smoothmouse.generic.statusbar = Controls_StatusBar;
 
+#ifndef TURTLEARENA // ALWAYS_RUN
 	s_controls.alwaysrun.generic.type      = MTYPE_RADIOBUTTON;
 	s_controls.alwaysrun.generic.flags	   = QMF_SMALLFONT;
 	s_controls.alwaysrun.generic.x	       = SCREEN_WIDTH/2;
@@ -1852,7 +2410,9 @@ static void Controls_MenuInit( int localClient )
 	s_controls.alwaysrun.generic.id        = ID_ALWAYSRUN;
 	s_controls.alwaysrun.generic.callback  = Controls_MenuEvent;
 	s_controls.alwaysrun.generic.statusbar = Controls_StatusBar;
+#endif
 
+#ifndef TA_WEAPSYS_EX
 	s_controls.autoswitch.generic.type      = MTYPE_RADIOBUTTON;
 	s_controls.autoswitch.generic.flags	    = QMF_SMALLFONT;
 	s_controls.autoswitch.generic.x	        = SCREEN_WIDTH/2;
@@ -1860,6 +2420,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.autoswitch.generic.id        = ID_AUTOSWITCH;
 	s_controls.autoswitch.generic.callback  = Controls_MenuEvent;
 	s_controls.autoswitch.generic.statusbar = Controls_StatusBar;
+#endif
 
 	s_controls.sensitivity.generic.type	     = MTYPE_SLIDER;
 	s_controls.sensitivity.generic.x		 = SCREEN_WIDTH/2;
@@ -1907,6 +2468,70 @@ static void Controls_MenuInit( int localClient )
 	s_controls.togglemenu.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.togglemenu.generic.id        = ID_TOGGLEMENU;
 
+#ifdef IOQ3ZTM
+	s_controls.voteYes.generic.type	     = MTYPE_ACTION;
+	s_controls.voteYes.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.voteYes.generic.callback  = Controls_ActionEvent;
+	s_controls.voteYes.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.voteYes.generic.id        = ID_VOTEYES;
+
+	s_controls.voteNo.generic.type	    = MTYPE_ACTION;
+	s_controls.voteNo.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.voteNo.generic.callback  = Controls_ActionEvent;
+	s_controls.voteNo.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.voteNo.generic.id        = ID_VOTENO;
+
+	s_controls.followPlayer.generic.type	  = MTYPE_ACTION;
+	s_controls.followPlayer.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.followPlayer.generic.callback  = Controls_ActionEvent;
+	s_controls.followPlayer.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.followPlayer.generic.id        = ID_FOLLOWPLAYER;
+
+	s_controls.takeScreenshot.generic.type	    = MTYPE_ACTION;
+	s_controls.takeScreenshot.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.takeScreenshot.generic.callback  = Controls_ActionEvent;
+	s_controls.takeScreenshot.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.takeScreenshot.generic.id        = ID_TAKESCREENSHOT;
+#endif
+
+#ifdef IOQ3ZTM // NEW_CAM
+	s_controls.camreset.generic.type	  = MTYPE_ACTION;
+	s_controls.camreset.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.camreset.generic.callback  = Controls_ActionEvent;
+	s_controls.camreset.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.camreset.generic.id        = ID_CAMRESET;
+
+	s_controls.camtoggle.generic.type      = MTYPE_ACTION;
+	s_controls.camtoggle.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.camtoggle.generic.callback  = Controls_ActionEvent;
+	s_controls.camtoggle.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.camtoggle.generic.id        = ID_CAMTOGGLE;
+
+	s_controls.camright.generic.type      = MTYPE_ACTION;
+	s_controls.camright.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.camright.generic.callback  = Controls_ActionEvent;
+	s_controls.camright.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.camright.generic.id        = ID_CAMRIGHT;
+
+	s_controls.camleft.generic.type      = MTYPE_ACTION;
+	s_controls.camleft.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.camleft.generic.callback  = Controls_ActionEvent;
+	s_controls.camleft.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.camleft.generic.id        = ID_CAMLEFT;
+
+	s_controls.camzoomin.generic.type      = MTYPE_ACTION;
+	s_controls.camzoomin.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.camzoomin.generic.callback  = Controls_ActionEvent;
+	s_controls.camzoomin.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.camzoomin.generic.id        = ID_CAMZOOMIN;
+
+	s_controls.camzoomout.generic.type      = MTYPE_ACTION;
+	s_controls.camzoomout.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.camzoomout.generic.callback  = Controls_ActionEvent;
+	s_controls.camzoomout.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.camzoomout.generic.id        = ID_CAMZOOMOUT;
+#endif
+
 	s_controls.selectjoy.generic.type		= MTYPE_PTEXT;
 	s_controls.selectjoy.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 	s_controls.selectjoy.generic.x			= SCREEN_WIDTH/2;
@@ -1927,6 +2552,7 @@ static void Controls_MenuInit( int localClient )
 	s_controls.joythreshold.maxvalue		  = 0.75f;
 	s_controls.joythreshold.generic.statusbar = Controls_StatusBar;
 
+#ifndef TA_MISC
 	s_controls.name.generic.type	= MTYPE_PTEXT;
 	s_controls.name.generic.flags	= QMF_CENTER_JUSTIFY|QMF_INACTIVE;
 	s_controls.name.generic.x		= 320;
@@ -1934,17 +2560,26 @@ static void Controls_MenuInit( int localClient )
 	s_controls.name.string			= playername;
 	s_controls.name.style			= UI_CENTER;
 	s_controls.name.color			= text_color_normal;
+#endif
 
 	Menu_AddItem( &s_controls.menu, &s_controls.banner );
 	Menu_AddItem( &s_controls.menu, &s_controls.framel );
 	Menu_AddItem( &s_controls.menu, &s_controls.framer );
+#ifndef TA_MISC
 	Menu_AddItem( &s_controls.menu, &s_controls.player );
 	Menu_AddItem( &s_controls.menu, &s_controls.name );
+#endif
 
 	Menu_AddItem( &s_controls.menu, &s_controls.looking );
 	Menu_AddItem( &s_controls.menu, &s_controls.movement );
 	Menu_AddItem( &s_controls.menu, &s_controls.weapons );
 	Menu_AddItem( &s_controls.menu, &s_controls.misc );
+#ifdef IOQ3ZTM // NEW_CAM
+	Menu_AddItem( &s_controls.menu, &s_controls.camera );
+#endif
+#ifdef IOQ3ZTM
+	Menu_AddItem( &s_controls.menu, &s_controls.defaults );
+#endif
 
 	Menu_AddItem( &s_controls.menu, &s_controls.sensitivity );
 	Menu_AddItem( &s_controls.menu, &s_controls.smoothmouse );
@@ -1954,12 +2589,21 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.mouselook );
 	Menu_AddItem( &s_controls.menu, &s_controls.freelook );
 	Menu_AddItem( &s_controls.menu, &s_controls.centerview );
+#ifdef TURTLEARENA // LOCKON
+	Menu_AddItem( &s_controls.menu, &s_controls.lockon );
+#endif
+#ifndef TURTLEARENA // NOZOOM
 	Menu_AddItem( &s_controls.menu, &s_controls.zoomview );
+#endif
 	Menu_AddItem( &s_controls.menu, &s_controls.selectjoy );
 	Menu_AddItem( &s_controls.menu, &s_controls.joythreshold );
 
+#ifndef TURTLEARENA // ALWAYS_RUN
 	Menu_AddItem( &s_controls.menu, &s_controls.alwaysrun );
+#endif
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	Menu_AddItem( &s_controls.menu, &s_controls.run );
+#endif
 	Menu_AddItem( &s_controls.menu, &s_controls.walkforward );
 	Menu_AddItem( &s_controls.menu, &s_controls.backpedal );
 	Menu_AddItem( &s_controls.menu, &s_controls.stepleft );
@@ -1971,6 +2615,9 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.sidestep );
 
 	Menu_AddItem( &s_controls.menu, &s_controls.attack );
+#ifdef TA_WEAPSYS_EX
+	Menu_AddItem( &s_controls.menu, &s_controls.dropweapon );
+#else
 	Menu_AddItem( &s_controls.menu, &s_controls.nextweapon );
 	Menu_AddItem( &s_controls.menu, &s_controls.prevweapon );
 	Menu_AddItem( &s_controls.menu, &s_controls.autoswitch );
@@ -1988,20 +2635,44 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.proxylauncher );
 	Menu_AddItem( &s_controls.menu, &s_controls.chaingun );
 #endif
+#endif
 
 	Menu_AddItem( &s_controls.menu, &s_controls.showscores );
+#ifdef TA_MISC // DROP_FLAG
+	Menu_AddItem( &s_controls.menu, &s_controls.dropflag );
+#endif
 	Menu_AddItem( &s_controls.menu, &s_controls.useitem );
+#ifdef TA_HOLDSYS/*2*/
+	Menu_AddItem( &s_controls.menu, &s_controls.nextitem );
+	Menu_AddItem( &s_controls.menu, &s_controls.previtem );
+#endif
 	Menu_AddItem( &s_controls.menu, &s_controls.gesture );
 	Menu_AddItem( &s_controls.menu, &s_controls.chat );
 	Menu_AddItem( &s_controls.menu, &s_controls.chat2 );
 	Menu_AddItem( &s_controls.menu, &s_controls.chat3 );
 	Menu_AddItem( &s_controls.menu, &s_controls.chat4 );
 	Menu_AddItem( &s_controls.menu, &s_controls.togglemenu );
+#ifdef IOQ3ZTM
+	Menu_AddItem( &s_controls.menu, &s_controls.voteYes );
+	Menu_AddItem( &s_controls.menu, &s_controls.voteNo );
+	Menu_AddItem( &s_controls.menu, &s_controls.followPlayer );
+	Menu_AddItem( &s_controls.menu, &s_controls.takeScreenshot );
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+	Menu_AddItem( &s_controls.menu, &s_controls.camreset );
+	Menu_AddItem( &s_controls.menu, &s_controls.camtoggle );
+	Menu_AddItem( &s_controls.menu, &s_controls.camright );
+	Menu_AddItem( &s_controls.menu, &s_controls.camleft );
+	Menu_AddItem( &s_controls.menu, &s_controls.camzoomin );
+	Menu_AddItem( &s_controls.menu, &s_controls.camzoomout );
+#endif
 
 	Menu_AddItem( &s_controls.menu, &s_controls.back );
 
+#ifndef TA_MISC
 	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "name"), s_controls.name.string, 16 );
 	Q_CleanStr( s_controls.name.string );
+#endif
 
 	// initialize the configurable cvars
 	Controls_InitCvars();
@@ -2009,11 +2680,13 @@ static void Controls_MenuInit( int localClient )
 	// initialize the current config
 	Controls_GetConfig();
 
+#ifndef TA_MISC
 	// intialize the model
 	Controls_InitModel();
 
 	// intialize the weapons
 	Controls_InitWeapons ();
+#endif
 
 	// initial default section
 	s_controls.section = C_LOOKING;

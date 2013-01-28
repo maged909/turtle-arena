@@ -1,5 +1,9 @@
-VERSION=1.36
-RELEASE=svn
+ifndef VERSION
+VERSION=0.7
+endif
+ifndef RELEASE
+RELEASE=0
+endif
 
 all:
 	VERSION=$(VERSION) RELEASE=$(RELEASE) ./doit

@@ -63,9 +63,11 @@ extern vmCvar_t	ui_obelisk_capturelimit;
 extern vmCvar_t	ui_obelisk_timelimit;
 extern vmCvar_t	ui_obelisk_friendly;
 
+#ifdef MISSIONPACK_HARVESTER
 extern vmCvar_t	ui_harvester_capturelimit;
 extern vmCvar_t	ui_harvester_timelimit;
 extern vmCvar_t	ui_harvester_friendly;
+#endif
 #endif
 
 extern vmCvar_t	ui_publicServer;
@@ -81,13 +83,25 @@ extern vmCvar_t	ui_spAwards;
 extern vmCvar_t	ui_spVideos;
 extern vmCvar_t	ui_spSkill;
 
+#ifdef TA_SP
+extern vmCvar_t	ui_singlePlayerActive;
+extern vmCvar_t	ui_saveVersions;
+extern vmCvar_t	ui_saveFilename;
+#endif
 extern vmCvar_t	ui_spSelection;
+
+#ifdef TA_SP
+extern vmCvar_t	ui_arcadeName;
+#endif
 
 extern vmCvar_t	ui_browserMaster;
 extern vmCvar_t	ui_browserGameType;
 extern vmCvar_t	ui_browserSortKey;
 extern vmCvar_t	ui_browserShowFull;
 extern vmCvar_t	ui_browserShowEmpty;
+#ifdef IOQ3ZTM // G_HUMANPLAYERS
+extern vmCvar_t	ui_browserShowBots;
+#endif
 
 extern vmCvar_t	ui_brassTime;
 extern vmCvar_t	ui_drawCrosshair;
@@ -179,7 +193,12 @@ typedef struct _tag_menuframework
 
 	qboolean	wrapAround;
 	qboolean	fullscreen;
+#ifndef TA_DATA
 	qboolean	showlogo;
+#endif
+#ifdef IOQ3ZTM
+	qboolean	noEscape; // Don't run UI_PopMenu when Esc is pressed
+#endif
 } menuframework_s;
 
 typedef struct
@@ -293,7 +312,9 @@ extern sfxHandle_t	menu_move_sound;
 extern sfxHandle_t	menu_out_sound;
 extern sfxHandle_t	menu_buzz_sound;
 extern sfxHandle_t	menu_null_sound;
+#ifndef TA_WEAPSYS_EX
 extern sfxHandle_t	weaponChangeSound;
+#endif
 extern vec4_t		menu_text_color;
 extern vec4_t		menu_grayed_color;
 extern vec4_t		menu_dark_color;
@@ -307,6 +328,9 @@ extern vec4_t		color_yellow;
 extern vec4_t		color_blue;
 extern vec4_t		color_orange;
 extern vec4_t		color_red;
+#ifdef TURTLEARENA
+extern vec4_t		color_green;
+#endif
 extern vec4_t		color_dim;
 extern vec4_t		name_color;
 extern vec4_t		list_color;
@@ -314,6 +338,8 @@ extern vec4_t		listbar_color;
 extern vec4_t		text_color_disabled; 
 extern vec4_t		text_color_normal;
 extern vec4_t		text_color_highlight;
+extern vec4_t		text_banner_color;
+extern vec4_t		text_big_color;
 
 extern char	*ui_medalNames[];
 extern char	*ui_medalPicNames[];
@@ -342,12 +368,23 @@ extern void UI_UpdateCvars( void );
 // ui_credits.c
 //
 extern void UI_CreditMenu( void );
+#ifdef TURTLEARENA // LONG_CREDITS
+extern void UI_LongCreditMenu( void );
+#endif
 
 //
 // ui_ingame.c
 //
 extern void InGame_Cache( void );
 extern void UI_InGameMenu(void);
+
+#ifdef TA_MISC // INGAME_SERVER_MENU
+//
+// ui_ingame_server.c
+//
+extern void InServer_Cache( void );
+extern void UI_InServerMenu(void);
+#endif
 
 //
 // ui_ingame_selectplayer.c
@@ -418,6 +455,19 @@ extern void UI_CinematicsMenu_Cache( void );
 extern void UI_ModsMenu( void );
 extern void UI_ModsMenu_Cache( void );
 
+#ifdef TA_MISC
+//
+// ui_multiplayer.c
+//
+extern void UI_MultiplayerMenu( void );
+extern void UI_Multiplayer_Cache( void );
+
+//
+// ui_playersetup.c
+//
+void UI_PlayerSetupMenu( int maxLocalClients, void (*action)(void), qboolean playButton );
+void UI_PlayerSetupMenu_Cache( void );
+#else
 //
 // ui_playermodel.c
 //
@@ -429,6 +479,7 @@ extern void PlayerModel_Cache( void );
 //
 extern void UI_PlayerSettingsMenu( int localClient );
 extern void PlayerSettings_Cache( void );
+#endif
 
 //
 // ui_preferences.c
@@ -445,7 +496,11 @@ extern void SpecifyLeague_Cache( void );
 //
 // ui_specifyserver.c
 //
+#ifdef IOQ3ZTM
+extern void UI_SpecifyServerMenu( qboolean fav );
+#else
 extern void UI_SpecifyServerMenu( void );
+#endif
 extern void SpecifyServer_Cache( void );
 
 //
@@ -461,9 +516,11 @@ extern void ArenaServers_Cache( void );
 //
 extern void UI_StartServerMenu( qboolean multiplayer );
 extern void StartServer_Cache( void );
+#ifndef TA_SP
 extern void ServerOptions_Cache( void );
 extern void UI_BotSelectMenu( char *bot );
 extern void UI_BotSelectMenu_Cache( void );
+#endif
 
 //
 // ui_serverinfo.c
@@ -482,6 +539,8 @@ extern void DriverInfo_Cache( void );
 // ui_players.c
 //
 
+#ifndef TA_MISC
+#ifndef IOQ3ZTM // LERP_FRAME_CLIENT_LESS // moved to bg_misc.h
 //FIXME ripped from cg_local.h
 typedef struct {
 	int			oldFrame;
@@ -501,6 +560,7 @@ typedef struct {
 	animation_t	*animation;
 	int			animationTime;		// time when the first frame of the animation will be exact
 } lerpFrame_t;
+#endif
 
 typedef struct {
 	// model info
@@ -515,12 +575,28 @@ typedef struct {
 	qhandle_t		headModel;
 	qhandle_t		headSkin;
 
-	animation_t		animations[MAX_ANIMATIONS];
+#ifdef IOQ3ZTM // BONES
+	qhandle_t		playerModel;
+	qhandle_t		playerSkin;
+#endif
 
+#ifdef TA_PLAYERSYS
+	bg_playercfg_t	playercfg;
+#else
+	animation_t		animations[MAX_ANIMATIONS];
+#endif
+
+#ifdef TA_WEAPSYS
+	qhandle_t		weaponModel[MAX_HANDS];
+	qhandle_t		barrelModel[MAX_HANDS];
+	qhandle_t		flashModel[MAX_HANDS];
+	vec3_t			flashDlightColor[MAX_HANDS];
+#else
 	qhandle_t		weaponModel;
 	qhandle_t		barrelModel;
 	qhandle_t		flashModel;
 	vec3_t			flashDlightColor;
+#endif
 	int				muzzleFlashTime;
 
 	vec3_t			color1;
@@ -558,6 +634,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model );
 void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat );
 qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName );
+#endif
 
 //
 // ui_atoms.c
@@ -574,11 +651,30 @@ typedef struct {
 	qboolean			debug;
 	qhandle_t			whiteShader;
 	qhandle_t			menuBackShader;
+#ifdef TA_DATA
+	qhandle_t			menuBackInGameShader;
+#else
 	qhandle_t			menuBackNoLogoShader;
+#endif
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t				fontSmall;
+	font_t				fontBig;
+	font_t				fontGiant;
+	font_t				fontPropSmall;
+	font_t				fontPropBig;
+#ifndef TA_DATA
+	font_t				fontPropGlowSmall;
+	font_t				fontPropGlowBig;
+#endif
+	font_t				fontBanner;
+#else
 	qhandle_t			charset;
 	qhandle_t			charsetProp;
+#ifndef TA_DATA
 	qhandle_t			charsetPropGlow;
+#endif
 	qhandle_t			charsetPropB;
+#endif
 	qhandle_t			cursor;
 	qhandle_t			rb_on;
 	qhandle_t			rb_off;
@@ -601,18 +697,33 @@ extern qboolean		UI_ConsoleCommand( int realTime );
 extern float		UI_ClampCvar( float min, float max, float value );
 extern void			UI_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 extern void			UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ); 
+#ifdef TA_DATA
+extern void			UI_DrawPicFullScreen(qhandle_t hShader);
+#endif
 extern void			UI_FillRect( float x, float y, float width, float height, const float *color );
 extern void			UI_DrawRect( float x, float y, float width, float height, const float *color );
 extern void			UI_UpdateScreen( void );
 extern void			UI_SetColor( const float *rgba );
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
+#ifdef IOQ3ZTM // FONT_REWRITE
+extern qboolean		UI_LoadFont(font_t *font, const char *ttfName, const char *shaderName, int pointSize,
+							int shaderCharWidth, float fontKerning);
+extern void			UI_DrawFontChar( font_t *font, float x, float y, int ch, qboolean adjustFrom640 );
+extern void			UI_DrawFontString( font_t *font, int x, int y, const char *s, float alpha );
+extern void			UI_DrawFontStringColor( font_t *font, int x, int y, const char *s, vec4_t color );
+font_t *UI_FontForStyle( int style );
+font_t *UI_ProportionalFontForStyle( int style );
+#ifndef TA_DATA
+font_t *UI_ProportionalGlowFontForStyle( int style );
+#endif
+#endif
 extern void			UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color );
 extern float		UI_ProportionalSizeScale( int style );
 extern void			UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
 extern void			UI_DrawProportionalString_AutoWrapped( int x, int ystart, int xmax, int ystep, const char* str, int style, vec4_t color );
-extern int			UI_ProportionalStringWidth( const char* str );
+extern int			UI_ProportionalStringWidth( const char* str, int style );
 extern void			UI_DrawString( int x, int y, const char* str, int style, vec4_t color );
-extern void			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
+extern int			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
 extern qboolean 	UI_CursorInRect (int x, int y, int width, int height);
 extern void			UI_AdjustFrom640( float *x, float *y, float *w, float *h );
 extern void			UI_DrawTextBox (int x, int y, int width, int lines);
@@ -630,6 +741,7 @@ extern void			UI_StartDemoLoop( void );
 extern qboolean		m_entersound;
 extern uiStatic_t	uis;
 
+#ifndef TA_SP
 //
 // ui_spLevel.c
 //
@@ -637,11 +749,19 @@ void UI_SPLevelMenu_Cache( void );
 void UI_SPLevelMenu( void );
 void UI_SPLevelMenu_f( void );
 void UI_SPLevelMenu_ReInit( void );
+#endif
 
 //
 // ui_spArena.c
 //
 void UI_SPArena_Start( const char *arenaInfo );
+#ifdef TA_SP
+void UI_LoadGameMenu( void );
+void LoadGame_Cache( void );
+void UI_SPMenu( void );
+void UI_SPMenu_f( void );
+void UI_SPMenu_Cache( void );
+#endif
 
 //
 // ui_spPostgame.c
@@ -649,11 +769,21 @@ void UI_SPArena_Start( const char *arenaInfo );
 void UI_SPPostgameMenu_Cache( void );
 void UI_SPPostgameMenu_f( void );
 
+#ifdef TA_SP
+//
+// ui_spPlayer.c
+//
+#define NUM_SP_CHARACTERS 4
+extern const char *spCharacterNames[NUM_SP_CHARACTERS];
+void UI_SPPlayerMenu( int maxLocalClients, void (*action)(void) );
+void UI_SPPlayerMenu_Cache( void );
+#else
 //
 // ui_spSkill.c
 //
 void UI_SPSkillMenu( const char *arenaInfo );
 void UI_SPSkillMenu_Cache( void );
+#endif
 
 //
 // ui_syscalls.c
@@ -750,6 +880,17 @@ void			trap_CIN_DrawCinematic (int handle);
 // allows you to resize the animation dynamically
 void			trap_CIN_SetExtents (int handle, int x, int y, int w, int h);
 
+#ifdef IOQ3ZTM // BONES
+void			trap_R_AddRefEntityToScene_CustomSkeleton( const refEntity_t *re, const refSkeleton_t *rs );
+int				trap_R_JointIndexForName(qhandle_t handle, const char *jointName);
+qboolean		trap_R_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
+qboolean		trap_R_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel,
+								int legsFrame, int legsOldFrame, float legsBacklerp,
+								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
+								int headFrame, int headOldFrame, float headBacklerp);
+void			trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
+#endif
+
 //
 // ui_addbots.c
 //
@@ -804,9 +945,11 @@ void UI_NetworkOptionsMenu( void );
 //
 typedef enum {
 	AWARD_ACCURACY,
+#ifndef TURTLEARENA // AWARDS
 	AWARD_IMPRESSIVE,
 	AWARD_EXCELLENT,
 	AWARD_GAUNTLET,
+#endif
 	AWARD_FRAGS,
 	AWARD_PERFECT
 } awardType_t;
@@ -822,6 +965,7 @@ char *UI_GetBotInfoByNumber( int num );
 char *UI_GetBotInfoByName( const char *name );
 int UI_GetNumBots( void );
 
+#ifndef TA_SP
 void UI_GetBestScore( int level, int *score, int *skill );
 void UI_SetBestScore( int level, int score );
 int UI_TierCompleted( int levelWon );
@@ -831,9 +975,12 @@ int  UI_GetCurrentGame( void );
 void UI_NewGame( void );
 void UI_LogAwardData( int award, int data );
 int UI_GetAwardLevel( int award );
+#endif
 
 void UI_SPUnlock_f( void );
+#ifndef TA_SP
 void UI_SPUnlockMedals_f( void );
+#endif
 
 void UI_InitGameinfo( void );
 
@@ -865,5 +1012,32 @@ void UI_SignupMenu( void );
 //
 void RankStatus_Cache( void );
 void UI_RankStatusMenu( void );
+
+#ifdef TA_SP
+// Arcade map gamedata
+#define ARCADE_GAMEDATA_MAGIC "EBXARCADE"
+#define ARCADE_GAMEDATA_VERSION 0
+#define NUM_ARCADE_SCORES 5
+
+typedef struct
+{
+	char name[9];
+	char character[17];
+	int score;
+	int time;
+
+	// Additional CTF data
+	int captures;
+	int redScore;
+	int blueScore;
+} arcadeScore_t;
+
+typedef struct
+{
+	char magic[9];
+	int version;
+	arcadeScore_t scores[NUM_ARCADE_SCORES];
+} arcadeGameData_t;
+#endif
 
 #endif

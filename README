@@ -106,7 +106,7 @@ Makefile.local:
   BASEGAME           - rename 'baseq3'
   BASEGAME_CFLAGS    - custom CFLAGS for basegame
   MISSIONPACK        - rename 'missionpack'
-  MISSIONPACK_CFLAGS - custom CFLAGS for missionpack (default '-DMISSIONPACK -DMISSIONPACK_HUD')
+  MISSIONPACK_CFLAGS - custom CFLAGS for missionpack (default '-DMISSIONPACK')
   USE_OPENAL         - use OpenAL where available
   USE_OPENAL_DLOPEN  - link with OpenAL at runtime
   USE_CURL           - use libcurl for http/ftp download support
@@ -114,7 +114,6 @@ Makefile.local:
   USE_CODEC_VORBIS   - enable Ogg Vorbis support
   USE_MUMBLE         - enable Mumble support
   USE_VOIP           - enable built-in VoIP support
-  USE_FREETYPE       - enable FreeType support for rendering fonts
   USE_OLD_VM64       - use Ludwig Nussel's old JIT compiler implementation
                        for x86_64
   USE_INTERNAL_SPEEX - build internal speex library instead of dynamically

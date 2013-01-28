@@ -40,7 +40,9 @@ sfxHandle_t menu_move_sound;
 sfxHandle_t menu_out_sound;
 sfxHandle_t menu_buzz_sound;
 sfxHandle_t menu_null_sound;
+#ifndef TA_WEAPSYS_EX
 sfxHandle_t weaponChangeSound;
+#endif
 
 static qhandle_t	sliderBar;
 static qhandle_t	sliderButton_0;
@@ -55,15 +57,28 @@ vec4_t color_blue	    = {0.00f, 0.00f, 1.00f, 1.00f};
 vec4_t color_lightOrange    = {1.00f, 0.68f, 0.00f, 1.00f };
 vec4_t color_orange	    = {1.00f, 0.43f, 0.00f, 1.00f};
 vec4_t color_red	    = {1.00f, 0.00f, 0.00f, 1.00f};
+#ifdef TURTLEARENA
+vec4_t color_green	    = {0.00f, 1.00f, 0.00f, 1.00f};
+#endif
 vec4_t color_dim	    = {0.00f, 0.00f, 0.00f, 0.25f};
 
 // current color scheme
 vec4_t pulse_color          = {1.00f, 1.00f, 1.00f, 1.00f};
 vec4_t text_color_disabled  = {0.50f, 0.50f, 0.50f, 1.00f};	// light gray
+#ifdef TURTLEARENA
+vec4_t text_color_normal    = {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
+vec4_t text_color_highlight = {1.00f, 0.43f, 0.00f, 1.00f};	// light orange
+#else
 vec4_t text_color_normal    = {1.00f, 0.43f, 0.00f, 1.00f};	// light orange
 vec4_t text_color_highlight = {1.00f, 1.00f, 0.00f, 1.00f};	// bright yellow
+#endif
 vec4_t listbar_color        = {1.00f, 0.43f, 0.00f, 0.30f};	// transluscent orange
-vec4_t text_color_status    = {1.00f, 1.00f, 1.00f, 1.00f};	// bright white	
+vec4_t text_banner_color	= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
+#ifdef TURTLEARENA
+vec4_t text_big_color		= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
+#else
+vec4_t text_big_color		= {1.00f, 0.00f, 0.00f, 1.00f};	// bright red
+#endif
 
 // action widget
 static void	Action_Init( menuaction_s *a );
@@ -187,13 +202,21 @@ static void PText_Init( menutext_s *t )
 	int	w;
 	int	h;
 	float	sizeScale;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
 
+	font = UI_ProportionalFontForStyle( t->style );
+#endif
 	sizeScale = UI_ProportionalSizeScale( t->style );
 
 	x = t->generic.x;
 	y = t->generic.y;
-	w = UI_ProportionalStringWidth( t->string ) * sizeScale;
+	w = UI_ProportionalStringWidth( t->string, t->style );
+#ifdef IOQ3ZTM // FONT_REWRITE
+	h =	Com_FontCharHeight(font, 0);
+#else
 	h =	PROP_HEIGHT * sizeScale;
+#endif
 
 	if( t->generic.flags & QMF_RIGHT_JUSTIFY ) {
 		x -= w;
@@ -375,6 +398,11 @@ Action_Init
 */
 static void Action_Init( menuaction_s *a )
 {
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
+
+	font = UI_FontForStyle( a->generic.flags );
+#else
 	int	len;
 
 	// calculate bounds
@@ -382,12 +410,21 @@ static void Action_Init( menuaction_s *a )
 		len = strlen(a->generic.name);
 	else
 		len = 0;
+#endif
 
 	// left justify text
-	a->generic.left   = a->generic.x; 
+	a->generic.left   = a->generic.x;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	a->generic.right  = a->generic.x + Com_FontStringWidth(font, a->generic.name, 0 );
+#else
 	a->generic.right  = a->generic.x + len*BIGCHAR_WIDTH;
+#endif
 	a->generic.top    = a->generic.y;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	a->generic.bottom = a->generic.y + Com_FontCharHeight(font, 0);
+#else
 	a->generic.bottom = a->generic.y + BIGCHAR_HEIGHT;
+#endif
 }
 
 /*
@@ -441,6 +478,11 @@ RadioButton_Init
 */
 static void RadioButton_Init( menuradiobutton_s *rb )
 {
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
+
+	font = UI_FontForStyle( rb->generic.flags );
+#else
 	int	len;
 
 	// calculate bounds
@@ -448,11 +490,36 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 		len = strlen(rb->generic.name);
 	else
 		len = 0;
+#endif
 
-	rb->generic.left   = rb->generic.x - (len+1)*SMALLCHAR_WIDTH;
+#ifdef IOQ3ZTM
+	if (rb->generic.flags & QMF_LEFT_JUSTIFY) {
+		rb->generic.left = rb->generic.x;
+		
+#ifdef IOQ3ZTM // FONT_REWRITE
+		rb->generic.x += Com_FontStringWidth(font, rb->generic.name, 0 ) + SMALLCHAR_WIDTH;
+#else
+		rb->generic.x += (len+1)*SMALLCHAR_WIDTH;
+#endif
+
+	} else
+#endif
+	{
+#ifdef IOQ3ZTM // FONT_REWRITE
+		rb->generic.left   = rb->generic.x - Com_FontStringWidth(font, rb->generic.name, 0 ) - SMALLCHAR_WIDTH;
+#else
+		rb->generic.left   = rb->generic.x - (len+1)*SMALLCHAR_WIDTH;
+#endif
+	}
+
 	rb->generic.right  = rb->generic.x + 6*SMALLCHAR_WIDTH;
+
 	rb->generic.top    = rb->generic.y;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	rb->generic.bottom = rb->generic.y + Com_FontCharHeight(font, 0);
+#else
 	rb->generic.bottom = rb->generic.y + SMALLCHAR_HEIGHT;
+#endif
 }
 
 /*
@@ -465,6 +532,9 @@ static sfxHandle_t RadioButton_Key( menuradiobutton_s *rb, int key )
 	switch (key)
 	{
 		case K_MOUSE1:
+#ifdef TA_MISC // MENU: Right Mouse button = left arrow
+		case K_MOUSE2:
+#endif
 			if (!(rb->generic.flags & QMF_HASMOUSEFOCUS))
 				break;
 
@@ -564,6 +634,11 @@ Slider_Init
 */
 static void Slider_Init( menuslider_s *s )
 {
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
+
+	font = UI_FontForStyle( s->generic.flags );
+#else
 	int len;
 
 	// calculate bounds
@@ -571,11 +646,20 @@ static void Slider_Init( menuslider_s *s )
 		len = strlen(s->generic.name);
 	else
 		len = 0;
+#endif
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	s->generic.left   = s->generic.x - Com_FontStringWidth(font, s->generic.name, 0 ) - SMALLCHAR_WIDTH;
+#else
 	s->generic.left   = s->generic.x - (len+1)*SMALLCHAR_WIDTH; 
+#endif
 	s->generic.right  = s->generic.x + (SLIDER_RANGE+2+1)*SMALLCHAR_WIDTH;
 	s->generic.top    = s->generic.y;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	s->generic.bottom = s->generic.y + Com_FontCharHeight(font, 0);
+#else
 	s->generic.bottom = s->generic.y + SMALLCHAR_HEIGHT;
+#endif
 }
 
 /*
@@ -783,27 +867,59 @@ static void SpinControl_Init( menulist_s *s ) {
 	int	len;
 	int	l;
 	const char* str;
+#ifdef IOQ3ZTM
+	qboolean foundItem = qfalse;
+#endif
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
 
+	font = UI_FontForStyle( s->generic.flags );
+
+	if (s->generic.flags & QMF_LEFT_JUSTIFY) {
+		s->generic.left	= s->generic.x;
+		s->generic.x += Com_FontStringWidth(font, s->generic.name, 0 ) + SMALLCHAR_WIDTH;
+	} else {
+		s->generic.left	= s->generic.x - Com_FontStringWidth(font, s->generic.name, 0 ) - SMALLCHAR_WIDTH;
+	}
+#else
 	if (s->generic.name)
 		len = strlen(s->generic.name) * SMALLCHAR_WIDTH;
 	else
 		len = 0;
 
 	s->generic.left	= s->generic.x - SMALLCHAR_WIDTH - len;
+#endif
 
 	len = s->numitems = 0;
 	while ( (str = s->itemnames[s->numitems]) != 0 )
 	{
+#ifdef IOQ3ZTM // FONT_REWRITE
+		l = Com_FontStringWidth(font, str, 0 );
+#else
 		l = strlen(str);
+#endif
 		if (l > len)
 			len = l;
+
+#ifdef IOQ3ZTM
+		// Use first non-empty item.
+		if (!foundItem && strlen(s->itemnames[s->numitems]) > 0) {
+			s->curvalue = s->numitems;
+			foundItem = qtrue;
+		}
+#endif
 
 		s->numitems++;
 	}		
 
 	s->generic.top	  =	s->generic.y;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	s->generic.right  =	s->generic.x + len + SMALLCHAR_WIDTH;
+	s->generic.bottom =	s->generic.y + Com_FontCharHeight(font, 0);
+#else
 	s->generic.right  =	s->generic.x + (len+1)*SMALLCHAR_WIDTH;
 	s->generic.bottom =	s->generic.y + SMALLCHAR_HEIGHT;
+#endif
 }
 
 /*
@@ -814,6 +930,15 @@ SpinControl_Key
 static sfxHandle_t SpinControl_Key( menulist_s *s, int key )
 {
 	sfxHandle_t	sound;
+#ifdef IOQ3ZTM
+	int			i;
+#endif
+
+#ifdef IOQ3ZTM // IOQ3BUGFIX: Don't have mouse control what it isn't touching!
+	if ((key == K_MOUSE1 || key == K_MOUSE2) && !(s->generic.flags & QMF_HASMOUSEFOCUS)) {
+		return 0;
+	}
+#endif
 
 	sound = 0;
 	switch (key)
@@ -821,17 +946,50 @@ static sfxHandle_t SpinControl_Key( menulist_s *s, int key )
 		case K_KP_RIGHTARROW:
 		case K_RIGHTARROW:
 		case K_MOUSE1:
+#ifdef IOQ3ZTM // IOQ3BUGFIX: ?
+			s->oldvalue = s->curvalue;
+#endif
+#ifdef IOQ3ZTM
+			// Skip empty items
+			for (i = 0; i < s->numitems; i++) {
+				s->curvalue++;
+				if (s->curvalue >= s->numitems)
+					s->curvalue = 0;
+				if (!s->itemnames || strlen(s->itemnames[s->curvalue]) > 0) {
+					break;
+				}
+			}
+#else
 			s->curvalue++;
 			if (s->curvalue >= s->numitems)
 				s->curvalue = 0;
+#endif
 			sound = menu_move_sound;
 			break;
 		
 		case K_KP_LEFTARROW:
 		case K_LEFTARROW:
+#ifdef TA_MISC // MENU: Right Mouse button = left arrow
+		case K_MOUSE2:
+#endif
+#ifdef IOQ3ZTM // IOQ3BUGFIX: ?
+			s->oldvalue = s->curvalue;
+#endif
+#ifdef IOQ3ZTM
+			// Skip empty items
+			for (i = 0; i < s->numitems; i++) {
+				s->curvalue--;
+				if (s->curvalue < 0)
+					s->curvalue = s->numitems-1;
+				if (!s->itemnames || strlen(s->itemnames[s->curvalue]) > 0) {
+					break;
+				}
+			}
+#else
 			s->curvalue--;
 			if (s->curvalue < 0)
 				s->curvalue = s->numitems-1;
+#endif
 			sound = menu_move_sound;
 			break;
 	}
@@ -894,6 +1052,11 @@ ScrollList_Init
 static void ScrollList_Init( menulist_s *l )
 {
 	int		w;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
+
+	font = UI_FontForStyle( l->generic.flags );
+#endif
 
 	l->oldvalue = 0;
 	l->curvalue = 0;
@@ -912,7 +1075,11 @@ static void ScrollList_Init( menulist_s *l )
 	l->generic.left   =	l->generic.x;
 	l->generic.top    = l->generic.y;	
 	l->generic.right  =	l->generic.x + w;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	l->generic.bottom =	l->generic.y + l->height * Com_FontCharHeight(font, 0);
+#else
 	l->generic.bottom =	l->generic.y + l->height * SMALLCHAR_HEIGHT;
+#endif
 
 	if( l->generic.flags & QMF_CENTER_JUSTIFY ) {
 		l->generic.left -= w / 2;
@@ -1104,6 +1271,9 @@ sfxHandle_t ScrollList_Key( menulist_s *l, int key )
 
 		case K_KP_LEFTARROW:
 		case K_LEFTARROW:
+#ifdef TA_MISC // MENU: Right Mouse button = left arrow
+		case K_MOUSE2:
+#endif
 			if( l->columns == 1 ) {
 				return menu_null_sound;
 			}
@@ -1217,6 +1387,11 @@ void ScrollList_Draw( menulist_s *l )
 	float*		color;
 	qboolean	hasfocus;
 	int			style;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t *font;
+
+	font = UI_FontForStyle( l->generic.flags );
+#endif
 
 	hasfocus = (l->generic.parent->cursor == l->generic.menuPosition);
 
@@ -1259,7 +1434,11 @@ void ScrollList_Draw( menulist_s *l )
 				style,
 				color);
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+			y += Com_FontCharHeight(font, 0);
+#else
 			y += SMALLCHAR_HEIGHT;
+#endif
 		}
 		x += (l->width + l->seperation) * SMALLCHAR_WIDTH;
 	}
@@ -1596,10 +1775,23 @@ sfxHandle_t Menu_DefaultKey( menuframework_s *m, int key )
 	// menu system keys
 	switch ( key )
 	{
+#ifndef TA_MISC // MENU: Right Mouse button = left arrow
 		case K_MOUSE2:
+#endif
 		case K_ESCAPE:
+#ifdef IOQ3ZTM
+			if (uis.activemenu->noEscape)
+			{
+				return sound;
+			}
+			else
+			{
+#endif
 			UI_PopMenu();
 			return menu_out_sound;
+#ifdef IOQ3ZTM
+			}
+#endif
 	}
 
 	if (!m || !m->nitems)
@@ -1642,11 +1834,12 @@ sfxHandle_t Menu_DefaultKey( menuframework_s *m, int key )
 	switch ( key )
 	{
 #ifndef NDEBUG
-		case K_F11:
+		case K_F10:
 			uis.debug ^= 1;
+			trap_Cvar_SetValue("developer", uis.debug);
 			break;
 
-		case K_F12:
+		case K_F11:
 			trap_Cmd_ExecuteText(EXEC_APPEND, "screenshot\n");
 			break;
 #endif
@@ -1732,10 +1925,27 @@ Menu_Cache
 */
 void Menu_Cache( void )
 {
+#ifdef IOQ3ZTM // FONT_REWRITE
+	UI_LoadFont(&uis.fontSmall, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 8, 0);
+	UI_LoadFont(&uis.fontBig, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 16, 0);
+	UI_LoadFont(&uis.fontGiant, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 48, 32, 0);
+
+	UI_LoadFont(&uis.fontPropSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, PROP_GAP_WIDTH);
+	UI_LoadFont(&uis.fontPropBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT, 22*0.66f, PROP_GAP_WIDTH);
+#ifndef TA_DATA
+	UI_LoadFont(&uis.fontPropGlowSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
+	UI_LoadFont(&uis.fontPropGlowBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT, 22*0.66f, 0);
+#endif
+
+	UI_LoadFont(&uis.fontBanner, "fonts/mplus-2p-black.ttf", "menu/art/font2_prop.tga", 48, 32, 0);
+#else
 	uis.charset			= trap_R_RegisterShaderNoMip( "gfx/2d/bigchars" );
 	uis.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
+#ifndef TA_DATA
 	uis.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
+#endif
 	uis.charsetPropB	= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
+#endif
 	uis.cursor          = trap_R_RegisterShaderNoMip( "menu/art/3_cursor2" );
 	uis.rb_on           = trap_R_RegisterShaderNoMip( "menu/art/switch_on" );
 	uis.rb_off          = trap_R_RegisterShaderNoMip( "menu/art/switch_off" );
@@ -1744,16 +1954,26 @@ void Menu_Cache( void )
 	if ( uis.glconfig.hardwareType == GLHW_RAGEPRO ) {
 		// the blend effect turns to shit with the normal 
 		uis.menuBackShader	= trap_R_RegisterShaderNoMip( "menubackRagePro" );
+#ifdef TA_DATA
+		uis.menuBackInGameShader	= trap_R_RegisterShaderNoMip( "menubackInGameRagePro" );
+#endif
 	} else {
 		uis.menuBackShader	= trap_R_RegisterShaderNoMip( "menuback" );
+#ifdef TA_DATA
+		uis.menuBackInGameShader	= trap_R_RegisterShaderNoMip( "menubackInGame" );
+#endif
 	}
+#ifndef TA_DATA
 	uis.menuBackNoLogoShader = trap_R_RegisterShaderNoMip( "menubacknologo" );
+#endif
 
 	menu_in_sound	= trap_S_RegisterSound( "sound/misc/menu1.wav", qfalse );
 	menu_move_sound	= trap_S_RegisterSound( "sound/misc/menu2.wav", qfalse );
 	menu_out_sound	= trap_S_RegisterSound( "sound/misc/menu3.wav", qfalse );
 	menu_buzz_sound	= trap_S_RegisterSound( "sound/misc/menu4.wav", qfalse );
+#ifndef TA_WEAPSYS_EX
 	weaponChangeSound	= trap_S_RegisterSound( "sound/weapons/change.wav", qfalse );
+#endif
 
 	// need a nonzero sound, make an empty sound for this
 	menu_null_sound = -1;

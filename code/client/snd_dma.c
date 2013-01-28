@@ -46,6 +46,9 @@ void S_Base_StopAllSounds(void);
 void S_Base_StopBackgroundTrack( void );
 
 snd_stream_t	*s_backgroundStream = NULL;
+#ifdef IOQ3ZTM // MUSIC_SCRIPT
+static float	s_backgroundVolume = 1.0f;
+#endif
 static char		s_backgroundLoop[MAX_QPATH];
 //static char		s_backgroundMusic[MAX_QPATH]; //TTimo: unused
 
@@ -416,7 +419,11 @@ void S_Base_BeginRegistration( void ) {
 		Com_Memset(s_knownSfx, '\0', sizeof(s_knownSfx));
 		Com_Memset(sfxHash, '\0', sizeof(sfx_t *) * LOOP_HASH);
 
+#ifdef TA_DATA // OPENARENA
+		S_Base_RegisterSound("sound/misc/silence.wav", qfalse);
+#else
 		S_Base_RegisterSound("sound/feedback/hit.wav", qfalse);		// changed to a sound in baseq3
+#endif
 	}
 }
 
@@ -1374,13 +1381,35 @@ void S_Base_StopBackgroundTrack( void ) {
 S_StartBackgroundTrack
 ======================
 */
-void S_Base_StartBackgroundTrack( const char *intro, const char *loop ){
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+void S_Base_StartBackgroundTrack( const char *_intro, const char *_loop )
+#else
+void S_Base_StartBackgroundTrack( const char *intro, const char *loop )
+#endif
+{
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+	char intro[MAX_QPATH];
+	char loop[MAX_QPATH];
+
+	if ( !_intro ) {
+		_intro = "";
+	}
+	if ( !_loop || !_loop[0] ) {
+		_loop = intro;
+	}
+
+	strncpy(intro, _intro, MAX_QPATH);
+	strncpy(loop, _loop, MAX_QPATH);
+
+	S_GetMusicForIntro(intro, loop, &s_backgroundVolume);
+#else
 	if ( !intro ) {
 		intro = "";
 	}
 	if ( !loop || !loop[0] ) {
 		loop = intro;
 	}
+#endif
 	Com_DPrintf( "S_StartBackgroundTrack( %s, %s )\n", intro, loop );
 
 	if(!*intro)
@@ -1389,11 +1418,15 @@ void S_Base_StartBackgroundTrack( const char *intro, const char *loop ){
 		return;
 	}
 
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+	Q_strncpyz( s_backgroundLoop, loop, sizeof( s_backgroundLoop ) );
+#else
 	if( !loop ) {
 		s_backgroundLoop[0] = 0;
 	} else {
 		Q_strncpyz( s_backgroundLoop, loop, sizeof( s_backgroundLoop ) );
 	}
+#endif
 
 	// close the background track, but DON'T reset s_rawend
 	// if restarting the same back ground track
@@ -1469,7 +1502,11 @@ void S_UpdateBackgroundTrack( void ) {
 		{
 			// add to raw buffer
 			S_Base_RawSamples(0, fileSamples, s_backgroundStream->info.rate,
-				s_backgroundStream->info.width, s_backgroundStream->info.channels, raw, s_musicVolume->value, -1);
+				s_backgroundStream->info.width, s_backgroundStream->info.channels, raw, s_musicVolume->value
+#ifdef IOQ3ZTM // MUSIC_SCRIPT
+				* s_backgroundVolume
+#endif
+				, -1);
 		}
 		else
 		{

@@ -110,11 +110,13 @@ void BotPrintTeamGoal(bot_state_t *bs) {
 			BotAI_Print(PRT_MESSAGE, "%s: I'm gonna attack the enemy base for %1.0f secs\n", netname, t);
 			break;
 		}
+#ifdef MISSIONPACK_HARVESTER
 		case LTG_HARVEST:
 		{
 			BotAI_Print(PRT_MESSAGE, "%s: I'm gonna harvest for %1.0f secs\n", netname, t);
 			break;
 		}
+#endif
 #endif
 		case LTG_DEFENDKEYAREA:
 		{
@@ -894,7 +896,11 @@ void BotMatch_AttackEnemyBase(bot_state_t *bs, bot_match_t *match) {
 		BotMatch_GetFlag(bs, match);
 	}
 #ifdef MISSIONPACK
-	else if (gametype == GT_1FCTF || gametype == GT_OBELISK || gametype == GT_HARVESTER) {
+	else if (gametype == GT_1FCTF || gametype == GT_OBELISK
+#ifdef MISSIONPACK_HARVESTER
+	|| gametype == GT_HARVESTER
+#endif
+	) {
 		if (!redobelisk.areanum || !blueobelisk.areanum)
 			return;
 	}
@@ -928,7 +934,7 @@ void BotMatch_AttackEnemyBase(bot_state_t *bs, bot_match_t *match) {
 #endif //DEBUG
 }
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HARVESTER
 /*
 ==================
 BotMatch_Harvest
@@ -986,7 +992,11 @@ void BotMatch_RushBase(bot_state_t *bs, bot_match_t *match) {
 			return;
 	}
 #ifdef MISSIONPACK
-	else if (gametype == GT_1FCTF || gametype == GT_HARVESTER) {
+	else if (gametype == GT_1FCTF
+#ifdef MISSIONPACK_HARVESTER
+	|| gametype == GT_HARVESTER
+#endif
+	) {
 		if (!redobelisk.areanum || !blueobelisk.areanum)
 			return;
 	}
@@ -1450,11 +1460,13 @@ void BotMatch_WhatAreYouDoing(bot_state_t *bs, bot_match_t *match) {
 			BotAI_BotInitialChat(bs, "attackingenemybase", NULL);
 			break;
 		}
+#ifdef MISSIONPACK_HARVESTER
 		case LTG_HARVEST:
 		{
 			BotAI_BotInitialChat(bs, "harvesting", NULL);
 			break;
 		}
+#endif
 #endif
 		default:
 		{
@@ -1526,6 +1538,7 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 	bot_goal_t goal;
 	char netname[MAX_MESSAGE_SIZE];
 	char *nearbyitems[] = {
+#ifndef TA_WEAPSYS
 		"Shotgun",
 		"Grenade Launcher",
 		"Rocket Launcher",
@@ -1533,6 +1546,16 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 		"Railgun",
 		"Lightning Gun",
 		"BFG10K",
+#endif
+#ifdef TURTLEARENA // POWERS, NOARMOR
+		"Strength",
+		"Regeneration",
+		"Defense",
+		"Speed",
+		"Invisibility",
+		"Flight",
+		"Invulnerability",
+#else
 		"Quad Damage",
 		"Regeneration",
 		"Battle Suit",
@@ -1541,12 +1564,15 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 		"Flight",
 		"Armor",
 		"Heavy Armor",
+#endif
 		"Red Flag",
 		"Blue Flag",
 #ifdef MISSIONPACK
+#ifndef TA_WEAPSYS
 		"Nailgun",
 		"Prox Launcher",
 		"Chaingun",
+#endif
 		"Scout",
 		"Guard",
 		"Doubler",
@@ -1554,7 +1580,9 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 		"Neutral Flag",
 		"Red Obelisk",
 		"Blue Obelisk",
+#ifdef MISSIONPACK_HARVESTER
 		"Neutral Obelisk",
+#endif
 #endif
 		NULL
 	};
@@ -1574,6 +1602,16 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 			bestitem = i;
 		}
 	}
+#ifdef TA_WEAPSYS
+	// Check weapons
+	for (i = 1; i < BG_NumWeaponGroups(); i++) {
+		dist = BotNearestVisibleItem(bs, bg_weapongroupinfo[i].item->pickup_name, &goal);
+		if (dist < bestdist) {
+			bestdist = dist;
+			bestitem = i;
+		}
+	}
+#endif
 	if (bestitem != -1) {
 		if (gametype == GT_CTF
 #ifdef MISSIONPACK
@@ -1593,7 +1631,11 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 			}
 		}
 #ifdef MISSIONPACK
-		else if (gametype == GT_OBELISK || gametype == GT_HARVESTER) {
+		else if (gametype == GT_OBELISK
+#ifdef MISSIONPACK_HARVESTER
+		|| gametype == GT_HARVESTER
+#endif
+		) {
 			redtt = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, redobelisk.areanum, TFL_DEFAULT);
 			bluett = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, blueobelisk.areanum, TFL_DEFAULT);
 			if (redtt < (redtt + bluett) * 0.4) {
@@ -1851,12 +1893,14 @@ int BotMatchMessage(bot_state_t *bs, char *message) {
 			BotMatch_AttackEnemyBase(bs, &match);
 			break;
 		}
+#ifdef MISSIONPACK_HARVESTER
 		//Harvester
 		case MSG_HARVEST:
 		{
 			BotMatch_Harvest(bs, &match);
 			break;
 		}
+#endif
 #endif
 		//CTF & 1FCTF & Harvester
 		case MSG_RUSHBASE:				//ctf rush to the base

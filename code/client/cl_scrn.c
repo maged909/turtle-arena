@@ -123,6 +123,254 @@ void SCR_DrawPic( float x, float y, float width, float height, qhandle_t hShader
 
 
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+/*
+================
+SCR_LoadFont
+=================
+*/
+qboolean SCR_LoadFont(font_t *font, const char *ttfName, const char *shaderName, int pointSize,
+			int shaderCharWidth, float fontKerning)
+{
+	font->fontInfo.name[0] = 0;
+	font->fontShader = 0;
+	font->pointSize = pointSize;
+	font->kerning = fontKerning;
+
+	font->shaderCharWidth = shaderCharWidth;
+
+	if (ttfName[0] != '\0') {
+		re.RegisterFont(ttfName, pointSize, &font->fontInfo);
+
+		if (font->fontInfo.name[0]) {
+			return qtrue;
+		}
+	}
+
+	if (shaderName[0] != '\0') {
+		font->fontShader = re.RegisterShaderNoMip(shaderName);
+
+		if (font->fontShader) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+** SCR_DrawFontChar
+** Characters are drawn at native screen resolution, unless adjustFrom640 is set to qtrue
+*/
+void SCR_DrawFontChar( font_t *font, float x, float y, int ch, qboolean adjustFrom640 )
+{
+	float	ax, ay, aw, ah;
+	float	useScale;
+
+	if (!font) {
+		return;
+	}
+
+	ch &= 0xff;
+
+    if (ch == ' ') {
+		return;
+	}
+
+#if 0 // SCR_DrawChar
+	if ( y < -font->pointSize ) {
+		return;
+	}
+#endif
+
+	useScale = Com_FontScale( font, 0 );
+
+    if (font->fontInfo.name[0]) {
+		glyphInfo_t *glyph;
+		float yadj;
+		float xadj;
+
+		y += Com_FontCharHeight( font, 0 );
+
+		glyph = &font->fontInfo.glyphs[ch];
+
+		yadj = useScale * glyph->top;
+		xadj = useScale * glyph->left;
+
+		ax = x+xadj;
+		ay = y-yadj;
+		aw = useScale * glyph->imageWidth;
+		ah = useScale * glyph->imageHeight;
+
+		if (adjustFrom640) {
+			SCR_AdjustFrom640( &ax, &ay, &aw, &ah );
+		}
+
+		re.DrawStretchPic( ax, ay, aw, ah,
+						   glyph->s, glyph->t,
+						   glyph->s2, glyph->t2,
+						   glyph->glyph );
+    } else {
+		int row, col;
+		float frow, fcol;
+		float size;
+
+#if 1 // SCR_DrawChar
+		if ( y < -font->pointSize ) {
+			return;
+		}
+#endif
+
+		size = useScale * font->pointSize;
+
+		ax = x;
+		ay = y;
+		aw = size;
+		ah = size;
+
+		if (adjustFrom640) {
+			SCR_AdjustFrom640( &ax, &ay, &aw, &ah );
+		}
+
+		row = ch>>4;
+		col = ch&15;
+
+		frow = row*0.0625;
+		fcol = col*0.0625;
+		size = 0.0625;
+
+		re.DrawStretchPic( ax, ay, aw, ah,
+						   fcol, frow,
+						   fcol + size, frow + size,
+						   font->fontShader );
+    }
+}
+
+/*
+==================
+SCR_DrawFontStringExt
+
+Draws a multi-colored string with a optional drop shadow, optionally forcing
+to a fixed color.
+==================
+*/
+void SCR_DrawFontStringExt( font_t *font, float x, float y, const char *string, const float *setColor, qboolean forceColor,
+		qboolean noColorEscape, qboolean drawShadow, qboolean adjustFrom640, int maxChars )
+{
+	vec4_t		color;
+	const char	*s;
+	float		xx;
+	int			cnt;
+
+	if (maxChars <= 0)
+		maxChars = 32767; // do them all!
+
+	if (drawShadow) // ZTM: Should this be in font_t? It is not in SCR_DrawSmallStringExt, but is in SCR_Draw(Big)StringExt
+	{
+		// draw the drop shadow
+		color[0] = color[1] = color[2] = 0;
+		color[3] = setColor[3];
+		re.SetColor( color );
+		s = string;
+		xx = x;
+		while ( *s ) {
+			if ( !noColorEscape && Q_IsColorString( s ) ) {
+				s += 2;
+				continue;
+			}
+			SCR_DrawFontChar( font, xx+2, y+2, *s, adjustFrom640 );
+			xx += Com_FontCharWidth( font, *s, 0 );
+			s++;
+		}
+	}
+
+	// draw the colored text
+	s = string;
+	xx = x;
+	cnt = 0;
+	re.SetColor( setColor );
+	while ( *s && cnt < maxChars) {
+#if 1 // SCR_DrawStringExt // Is one way better then the other? Do they do the same thing?
+		if ( !noColorEscape && Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				Com_Memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
+				color[3] = setColor[3];
+				re.SetColor( color );
+			}
+			s += 2;
+			continue;
+		}
+#else // SCR_DrawSmallStringExt
+		if ( Q_IsColorString( s ) ) {
+			if ( !forceColor ) {
+				Com_Memcpy( color, g_color_table[ColorIndex(*(s+1))], sizeof( color ) );
+				color[3] = setColor[3];
+				re.SetColor( color );
+			}
+			if ( !noColorEscape ) {
+				s += 2;
+				continue;
+			}
+		}
+#endif
+        SCR_DrawFontChar( font, xx, y, *s, adjustFrom640 );
+        xx += Com_FontCharWidth( font, *s, 0 );
+        cnt++;
+		s++;
+	}
+	re.SetColor( NULL );
+}
+
+#if 0 // ZTM: Old wrapers
+void SCR_DrawStringExt( int x, int y, float size, const char *string, float *setColor, qboolean forceColor,
+		qboolean noColorEscape )
+{
+	font_t *font;
+
+	/*if (size >= GIANTCHAR_WIDTH)
+		font = &cls.fontGiant;
+	else */if (size >= BIGCHAR_WIDTH)
+		font = &cls.fontBig;
+	else if (size >= SMALLCHAR_WIDTH)
+		font = &cls.fontSmall;
+	else
+		font = &cls.fontTiny;
+
+	SCR_DrawFontStringExt( font, x, y, string, setColor, forceColor,
+		qfalse, qtrue, qtrue, 0 );
+}
+
+void SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor,
+		qboolean noColorEscape )
+{
+	SCR_DrawFontStringExt( &cls.fontSmall, x, y, string, setColor, forceColor, noColorEscape, qfalse, qfalse, 0);
+}
+#endif
+
+void SCR_DrawFontString( font_t *font, int x, int y, const char *s, float alpha ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	SCR_DrawFontStringExt( font, x, y, s, color, qfalse, qfalse, qtrue, qtrue, 0 );
+}
+
+void SCR_DrawFontStringColor( font_t *font, int x, int y, const char *s, vec4_t color ) {
+	SCR_DrawFontStringExt( font, x, y, s, color, qtrue, qfalse, qtrue, qtrue, 0 );
+}
+
+void SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape ) {
+	float	color[4];
+
+	color[0] = color[1] = color[2] = 1.0;
+	color[3] = alpha;
+	SCR_DrawFontStringExt( &cls.fontBig, x, y, s, color, qfalse, noColorEscape, qtrue, qfalse, 0 );
+}
+
+void SCR_DrawBigStringColor( int x, int y, const char *s, vec4_t color, qboolean noColorEscape ) {
+	SCR_DrawFontStringExt( &cls.fontBig, x, y, s, color, qtrue, noColorEscape, qtrue, qfalse, 0 );
+}
+#else
 /*
 ** SCR_DrawChar
 ** chars are drawn at 640*480 virtual screen size
@@ -300,6 +548,7 @@ void SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, 
 	}
 	re.SetColor( NULL );
 }
+#endif // !FONT_REWRITE
 
 
 
@@ -351,7 +600,12 @@ void SCR_DrawDemoRecording( void ) {
 	pos = FS_FTell( clc.demofile );
 	sprintf( string, "RECORDING %s: %ik", clc.demoName, pos / 1024 );
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	SCR_DrawFontStringColor( &cls.fontTiny, 320 - Com_FontStringWidth(&cls.fontTiny, string, 0 ) * 0.5f,
+			20, string, g_color_table[7]);
+#else
 	SCR_DrawStringExt( 320 - strlen( string ) * 4, 20, 8, string, g_color_table[7], qtrue, qfalse );
+#endif
 }
 
 

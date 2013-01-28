@@ -1,13 +1,13 @@
-; sample NSIS description file for a Spearmint mod installer
+; sample NSIS description file for a Turtle Arena mod installer
 
 !define NAME "Catch the Chicken"
-!define FSNAME "spearmint-q3ctc"
+!define FSNAME "turtlearena-q3ctc"
 !define VERSION "1.4"
 !define RELEASE "1"
 !define MODDIR "q3ctc"
-!define PUBLISHER "The Spearmint Team"
-!define URL "http://github.com/zturtleman/spearmint/"
-; uncomment if the mod works without baseq3
+!define PUBLISHER "The Turtle Arena Team"
+!define URL "http://turtlearena.googlecode.com/"
+; uncomment if the mod works without base
 ;!define STANDALONE
 
 !define MUI_ICON "../quake3.ico"
@@ -27,10 +27,10 @@
 
 ; no need to edit below in theory
 
-!define GAMENAME "Spearmint"
-!define CLIENT "spearmint.x86.exe"
-!define GAMEDIR "Spearmint"
-!define GAMEKEY "spearmint"
+!define GAMENAME "Turtle Arena"
+!define CLIENT "turtlearena.x86.exe"
+!define GAMEDIR "Turtle Arena"
+!define GAMEKEY "turtlearena"
 
 SetCompressor lzma
 

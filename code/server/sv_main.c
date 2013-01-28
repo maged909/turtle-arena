@@ -676,8 +676,13 @@ static void SVC_Status( netadr_t from ) {
 		cl = pl->client;
 		if ( cl->state >= CS_CONNECTED ) {
 			ps = SV_GameClientNum( i );
+#ifdef IOQ3ZTM // Addon for G_HUMANPLAYERS // Tell which players are bots (hopefully, without breaking compatiblity... tested/working in Q3:Team Arena)
+			Com_sprintf (player, sizeof(player), "%i %i \"%s\"%s\n", 
+				ps->persistant[PERS_SCORE], cl->ping, pl->name, (cl->netchan.remoteAddress.type == NA_BOT) ? " [bot]" : "");
+#else
 			Com_sprintf (player, sizeof(player), "%i %i \"%s\"\n", 
 				ps->persistant[PERS_SCORE], cl->ping, pl->name);
+#endif
 			playerLength = strlen(player);
 			if (statusLength + playerLength >= sizeof(status) ) {
 				break;		// can't hold any more

@@ -34,7 +34,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define	MAX_DLIGHTS		32		// can't be increased, because bit flags are used on surfaces
 
+#ifdef IOQ3ZTM_NO_COMPAT // MORE_ENTITIES
+#define	REFENTITYNUM_BITS	14		// can't be increased without changing drawsurf bit packing
+#else
 #define	REFENTITYNUM_BITS	12		// can't be increased without changing drawsurf bit packing
+#endif
 #define	REFENTITYNUM_MASK	((1<<REFENTITYNUM_BITS) - 1)
 // the last N-bit number (2^REFENTITYNUM_BITS - 1) is reserved for the special world refentity,
 //  and this is reflected by the value of MAX_REFENTITIES (which therefore is not a power-of-2)
@@ -61,6 +65,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define	RF_SHADOW_PLANE		0x0100		// use refEntity->shadowPlane
 #define	RF_WRAP_FRAMES		0x0200		// mod the model frames by the maxframes to allow continuous
+
+#ifdef IOQ3ZTM // RENDERFLAGS
+#define RF_FORCE_ENT_ALPHA	0x0400		// IOSTVEF: override shader alpha value and take the one from the entity.
+#endif
 
 // refdef flags
 #define RDF_NOWORLDMODEL	0x0001		// used for player configuration screen
@@ -111,6 +119,26 @@ typedef enum {
 	RT_MAX_REF_ENTITY_TYPE
 } refEntityType_t;
 
+#ifdef IOQ3ZTM // BONES
+#define MAX_SKELETON_JOINTS 128 // see IQM_MAX_JOINTS
+// ZTM: TODO: Replace IQM_MAX_JOINTS with MAX_SKELETON_JOINTS?
+
+typedef enum
+{
+	ST_NONE,
+	ST_RELATIVE,
+	ST_ABSOLUTE
+} skeletonType_t;
+
+typedef struct
+{
+	skeletonType_t	type;
+	int				numJoints;
+	orientation_t	joints[MAX_SKELETON_JOINTS];
+	int				jointParents[MAX_SKELETON_JOINTS];
+} refSkeleton_t;
+#endif
+
 typedef struct {
 	refEntityType_t	reType;
 	int			renderfx;
@@ -135,6 +163,9 @@ typedef struct {
 	int			skinNum;			// inline skin index
 	qhandle_t	customSkin;			// NULL for default skin
 	qhandle_t	customShader;		// use one image for the entire thing
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+	float		skinFraction;		// 0 to 1, select which shader from the skin to use
+#endif
 
 	// misc
 	byte		shaderRGBA[4];		// colors used by rgbgen entity shaders

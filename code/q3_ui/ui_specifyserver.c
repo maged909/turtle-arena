@@ -38,11 +38,27 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define SPECIFYSERVER_FRAMER	"menu/art/frame1_r"
 #define SPECIFYSERVER_BACK0		"menu/art/back_0"
 #define SPECIFYSERVER_BACK1		"menu/art/back_1"
+#ifdef TA_DATA // NO_MENU_FIGHT
+#define SPECIFYSERVER_FIGHT0	"menu/art/join_0"
+#define SPECIFYSERVER_FIGHT1	"menu/art/join_1"
+#else
 #define SPECIFYSERVER_FIGHT0	"menu/art/fight_0"
 #define SPECIFYSERVER_FIGHT1	"menu/art/fight_1"
+#endif
+#ifdef IOQ3ZTM // SPECIFY_FAV
+#define SPECIFYSERVER_ADD0		"menu/art/accept_0"
+#define SPECIFYSERVER_ADD1		"menu/art/accept_1"
+#endif
+
 
 #define ID_SPECIFYSERVERBACK	102
 #define ID_SPECIFYSERVERGO		103
+#ifdef IOQ3ZTM // SPECIFY_FAV
+#define ID_SPECIFYSERVERADD		104
+
+void ArenaServers_LoadFavorites( void );
+void ArenaServers_StartRefresh( void );
+#endif
 
 static char* specifyserver_artlist[] =
 {
@@ -52,6 +68,10 @@ static char* specifyserver_artlist[] =
 	SPECIFYSERVER_BACK1,	
 	SPECIFYSERVER_FIGHT0,
 	SPECIFYSERVER_FIGHT1,
+#ifdef IOQ3ZTM // SPECIFY_FAV
+	SPECIFYSERVER_ADD0,
+	SPECIFYSERVER_ADD1,
+#endif
 	NULL
 };
 
@@ -63,11 +83,17 @@ typedef struct
 	menubitmap_s	framer;
 	menufield_s		domain;
 	menufield_s		port;
+#ifdef IOQ3ZTM // SPECIFY_FAV
+	menubitmap_s	add;
+#endif
 	menubitmap_s	go;
 	menubitmap_s	back;
 } specifyserver_t;
 
 static specifyserver_t	s_specifyserver;
+#ifdef IOQ3ZTM
+static qboolean s_specifyserverFav;
+#endif
 
 /*
 =================
@@ -93,6 +119,58 @@ static void SpecifyServer_Event( void* ptr, int event )
 				trap_Cmd_ExecuteText( EXEC_APPEND, va( "connect %s\n", buff ) );
 			}
 			break;
+
+#ifdef IOQ3ZTM // SPECIFY_FAV
+		case ID_SPECIFYSERVERADD:
+			if (event != QM_ACTIVATED)
+				break;
+
+			if (s_specifyserver.domain.field.buffer[0])
+			{
+				strcpy(buff,s_specifyserver.domain.field.buffer);
+				if (s_specifyserver.port.field.buffer[0])
+					Com_sprintf( buff+strlen(buff), 128, ":%s", s_specifyserver.port.field.buffer );
+
+				// From serverinfo
+				{
+					int		i;
+					int		best;
+					char adrstr[256];
+
+					best = 0;
+					for (i=0; i<MAX_FAVORITESERVERS; i++)
+					{
+						trap_Cvar_VariableStringBuffer( va("server%d",i+1), adrstr, sizeof(adrstr) );
+						if (!Q_stricmp(buff,adrstr))
+						{
+							// Already in list
+							UI_PopMenu();
+							ArenaServers_StartRefresh();
+							return;
+						}
+
+						// use first empty or non-numeric available slot
+						if ((adrstr[0]  < '0' || adrstr[0] > '9' ) && !best)
+							best = i+1;
+					}
+
+					if (best)
+					{
+						trap_Cvar_Set( va("server%d",best), buff);
+						ArenaServers_LoadFavorites();
+						UI_PopMenu();
+						ArenaServers_StartRefresh();
+					}
+					else
+					{
+						trap_Cvar_Set( "com_errorMessage", "Can't add fav, all fav slots full.");
+						UI_MainMenu();
+						return;
+					}
+				}
+			}
+			break;
+#endif
 
 		case ID_SPECIFYSERVERBACK:
 			if (event != QM_ACTIVATED)
@@ -121,8 +199,21 @@ void SpecifyServer_MenuInit( void )
 	s_specifyserver.banner.generic.type	 = MTYPE_BTEXT;
 	s_specifyserver.banner.generic.x     = 320;
 	s_specifyserver.banner.generic.y     = 16;
+#ifdef IOQ3ZTM // SPECIFY_FAV
+	if (s_specifyserverFav)
+#ifdef TA_DATA
+		s_specifyserver.banner.string		 = "NEW FAVORITE";
+#else
+		s_specifyserver.banner.string		 = "SPECIFY FAVORITE";
+#endif
+	else
+#endif
 	s_specifyserver.banner.string		 = "SPECIFY SERVER";
+#ifdef IOQ3ZTM
+	s_specifyserver.banner.color  		 = text_banner_color;
+#else
 	s_specifyserver.banner.color  		 = color_white;
+#endif
 	s_specifyserver.banner.style  		 = UI_CENTER;
 
 	s_specifyserver.framel.generic.type  = MTYPE_BITMAP;
@@ -157,6 +248,56 @@ void SpecifyServer_MenuInit( void )
 	s_specifyserver.port.field.widthInChars = 6;
 	s_specifyserver.port.field.maxchars     = 5;
 
+#ifdef TA_MISC // SPECIFY_FAV
+	if (s_specifyserverFav)
+	{
+		s_specifyserver.go.generic.type	    = MTYPE_BITMAP;
+		s_specifyserver.go.generic.name     = SPECIFYSERVER_ADD0;
+		s_specifyserver.go.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+		s_specifyserver.go.generic.callback = SpecifyServer_Event;
+		s_specifyserver.go.generic.id	    = ID_SPECIFYSERVERADD;
+		s_specifyserver.go.generic.x		= 640;
+		s_specifyserver.go.generic.y		= 480-64;
+		s_specifyserver.go.width  		    = 128;
+		s_specifyserver.go.height  		    = 64;
+		s_specifyserver.go.focuspic         = SPECIFYSERVER_ADD1;
+	}
+	else
+	{
+		s_specifyserver.go.generic.type	    = MTYPE_BITMAP;
+		s_specifyserver.go.generic.name     = SPECIFYSERVER_FIGHT0;
+		s_specifyserver.go.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+		s_specifyserver.go.generic.callback = SpecifyServer_Event;
+		s_specifyserver.go.generic.id	    = ID_SPECIFYSERVERGO;
+		s_specifyserver.go.generic.x		= 640;
+		s_specifyserver.go.generic.y		= 480-64;
+		s_specifyserver.go.width  		    = 128;
+		s_specifyserver.go.height  		    = 64;
+		s_specifyserver.go.focuspic         = SPECIFYSERVER_FIGHT1;
+	}
+#elif defined IOQ3ZTM // SPECIFY_FAV
+	s_specifyserver.add.generic.type	= MTYPE_BITMAP;
+	s_specifyserver.add.generic.name	= SPECIFYSERVER_ADD0;
+	s_specifyserver.add.generic.flags	= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_specifyserver.add.generic.callback= SpecifyServer_Event;
+	s_specifyserver.add.generic.id		= ID_SPECIFYSERVERADD;
+	s_specifyserver.add.generic.x		= 640;
+	s_specifyserver.add.generic.y		= 480-64;
+	s_specifyserver.add.width			= 128;
+	s_specifyserver.add.height			= 64;
+	s_specifyserver.add.focuspic		= SPECIFYSERVER_ADD1;
+
+	s_specifyserver.go.generic.type	    = MTYPE_BITMAP;
+	s_specifyserver.go.generic.name     = SPECIFYSERVER_FIGHT0;
+	s_specifyserver.go.generic.flags    = QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_specifyserver.go.generic.callback = SpecifyServer_Event;
+	s_specifyserver.go.generic.id	    = ID_SPECIFYSERVERGO;
+	s_specifyserver.go.generic.x		= 320;
+	s_specifyserver.go.generic.y		= 480-64;
+	s_specifyserver.go.width  		    = 128;
+	s_specifyserver.go.height  		    = 64;
+	s_specifyserver.go.focuspic         = SPECIFYSERVER_FIGHT1;
+#else
 	s_specifyserver.go.generic.type	    = MTYPE_BITMAP;
 	s_specifyserver.go.generic.name     = SPECIFYSERVER_FIGHT0;
 	s_specifyserver.go.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -167,6 +308,7 @@ void SpecifyServer_MenuInit( void )
 	s_specifyserver.go.width  		    = 128;
 	s_specifyserver.go.height  		    = 64;
 	s_specifyserver.go.focuspic         = SPECIFYSERVER_FIGHT1;
+#endif
 
 	s_specifyserver.back.generic.type	  = MTYPE_BITMAP;
 	s_specifyserver.back.generic.name     = SPECIFYSERVER_BACK0;
@@ -184,9 +326,13 @@ void SpecifyServer_MenuInit( void )
 	Menu_AddItem( &s_specifyserver.menu, &s_specifyserver.framer );
 	Menu_AddItem( &s_specifyserver.menu, &s_specifyserver.domain );
 	Menu_AddItem( &s_specifyserver.menu, &s_specifyserver.port );
+#if defined IOQ3ZTM && !defined TA_MISC // SPECIFY_FAV
+	Menu_AddItem( &s_specifyserver.menu, &s_specifyserver.add );
+#endif
 	Menu_AddItem( &s_specifyserver.menu, &s_specifyserver.go );
 	Menu_AddItem( &s_specifyserver.menu, &s_specifyserver.back );
 
+	// ZTM: NOTE: If PORT_SERVER is changed update this.
 	Com_sprintf( s_specifyserver.port.field.buffer, 6, "%i", 27960 );
 }
 
@@ -213,8 +359,15 @@ void SpecifyServer_Cache( void )
 UI_SpecifyServerMenu
 =================
 */
+#ifdef IOQ3ZTM // SPECIFY_FAV
+void UI_SpecifyServerMenu( qboolean fav )
+#else
 void UI_SpecifyServerMenu( void )
+#endif
 {
+#ifdef IOQ3ZTM // SPECIFY_FAV
+	s_specifyserverFav = fav;
+#endif
 	SpecifyServer_MenuInit();
 	UI_PushMenu( &s_specifyserver.menu );
 }

@@ -22,6 +22,8 @@
 					<Add option="-DNDEBUG" />
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+					<Add option="-DTA_HUD" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Win32">
@@ -40,6 +42,8 @@
 					<Add option="-D_DEBUG" />
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+					<Add option="-DTA_HUD" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Win32">
@@ -99,6 +103,8 @@
 					<Add option="-DNDEBUG" />
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+					<Add option="-DTA_HUD" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux i386">
@@ -118,6 +124,8 @@
 					<Add option="-D_DEBUG" />
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+					<Add option="-DTA_HUD" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Linux i386">
@@ -179,6 +187,8 @@
 					<Add option="-DNDEBUG" />
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+					<Add option="-DTA_HUD" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux x86_64">
@@ -198,6 +208,8 @@
 					<Add option="-D_DEBUG" />
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
+					<Add option="-DTA_HUD" />
 				</Compiler>
 			</Target>
 			<Target title="Release TA_UI Linux x86_64">
@@ -243,6 +255,32 @@
 				</Compiler>
 			</Target>
 		</Build>
+		<Compiler>
+			<Add option="-DNOTRATEDM" />
+			<Add option="-DNOBLOOD" />
+			<Add option="-DIOQ3ZTM" />
+			<Add option="-DIOQ3ZTM_NO_COMPAT" />
+			<Add option="-DIOQ3ZTM_NO_TEAM_MODEL" />
+			<Add option="-DTA_HOLDSYS" />
+			<Add option="-DTA_ITEMSYS" />
+			<Add option="-DTA_WEAPSYS" />
+			<Add option="-DTA_PLAYERSYS" />
+			<Add option="-DTA_SUPPORTQ3" />
+			<Add option="-DTA_ENTSYS" />
+			<Add option="-DTA_NPCSYS" />
+			<Add option="-DTA_PATHSYS" />
+			<Add option="-DTA_WEAPSYS_EX_COMPAT" />
+			<Add option="-DTA_BLOOM" />
+			<Add option="-DTA_SPLITVIEW" />
+			<Add option="-DTURTLEARENA" />
+			<Add option="-DTA_MISC" />
+			<Add option="-DTA_SP" />
+			<Add option="-DTA_HOLDABLE" />
+			<Add option="-DTA_WEAPSYS_EX" />
+			<Add option="-DTA_DATA" />
+			<Add option="-DNIGHTSMODE" />
+			<Add option="-DTA_GAME_MODELS" />
+		</Compiler>
 		<Unit filename="../../code/cgame/cg_atmospheric.c">
 			<Option compilerVar="CC" />
 		</Unit>

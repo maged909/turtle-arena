@@ -90,10 +90,10 @@ static void UI_DisplayDownloadInfo( const char *downloadName ) {
 	downloadCount = trap_Cvar_VariableValue( "cl_downloadCount" );
 	downloadTime = trap_Cvar_VariableValue( "cl_downloadTime" );
 
-	leftWidth = UI_ProportionalStringWidth( dlText ) * UI_ProportionalSizeScale( style );
-	width = UI_ProportionalStringWidth( etaText ) * UI_ProportionalSizeScale( style );
+	leftWidth = UI_ProportionalStringWidth( dlText, style );
+	width = UI_ProportionalStringWidth( etaText, style );
 	if (width > leftWidth) leftWidth = width;
-	width = UI_ProportionalStringWidth( xferText ) * UI_ProportionalSizeScale( style );
+	width = UI_ProportionalStringWidth( xferText, style );
 	if (width > leftWidth) leftWidth = width;
 	leftWidth += 16;
 
@@ -171,13 +171,25 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 	char			*s;
 	uiClientState_t	cstate;
 	char			info[MAX_INFO_VALUE];
+	float			yStart;
+
+#ifdef IOQ3ZTM // TEAM_ARENA_UI_BACKPORTS
+	if (!overlay)
+		yStart = 130;
+	else
+#endif
+	yStart = 16;
 
 	Menu_Cache();
 
 	if ( !overlay ) {
 		// draw the dialog background
 		UI_SetColor( color_white );
+#ifdef TA_DATA
+		UI_DrawPicFullScreen( uis.menuBackShader );
+#else
 		UI_DrawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackShader );
+#endif
 	}
 
 	// see what information we should display
@@ -185,11 +197,16 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 	info[0] = '\0';
 	if( trap_GetConfigString( CS_SERVERINFO, info, sizeof(info) ) ) {
-		UI_DrawProportionalString( 320, 16, va( "Loading %s", Info_ValueForKey( info, "mapname" ) ), UI_BIGFONT|UI_CENTER|UI_DROPSHADOW, color_white );
+		UI_DrawProportionalString( 320, yStart, va( "Loading %s", Info_ValueForKey( info, "mapname" ) ), UI_BIGFONT|UI_CENTER|UI_DROPSHADOW, color_white );
 	}
 
-	UI_DrawProportionalString( 320, 64, va("Connecting to %s", cstate.servername), UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
-	//UI_DrawProportionalString( 320, 96, "Press Esc to abort", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+#ifdef IOQ3ZTM // TEAM_ARENA_UI_BACKPORTS
+	if (!Q_stricmp(cstate.servername,"localhost"))
+		UI_DrawProportionalString( 320, yStart+48, "Starting up...", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+	else
+#endif
+	UI_DrawProportionalString( 320, yStart+48, va("Connecting to %s", cstate.servername), UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+	//UI_DrawProportionalString( 320, yStart+80, "Press Esc to abort", UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
 
 	// display global MOTD at bottom
 	UI_DrawProportionalString( SCREEN_WIDTH/2, SCREEN_HEIGHT-32, 
@@ -197,7 +214,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 	
 	// print any server info (server full, bad version, etc)
 	if ( cstate.connState < CA_CONNECTED ) {
-		UI_DrawProportionalString_AutoWrapped( 320, 192, 630, 20, cstate.messageString, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+		UI_DrawProportionalString_AutoWrapped( 320, yStart+176, 630, 20, cstate.messageString, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
 	}
 
 #if 0
@@ -211,7 +228,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 		passwordField.generic.name = "Password:";
 		passwordField.generic.callback = 0;
 		passwordField.generic.x		= 10;
-		passwordField.generic.y		= 180;
+		passwordField.generic.y		= yStart+164;
 		Field_Clear( &passwordField.field );
 		passwordField.width = 256;
 		passwordField.field.widthInChars = 16;
@@ -255,7 +272,10 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 		return;
 	}
 
-	UI_DrawProportionalString( 320, 128, s, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, color_white );
+#ifdef IOQ3ZTM // TEAM_ARENA_UI_BACKPORTS
+	if (Q_stricmp(cstate.servername,"localhost"))
+#endif
+	UI_DrawProportionalString( 320, yStart+112, s, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, color_white );
 
 	// password required / connection rejected information goes here
 }

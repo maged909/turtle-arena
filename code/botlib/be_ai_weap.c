@@ -55,6 +55,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 //#define DEBUG_AI_WEAP
 
+#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
 //structure field offsets
 #define WEAPON_OFS(x) (size_t)&(((weaponinfo_t *)0)->x)
 #define PROJECTILE_OFS(x) (size_t)&(((projectileinfo_t *)0)->x)
@@ -548,4 +549,4 @@ void BotShutdownWeaponAI(void)
 		} //end if
 	} //end for
 } //end of the function BotShutdownWeaponAI
-
+#endif // !TA_WEAPSYS_NOCOMPAT

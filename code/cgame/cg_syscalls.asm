@@ -163,3 +163,11 @@ equ trap_CIN_RunCinematic 				-603
 equ trap_CIN_DrawCinematic				-604
 equ trap_CIN_SetExtents					-605
 
+
+;;IOQ3ZTM // BONES
+equ trap_R_AddRefEntityToScene_CustomSkeleton -801
+equ trap_R_JointIndexForName			-802
+equ trap_R_SetupSkeleton				-803
+equ trap_R_SetupPlayerSkeleton			-804
+equ trap_R_MakeSkeletonAbsolute			-805
+

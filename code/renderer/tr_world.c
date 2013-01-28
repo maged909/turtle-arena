@@ -222,7 +222,11 @@ static void R_AddWorldSurface( msurface_t *surf, shader_t *shader, int fogNum, i
 		dlightBits = ( dlightBits != 0 );
 	}
 
+#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
+	R_AddDrawSurf( surf->data, shader, surf->fogIndex, dlightBits, SS_BAD );
+#else
 	R_AddDrawSurf( surf->data, shader, surf->fogIndex, dlightBits );
+#endif
 }
 
 /*

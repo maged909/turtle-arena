@@ -28,6 +28,64 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
+#ifdef TURTLEARENA
+#define INVENTORY_NONE				0
+#define INVENTORY_HEALTH			1
+
+//#ifdef TA_WEAPSYS_EX
+// If INVENTORY_WAEPON is different than INVENTORY_DEFAULTWEAPON,
+//   the default can be used by dropping current weapon.
+#define INVENTORY_DEFAULTWEAPON		2 // player's default weapon
+#define INVENTORY_WEAPON			3 // weapon player is holding
+#define INVENTORY_AMMO 				4 // ammo for weapon player is holding
+//#endif
+
+// MISSIONPACK
+#define INVENTORY_PERSISTANT_POWER	5
+//#ifdef MISSIONPACK_HARVESTER
+//#define INVENTORY_REDCUBE			6
+//#define INVENTORY_BLUECUBE		7
+//#endif
+
+// holdable items
+#define INVENTORY_MEDKIT			15
+#define INVENTORY_PORTAL			16
+#define INVENTORY_SHURIKEN			17
+#define INVENTORY_ELECTRICSHURIKEN	18
+#define INVENTORY_FIRESHURIKEN		19
+#define INVENTORY_LASERSHURIKEN		20
+
+// powerups
+#define INVENTORY_QUAD				30
+#define INVENTORY_ENVIRONMENTSUIT	31
+#define INVENTORY_HASTE				32
+#define INVENTORY_INVISIBILITY		33
+#define INVENTORY_FLIGHT			34
+#define INVENTORY_INVUL				35
+#define INVENTORY_REDFLAG			36
+#define INVENTORY_BLUEFLAG			37
+#define INVENTORY_NEUTRALFLAG		38
+
+// MISSIONPACK persistant powers
+#define INVENTORY_SCOUT				39
+#define INVENTORY_GUARD				40
+#define INVENTORY_DOUBLER			41
+#define INVENTORY_AMMOREGEN			42
+
+// 45-49 are free
+
+//TA_WEAPSYS
+#define INVENTORY_WEAPON_START		50 // MAX_BG_WEAPONS-1 (31) slots starting here
+#define INVENTORY_AMMO_START		81 // MAX_BG_WEAPONS-1 (31) slots starting here
+
+//enemy stuff
+#define ENEMY_HORIZONTAL_DIST		200
+#define ENEMY_HEIGHT				201
+#define NUM_VISIBLE_ENEMIES			202
+#define NUM_VISIBLE_TEAMMATES		203
+
+#else // NOT TURTLEARENA ===================================================
+
 #define INVENTORY_NONE				0
 //armor
 #define INVENTORY_ARMOR				1
@@ -80,6 +138,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define INVENTORY_NEUTRALFLAG		47
 #define INVENTORY_REDCUBE			48
 #define INVENTORY_BLUECUBE			49
+#ifdef TA_WEAPSYS
+#define INVENTORY_WEAPON_START 50 // 31 slots starting here
+#define INVENTORY_AMMO_START 81 // 31 slots starting here
+#endif
 //enemy stuff
 #define ENEMY_HORIZONTAL_DIST		200
 #define ENEMY_HEIGHT				201
@@ -157,6 +219,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MODELINDEX_PROXLAUNCHER		50
 #define MODELINDEX_CHAINGUN			51
 
+#ifdef TA_WEAPSYS
+#define MODELINDEX_DEFAULTWEAPON	52 // weapon index -1
+#endif
 
 //
 #define WEAPONINDEX_GAUNTLET			1
@@ -172,3 +237,5 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define WEAPONINDEX_NAILGUN				11
 #define WEAPONINDEX_PROXLAUNCHER		12
 #define WEAPONINDEX_CHAINGUN			13
+
+#endif // TURTLEARENA

@@ -193,8 +193,8 @@ void CG_SelectPrevPlayer( void ) {
 	CG_SetSelectedPlayerName();
 }
 
-
 #ifdef MISSIONPACK_HUD
+#ifndef TURTLEARENA // NOARMOR
 static void CG_DrawPlayerArmorIcon( rectDef_t *rect, qboolean draw2D ) {
 	vec3_t		angles;
 	vec3_t		origin;
@@ -234,6 +234,7 @@ static void CG_DrawPlayerArmorValue(rectDef_t *rect, float scale, vec4_t color, 
 		CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
 	}
 }
+#endif // !TURTLEARENA
 
 #ifndef MISSIONPACK
 static float healthColors[4][4] = { 
@@ -253,18 +254,67 @@ static void CG_DrawPlayerAmmoIcon( rectDef_t *rect, qboolean draw2D ) {
 
 	if ( draw2D || (!cg_draw3dIcons.integer && cg_drawIcons.integer) ) {
 		qhandle_t	icon;
+#ifdef TA_WEAPSYS
+#ifdef TURTLEARENA // WEAPONS
+		icon = cg_weapongroups[ cg.cur_lc->predictedPlayerState.weapon ].weaponIcon;
+#else
+		icon = cg_weapongroups[ cg.cur_lc->predictedPlayerState.weapon ].ammoIcon;
+#endif
+#else
 		icon = cg_weapons[ cg.cur_lc->predictedPlayerState.weapon ].ammoIcon;
+#endif
 		if ( icon ) {
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, icon );
 		}
 	} else if (cg_draw3dIcons.integer) {
-		if ( cent->currentState.weapon && cg_weapons[ cent->currentState.weapon ].ammoModel ) {
+		if ( cent->currentState.weapon &&
+#ifdef TA_WEAPSYS
+#ifdef TURTLEARENA // WEAPONS
+			cg_weapongroups[ cent->currentState.weapon ].weaponModel
+#else
+			cg_weapongroups[ cent->currentState.weapon ].ammoModel
+#endif
+#else
+			cg_weapons[ cent->currentState.weapon ].ammoModel
+#endif
+			)
+		{
 			VectorClear( angles );
+#ifdef TURTLEARENA // WEAPONS
+			angles[YAW] = 20 * sin( cg.time / 1000.0 );
+
+		  	if (bg_weapongroupinfo[ cent->currentState.weapon ].weapon[0]->weapontype == WT_GUN) {
+				origin[0] = 80;
+				origin[1] = -20;
+		  	} else {
+				origin[0] = 50;
+				origin[1] = 0;
+			}
+	  		origin[2] = -10;
+
+	  		// If it doesn't have a special pickup weapon model...
+			if (cg_weapongroups[ cent->currentState.weapon ].weaponModel ==
+				cg_weapons[bg_weapongroupinfo[ cent->currentState.weapon ].weaponnum[0]].weaponModel)
+			{
+				angles[YAW] += 25 + 90;
+			}
+#else
 			origin[0] = 70;
 			origin[1] = 0;
 			origin[2] = 0;
 			angles[YAW] = 90 + 20 * sin( cg.time / 1000.0 );
-			CG_Draw3DModel( rect->x, rect->y, rect->w, rect->h, cg_weapons[ cent->currentState.weapon ].ammoModel, 0, origin, angles );
+#endif
+  			CG_Draw3DModel( rect->x, rect->y, rect->w, rect->h,
+#ifdef TA_WEAPSYS
+#ifdef TURTLEARENA // WEAPONS
+				cg_weapongroups[ cent->currentState.weapon ].weaponModel,
+#else
+				cg_weapongroups[ cent->currentState.weapon ].ammoModel,
+#endif
+#else
+				cg_weapons[ cent->currentState.weapon ].ammoModel,
+#endif
+				0, origin, angles );
 		}
 	}
 }
@@ -279,7 +329,11 @@ static void CG_DrawPlayerAmmoValue(rectDef_t *rect, float scale, vec4_t color, q
 	ps = cg.cur_ps;
 
 	if ( cent->currentState.weapon ) {
+#ifdef TA_WEAPSYS_EX
+		value = ps->stats[STAT_AMMO];
+#else
 		value = ps->ammo[cent->currentState.weapon];
+#endif
 		if ( value > -1 ) {
 			if (shader) {
 		    trap_R_SetColor( color );
@@ -370,6 +424,7 @@ static void CG_DrawSelectedPlayerHealth( rectDef_t *rect, float scale, vec4_t co
 	}
 }
 
+#ifndef TURTLEARENA // NOARMOR
 static void CG_DrawSelectedPlayerArmor( rectDef_t *rect, float scale, vec4_t color, qhandle_t shader, int textStyle ) {
 	clientInfo_t *ci;
 	int value;
@@ -393,6 +448,7 @@ static void CG_DrawSelectedPlayerArmor( rectDef_t *rect, float scale, vec4_t col
 		}
  	}
 }
+#endif // !TURTLEARENA
 
 qhandle_t CG_StatusHandle(int task) {
 	qhandle_t h;
@@ -503,8 +559,13 @@ static void CG_DrawSelectedPlayerWeapon( rectDef_t *rect ) {
 	team = cg.cur_ps->persistant[PERS_TEAM];
 	ci = cgs.clientinfo + sortedTeamPlayers[team][CG_GetSelectedPlayer()];
 	if (ci) {
+#ifdef TA_WEAPSYS
+		if ( cg_weapongroups[ci->curWeapon].weaponIcon ) {
+			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_weapongroups[ci->curWeapon].weaponIcon );
+#else
 		if ( cg_weapons[ci->curWeapon].weaponIcon ) {
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_weapons[ci->curWeapon].weaponIcon );
+#endif
 		} else {
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cgs.media.deferShader);
 		}
@@ -536,7 +597,11 @@ static void CG_DrawPlayerItem( rectDef_t *rect, float scale, qboolean draw2D) {
 	int		value;
   vec3_t origin, angles;
 
+#ifdef TA_HOLDSYS
+	value = BG_ItemNumForHoldableNum(cg.cur_ps->holdableIndex);
+#else
 	value = cg.cur_ps->stats[STAT_HOLDABLE_ITEM];
+#endif
 	if ( value ) {
 		CG_RegisterItemVisuals( value );
 
@@ -554,6 +619,37 @@ static void CG_DrawPlayerItem( rectDef_t *rect, float scale, qboolean draw2D) {
 	}
 
 }
+
+#ifdef TA_HOLDSYS
+static void CG_DrawPlayerItemValue(rectDef_t *rect, float scale, vec4_t color, qhandle_t shader, int textStyle) {
+	char	num[16];
+	int value;
+	int giveQuantity;
+	playerState_t	*ps;
+
+	ps = cg.cur_ps;
+
+	if ( ps->holdableIndex ) {
+		giveQuantity = BG_ItemForItemNum(BG_ItemNumForHoldableNum(ps->holdableIndex))->quantity;
+		value = ps->holdable[cg.cur_ps->holdableIndex];
+
+		if ((giveQuantity > 0 && value > 0)
+			|| (giveQuantity == 0 && value > 1)) // Only happens with give command.
+		{
+			if (shader) {
+		    trap_R_SetColor( color );
+				CG_DrawPic(rect->x, rect->y, rect->w, rect->h, shader);
+			  trap_R_SetColor( NULL );
+			} else {
+				Com_sprintf (num, sizeof(num), "%i", value);
+				value = CG_Text_Width(num, scale, 0);
+				CG_Text_Paint(rect->x + (rect->w - value) / 2, rect->y + rect->h, scale, color, num, 0, 0, textStyle);
+			}
+		}
+	}
+
+}
+#endif
 
 
 static void CG_DrawSelectedPlayerPowerup( rectDef_t *rect, qboolean draw2D ) {
@@ -596,11 +692,16 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer()]);
 
 	if (ci) {
+#ifdef IOQ3ZTM // BONES
+		cm = ci->headModel;
+		if ( cg_draw3dIcons.integer && cm ) {
+#else
 		if ( cg_draw3dIcons.integer ) {
 			cm = ci->headModel;
 			if ( !cm ) {
 				return;
 			}
+#endif
 
 			// offset the origin y and z to center the head
 			trap_R_ModelBounds( cm, mins, maxs );
@@ -614,13 +715,21 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 			origin[0] = len / 0.268;	// len / tan( fov/2 )
 
 			// allow per-model tweaking
+#ifdef TA_PLAYERSYS
+			VectorAdd( origin, ci->playercfg.headOffset, origin );
+#else
 			VectorAdd( origin, ci->headOffset, origin );
+#endif
 
 			angles[PITCH] = 0;
 			angles[YAW] = 180;
 			angles[ROLL] = 0;
 
+#if defined IOQ3ZTM || defined IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+			CG_Draw3DHeadModel( ci - cgs.clientinfo, rect->x, rect->y, rect->w, rect->h, origin, angles );
+#else
 			CG_Draw3DModel( rect->x, rect->y, rect->w, rect->h, ci->headModel, ci->headSkin, origin, angles );
+#endif
 		} else if ( cg_drawIcons.integer ) {
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, ci->modelIcon );
 		}
@@ -702,12 +811,14 @@ static void CG_DrawBlueFlagName(rectDef_t *rect, float scale, vec4_t color, int 
 
 static void CG_DrawBlueFlagStatus(rectDef_t *rect, qhandle_t shader) {
 	if (cgs.gametype != GT_CTF && cgs.gametype != GT_1FCTF) {
+#ifdef MISSIONPACK_HARVESTER
 		if (cgs.gametype == GT_HARVESTER) {
 		  vec4_t color = {0, 0, 1, 1};
 		  trap_R_SetColor(color);
 	    CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cgs.media.blueCubeIcon );
 		  trap_R_SetColor(NULL);
 		}
+#endif
 		return;
 	}
   if (shader) {
@@ -733,7 +844,7 @@ static void CG_DrawBlueFlagHead(rectDef_t *rect) {
 	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_RED  && cgs.clientinfo[i].powerups & ( 1<< PW_BLUEFLAG )) {
       vec3_t angles;
       VectorClear( angles );
- 		  angles[YAW] = 180 + 20 * sin( cg.time / 650.0 );;
+ 		  angles[YAW] = 180 + 20 * sin( cg.time / 650.0 );
       CG_DrawHead( rect->x, rect->y, rect->w, rect->h, 0,angles );
       return;
     }
@@ -752,12 +863,14 @@ static void CG_DrawRedFlagName(rectDef_t *rect, float scale, vec4_t color, int t
 
 static void CG_DrawRedFlagStatus(rectDef_t *rect, qhandle_t shader) {
 	if (cgs.gametype != GT_CTF && cgs.gametype != GT_1FCTF) {
+#ifdef MISSIONPACK_HARVESTER
 		if (cgs.gametype == GT_HARVESTER) {
 		  vec4_t color = {1, 0, 0, 1};
 		  trap_R_SetColor(color);
 	    CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cgs.media.redCubeIcon );
 		  trap_R_SetColor(NULL);
 		}
+#endif
 		return;
 	}
   if (shader) {
@@ -790,6 +903,7 @@ static void CG_DrawRedFlagHead(rectDef_t *rect) {
   }
 }
 
+#ifdef MISSIONPACK_HARVESTER
 static void CG_HarvesterSkulls(rectDef_t *rect, float scale, vec4_t color, qboolean force2D, int textStyle ) {
 	char num[16];
 	vec3_t origin, angles;
@@ -831,6 +945,7 @@ static void CG_HarvesterSkulls(rectDef_t *rect, float scale, vec4_t color, qbool
 		}
 	}
 }
+#endif
 
 static void CG_OneFlagStatus(rectDef_t *rect) {
 	if (cgs.gametype != GT_1FCTF) {
@@ -874,7 +989,7 @@ static void CG_DrawCTFPowerUp(rectDef_t *rect) {
 
 
 static void CG_DrawTeamColor(rectDef_t *rect, vec4_t color) {
-	CG_DrawTeamBackground(rect->x, rect->y, rect->w, rect->h, color[3], cg.cur_ps->persistant[PERS_TEAM]);
+	CG_DrawTeamBackground(rect->x, rect->y, rect->w, rect->h, color[3], cg.cur_ps->persistant[PERS_TEAM], cg.cur_ps->clientNum);
 }
 
 static void CG_DrawAreaPowerUp(rectDef_t *rect, int align, float special, float scale, vec4_t color) {
@@ -960,29 +1075,41 @@ static void CG_DrawAreaPowerUp(rectDef_t *rect, int align, float special, float 
 }
 
 float CG_GetValue(int ownerDraw) {
+#ifndef TA_WEAPSYS_EX
 	centity_t	*cent;
+#endif
  	clientInfo_t *ci;
 	playerState_t	*ps;
 
 	ps = cg.cur_ps;
+#ifndef TA_WEAPSYS_EX
 	cent = &cg_entities[ps->clientNum];
+#endif
 
   switch (ownerDraw) {
+#ifndef TURTLEARENA // NOARMOR
   case CG_SELECTEDPLAYER_ARMOR:
     ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer()];
     return ci->armor;
     break;
+#endif
   case CG_SELECTEDPLAYER_HEALTH:
     ci = cgs.clientinfo + sortedTeamPlayers[ps->persistant[PERS_TEAM]][CG_GetSelectedPlayer()];
     return ci->health;
     break;
+#ifndef TURTLEARENA // NOARMOR
   case CG_PLAYER_ARMOR_VALUE:
 		return ps->stats[STAT_ARMOR];
     break;
+#endif
   case CG_PLAYER_AMMO_VALUE:
+#ifdef TA_WEAPSYS_EX
+		return ps->stats[STAT_AMMO];
+#else
 		if ( cent->currentState.weapon ) {
 		  return ps->ammo[cent->currentState.weapon];
 		}
+#endif
     break;
   case CG_PLAYER_SCORE:
 	  return ps->persistant[PERS_SCORE];
@@ -990,6 +1117,11 @@ float CG_GetValue(int ownerDraw) {
   case CG_PLAYER_HEALTH:
 		return ps->stats[STAT_HEALTH];
     break;
+#ifdef TA_HOLDSYS
+  case CG_PLAYER_ITEM_VALUE:
+		return ps->holdable[ps->holdableIndex];
+    break;
+#endif
   case CG_RED_SCORE:
 		return cgs.scores1;
     break;
@@ -1094,11 +1226,15 @@ qboolean CG_OwnerDrawVisible(int flags) {
 	}
 
 	if (flags & CG_SHOW_HARVESTER) {
+#ifndef MISSIONPACK_HARVESTER
+		return qfalse;
+#else
 		if( cgs.gametype == GT_HARVESTER ) {
 			return qtrue;
     } else {
       return qfalse;
     }
+#endif
 	}
 
 	if (flags & CG_SHOW_ONEFLAG) {
@@ -1186,7 +1322,11 @@ static void CG_DrawAreaChat(rectDef_t *rect, float scale, vec4_t color, qhandle_
 const char *CG_GetKillerText(void) {
 	const char *s = "";
 	if ( cg.cur_lc && cg.cur_lc->killerName[0] ) {
+#ifdef NOTRATEDM // frag to KO
+		s = va("Knocked out by %s", cg.cur_lc->killerName );
+#else
 		s = va("Fragged by %s", cg.cur_lc->killerName );
+#endif
 	}
 	return s;
 }
@@ -1252,8 +1392,10 @@ const char *CG_GameTypeString(void) {
 		return "One Flag CTF";
 	} else if ( cgs.gametype == GT_OBELISK ) {
 		return "Overload";
+#ifdef MISSIONPACK_HARVESTER
 	} else if ( cgs.gametype == GT_HARVESTER ) {
 		return "Harvester";
+#endif
 	}
 	return "";
 }
@@ -1261,6 +1403,7 @@ static void CG_DrawGameType(rectDef_t *rect, float scale, vec4_t color, qhandle_
 	CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, CG_GameTypeString(), 0, 0, textStyle);
 }
 
+#ifndef IOQ3ZTM // FONT_REWRITE
 static void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, vec4_t color, const char* text, float adjust, int limit) {
   int len, count;
 	vec4_t newColor;
@@ -1315,6 +1458,7 @@ static void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, vec4
   }
 
 }
+#endif
 
 
 
@@ -1384,7 +1528,11 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 			// FIXME: max of 3 powerups shown properly
 			xx = rect->x + (PIC_WIDTH * 3) + 2;
 
+#ifdef TURTLEARENA // NOARMOR
+			CG_GetColorForHealth( ci->health, hcolor );
+#else
 			CG_GetColorForHealth( ci->health, ci->armor, hcolor );
+#endif
 			trap_R_SetColor(hcolor);
 			CG_DrawPic( xx, y + 1, PIC_WIDTH - 2, PIC_WIDTH - 2, cgs.media.heartShader );
 
@@ -1396,9 +1544,16 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 
 // weapon used is not that useful, use the space for task
 #if 0
+#ifdef TA_WEAPSYS
+			if ( cg_weapongroups[ci->curWeapon].weaponIcon ) {
+				CG_DrawPic( xx, y, PIC_WIDTH, PIC_WIDTH, cg_weapongroups[ci->curWeapon].weaponIcon );
+			}
+#else
 			if ( cg_weapons[ci->curWeapon].weaponIcon ) {
 				CG_DrawPic( xx, y, PIC_WIDTH, PIC_WIDTH, cg_weapons[ci->curWeapon].weaponIcon );
-			} else {
+			}
+#endif
+			else {
 				CG_DrawPic( xx, y, PIC_WIDTH, PIC_WIDTH, cgs.media.deferShader );
 			}
 #endif
@@ -1487,18 +1642,22 @@ void CG_DrawMedal(int ownerDraw, rectDef_t *rect, float scale, vec4_t color, qha
 		case CG_DEFEND:
 			value = score->defendCount;
 			break;
+#ifndef TURTLEARENA // AWARDS
 		case CG_EXCELLENT:
 			value = score->excellentCount;
 			break;
 		case CG_IMPRESSIVE:
 			value = score->impressiveCount;
 			break;
+#endif
 		case CG_PERFECT:
 			value = score->perfect;
 			break;
+#ifndef TURTLEARENA // AWARDS
 		case CG_GAUNTLET:
 			value = score->guantletCount;
 			break;
+#endif
 		case CG_CAPTURES:
 			value = score->captures;
 			break;
@@ -1554,6 +1713,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   rect.h = h;
 
   switch (ownerDraw) {
+#ifndef TURTLEARENA // NOARMOR
   case CG_PLAYER_ARMOR_ICON:
     CG_DrawPlayerArmorIcon(&rect, ownerDrawFlags & CG_SHOW_2DONLY);
     break;
@@ -1563,6 +1723,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   case CG_PLAYER_ARMOR_VALUE:
     CG_DrawPlayerArmorValue(&rect, scale, color, shader, textStyle);
     break;
+#endif
   case CG_PLAYER_AMMO_ICON:
     CG_DrawPlayerAmmoIcon(&rect, ownerDrawFlags & CG_SHOW_2DONLY);
     break;
@@ -1584,9 +1745,11 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   case CG_SELECTEDPLAYER_STATUS:
     CG_DrawSelectedPlayerStatus(&rect);
     break;
+#ifndef TURTLEARENA // NOARMOR
   case CG_SELECTEDPLAYER_ARMOR:
     CG_DrawSelectedPlayerArmor(&rect, scale, color, shader, textStyle);
     break;
+#endif
   case CG_SELECTEDPLAYER_HEALTH:
     CG_DrawSelectedPlayerHealth(&rect, scale, color, shader, textStyle);
     break;
@@ -1608,6 +1771,11 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   case CG_PLAYER_ITEM:
     CG_DrawPlayerItem(&rect, scale, ownerDrawFlags & CG_SHOW_2DONLY);
     break;
+#ifdef TA_HOLDSYS // CG_DrawPlayerAmmoValue
+  case CG_PLAYER_ITEM_VALUE:
+    CG_DrawPlayerItemValue(&rect, scale, color, shader, textStyle);
+    break;
+#endif
   case CG_PLAYER_SCORE:
     CG_DrawPlayerScore(&rect, scale, color, shader, textStyle);
     break;
@@ -1644,12 +1812,14 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   case CG_RED_FLAGNAME:
     CG_DrawRedFlagName(&rect, scale, color, textStyle);
     break;
+#ifdef MISSIONPACK_HARVESTER
   case CG_HARVESTER_SKULLS:
     CG_HarvesterSkulls(&rect, scale, color, qfalse, textStyle);
     break;
   case CG_HARVESTER_SKULLS2D:
     CG_HarvesterSkulls(&rect, scale, color, qtrue, textStyle);
     break;
+#endif
   case CG_ONEFLAG_STATUS:
     CG_OneFlagStatus(&rect);
     break;
@@ -1695,10 +1865,14 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 	case CG_ACCURACY:
 	case CG_ASSISTS:
 	case CG_DEFEND:
+#ifndef TURTLEARENA // AWARDS
 	case CG_EXCELLENT:
 	case CG_IMPRESSIVE:
+#endif
 	case CG_PERFECT:
+#ifndef TURTLEARENA // AWARDS
 	case CG_GAUNTLET:
+#endif
 	case CG_CAPTURES:
 		CG_DrawMedal(ownerDraw, &rect, scale, color, shader);
 		break;
@@ -1885,5 +2059,5 @@ void CG_GetTeamColor(vec4_t *color) {
 	}
 }
 
-#endif
 
+#endif // MISSIONPACK

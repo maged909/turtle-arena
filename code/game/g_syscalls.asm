@@ -149,6 +149,9 @@ equ trap_EA_MoveBack					-414
 equ trap_EA_MoveLeft					-415
 equ trap_EA_MoveRight					-416
 
+;; ZTM: TA_WEAPSYS_EX
+equ trap_EA_DropWeapon					-417
+
 equ trap_EA_SelectWeapon				-417
 equ trap_EA_Jump						-418
 equ trap_EA_DelayedJump					-419
@@ -243,4 +246,14 @@ equ trap_BotAddAvoidSpot				-575
 equ trap_AAS_AlternativeRouteGoals		-576
 equ trap_AAS_PredictRoute				-577
 equ trap_AAS_PointReachabilityAreaIndex	-578
+
+
+;; ZTM: For TA_GAME_MODELS
+equ trap_R_RegisterModel		-601
+equ trap_R_LerpTag				-602
+;; IOQ3ZTM // BONES
+equ trap_R_JointIndexForName	-603
+equ trap_R_SetupSkeleton		-604
+equ trap_R_SetupPlayerSkeleton	-605
+equ trap_R_MakeSkeletonAbsolute	-606
 

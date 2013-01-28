@@ -115,13 +115,22 @@ typedef struct iteminfo_s
 {
 	char classname[32];					//classname of the item
 	char name[MAX_STRINGFIELD];			//name of the item
+#ifndef TA_DATA // UNUSED
 	char model[MAX_STRINGFIELD];		//model of the item
+#endif
 	int modelindex;						//model index
+#ifndef TA_DATA // UNUSED
 	int type;							//item type
 	int index;							//index in the inventory
+#endif
 	float respawntime;					//respawn time
 	vec3_t mins;						//mins of the item
 	vec3_t maxs;						//maxs of the item
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+	int defaultWeight;					//inline weight, for if only a constant value is needed.
+	int inventory;						//inline inventory number
+#endif
+
 	int number;							//number of the item info
 } iteminfo_t;
 
@@ -130,13 +139,21 @@ typedef struct iteminfo_s
 fielddef_t iteminfo_fields[] =
 {
 {"name", ITEMINFO_OFS(name), FT_STRING},
+#ifndef TA_DATA // UNUSED
 {"model", ITEMINFO_OFS(model), FT_STRING},
+#endif
 {"modelindex", ITEMINFO_OFS(modelindex), FT_INT},
+#ifndef TA_DATA // UNUSED
 {"type", ITEMINFO_OFS(type), FT_INT},
 {"index", ITEMINFO_OFS(index), FT_INT},
+#endif
 {"respawntime", ITEMINFO_OFS(respawntime), FT_FLOAT},
 {"mins", ITEMINFO_OFS(mins), FT_FLOAT|FT_ARRAY, 3},
 {"maxs", ITEMINFO_OFS(maxs), FT_FLOAT|FT_ARRAY, 3},
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+{"defaultWeight", ITEMINFO_OFS(defaultWeight), FT_INT},
+{"inventory", ITEMINFO_OFS(inventory), FT_INT},
+#endif
 {NULL, 0, 0}
 };
 
@@ -331,6 +348,108 @@ itemconfig_t *LoadItemConfig(char *filename)
 	botimport.Print(PRT_DEVELOPER, "loaded %s\n", path);
 	return ic;
 } //end of the function LoadItemConfig
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+#define MAX_INVENTORYVALUE			999999 // be_ai_weight.c
+#ifndef max
+#define max(x,y) (x) > (y) ? (x) : (y)
+#endif
+//===========================================================================
+// atemps to create a fuzzy weight for item
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+int CreateFuzzyWeight(weightconfig_t *iwc, iteminfo_t *item)
+{
+	fuzzyseperator_t *fs;
+	int index;
+
+	if (iwc->numweights >= MAX_WEIGHTS || item->defaultWeight <= 0) {
+		return -1;
+	}
+
+	index = iwc->numweights;
+
+	iwc->weights[index].name = (char *) GetClearedMemory(strlen(item->classname) + 1);
+	strcpy(iwc->weights[index].name, item->classname);
+
+	if (item->inventory)
+	{
+		fuzzyseperator_t *firstfs = NULL;
+		fuzzyseperator_t *lastfs = NULL;
+
+		//switch(INVENTORY_DAISHO)
+		//{
+		//case 1: return WS(DAW);
+		//default: return 0;
+		//}
+
+		// Setup fuzzyseperator
+		fs = (fuzzyseperator_t *) GetClearedMemory(sizeof(fuzzyseperator_t));
+		fs->next = NULL;
+		fs->child = NULL;
+		fs->index = item->inventory; //switch(INVENTORY_*)
+		if (lastfs) lastfs->next = fs;
+		else firstfs = fs;
+		lastfs = fs;
+		fs->value = 1; //case 1: return defaultWeight;
+#if 1
+		// Setup balance
+		fs->type = WT_BALANCE;
+		fs->weight = item->defaultWeight;
+		fs->minweight = max(1, fs->weight/20.0f);
+		fs->maxweight = max(1, fs->weight*20.0f);
+#else
+		// Setup a simple "return weight;"
+		fs->type = 0;
+		fs->weight = item->defaultWeight;
+		fs->minweight = fs->weight;
+		fs->maxweight = fs->weight;
+#endif
+
+		//default: return 0;
+		fs = (fuzzyseperator_t *) GetClearedMemory(sizeof(fuzzyseperator_t));
+		fs->index = item->inventory;
+		fs->value = MAX_INVENTORYVALUE;
+		fs->weight = 0;
+		fs->next = NULL;
+		fs->child = NULL;
+		if (lastfs) lastfs->next = fs;
+		else firstfs = fs;
+		lastfs = fs;
+
+		iwc->weights[index].firstseperator = firstfs;
+		iwc->numweights++;
+		return index;
+	}
+
+	// Setup fuzzyseperator
+	fs = (fuzzyseperator_t *) GetClearedMemory(sizeof(fuzzyseperator_t));
+	fs->index = 0;
+	fs->value = MAX_INVENTORYVALUE;
+	fs->next = NULL;
+	fs->child = NULL;
+#if 0
+	// Setup balance
+	fs->type = WT_BALANCE;
+	fs->weight = item->defaultWeight;
+	fs->minweight = max(1, fs->weight/20.0f);
+	fs->maxweight = max(1, fs->weight*20.0f);
+#else
+	// Setup a simple "return weight;"
+	fs->type = 0;
+	fs->weight = item->defaultWeight;
+	fs->minweight = fs->weight;
+	fs->maxweight = fs->weight;
+#endif
+
+	iwc->weights[index].firstseperator = fs;
+	iwc->numweights++;
+
+	return index;
+} //end of the function CreateFuzzyWeight
+#endif
 //===========================================================================
 // index to find the weight function of an iteminfo
 //
@@ -348,6 +467,12 @@ int *ItemWeightIndex(weightconfig_t *iwc, itemconfig_t *ic)
 	for (i = 0; i < ic->numiteminfo; i++)
 	{
 		index[i] = FindFuzzyWeight(iwc, ic->iteminfo[i].classname);
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+		if (index[i] < 0)
+		{
+			index[i] = CreateFuzzyWeight(iwc, &ic->iteminfo[i]);
+		}
+#endif
 		if (index[i] < 0)
 		{
 			Log_Write("item info %d \"%s\" has no fuzzy weight\r\n", i, ic->iteminfo[i].classname);
@@ -524,7 +649,11 @@ void BotInitInfoEntities(void)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+void BotInitLevelItems(bot_shareditem_t *itemInfos)
+#else
 void BotInitLevelItems(void)
+#endif
 {
 	int i, spawnflags, value;
 	char classname[MAX_EPAIRKEY];
@@ -547,6 +676,46 @@ void BotInitLevelItems(void)
 
 	//if there's no AAS file loaded
 	if (!AAS_Loaded()) return;
+
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+	// Add the new items.
+	if (itemInfos != NULL)
+	{
+		int j;
+		int max_iteminfo;
+
+		max_iteminfo = (int) LibVarValue("max_iteminfo", "256");
+
+		for (i = ic->numiteminfo, j = 0; i < max_iteminfo; i++, j++)
+		{
+			if (!itemInfos[j].classname)
+				break;
+
+			Q_strncpyz(ic->iteminfo[i].classname, itemInfos[j].classname, 32);
+			Q_strncpyz(ic->iteminfo[i].name, itemInfos[j].name, MAX_QPATH);
+#ifndef TA_DATA // UNUSED
+			Q_strncpyz(ic->iteminfo[i].model, itemInfos[j].model, MAX_QPATH);
+#endif
+			ic->iteminfo[i].modelindex = itemInfos[j].modelindex;
+			ic->iteminfo[i].respawntime = itemInfos[j].respawntime;
+			ic->iteminfo[i].defaultWeight = itemInfos[j].defaultWeight;
+			ic->iteminfo[i].inventory = itemInfos[j].inventory;
+
+#ifndef TA_DATA // UNUNSED
+			ic->iteminfo[i].type = 0;
+			ic->iteminfo[i].index = 0;
+#endif
+
+			// Set mins/maxs
+			VectorSet(ic->iteminfo[i].mins, -13, -13, -13);
+			VectorSet(ic->iteminfo[i].maxs, 13, 13, 13);
+
+			ic->iteminfo[i].number = ic->numiteminfo;
+
+			ic->numiteminfo++;
+		}
+	}
+#endif
 
 	//update the modelindexes of the item info
 	for (i = 0; i < ic->numiteminfo; i++)

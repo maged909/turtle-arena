@@ -277,6 +277,44 @@ void trap_SnapVector( float *v ) {
 	syscall( G_SNAPVECTOR, v );
 }
 
+#ifdef TA_GAME_MODELS
+qhandle_t trap_R_RegisterModel( const char *name ) {
+	return syscall( G_REGISTERMODEL, name );
+}
+
+int		trap_R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame,
+					   float frac, const char *tagName ) {
+	return syscall( G_LERPTAG, tag, handle, startFrame, endFrame, PASSFLOAT(frac), tagName );
+}
+
+#ifdef IOQ3ZTM // BONES
+int trap_R_JointIndexForName(qhandle_t handle, const char *jointName)
+{
+	return syscall( G_JOINTINDEXFORNAME, handle, jointName );
+}
+
+qboolean trap_R_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp)
+{
+	return syscall( G_SETUPSKELETON, handle, refSkel, frame, oldframe, PASSFLOAT(backlerp) );
+}
+
+qboolean trap_R_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel,
+								int legsFrame, int legsOldFrame, float legsBacklerp,
+								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
+								int headFrame, int headOldFrame, float headBacklerp)
+{
+	return syscall( G_SETUPPLAYERSKELETON, handle, refSkel, legsFrame, legsOldFrame, PASSFLOAT(legsBacklerp),
+							torsoFrame, torsoOldFrame, PASSFLOAT(torsoBacklerp),
+							headFrame, headOldFrame, PASSFLOAT(headBacklerp));
+}
+
+void trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out)
+{
+	syscall( G_MAKESKELETONABSOLUTE, in, out );
+}
+#endif
+#endif
+
 void trap_AddCommand( const char *cmdName ) {
 	syscall( G_ADDCOMMAND, cmdName );
 }
@@ -306,9 +344,15 @@ int trap_BotLibStartFrame(float time) {
 	return syscall( BOTLIB_START_FRAME, PASSFLOAT( time ) );
 }
 
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+int trap_BotLibLoadMap(const char *mapname, void /* bot_shareditem_t */ *itemInfos) {
+	return syscall( BOTLIB_LOAD_MAP, mapname, itemInfos );
+}
+#else
 int trap_BotLibLoadMap(const char *mapname) {
 	return syscall( BOTLIB_LOAD_MAP, mapname );
 }
+#endif
 
 int trap_BotLibUpdateEntity(int ent, void /* struct bot_updateentity_s */ *bue) {
 	return syscall( BOTLIB_UPDATENTITY, ent, bue );
@@ -456,9 +500,15 @@ void trap_EA_Attack(int client) {
 	syscall( BOTLIB_EA_ATTACK, client );
 }
 
+#ifdef TA_HOLDSYS
+void trap_EA_Use(int client, int holdable) {
+	syscall( BOTLIB_EA_USE, client, holdable );
+}
+#else
 void trap_EA_Use(int client) {
 	syscall( BOTLIB_EA_USE, client );
 }
+#endif
 
 void trap_EA_Respawn(int client) {
 	syscall( BOTLIB_EA_RESPAWN, client );
@@ -492,9 +542,15 @@ void trap_EA_MoveRight(int client) {
 	syscall( BOTLIB_EA_MOVE_RIGHT, client );
 }
 
+#ifdef TA_WEAPSYS_EX // BOTLIB
+void trap_EA_DropWeapon(int client) {
+	syscall( BOTLIB_EA_DROP_WEAPON, client );
+}
+#else
 void trap_EA_SelectWeapon(int client, int weapon) {
 	syscall( BOTLIB_EA_SELECT_WEAPON, client, weapon );
 }
+#endif
 
 void trap_EA_Jump(int client) {
 	syscall( BOTLIB_EA_JUMP, client );
@@ -718,9 +774,11 @@ void trap_BotSetAvoidGoalTime(int goalstate, int number, float avoidtime) {
 	syscall( BOTLIB_AI_SET_AVOID_GOAL_TIME, goalstate, number, PASSFLOAT(avoidtime));
 }
 
+#ifndef TA_WEAPSYS // BOT_ITEM_INFOS
 void trap_BotInitLevelItems(void) {
 	syscall( BOTLIB_AI_INIT_LEVEL_ITEMS );
 }
+#endif
 
 void trap_BotUpdateEntityItems(void) {
 	syscall( BOTLIB_AI_UPDATE_ENTITY_ITEMS );
@@ -802,6 +860,7 @@ void trap_BotInitMoveState(int handle, void /* struct bot_initmove_s */ *initmov
 	syscall( BOTLIB_AI_INIT_MOVE_STATE, handle, initmove );
 }
 
+#ifndef TA_WEAPSYS
 int trap_BotChooseBestFightWeapon(int weaponstate, int *inventory) {
 	return syscall( BOTLIB_AI_CHOOSE_BEST_FIGHT_WEAPON, weaponstate, inventory );
 }
@@ -825,6 +884,7 @@ void trap_BotFreeWeaponState(int weaponstate) {
 void trap_BotResetWeaponState(int weaponstate) {
 	syscall( BOTLIB_AI_RESET_WEAPON_STATE, weaponstate );
 }
+#endif
 
 int trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child) {
 	return syscall( BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION, numranks, ranks, parent1, parent2, child );

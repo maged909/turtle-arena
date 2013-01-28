@@ -32,11 +32,20 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
+#if defined TA_GAME_MODELS && defined DEDICATED
+#define RENDERLESS_MODELS // ZTM: Ded server needs the tags for melee attacks
+#endif
+
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
 #include "../qcommon/qcommon.h"
 #include "tr_public.h"
+#ifdef RENDERLESS_MODELS
+#define GLuint unsigned int
+#define GLboolean qboolean
+#else
 #include "qgl.h"
+#endif
 #include "iqm.h"
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_INT
@@ -77,6 +86,10 @@ typedef struct {
 	vec3_t		ambientLight;	// color normalized to 0-255
 	int			ambientLightInt;	// 32 bit rgba packed
 	vec3_t		directedLight;
+
+#ifdef IOQ3ZTM // BONES
+	int			customSkeleton;
+#endif
 } trRefEntity_t;
 
 
@@ -182,6 +195,10 @@ typedef enum {
 	AGEN_WAVEFORM,
 	AGEN_PORTAL,
 	AGEN_CONST
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS_AGEN
+	,AGEN_DAMAGE
+	,AGEN_ONE_MINUS_DAMAGE
+#endif
 } alphaGen_t;
 
 typedef enum {
@@ -207,6 +224,9 @@ typedef enum {
 	TCGEN_ENVIRONMENT_MAPPED,
 	TCGEN_FOG,
 	TCGEN_VECTOR			// S and T from world coordinates
+#ifdef IOQ3ZTM // ZEQ2_CEL
+	,TCGEN_ENVIRONMENT_CELSHADE_MAPPED
+#endif
 } texCoordGen_t;
 
 typedef enum {
@@ -352,6 +372,23 @@ typedef struct {
 	float		density;
 } fogParms_t;
 
+#ifdef IOQ3ZTM // CELSHADING
+typedef struct
+{
+	float			width;				// Width of cel outline.
+
+	float			portalRange;		// distance to fog out at
+
+	waveForm_t		rgbWave;
+	colorGen_t		rgbGen;
+
+	waveForm_t		alphaWave;
+	alphaGen_t		alphaGen;
+
+	byte			constantColor[4];	// for CGEN_CONST and AGEN_CONST
+} celoutline_t;
+#endif
+
 
 typedef struct shader_s {
 	char		name[MAX_QPATH];		// game path, including extension
@@ -385,6 +422,10 @@ typedef struct shader_s {
 	vec4_t distanceCull;				// opaque alpha range for foliage (inner, outer, alpha threshold, 1/(outer-inner))
 
 	int			multitextureEnv;		// 0, GL_MODULATE, GL_ADD (FIXME: put in stage)
+
+#ifdef IOQ3ZTM // CELSHADING
+	celoutline_t celoutline;
+#endif
 
 	cullType_t	cullType;				// CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
 	qboolean	polygonOffset;			// set for decals and other items that must be offset 
@@ -466,6 +507,11 @@ typedef struct {
 	int			num_entities;
 	trRefEntity_t	*entities;
 
+#ifdef IOQ3ZTM // BONES
+	int			num_skeletons;
+	refSkeleton_t	*skeletons;
+#endif
+
 	int			num_dlights;
 	struct dlight_s	*dlights;
 
@@ -485,9 +531,17 @@ typedef struct {
 //=================================================================================
 
 // skins allow models to be retextured without modifying the model file
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+#define MAX_SKIN_SURFACE_SHADERS 10
+#endif
 typedef struct {
 	char		name[MAX_QPATH];
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+	shader_t	*shaders[MAX_SKIN_SURFACE_SHADERS];
+	int			numShaders;
+#else
 	shader_t	*shader;
+#endif
 } skinSurface_t;
 
 typedef struct skin_s {
@@ -890,10 +944,21 @@ int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFr
 					 float frac, const char *tagName );
 void		R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs );
 
+#ifdef IOQ3ZTM // BONES
+int RE_JointIndexForName(qhandle_t handle, const char *jointName);
+qboolean RE_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
+qboolean RE_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int legsFrame, int legsOldFrame, float legsBacklerp,
+								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
+								int headFrame, int headOldFrame, float headBacklerp);
+void R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
+#endif
+
 void		R_Modellist_f (void);
 
 //====================================================
+#ifndef RENDERLESS_MODELS
 extern	refimport_t		ri;
+#endif
 
 #define	MAX_DRAWIMAGES			2048
 #define	MAX_SKINS				1024
@@ -919,7 +984,7 @@ the bits are allocated as follows:
 0-1   : dlightmap index
 2-6   : fog index
 7-16  : entity index
-17-30 : sorted shader index
+17-31 : sorted shader index
 
 	ZTM - increased entity bits (for splitscreen), made sort 64 bit
 0-1   : dlightmap index (2 bits)
@@ -1010,6 +1075,7 @@ typedef struct {
 ** by the frontend.
 */
 typedef struct {
+#ifndef RENDERLESS_MODELS
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
 
 	int						visCount;		// incremented every time a new vis cluster is entered
@@ -1089,9 +1155,11 @@ typedef struct {
 	// put large tables at the end, so most elements will be
 	// within the +/32K indexed range on risc processors
 	//
+#endif
 	model_t					*models[MAX_MOD_KNOWN];
 	int						numModels;
 
+#ifndef RENDERLESS_MODELS
 	int						numImages;
 	image_t					*images[MAX_DRAWIMAGES];
 
@@ -1112,6 +1180,7 @@ typedef struct {
 	float					inverseSawToothTable[FUNCTABLE_SIZE];
 	float					noiseTable[FUNCTABLE_SIZE];
 	float					fogTable[FOG_TABLE_SIZE];
+#endif
 } trGlobals_t;
 
 extern backEndState_t	backEnd;
@@ -1213,6 +1282,10 @@ extern	cvar_t	*r_vertexLight;					// vertex lighting mode for better performance
 extern	cvar_t	*r_uiFullScreen;				// ui is running fullscreen
 
 extern	cvar_t	*r_logFile;						// number of frames to emit GL logs
+#ifdef IOQ3ZTM // CELSHADING
+extern	cvar_t	*r_celshadalgo;					// Cel shading, Chooses method: 0 = disabled, 1 = whiteTexture, 10 = kuwahara, 20 = snn.
+extern	cvar_t	*r_celoutline;					// Cel outline. The integer value is the width of the cel outline to draw.
+#endif
 extern	cvar_t	*r_showtris;					// enables wireframe rendering of the world
 extern	cvar_t	*r_showsky;						// forces sky in front of all surfaces
 extern	cvar_t	*r_shownormals;					// draws wireframe normals
@@ -1278,7 +1351,13 @@ void R_ComposeSort( drawSurf_t *drawSurf, int sortedShaderIndex, int sortOrder,
 void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOrder,
 					 int *entityNum, int *fogNum, int *dlightMap );
 
+#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
+int R_SortOrder(trRefEntity_t *ent);
+
+void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap, int sortOrder );
+#else
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap );
+#endif
 
 
 #define	CULL_IN		0		// completely unclipped
@@ -1595,14 +1674,18 @@ SCENE GENERATION
 void R_InitNextFrame( void );
 
 void RE_ClearScene( void );
+#ifdef IOQ3ZTM // BONES
+void RE_AddRefEntityToScene( const refEntity_t *ent, const refSkeleton_t *customSkeleton );
+#else
 void RE_AddRefEntityToScene( const refEntity_t *ent );
+#endif
 void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_RenderScene( const refdef_t *fd );
 
-#ifdef RAVENMD4
+#if 0 // #ifdef RAVENMD4 // ZTM: Moved to tr_model.c
 /*
 =============================================================
 
@@ -1644,6 +1727,10 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface );
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
                   int startFrame, int endFrame,
                   float frac, const char *tagName );
+#ifdef IOQ3ZTM // BONES
+void ComputeJointRelativeOrientation( iqmData_t *data, int frame, int oldframe,
+			      float backlerp, int joint, orientation_t *orientation );
+#endif
 
 /*
 =============================================================
@@ -1669,6 +1756,9 @@ void	R_TransformClipToWindow( const vec4_t clip, const viewParms_t *view, vec4_t
 
 void	RB_DeformTessGeometry( void );
 
+#ifdef IOQ3ZTM // ZEQ2_CEL
+void	RB_CalcEnvironmentCelShadeTexCoords( float *dstTexCoords );
+#endif
 void	RB_CalcEnvironmentTexCoords( float *dstTexCoords );
 void	RB_CalcFogTexCoords( float *dstTexCoords );
 void	RB_CalcScrollTexCoords( const float scroll[2], float *dstTexCoords );
@@ -1800,6 +1890,14 @@ typedef struct
 	int commandId;
 } clearDepthCommand_t;
 
+#ifdef TA_BLOOM
+typedef struct {
+	int		commandId;
+	float	x, y;
+	float	w, h;
+} bloomCommand_t;
+#endif
+
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
@@ -1814,6 +1912,9 @@ typedef enum {
 	RC_VIDEOFRAME,
 	RC_COLORMASK,
 	RC_CLEARDEPTH
+#ifdef TA_BLOOM
+	,RC_BLOOM
+#endif
 } renderCommand_t;
 
 
@@ -1823,12 +1924,19 @@ typedef enum {
 #define	MAX_POLYS		600
 #define	MAX_POLYVERTS	3000
 
+#ifdef IOQ3ZTM // BONES
+#define MAX_CUSTOM_SKELETONS (MAX_CLIENTS*MAX_SPLITVIEW)
+#endif
+
 // all of the information needed by the back end must be
 // contained in a backEndData_t
 typedef struct {
 	drawSurf_t	drawSurfs[MAX_DRAWSURFS];
 	dlight_t	dlights[MAX_DLIGHTS];
 	trRefEntity_t	entities[MAX_REFENTITIES];
+#ifdef IOQ3ZTM // BONES
+	refSkeleton_t	skeletons[MAX_CUSTOM_SKELETONS];
+#endif
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
 	srfPolyBuffer_t *polybuffers;//[MAX_POLYS];
@@ -1860,8 +1968,14 @@ void RE_RotatedPic( float x, float y, float w, float h,
 void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
 void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader );
+#ifdef TA_BLOOM
+void RB_SetGL2D (void);
+#endif
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+void RE_SavePNG(const char *filename, int width, int height, byte *data, int padding);
+#endif
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
                 unsigned char *image_buffer, int padding);
 size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
@@ -1881,6 +1995,12 @@ int R_DefaultFogNum( void );
 void R_FogOff( void );
 void RB_FogOn( void );
 void RB_Fog( int fogNum );
+
+#ifdef TA_BLOOM
+// bloom stuff
+void R_BloomInit( void );
+void R_BloomScreen( int x, int y, int w, int h );
+#endif
 
 
 #endif //TR_LOCAL_H

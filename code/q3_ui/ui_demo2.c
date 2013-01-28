@@ -60,7 +60,11 @@ DEMOS MENU
 #define ID_LEFT				14
 
 #define ARROWS_WIDTH		128
+#ifdef TA_DATA
+#define ARROWS_HEIGHT		64
+#else
 #define ARROWS_HEIGHT		48
+#endif
 
 
 typedef struct {
@@ -140,8 +144,12 @@ static void Demos_MenuInit( void ) {
 	s_demos.banner.generic.type		= MTYPE_BTEXT;
 	s_demos.banner.generic.x		= 320;
 	s_demos.banner.generic.y		= 16;
+#ifdef TA_MISC
+	s_demos.banner.string			= "REPLAYS";
+#else
 	s_demos.banner.string			= "DEMOS";
-	s_demos.banner.color			= color_white;
+#endif
+	s_demos.banner.color			= text_banner_color;
 	s_demos.banner.style			= UI_CENTER;
 
 	s_demos.framel.generic.type		= MTYPE_BITMAP;

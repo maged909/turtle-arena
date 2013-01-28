@@ -252,29 +252,43 @@ static void CG_scrollScoresUp_f( void) {
 #endif
 
 
+#ifndef TA_SP
 #ifdef MISSIONPACK
 static void CG_spWin_f( void) {
+#ifdef IOQ3ZTM // NEW_CAM
+	trap_Cvar_Set("cg_cameraOrbit", "60");
+#else
 	trap_Cvar_Set("cg_cameraOrbit", "2");
 	trap_Cvar_Set("cg_cameraOrbitDelay", "35");
+#endif
 	trap_Cvar_Set("cg_thirdPerson", "1");
 	trap_Cvar_Set("cg_thirdPersonAngle", "0");
+#ifndef TURTLEARENA // THIRD_PERSON
 	trap_Cvar_Set("cg_thirdPersonRange", "100");
+#endif
 	CG_AddBufferedSound(cgs.media.winnerSound);
 	//trap_S_StartLocalSound(cgs.media.winnerSound, CHAN_ANNOUNCER);
 	CG_GlobalCenterPrint("YOU WIN!", SCREEN_HEIGHT/2, 2.0);
 }
 
 static void CG_spLose_f( void) {
+#ifdef IOQ3ZTM // NEW_CAM
+	trap_Cvar_Set("cg_cameraOrbit", "60");
+#else
 	trap_Cvar_Set("cg_cameraOrbit", "2");
 	trap_Cvar_Set("cg_cameraOrbitDelay", "35");
+#endif
 	trap_Cvar_Set("cg_thirdPerson", "1");
 	trap_Cvar_Set("cg_thirdPersonAngle", "0");
+#ifndef TURTLEARENA // THIRD_PERSON
 	trap_Cvar_Set("cg_thirdPersonRange", "100");
+#endif
 	CG_AddBufferedSound(cgs.media.loserSound);
 	//trap_S_StartLocalSound(cgs.media.loserSound, CHAN_ANNOUNCER);
 	CG_GlobalCenterPrint("YOU LOSE...", SCREEN_HEIGHT/2, 2.0);
 }
 
+#endif
 #endif
 
 static void CG_TellTarget_f( void ) {
@@ -457,9 +471,11 @@ static void CG_TauntDeathInsult_f (void ) {
 	trap_Cmd_ExecuteText(EXEC_NOW, "cmd vsay death_insult\n");
 }
 
+#ifndef TURTLEARENA // WEAPONS
 static void CG_TauntGauntlet_f (void ) {
 	trap_Cmd_ExecuteText(EXEC_NOW, "cmd vsay kill_guantlet\n");
 }
+#endif
 
 static void CG_TaskSuicide_f (void ) {
 	int		clientNum;
@@ -522,12 +538,16 @@ static void CG_StartOrbit_f( void ) {
 	}
 	if (cg_cameraOrbit.value != 0) {
 		trap_Cvar_Set ("cg_cameraOrbit", "0");
+#ifndef TURTLEARENA // THIRD_PERSON
 		trap_Cvar_Set("cg_thirdPerson", "0");
+#endif
 	} else {
 		trap_Cvar_Set("cg_cameraOrbit", "5");
 		trap_Cvar_Set("cg_thirdPerson", "1");
 		trap_Cvar_Set("cg_thirdPersonAngle", "0");
+#ifndef TURTLEARENA // THIRD_PERSON
 		trap_Cvar_Set("cg_thirdPersonRange", "100");
+#endif
 	}
 }
 
@@ -544,6 +564,204 @@ static void CG_Camera_f( void ) {
 }
 */
 
+#ifdef IOQ3ZTM // NEW_CAM
+void CG_CamZoomIn(int localClient, qboolean down)
+{
+	cglc_t *lc = &cg.localClients[localClient];
+
+	lc->camZoomIn = down;
+	if (down) {
+		lc->camZoomDir -= 1.0f;
+		lc->camReseting = qfalse;
+	}
+}
+
+void CG_CamZoomOut(int localClient, qboolean down)
+{
+	cglc_t *lc = &cg.localClients[localClient];
+
+	lc->camZoomOut = down;
+	if (down) {
+		lc->camZoomDir += 1.0f;
+		lc->camReseting = qfalse;
+	}
+}
+
+void CG_CamLeft(int localClient, qboolean down)
+{
+	cglc_t *lc = &cg.localClients[localClient];
+
+	lc->camLeft = down;
+	if (down) {
+		lc->camRotDir += 1.0f;
+		lc->camReseting = qfalse;
+	}
+}
+
+void CG_CamRight(int localClient, qboolean down)
+{
+	cglc_t *lc = &cg.localClients[localClient];
+
+	lc->camRight = down;
+	if (down) {
+		lc->camRotDir -= 1.0f;
+		lc->camReseting = qfalse;
+	}
+}
+
+void CG_CamReset(int localClient)
+{
+	cglc_t *lc = &cg.localClients[localClient];
+
+	lc->camReseting = qtrue;
+	lc->camZoomDir = 0;
+	lc->camRotDir = 0;
+}
+
+void CG_CamZoomInDown_f(void) {
+	CG_CamZoomIn(0, qtrue);
+}
+
+void CG_CamZoomInUp_f(void) {
+	CG_CamZoomIn(0, qfalse);
+}
+
+void CG_CamZoomOutDown_f(void) {
+	CG_CamZoomOut(0, qtrue);
+}
+
+void CG_CamZoomOutUp_f(void) {
+	CG_CamZoomOut(0, qfalse);
+}
+
+void CG_CamLeftDown_f(void) {
+	CG_CamLeft(0, qtrue);
+}
+
+void CG_CamLeftUp_f(void) {
+	CG_CamLeft(0, qfalse);
+}
+
+void CG_CamRightDown_f(void) {
+	CG_CamRight(0, qtrue);
+}
+
+void CG_CamRightUp_f(void) {
+	CG_CamRight(0, qfalse);
+}
+
+void CG_CamReset_f(void) {
+	CG_CamReset(0);
+}
+
+void CG_2CamZoomInDown_f(void) {
+	CG_CamZoomIn(1, qtrue);
+}
+
+void CG_2CamZoomInUp_f(void) {
+	CG_CamZoomIn(1, qfalse);
+}
+
+void CG_2CamZoomOutDown_f(void) {
+	CG_CamZoomOut(1, qtrue);
+}
+
+void CG_2CamZoomOutUp_f(void) {
+	CG_CamZoomOut(1, qfalse);
+}
+
+void CG_2CamLeftDown_f(void) {
+	CG_CamLeft(1, qtrue);
+}
+
+void CG_2CamLeftUp_f(void) {
+	CG_CamLeft(1, qfalse);
+}
+
+void CG_2CamRightDown_f(void) {
+	CG_CamRight(1, qtrue);
+}
+
+void CG_2CamRightUp_f(void) {
+	CG_CamRight(1, qfalse);
+}
+
+void CG_2CamReset_f(void) {
+	CG_CamReset(1);
+}
+
+void CG_3CamZoomInDown_f(void) {
+	CG_CamZoomIn(2, qtrue);
+}
+
+void CG_3CamZoomInUp_f(void) {
+	CG_CamZoomIn(2, qfalse);
+}
+
+void CG_3CamZoomOutDown_f(void) {
+	CG_CamZoomOut(2, qtrue);
+}
+
+void CG_3CamZoomOutUp_f(void) {
+	CG_CamZoomOut(2, qfalse);
+}
+
+void CG_3CamLeftDown_f(void) {
+	CG_CamLeft(2, qtrue);
+}
+
+void CG_3CamLeftUp_f(void) {
+	CG_CamLeft(2, qfalse);
+}
+
+void CG_3CamRightDown_f(void) {
+	CG_CamRight(2, qtrue);
+}
+
+void CG_3CamRightUp_f(void) {
+	CG_CamRight(2, qfalse);
+}
+
+void CG_3CamReset_f(void) {
+	CG_CamReset(2);
+}
+
+void CG_4CamZoomInDown_f(void) {
+	CG_CamZoomIn(3, qtrue);
+}
+
+void CG_4CamZoomInUp_f(void) {
+	CG_CamZoomIn(3, qfalse);
+}
+
+void CG_4CamZoomOutDown_f(void) {
+	CG_CamZoomOut(3, qtrue);
+}
+
+void CG_4CamZoomOutUp_f(void) {
+	CG_CamZoomOut(3, qfalse);
+}
+
+void CG_4CamLeftDown_f(void) {
+	CG_CamLeft(3, qtrue);
+}
+
+void CG_4CamLeftUp_f(void) {
+	CG_CamLeft(3, qfalse);
+}
+
+void CG_4CamRightDown_f(void) {
+	CG_CamRight(3, qtrue);
+}
+
+void CG_4CamRightUp_f(void) {
+	CG_CamRight(3, qfalse);
+}
+
+void CG_4CamReset_f(void) {
+	CG_CamReset(3);
+}
+#endif
 
 void CG_GenerateTracemap(void)
 {
@@ -581,6 +799,7 @@ static consoleCommand_t	commands[] = {
 	{ "-3scores", CG_3ScoresUp_f },
 	{ "+4scores", CG_4ScoresDown_f },
 	{ "-4scores", CG_4ScoresUp_f },
+#ifndef TURTLEARENA // NOZOOM
 	{ "+zoom", CG_ZoomDown_f },
 	{ "-zoom", CG_ZoomUp_f },
 	{ "+2zoom", CG_2ZoomDown_f },
@@ -589,8 +808,48 @@ static consoleCommand_t	commands[] = {
 	{ "-3zoom", CG_3ZoomUp_f },
 	{ "+4zoom", CG_4ZoomDown_f },
 	{ "-4zoom", CG_4ZoomUp_f },
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+	{ "camreset", CG_CamReset_f },
+	{ "+camleft", CG_CamLeftDown_f },
+	{ "-camleft", CG_CamLeftUp_f },
+	{ "+camright", CG_CamRightDown_f },
+	{ "-camright", CG_CamRightUp_f },
+	{ "+camzoomin", CG_CamZoomInDown_f },
+	{ "-camzoomin", CG_CamZoomInUp_f },
+	{ "+camzoomout", CG_CamZoomOutDown_f },
+	{ "-camzoomout", CG_CamZoomOutUp_f },
+	{ "2camreset", CG_2CamReset_f },
+	{ "+2camleft", CG_2CamLeftDown_f },
+	{ "-2camleft", CG_2CamLeftUp_f },
+	{ "+2camright", CG_2CamRightDown_f },
+	{ "-2camright", CG_2CamRightUp_f },
+	{ "+2camzoomin", CG_2CamZoomInDown_f },
+	{ "-2camzoomin", CG_2CamZoomInUp_f },
+	{ "+2camzoomout", CG_2CamZoomOutDown_f },
+	{ "-2camzoomout", CG_2CamZoomOutUp_f },
+	{ "3camreset", CG_3CamReset_f },
+	{ "+3camleft", CG_3CamLeftDown_f },
+	{ "-3camleft", CG_3CamLeftUp_f },
+	{ "+3camright", CG_3CamRightDown_f },
+	{ "-3camright", CG_3CamRightUp_f },
+	{ "+3camzoomin", CG_3CamZoomInDown_f },
+	{ "-3camzoomin", CG_3CamZoomInUp_f },
+	{ "+3camzoomout", CG_3CamZoomOutDown_f },
+	{ "-3camzoomout", CG_3CamZoomOutUp_f },
+	{ "4camreset", CG_4CamReset_f },
+	{ "+4camleft", CG_4CamLeftDown_f },
+	{ "-4camleft", CG_4CamLeftUp_f },
+	{ "+4camright", CG_4CamRightDown_f },
+	{ "-4camright", CG_4CamRightUp_f },
+	{ "+4camzoomin", CG_4CamZoomInDown_f },
+	{ "-4camzoomin", CG_4CamZoomInUp_f },
+	{ "+4camzoomout", CG_4CamZoomOutDown_f },
+	{ "-4camzoomout", CG_4CamZoomOutUp_f },
+#endif
 	{ "sizeup", CG_SizeUp_f },
 	{ "sizedown", CG_SizeDown_f },
+#ifndef TA_WEAPSYS_EX
 	{ "weapnext", CG_NextWeapon_f },
 	{ "weapprev", CG_PrevWeapon_f },
 	{ "weapon", CG_Weapon_f },
@@ -603,6 +862,21 @@ static consoleCommand_t	commands[] = {
 	{ "4weapnext", CG_4NextWeapon_f },
 	{ "4weapprev", CG_4PrevWeapon_f },
 	{ "4weapon", CG_4Weapon_f },
+#endif
+#ifdef TA_HOLDSYS/*2*/
+	{ "holdnext", CG_NextHoldable_f },
+	{ "holdprev", CG_PrevHoldable_f },
+	{ "holdable", CG_Holdable_f },
+	{ "2holdnext", CG_2NextHoldable_f },
+	{ "2holdprev", CG_2PrevHoldable_f },
+	{ "2holdable", CG_2Holdable_f },
+	{ "3holdnext", CG_3NextHoldable_f },
+	{ "3holdprev", CG_3PrevHoldable_f },
+	{ "3holdable", CG_3Holdable_f },
+	{ "4holdnext", CG_4NextHoldable_f },
+	{ "4holdprev", CG_4PrevHoldable_f },
+	{ "4holdable", CG_4Holdable_f },
+#endif
 	{ "tcmd", CG_TargetCommand_f },
 	{ "tell_target", CG_TellTarget_f },
 	{ "tell_attacker", CG_TellAttacker_f },
@@ -627,9 +901,13 @@ static consoleCommand_t	commands[] = {
 	{ "tauntPraise", CG_TauntPraise_f },
 	{ "tauntTaunt", CG_TauntTaunt_f },
 	{ "tauntDeathInsult", CG_TauntDeathInsult_f },
+#ifndef TURTLEARENA // WEAPONS
 	{ "tauntGauntlet", CG_TauntGauntlet_f },
+#endif
+#ifndef TA_SP
 	{ "spWin", CG_spWin_f },
 	{ "spLose", CG_spLose_f },
+#endif
 #ifdef MISSIONPACK_HUD
 	{ "loadhud", CG_LoadHud_f },
 	{ "scoresDown", CG_scrollScoresDown_f },
@@ -725,6 +1003,9 @@ void CG_InitConsoleCommands( void ) {
 		trap_AddCommand(Com_LocalClientCvarName(i, "teamvote"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "setviewpos"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "stats"));
+#ifdef TA_MISC // DROP_FLAG
+		trap_AddCommand(Com_LocalClientCvarName(i, "dropflag"));
+#endif
 	}
 
 	trap_AddCommand ("addbot");

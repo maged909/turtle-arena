@@ -105,12 +105,17 @@ typedef struct bot_movestate_s
 #define MODELTYPE_FUNC_BOB		2
 #define MODELTYPE_FUNC_DOOR		3
 #define MODELTYPE_FUNC_STATIC	4
+#ifdef TA_ENTSYS // BREAKABLE
+#define MODELTYPE_FUNC_BREAKABLE	5
+#endif
 
 libvar_t *sv_maxstep;
 libvar_t *sv_maxbarrier;
 libvar_t *sv_gravity;
 libvar_t *weapindex_rocketlauncher;
+#ifndef TA_WEAPSYS
 libvar_t *weapindex_bfg10k;
+#endif
 libvar_t *weapindex_grapple;
 libvar_t *entitytypemissile;
 libvar_t *offhandgrapple;
@@ -121,6 +126,39 @@ int modeltypes[MAX_MODELS];
 
 bot_movestate_t *botmovestates[MAX_CLIENTS+1];
 
+#ifdef TA_WEAPSYS
+//========================================================================
+//
+// Parameter:			client number, weapon number
+// Returns:				-
+// Changes Globals:		-
+//========================================================================
+qboolean BotValidWeapon(int client, int weaponnum)
+{
+#ifdef TA_WEAPSYS_EX
+	// ZTM: if (client current weapon == weaponnum) return qtrue;
+	aas_entityinfo_t entinfo;
+
+	if (weaponnum < 0) {
+		return qfalse;
+	} //end if
+
+	AAS_EntityInfo(client, &entinfo);
+	if (entinfo.weapon == weaponnum)
+	{
+		return qtrue;
+	} //end if
+	return qfalse;
+#else
+	if (weaponnum < 0) {
+		return qfalse;
+	} //end if
+
+	// ZTM: FIXME?: Bots always want Grappling Hook.
+	return qtrue;
+#endif
+} // end of the function BotValidWeapon
+#endif
 //========================================================================
 //
 // Parameter:			-
@@ -541,6 +579,10 @@ void BotSetBrushModelTypes(void)
 			modeltypes[modelnum] = MODELTYPE_FUNC_DOOR;
 		else if (!Q_stricmp(classname, "func_static"))
 			modeltypes[modelnum] = MODELTYPE_FUNC_STATIC;
+#ifdef TA_ENTSYS // BREAKABLE
+		else if (!Q_stricmp(classname, "func_breakable"))
+			modeltypes[modelnum] = MODELTYPE_FUNC_BREAKABLE;
+#endif
 	} //end for
 } //end of the function BotSetBrushModelTypes
 //===========================================================================
@@ -672,7 +714,9 @@ int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avo
 		case TRAVEL_ELEVATOR: checkbetween = qfalse; break;
 		case TRAVEL_GRAPPLEHOOK: checkbetween = qfalse; break;
 		case TRAVEL_ROCKETJUMP: checkbetween = qfalse; break;
+#ifndef TA_WEAPSYS
 		case TRAVEL_BFGJUMP: checkbetween = qfalse; break;
+#endif
 		case TRAVEL_JUMPPAD: checkbetween = qfalse; break;
 		case TRAVEL_FUNCBOB: checkbetween = qfalse; break;
 		default: checkbetween = qtrue; break;
@@ -864,7 +908,9 @@ int BotMovementViewTarget(int movestate, bot_goal_t *goal, int travelflags, floa
 		if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_TELEPORT) return qtrue;
 		//never look beyond the weapon jump point
 		if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_ROCKETJUMP) return qtrue;
+#ifndef TA_WEAPSYS
 		if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_BFGJUMP) return qtrue;
+#endif
 		//don't add jump pad distances
 		if ((reach.traveltype & TRAVELTYPE_MASK) != TRAVEL_JUMPPAD &&
 			(reach.traveltype & TRAVELTYPE_MASK) != TRAVEL_ELEVATOR &&
@@ -1089,6 +1135,25 @@ int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed)
 	//there is a barrier
 	return qtrue;
 } //end of the function BotCheckBarrierJump
+#ifdef IOQ3ZTM // WALK_UNDERWATER
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
+void BotJumpIfOnGround(bot_movestate_t *ms) {
+
+	if (AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
+
+	//if the bot is on the ground
+	if (ms->moveflags & MFL_ONGROUND)
+	{
+		//jump off the ground
+		EA_Jump(ms->client);
+	}
+} //end of the function BotJumpIfOnGround
+#endif
 //===========================================================================
 //
 // Parameter:			-
@@ -1101,6 +1166,11 @@ int BotSwimInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 
 	VectorCopy(dir, normdir);
 	VectorNormalize(normdir);
+#ifdef IOQ3ZTM // WALK_UNDERWATER
+	if (normdir[2] > 0) {
+		BotJumpIfOnGround(ms);
+	}
+#endif
 	EA_Move(ms->client, normdir, speed);
 	return qtrue;
 } //end of the function BotSwimInDirection
@@ -1230,11 +1300,32 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type)
 {
 	bot_movestate_t *ms;
+#ifdef IOQ3ZTM // WALK_UNDERWATER
+	qboolean swimming;
+#endif
 
 	ms = BotMoveStateFromHandle(movestate);
 	if (!ms) return qfalse;
+#ifdef IOQ3ZTM // WALK_UNDERWATER
+	//check if swimming
+	swimming = AAS_Swimming(ms->origin);
+	//player walks on ground underwater
+	if (swimming && !(dir[2] > 0))
+	{
+		if (AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
+		//if the bot is on the ground
+		if (ms->moveflags & MFL_ONGROUND)
+		{
+			//walk underwater instead
+			swimming = qfalse;
+		}
+	}
+	//if in water and not on ground or want to swim up
+	if (swimming)
+#else
 	//if swimming
 	if (AAS_Swimming(ms->origin))
+#endif
 	{
 		return BotSwimInDirection(ms, dir, speed, type);
 	} //end if
@@ -1292,7 +1383,11 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 		maxs[2] -= 10; //a little lower to avoid low ceiling
 	} //end if
 	VectorMA(ms->origin, 3, dir, end);
+#ifdef TURTLEARENA // NO_BODY_TRACE // ZTM: FIXME: Make this game independent, botlib needs entity's clipmask (game only?).
+	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+#else
 	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BODY);
+#endif
 	//if not started in solid and not hitting the world entity
 	if (!trace.startsolid && (trace.ent != ENTITYNUM_WORLD && trace.ent != ENTITYNUM_NONE) )
 	{
@@ -1515,8 +1610,13 @@ bot_moveresult_t BotTravel_Swim(bot_movestate_t *ms, aas_reachability_t *reach)
 	VectorNormalize(dir);
 	//
 	BotCheckBlocked(ms, dir, qtrue, &result);
+#ifdef IOQ3ZTM // WALK_UNDERWATER
+	//
+	BotSwimInDirection(ms, dir, 400, 0);
+#else
 	//elemantary actions
 	EA_Move(ms->client, dir, 400);
+#endif
 	//
 	VectorCopy(dir, result.movedir);
 	Vector2Angles(dir, result.ideal_viewangles);
@@ -2569,6 +2669,20 @@ bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_t *reac
 		ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 		return result;
 	} //end if
+#ifdef TA_WEAPSYS
+	// Check if bot has grapple.
+	if (!(int) offhandgrapple->value && !BotValidWeapon(ms->client, weapindex_grapple->value)) {
+#ifdef DEBUG_GRAPPLE
+		botimport.Print(PRT_ERROR, "doesn't own grapple\n");
+#endif //DEBUG_GRAPPLE
+		if (offhandgrapple->value)
+			EA_Command(ms->client, cmd_grappleoff->string);
+		ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
+		ms->moveflags |= MFL_GRAPPLERESET;
+		ms->reachability_time = 0;	//end the reachability
+		return result;
+	}
+#endif
 	//
 	if (!(int) offhandgrapple->value)
 	{
@@ -2706,6 +2820,15 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 	float dist, speed;
 	bot_moveresult_t_cleared( result );
 
+#ifdef TA_WEAPSYS
+	// Check if bot has rocketlauncher.
+	if (!BotValidWeapon(ms->client, weapindex_rocketlauncher->value)) {
+		//botimport.Print(PRT_ERROR, "doesn't own rocketlauncher\n");
+		ms->reachability_time = 0;	//end the reachability
+		return result;
+	}
+#endif
+
 	//botimport.Print(PRT_MESSAGE, "BotTravel_RocketJump: bah\n");
 	//
 	hordir[0] = reach->start[0] - ms->origin[0];
@@ -2748,8 +2871,10 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 	EA_View(ms->client, result.ideal_viewangles);
 	//view is important for the movment
 	result.flags |= MOVERESULT_MOVEMENTVIEWSET;
+#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT // BOTLIB
 	//select the rocket launcher
 	EA_SelectWeapon(ms->client, (int) weapindex_rocketlauncher->value);
+#endif
 	//weapon is used for movement
 	result.weapon = (int) weapindex_rocketlauncher->value;
 	result.flags |= MOVERESULT_MOVEMENTWEAPON;
@@ -2758,6 +2883,7 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 	//
 	return result;
 } //end of the function BotTravel_RocketJump
+#ifndef TA_WEAPSYS // unused
 //===========================================================================
 //
 // Parameter:				-
@@ -2818,6 +2944,7 @@ bot_moveresult_t BotTravel_BFGJump(bot_movestate_t *ms, aas_reachability_t *reac
 	//
 	return result;
 } //end of the function BotTravel_BFGJump
+#endif
 //===========================================================================
 //
 // Parameter:				-
@@ -2930,7 +3057,9 @@ int BotReachabilityTime(aas_reachability_t *reach)
 		case TRAVEL_ELEVATOR: return 10;
 		case TRAVEL_GRAPPLEHOOK: return 8;
 		case TRAVEL_ROCKETJUMP: return 6;
+#ifndef TA_WEAPSYS
 		case TRAVEL_BFGJUMP: return 6;
+#endif
 		case TRAVEL_JUMPPAD: return 10;
 		case TRAVEL_FUNCBOB: return 10;
 		default:
@@ -2977,8 +3106,17 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal)
 	if (speed < 10) speed = 0;
 	//
 	BotCheckBlocked(ms, dir, qtrue, &result);
-	//elemantary action move in direction
-	EA_Move(ms->client, dir, speed);
+#ifdef IOQ3ZTM // WALK_UNDERWATER
+	if (ms->moveflags & MFL_SWIMMING)
+	{
+		BotSwimInDirection(ms, dir, speed, 0);
+	}
+	else
+#endif
+	{
+		//elemantary action move in direction
+		EA_Move(ms->client, dir, speed);
+	}
 	VectorCopy(dir, result.movedir);
 	//
 	if (ms->moveflags & MFL_SWIMMING)
@@ -3107,7 +3245,11 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					} //end if
 					result->flags |= MOVERESULT_ONTOPOF_FUNCBOB;
 				} //end if
-				else if (modeltype == MODELTYPE_FUNC_STATIC || modeltype == MODELTYPE_FUNC_DOOR)
+				else if (modeltype == MODELTYPE_FUNC_STATIC || modeltype == MODELTYPE_FUNC_DOOR
+#ifdef TA_ENTSYS // BREAKABLE
+					|| modeltype == MODELTYPE_FUNC_BREAKABLE
+#endif
+					)
 				{
 					// check if ontop of a door bridge ?
 					ms->areanum = BotFuzzyPointReachabilityArea(ms->origin);
@@ -3313,7 +3455,9 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_ELEVATOR: *result = BotTravel_Elevator(ms, &reach); break;
 				case TRAVEL_GRAPPLEHOOK: *result = BotTravel_Grapple(ms, &reach); break;
 				case TRAVEL_ROCKETJUMP: *result = BotTravel_RocketJump(ms, &reach); break;
+#ifndef TA_WEAPSYS // unused
 				case TRAVEL_BFGJUMP: *result = BotTravel_BFGJump(ms, &reach); break;
+#endif
 				case TRAVEL_JUMPPAD: *result = BotTravel_JumpPad(ms, &reach); break;
 				case TRAVEL_FUNCBOB: *result = BotTravel_FuncBobbing(ms, &reach); break;
 				default:
@@ -3420,8 +3564,12 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				case TRAVEL_TELEPORT: /*do nothing*/ break;
 				case TRAVEL_ELEVATOR: *result = BotFinishTravel_Elevator(ms, &reach); break;
 				case TRAVEL_GRAPPLEHOOK: *result = BotTravel_Grapple(ms, &reach); break;
+#ifdef TA_WEAPSYS
+				case TRAVEL_ROCKETJUMP: *result = BotFinishTravel_WeaponJump(ms, &reach); break;
+#else
 				case TRAVEL_ROCKETJUMP:
 				case TRAVEL_BFGJUMP: *result = BotFinishTravel_WeaponJump(ms, &reach); break;
+#endif
 				case TRAVEL_JUMPPAD: *result = BotFinishTravel_JumpPad(ms, &reach); break;
 				case TRAVEL_FUNCBOB: *result = BotFinishTravel_FuncBobbing(ms, &reach); break;
 				default:
@@ -3523,9 +3671,15 @@ int BotSetupMoveAI(void)
 	sv_maxstep = LibVar("sv_step", "18");
 	sv_maxbarrier = LibVar("sv_maxbarrier", "32");
 	sv_gravity = LibVar("sv_gravity", "800");
+#ifdef TA_WEAPSYS
+	// ZTM: NOTE: We don't know the indexes (game should set them).
+	weapindex_rocketlauncher = LibVar("weapindex_rocketlauncher", "-1");
+	weapindex_grapple = LibVar("weapindex_grapple", "-1");
+#else
 	weapindex_rocketlauncher = LibVar("weapindex_rocketlauncher", "5");
 	weapindex_bfg10k = LibVar("weapindex_bfg10k", "9");
 	weapindex_grapple = LibVar("weapindex_grapple", "10");
+#endif
 	entitytypemissile = LibVar("entitytypemissile", "3");
 	offhandgrapple = LibVar("offhandgrapple", "0");
 	cmd_grappleon = LibVar("cmd_grappleon", "grappleon");

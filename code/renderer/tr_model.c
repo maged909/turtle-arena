@@ -29,7 +29,29 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 // tr_models.c -- model loading and caching
 
+#ifdef TA_GAME_MODELS
+#include "../server/server.h"
+#endif
+
 #include "tr_local.h"
+
+#ifdef RENDERLESS_MODELS
+trGlobals_t tr;
+
+void R_ModelInit( void );
+
+/*
+===============
+R_Init
+===============
+*/
+void R_Init( void ) {
+	// clear all our internal state
+	Com_Memset( &tr, 0, sizeof( tr ) );
+
+	R_ModelInit();
+}
+#endif
 
 #define	LL(x) x=LittleLong(x)
 
@@ -37,6 +59,7 @@ static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, const char *name 
 static qboolean R_LoadMD4(model_t *mod, void *buffer, const char *name );
 #ifdef RAVENMD4
 static qboolean R_LoadMDR(model_t *mod, void *buffer, int filesize, const char *name );
+void MC_UnCompress(float mat[3][4],const unsigned char * comp);
 #endif
 
 /*
@@ -77,7 +100,11 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 		else
 			Com_sprintf(namebuf, sizeof(namebuf), "%s.%s", filename, fext);
 
+#ifdef RENDERLESS_MODELS
+		FS_ReadFile( namebuf, &buf.v );
+#else
 		ri.FS_ReadFile( namebuf, &buf.v );
+#endif
 		if(!buf.u)
 			continue;
 		
@@ -89,10 +116,18 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 			if (ident == MD3_IDENT)
 				loaded = R_LoadMD3(mod, lod, buf.u, name);
 			else
+#ifdef RENDERLESS_MODELS
+				Com_Printf("R_RegisterMD3: unknown fileid for %s\n", name);
+#else
 				ri.Printf(PRINT_WARNING,"R_RegisterMD3: unknown fileid for %s\n", name);
+#endif
 		}
 		
+#ifdef RENDERLESS_MODELS
+		FS_FreeFile(buf.v);
+#else
 		ri.FS_FreeFile(buf.v);
+#endif
 
 		if(loaded)
 		{
@@ -140,7 +175,11 @@ qhandle_t R_RegisterMDR(const char *name, model_t *mod)
 	qboolean loaded = qfalse;
 	int filesize;
 
+#ifdef RENDERLESS_MODELS
+	filesize = FS_ReadFile(name, (void **) &buf.v);
+#else
 	filesize = ri.FS_ReadFile(name, (void **) &buf.v);
+#endif
 	if(!buf.u)
 	{
 		mod->type = MOD_BAD;
@@ -151,11 +190,19 @@ qhandle_t R_RegisterMDR(const char *name, model_t *mod)
 	if(ident == MDR_IDENT)
 		loaded = R_LoadMDR(mod, buf.u, filesize, name);
 
+#ifdef RENDERLESS_MODELS
+	FS_FreeFile (buf.v);
+#else
 	ri.FS_FreeFile (buf.v);
+#endif
 	
 	if(!loaded)
 	{
+#ifdef RENDERLESS_MODELS
+		Com_Printf("R_RegisterMDR: couldn't load mdr file %s\n", name);
+#else
 		ri.Printf(PRINT_WARNING,"R_RegisterMDR: couldn't load mdr file %s\n", name);
+#endif
 		mod->type = MOD_BAD;
 		return 0;
 	}
@@ -178,7 +225,11 @@ qhandle_t R_RegisterIQM(const char *name, model_t *mod)
 	qboolean loaded = qfalse;
 	int filesize;
 
+#ifdef RENDERLESS_MODELS
+	filesize = FS_ReadFile(name, (void **) &buf.v);
+#else
 	filesize = ri.FS_ReadFile(name, (void **) &buf.v);
+#endif
 	if(!buf.u)
 	{
 		mod->type = MOD_BAD;
@@ -187,11 +238,19 @@ qhandle_t R_RegisterIQM(const char *name, model_t *mod)
 	
 	loaded = R_LoadIQM(mod, buf.u, filesize, name);
 
+#ifdef RENDERLESS_MODELS
+	FS_FreeFile (buf.v);
+#else
 	ri.FS_FreeFile (buf.v);
+#endif
 	
 	if(!loaded)
 	{
+#ifdef RENDERLESS_MODELS
+		Com_Printf("R_RegisterIQM: couldn't load iqm file %s\n", name);
+#else
 		ri.Printf(PRINT_WARNING,"R_RegisterIQM: couldn't load iqm file %s\n", name);
+#endif
 		mod->type = MOD_BAD;
 		return 0;
 	}
@@ -250,7 +309,11 @@ model_t *R_AllocModel( void ) {
 		return NULL;
 	}
 
+#ifdef RENDERLESS_MODELS
+	mod = Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
+#else
 	mod = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
+#endif
 	mod->index = tr.numModels;
 	tr.models[tr.numModels] = mod;
 	tr.numModels++;
@@ -281,12 +344,20 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	char		altName[ MAX_QPATH ];
 
 	if ( !name || !name[0] ) {
+#ifdef RENDERLESS_MODELS
+		Com_Printf( "RE_RegisterModel: NULL name\n" );
+#else
 		ri.Printf( PRINT_ALL, "RE_RegisterModel: NULL name\n" );
+#endif
 		return 0;
 	}
 
 	if ( strlen( name ) >= MAX_QPATH ) {
+#ifdef RENDERLESS_MODELS
+		Com_Printf( "Model name exceeds MAX_QPATH\n" );
+#else
 		ri.Printf( PRINT_ALL, "Model name exceeds MAX_QPATH\n" );
+#endif
 		return 0;
 	}
 
@@ -306,7 +377,11 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	// allocate a new model_t
 
 	if ( ( mod = R_AllocModel() ) == NULL ) {
+#ifdef RENDERLESS_MODELS
+		Com_Printf( "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
+#else
 		ri.Printf( PRINT_WARNING, "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
+#endif
 		return 0;
 	}
 
@@ -314,7 +389,9 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );
 
 
+#ifndef RENDERLESS_MODELS
 	R_IssuePendingRenderCommands();
+#endif
 
 	mod->type = MOD_BAD;
 	mod->numLods = 0;
@@ -374,8 +451,13 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		{
 			if( orgNameFailed )
 			{
+#ifdef RENDERLESS_MODELS
+				Com_Printf("WARNING: %s not present, using %s instead\n",
+						name, altName );
+#else
 				ri.Printf( PRINT_DEVELOPER, "WARNING: %s not present, using %s instead\n",
 						name, altName );
+#endif
 			}
 
 			break;
@@ -407,15 +489,24 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
 
 	version = LittleLong (pinmodel->version);
 	if (version != MD3_VERSION) {
+#ifdef RENDERLESS_MODELS
+		Com_Printf( "R_LoadMD3: %s has wrong version (%i should be %i)\n",
+				 mod_name, version, MD3_VERSION);
+#else
 		ri.Printf( PRINT_WARNING, "R_LoadMD3: %s has wrong version (%i should be %i)\n",
 				 mod_name, version, MD3_VERSION);
+#endif
 		return qfalse;
 	}
 
 	mod->type = MOD_MESH;
 	size = LittleLong(pinmodel->ofsEnd);
 	mod->dataSize += size;
+#ifdef RENDERLESS_MODELS
+	mod->md3[lod] = Hunk_Alloc( size, h_low );
+#else
 	mod->md3[lod] = ri.Hunk_Alloc( size, h_low );
+#endif
 
 	Com_Memcpy (mod->md3[lod], buffer, LittleLong(pinmodel->ofsEnd) );
 
@@ -430,7 +521,9 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
     LL(mod->md3[lod]->ofsEnd);
 
 	if ( mod->md3[lod]->numFrames < 1 ) {
+#ifndef RENDERLESS_MODELS
 		ri.Printf( PRINT_WARNING, "R_LoadMD3: %s has no frames\n", mod_name );
+#endif
 		return qfalse;
 	}
     
@@ -472,6 +565,21 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
         LL(surf->ofsXyzNormals);
         LL(surf->ofsEnd);
 		
+#ifndef RENDERLESS_MODELS
+#ifdef IOQ3ZTM // ZTM: Show the name of the surface, it is helpful.
+		if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
+			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i verts on %s (%i)",
+				mod_name, SHADER_MAX_VERTEXES, surf->name[0] == '\0' ? "a surface" : surf->name,
+				surf->numVerts );
+			return qfalse;
+		}
+		if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) {
+			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i triangles on %s (%i)",
+				mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] == '\0' ? "a surface" : surf->name,
+				surf->numTriangles );
+			return qfalse;
+		}
+#else
 		if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
 			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i verts on a surface (%i).\n",
 				mod_name, SHADER_MAX_VERTEXES, surf->numVerts );
@@ -482,6 +590,8 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
 				mod_name, SHADER_MAX_INDEXES / 3, surf->numTriangles );
 			return qfalse;
 		}
+#endif
+#endif
 	
 		// change to surface identifier
 		surf->ident = SF_MD3;
@@ -499,6 +609,9 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
         // register the shaders
         shader = (md3Shader_t *) ( (byte *)surf + surf->ofsShaders );
         for ( j = 0 ; j < surf->numShaders ; j++, shader++ ) {
+#ifdef RENDERLESS_MODELS
+			shader->shaderIndex = 0;
+#else
             shader_t	*sh;
 
             sh = R_FindShader( shader->name, LIGHTMAP_NONE, qtrue );
@@ -507,6 +620,7 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
 			} else {
 				shader->shaderIndex = sh->index;
 			}
+#endif
         }
 
 		// swap all the triangles
@@ -563,14 +677,20 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	mdrWeight_t			*weight, *curweight;
 	mdrTag_t			*tag, *curtag;
 	int					size;
+#ifndef RENDERLESS_MODELS
 	shader_t			*sh;
+#endif
 
 	pinmodel = (mdrHeader_t *)buffer;
 
 	pinmodel->version = LittleLong(pinmodel->version);
 	if (pinmodel->version != MDR_VERSION) 
 	{
+#ifdef RENDERLESS_MODELS
+		Com_Printf("R_LoadMDR: %s has wrong version (%i should be %i)\n", mod_name, pinmodel->version, MDR_VERSION);
+#else
 		ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has wrong version (%i should be %i)\n", mod_name, pinmodel->version, MDR_VERSION);
+#endif
 		return qfalse;
 	}
 
@@ -578,7 +698,11 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	
 	if(size > filesize)
 	{
+#ifdef RENDERLESS_MODELS
+		Com_Printf("R_LoadMDR: Header of %s is broken. Wrong filesize declared!\n", mod_name);
+#else
 		ri.Printf(PRINT_WARNING, "R_LoadMDR: Header of %s is broken. Wrong filesize declared!\n", mod_name);
+#endif
 		return qfalse;
 	}
 	
@@ -602,12 +726,20 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	if(pinmodel->numBones < 0 ||
 		sizeof(*mdr) + pinmodel->numFrames * (sizeof(*frame) + (pinmodel->numBones - 1) * sizeof(*frame->bones)) > size)
 	{
+#ifdef RENDERLESS_MODELS
+		Com_Printf("R_LoadMDR: %s has broken structure.\n", mod_name);
+#else
 		ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has broken structure.\n", mod_name);
+#endif
 		return qfalse;
 	}
 
 	mod->dataSize += size;
+#ifdef RENDERLESS_MODELS
+	mod->modelData = mdr = Hunk_Alloc( size, h_low );
+#else
 	mod->modelData = mdr = ri.Hunk_Alloc( size, h_low );
+#endif
 
 	// Copy all the values over from the file and fix endian issues in the process, if necessary.
 	
@@ -620,16 +752,29 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	mdr->numTags = LittleLong(pinmodel->numTags);
 	// We don't care about the other offset values, we'll generate them ourselves while loading.
 
+#if 0 // #ifndef RENDERLESS_MODELS // ZTM: More MDR testing
+	ri.Printf(PRINT_WARNING, "R_LoadMDR: Loading %s...\n", mod_name);
+#endif
+
 	mod->numLods = mdr->numLODs;
 
 	if ( mdr->numFrames < 1 ) 
 	{
+#ifndef RENDERLESS_MODELS
 		ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has no frames\n", mod_name);
+#endif
 		return qfalse;
 	}
 
 	/* The first frame will be put into the first free space after the header */
 	frame = (mdrFrame_t *)(mdr + 1);
+#if 0 // #ifndef RENDERLESS_MODELS // ZTM: More MDR testing
+	mdr->ofsFrames = pinmodel->ofsFrames;
+	if (mdr->ofsFrames != (int)((byte *) frame - (byte *) mdr))
+	{
+		ri.Printf(PRINT_WARNING, "R_LoadMDR: mdr->ofsFrames miss match (%d/%d)!\n", mdr->ofsFrames, (int)((byte *) frame - (byte *) mdr));
+	}
+#endif
 	mdr->ofsFrames = (int)((byte *) frame - (byte *) mdr);
 		
 	if (pinmodel->ofsFrames < 0)
@@ -706,6 +851,13 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	
 	// frame should now point to the first free address after all frames.
 	lod = (mdrLOD_t *) frame;
+#if 0 // #ifndef RENDERLESS_MODELS // ZTM: More MDR testing
+	mdr->ofsLODs = LittleLong(pinmodel->ofsLODs);
+	if (mdr->ofsLODs != (int) ((byte *) lod - (byte *)mdr))
+	{
+		ri.Printf(PRINT_WARNING, "R_LoadMDR: mdr->ofsLODs miss match (%d/%d)!\n", mdr->ofsLODs, (int) ((byte *) lod - (byte *)mdr));
+	}
+#endif
 	mdr->ofsLODs = (int) ((byte *) lod - (byte *)mdr);
 	
 	curlod = (mdrLOD_t *)((byte *) pinmodel + LittleLong(pinmodel->ofsLODs));
@@ -716,7 +868,9 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 		// simple bounds check
 		if((byte *) (lod + 1) > (byte *) mdr + size)
 		{
+#ifndef RENDERLESS_MODELS
 			ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has broken structure.\n", mod_name);
+#endif
 			return qfalse;
 		}
 
@@ -724,6 +878,13 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 		
 		// swap all the surfaces
 		surf = (mdrSurface_t *) (lod + 1);
+#if 0 // #ifndef RENDERLESS_MODELS // ZTM: More MDR testing
+		lod->ofsSurfaces = LittleLong(curlod->ofsSurfaces);
+		if (lod->ofsSurfaces != (int)((byte *) surf - (byte *) lod))
+		{
+			ri.Printf(PRINT_WARNING, "R_LoadMDR: lod->ofsSurfaces miss match (%d/%d)!\n", lod->ofsSurfaces, (int)((byte *) surf - (byte *) lod));
+		}
+#endif
 		lod->ofsSurfaces = (int)((byte *) surf - (byte *) lod);
 		cursurf = (mdrSurface_t *) ((byte *)curlod + LittleLong(curlod->ofsSurfaces));
 		
@@ -732,7 +893,9 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// simple bounds check
 			if((byte *) (surf + 1) > (byte *) mdr + size)
 			{
+#ifndef RENDERLESS_MODELS
 				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has broken structure.\n", mod_name);
+#endif
 				return qfalse;
 			}
 
@@ -748,7 +911,24 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			surf->numTriangles = LittleLong(cursurf->numTriangles);
 			// numBoneReferences and BoneReferences generally seem to be unused
 			
+#ifndef RENDERLESS_MODELS
 			// now do the checks that may fail.
+#ifdef IOQ3ZTM // ZTM: Show the name of the surface, it is helpful.
+			if ( surf->numVerts > SHADER_MAX_VERTEXES )
+			{
+				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i verts on %s (%i)\n",
+					  mod_name, SHADER_MAX_VERTEXES, surf->name[0] == '\0' ? "a surface" : surf->name,
+					  surf->numVerts );
+				return qfalse;
+			}
+			if ( surf->numTriangles*3 > SHADER_MAX_INDEXES )
+			{
+				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i triangles on %s (%i)\n",
+					  mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] == '\0' ? "a surface" : surf->name,
+					  surf->numTriangles );
+				return qfalse;
+			}
+#else
 			if ( surf->numVerts > SHADER_MAX_VERTEXES ) 
 			{
 				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i verts on a surface (%i).\n",
@@ -761,9 +941,14 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 					  mod_name, SHADER_MAX_INDEXES / 3, surf->numTriangles );
 				return qfalse;
 			}
+#endif
+#endif
 			// lowercase the surface name so skin compares are faster
 			Q_strlwr( surf->name );
 
+#ifdef RENDERLESS_MODELS
+			surf->shaderIndex = 0;
+#else
 			// register the shaders
 			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
 			if ( sh->defaultShader ) {
@@ -771,6 +956,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			} else {
 				surf->shaderIndex = sh->index;
 			}
+#endif
 			
 			// now copy the vertexes.
 			v = (mdrVertex_t *) (surf + 1);
@@ -784,7 +970,9 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 				// simple bounds check
 				if(curv->numWeights < 0 || (byte *) (v + 1) + (curv->numWeights - 1) * sizeof(*weight) > (byte *) mdr + size)
 				{
+#ifndef RENDERLESS_MODELS
 					ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has broken structure.\n", mod_name);
+#endif
 					return qfalse;
 				}
 
@@ -825,7 +1013,9 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// simple bounds check
 			if(surf->numTriangles < 0 || (byte *) (tri + surf->numTriangles) > (byte *) mdr + size)
 			{
+#ifndef RENDERLESS_MODELS
 				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has broken structure.\n", mod_name);
+#endif
 				return qfalse;
 			}
 
@@ -840,6 +1030,13 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			}
 			
 			// tri now points to the end of the surface.
+#if 0 // #ifndef RENDERLESS_MODELS // ZTM: More MDR testing
+			surf->ofsEnd = LittleLong(cursurf->ofsEnd);
+			if (surf->ofsEnd != (byte *) tri - (byte *) surf)
+			{
+				ri.Printf(PRINT_WARNING, "R_LoadMDR: surf->ofsEnd (lod=%d) miss match (%d/%d)!\n", l, surf->ofsEnd, (int)((byte *) tri - (byte *) surf));
+			}
+#endif
 			surf->ofsEnd = (byte *) tri - (byte *) surf;
 			surf = (mdrSurface_t *) tri;
 
@@ -848,6 +1045,13 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 		}
 
 		// surf points to the next lod now.
+#if 0 // #ifndef RENDERLESS_MODELS // ZTM: More MDR testing
+		lod->ofsEnd = LittleLong(curlod->ofsEnd);
+		if (lod->ofsEnd != (int)((byte *) surf - (byte *) lod))
+		{
+			ri.Printf(PRINT_WARNING, "R_LoadMDR: lod->ofsEnd (lod=%d) miss match (%d/%d)!\n", l, lod->ofsEnd, (int)((byte *) surf - (byte *) lod));
+		}
+#endif
 		lod->ofsEnd = (int)((byte *) surf - (byte *) lod);
 		lod = (mdrLOD_t *) surf;
 
@@ -857,13 +1061,22 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	
 	// lod points to the first tag now, so update the offset too.
 	tag = (mdrTag_t *) lod;
+#if 0 // #ifndef RENDERLESS_MODELS // ZTM: More MDR testing
+	mdr->ofsTags = LittleLong(pinmodel->ofsTags);
+	if (mdr->ofsTags != (int)((byte *) tag - (byte *) mdr))
+	{
+		ri.Printf(PRINT_WARNING, "R_LoadMDR: mdr->ofsTags miss match (%d/%d)!\n", mdr->ofsTags, (int)((byte *) tag - (byte *) mdr));
+	}
+#endif
 	mdr->ofsTags = (int)((byte *) tag - (byte *) mdr);
 	curtag = (mdrTag_t *) ((byte *)pinmodel + LittleLong(pinmodel->ofsTags));
 
 	// simple bounds check
 	if(mdr->numTags < 0 || (byte *) (tag + mdr->numTags) > (byte *) mdr + size)
 	{
+#ifndef RENDERLESS_MODELS
 		ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has broken structure.\n", mod_name);
+#endif
 		return qfalse;
 	}
 	
@@ -877,6 +1090,14 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	}
 	
 	// And finally we know the real offset to the end.
+#if 0 // #ifndef RENDERLESS_MODELS // ZTM: More MDR testing
+	// ZTM: My MM3D MDR exporter fails this test.
+	mdr->ofsEnd = LittleLong(pinmodel->ofsEnd);
+	if (mdr->ofsEnd != (int)((byte *) tag - (byte *) mdr))
+	{
+		ri.Printf(PRINT_WARNING, "R_LoadMDR: mdr->ofsEnd miss match (%d/%d)!\n", mdr->ofsEnd, (int)((byte *) tag - (byte *) mdr));
+	}
+#endif
 	mdr->ofsEnd = (int)((byte *) tag - (byte *) mdr);
 
 	// phew! we're done.
@@ -901,22 +1122,30 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
 	md4Vertex_t			*v;
 	int					version;
 	int					size;
+#ifndef RENDERLESS_MODELS
 	shader_t			*sh;
+#endif
 	int					frameSize;
 
 	pinmodel = (md4Header_t *)buffer;
 
 	version = LittleLong (pinmodel->version);
 	if (version != MD4_VERSION) {
+#ifndef RENDERLESS_MODELS
 		ri.Printf( PRINT_WARNING, "R_LoadMD4: %s has wrong version (%i should be %i)\n",
 				 mod_name, version, MD4_VERSION);
+#endif
 		return qfalse;
 	}
 
 	mod->type = MOD_MD4;
 	size = LittleLong(pinmodel->ofsEnd);
 	mod->dataSize += size;
+#ifdef RENDERLESS_MODELS
+	mod->modelData = md4 = Hunk_Alloc( size, h_low );
+#else
 	mod->modelData = md4 = ri.Hunk_Alloc( size, h_low );
+#endif
 
 	Com_Memcpy(md4, buffer, size);
 
@@ -930,7 +1159,9 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
     md4->ofsEnd = size;
 
 	if ( md4->numFrames < 1 ) {
+#ifndef RENDERLESS_MODELS
 		ri.Printf( PRINT_WARNING, "R_LoadMD4: %s has no frames\n", mod_name );
+#endif
 		return qfalse;
 	}
 
@@ -965,6 +1196,21 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
 			LL(surf->ofsVerts);
 			LL(surf->ofsEnd);
 			
+#ifndef RENDERLESS_MODELS
+#ifdef IOQ3ZTM // ZTM: Show the name of the surface, it is helpful.
+			if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
+				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i verts on %s (%i)",
+					mod_name, SHADER_MAX_VERTEXES, surf->name[0] == '\0' ? "a surface" : surf->name,
+					surf->numVerts );
+				return qfalse;
+			}
+			if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) {
+				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i triangles on %s (%i)",
+					mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] == '\0' ? "a surface" : surf->name,
+					surf->numTriangles );
+				return qfalse;
+			}
+#else
 			if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
 				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i verts on a surface (%i).\n",
 					mod_name, SHADER_MAX_VERTEXES, surf->numVerts );
@@ -975,6 +1221,8 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
 					mod_name, SHADER_MAX_INDEXES / 3, surf->numTriangles );
 				return qfalse;
 			}
+#endif
+#endif
 
 			// change to surface identifier
 			surf->ident = SF_MD4;
@@ -983,12 +1231,16 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
 			Q_strlwr( surf->name );
 		
 			// register the shaders
+#ifdef RENDERLESS_MODELS
+			surf->shaderIndex = 0;
+#else
 			sh = R_FindShader( surf->shader, LIGHTMAP_NONE, qtrue );
 			if ( sh->defaultShader ) {
 				surf->shaderIndex = 0;
 			} else {
 				surf->shaderIndex = sh->index;
 			}
+#endif
 
 			// swap all the triangles
 			tri = (md4Triangle_t *) ( (byte *)surf + surf->ofsTriangles );
@@ -1043,6 +1295,7 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
 
 //=============================================================================
 
+#ifndef RENDERLESS_MODELS
 /*
 ** RE_BeginRegistration
 */
@@ -1065,6 +1318,7 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	// first time the level shot would not be drawn
 //	RE_StretchPic(0, 0, 0, 0, 0, 0, 1, 1, 0);
 }
+#endif
 
 //=============================================================================
 
@@ -1081,9 +1335,18 @@ void R_ModelInit( void ) {
 
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
+
+#ifdef TA_GAME_MODELS
+#ifdef RENDERLESS_MODELS
+	SV_UpdateUserinfos();
+#else
+	ri.ServerUpdateUserinfos();
+#endif
+#endif
 }
 
 
+#ifndef RENDERLESS_MODELS
 /*
 ================
 R_Modellist_f
@@ -1115,7 +1378,350 @@ void R_Modellist_f( void ) {
 	}
 #endif
 }
+#endif
 
+
+#ifdef IOQ3ZTM // BONES
+//=============================================================================
+
+/*
+================
+RE_JointIndexForName
+
+Returns -1 if joint was not found.
+================
+*/
+int RE_JointIndexForName(qhandle_t handle, const char *jointName)
+{
+	model_t		*model;
+	int			jointIndex;
+	int			i;
+
+	model = R_GetModelByHandle( handle );
+	jointIndex = -1;
+
+	switch (model->type)
+	{
+		case MOD_IQM:
+			{
+				iqmData_t *iqmData;
+				const char *str;
+
+				iqmData = model->modelData;
+				str = iqmData->names;
+
+				for (i = 0; i < iqmData->num_joints; i++)
+				{
+					if (!strcmp( str, jointName ) )
+					{
+						// Found joint
+						jointIndex = i;
+						break;
+					}
+
+					// Look at next joint name
+					str += strlen( str ) + 1;
+				}
+				break;
+			}
+
+#ifdef RAVENMD4
+		case MOD_MDR:
+			// MDR doesn't save joint names, but has 'tags' that are simply joint name and index.
+			// Can only find joint if it has a tag.
+			{
+				mdrHeader_t		*mod;
+				mdrTag_t		*tag;
+
+				mod = model->modelData;
+
+				tag = (mdrTag_t *)((byte *)mod + mod->ofsTags);
+				for ( i = 0 ; i < mod->numTags ; i++, tag++ )
+				{
+					if ( !strcmp( tag->name, jointName ) )
+					{
+						jointIndex = tag->boneIndex;
+						break;
+					}
+				}
+				break;
+			}
+#endif
+
+		default:
+			break;
+	}
+
+	return jointIndex;
+}
+
+#if 0
+/*
+================
+RE_JointName
+
+Returns NULL if invalid jointIndex or boneIndex doesn't have a name.
+================
+*/
+static const char *RE_JointName(qhandle_t handle, int jointIndex)
+{
+	model_t *model;
+	const char *jointName;
+	int			i;
+
+	if (jointIndex < 0 ||  jointIndex >= RE_NumberOfJoints(handle))
+		return NULL;
+
+	model = R_GetModelByHandle( handle );
+
+	switch (model->type)
+	{
+		case MOD_IQM:
+			{
+				iqmData_t *iqmData;
+				const char *str;
+
+				iqmData = model->modelData;
+				str = iqmData->names;
+
+				for (i = 0; i < jointIndex; i++)
+				{
+					// Next joint name
+					str += strlen( str ) + 1;
+				}
+
+				jointName = str;
+				break;
+			}
+
+#ifdef RAVENMD4
+		case MOD_MDR:
+			{
+				mdrHeader_t		*mod;
+				mdrTag_t		*tag;
+
+				mod = model->modelData;
+
+				tag = (mdrTag_t *)((byte *)mod + mod->ofsTags);
+				for ( i = 0 ; i < mod->numTags ; i++, tag++ )
+				{
+					if (tag->boneIndex == jointIndex)
+					{
+						jointName = tag->name;
+						break;
+					}
+				}
+
+				// Tag not found
+				if (i == mod->numTags)
+					jointName = NULL;
+				break;
+			}
+#endif
+
+		default:
+			jointName = NULL;
+			break;
+	}
+
+	return jointName;
+}
+#endif
+
+/*
+================
+RE_SetupSkeleton
+
+Creates relative joint skeleton using specified animation information.
+Returns qfalse if didn't setup refSkel.
+
+If refSkel is NULL returns qtrue if handle is valid model for skeleton animation.
+
+Note: If only need to find the orientation of a single joint use R_LerpTag instead.
+================
+*/
+qboolean RE_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp)
+{
+	model_t		*model;
+	int			i;
+
+	model = R_GetModelByHandle( handle );
+
+	switch (model->type)
+	{
+		case MOD_IQM:
+		{
+			iqmData_t *iqmData;
+
+			// Model is valid for skeleton animation, return qtrue.
+			if (!refSkel) {
+				return qtrue;
+			}
+
+			iqmData = model->modelData;
+
+			refSkel->type = ST_RELATIVE;
+			refSkel->numJoints = iqmData->num_joints;
+
+			// Setup skeleton
+			for (i = 0; i < refSkel->numJoints; i++) {
+				// Setup matrix
+				ComputeJointRelativeOrientation(iqmData, frame, oldframe, backlerp, i, &refSkel->joints[i]);
+
+				refSkel->jointParents[i] = iqmData->jointParents[i];
+			}
+			break;
+		}
+
+#if 0 //#ifdef RAVENMD4
+		// ZTM: TODO: Finish setting up MDR joints and support using custom skeleton.
+		case MOD_MDR:
+		{
+			mdrheader_t *mdrData;
+
+			mdrData = model->modelData;
+
+			refSkel->type = ST_ABSOLUTE;
+			refSkel->numJoints = mdrData->numBones;
+
+			// Setup skeleton
+			for (i = 0; i < numJoints; i++) {
+				// Setup matrix
+				//ComputeJointRelativeOrientation(iqmData, frame, oldframe, backlerp, i, &refSkel->joints[i]);
+				refSkel->jointParents[i] = -1;
+			}
+			break;
+		}
+#endif
+
+		default:
+			if (refSkel) {
+				Com_Memset(refSkel, 0, sizeof (refSkeleton_t));
+			}
+			return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+================
+RE_SetupPlayerSkeleton
+
+Creates relative joint skeleton using specified animation informaiton.
+Returns qfalse if didn't setup refSkel.
+
+If refSkel is NULL returns qtrue if handle is valid model for player skeleton animation.
+================
+*/
+qboolean RE_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int legsFrame, int legsOldFrame, float legsBacklerp,
+								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
+								int headFrame, int headOldFrame, float headBacklerp)
+{
+	model_t		*model;
+	int			i;
+	int			frame;
+	int			oldframe;
+	float		backlerp;
+
+	model = R_GetModelByHandle( handle );
+
+	switch (model->type)
+	{
+		case MOD_IQM:
+		{
+			iqmData_t *iqmData;
+			const char *str;
+
+			// Model is valid for player skeleton animation, return qtrue.
+			if (!refSkel) {
+				return qtrue;
+			}
+
+			iqmData = model->modelData;
+			str = iqmData->names;
+
+			refSkel->type = ST_RELATIVE;
+			refSkel->numJoints = iqmData->num_joints;
+
+			// Setup skeleton using the three different animations
+			for (i = 0; i < refSkel->numJoints; i++) {
+				if (!strncasecmp(str, "l_", 2) || !strcasecmp(str, "tag_torso")) {
+					frame = legsFrame;
+					oldframe = legsOldFrame;
+					backlerp = legsBacklerp;
+				} else if (!strncasecmp(str, "u_", 2) || !strcasecmp(str, "tag_head")) {
+					frame = torsoFrame;
+					oldframe = torsoOldFrame;
+					backlerp = torsoBacklerp;
+				} else /*if (!strncasecmp(str "h_", 2))*/ {
+					frame = headFrame;
+					oldframe = headOldFrame;
+					backlerp = headBacklerp;
+				}
+
+				// Setup matrix
+				ComputeJointRelativeOrientation(iqmData, frame, oldframe, backlerp, i, &refSkel->joints[i]);
+
+				refSkel->jointParents[i] = iqmData->jointParents[i];
+
+				// Next joint name
+				str += strlen( str ) + 1;
+			}
+
+			break;
+		}
+
+		default:
+			if (refSkel) {
+				Com_Memset(refSkel, 0, sizeof (refSkeleton_t));
+			}
+			return qfalse;
+	}
+
+	return qtrue;
+}
+
+void OrientationMultiply( orientation_t a, orientation_t b, orientation_t *out );
+
+/*
+================
+R_MakeSkeletonAbsolute
+
+Makes relative skeleton into absolute skeleton.
+================
+*/
+void R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out)
+{
+	int numJoints;
+	int i;
+	int parent;
+
+	if (in->type == ST_RELATIVE) {
+		numJoints = in->numJoints;
+
+		if (numJoints > MAX_SKELETON_JOINTS) {
+			numJoints = MAX_SKELETON_JOINTS;
+		}
+
+		for (i = 0; i < numJoints; ++i) {
+			parent = in->jointParents[i];
+
+			if( parent >= 0 ) {
+				OrientationMultiply(out->joints[parent], in->joints[i], &out->joints[i]);
+			} else {
+				Com_Memcpy(&out->joints[i], &in->joints[i], sizeof (orientation_t));
+			}
+		}
+
+		out->type = ST_ABSOLUTE;
+		out->numJoints = numJoints;
+		Com_Memcpy(out->jointParents, in->jointParents, sizeof (int) * MAX_SKELETON_JOINTS);
+	} else {
+		Com_Memcpy(out, in, sizeof (refSkeleton_t));
+	}
+}
+#endif
 
 //=============================================================================
 
@@ -1268,10 +1874,12 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 	model = R_GetModelByHandle( handle );
 
 	if(model->type == MOD_BRUSH) {
+#ifndef RENDERLESS_MODELS
 		VectorCopy( model->bmodel->bounds[0], mins );
 		VectorCopy( model->bmodel->bounds[1], maxs );
 		
 		return;
+#endif
 	} else if (model->type == MOD_MESH) {
 		md3Header_t	*header;
 		md3Frame_t	*frame;
@@ -1323,3 +1931,114 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 	VectorClear( mins );
 	VectorClear( maxs );
 }
+
+#ifdef RAVENMD4
+//
+#define MC_BITS_X (16)
+#define MC_BITS_Y (16)
+#define MC_BITS_Z (16)
+#define MC_BITS_VECT (16)
+
+#define MC_SCALE_X (1.0f/64)
+#define MC_SCALE_Y (1.0f/64)
+#define MC_SCALE_Z (1.0f/64)
+
+//
+#define MC_MASK_X ((1<<(MC_BITS_X))-1)
+#define MC_MASK_Y ((1<<(MC_BITS_Y))-1)
+#define MC_MASK_Z ((1<<(MC_BITS_Z))-1)
+#define MC_MASK_VECT ((1<<(MC_BITS_VECT))-1)
+
+#define MC_SCALE_VECT (1.0f/(float)((1<<(MC_BITS_VECT-1))-2))
+
+#define MC_POS_X (0)
+#define MC_SHIFT_X (0)
+
+#define MC_POS_Y ((((MC_BITS_X))/8))
+#define MC_SHIFT_Y ((((MC_BITS_X)%8)))
+
+#define MC_POS_Z ((((MC_BITS_X+MC_BITS_Y))/8))
+#define MC_SHIFT_Z ((((MC_BITS_X+MC_BITS_Y)%8)))
+
+#define MC_POS_V11 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z))/8))
+#define MC_SHIFT_V11 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z)%8)))
+
+#define MC_POS_V12 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT))/8))
+#define MC_SHIFT_V12 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT)%8)))
+
+#define MC_POS_V13 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*2))/8))
+#define MC_SHIFT_V13 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*2)%8)))
+
+#define MC_POS_V21 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*3))/8))
+#define MC_SHIFT_V21 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*3)%8)))
+
+#define MC_POS_V22 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*4))/8))
+#define MC_SHIFT_V22 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*4)%8)))
+
+#define MC_POS_V23 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*5))/8))
+#define MC_SHIFT_V23 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*5)%8)))
+
+#define MC_POS_V31 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*6))/8))
+#define MC_SHIFT_V31 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*6)%8)))
+
+#define MC_POS_V32 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*7))/8))
+#define MC_SHIFT_V32 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*7)%8)))
+
+#define MC_POS_V33 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*8))/8))
+#define MC_SHIFT_V33 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*8)%8)))
+
+void MC_UnCompress(float mat[3][4],const unsigned char * comp)
+{
+	int val;
+
+	val=(int)((unsigned short *)(comp))[0];
+	val-=1<<(MC_BITS_X-1);
+	mat[0][3]=((float)(val))*MC_SCALE_X;
+
+	val=(int)((unsigned short *)(comp))[1];
+	val-=1<<(MC_BITS_Y-1);
+	mat[1][3]=((float)(val))*MC_SCALE_Y;
+
+	val=(int)((unsigned short *)(comp))[2];
+	val-=1<<(MC_BITS_Z-1);
+	mat[2][3]=((float)(val))*MC_SCALE_Z;
+
+	val=(int)((unsigned short *)(comp))[3];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[0][0]=((float)(val))*MC_SCALE_VECT;
+
+	val=(int)((unsigned short *)(comp))[4];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[0][1]=((float)(val))*MC_SCALE_VECT;
+
+	val=(int)((unsigned short *)(comp))[5];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[0][2]=((float)(val))*MC_SCALE_VECT;
+
+
+	val=(int)((unsigned short *)(comp))[6];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[1][0]=((float)(val))*MC_SCALE_VECT;
+
+	val=(int)((unsigned short *)(comp))[7];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[1][1]=((float)(val))*MC_SCALE_VECT;
+
+	val=(int)((unsigned short *)(comp))[8];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[1][2]=((float)(val))*MC_SCALE_VECT;
+
+
+	val=(int)((unsigned short *)(comp))[9];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[2][0]=((float)(val))*MC_SCALE_VECT;
+
+	val=(int)((unsigned short *)(comp))[10];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[2][1]=((float)(val))*MC_SCALE_VECT;
+
+	val=(int)((unsigned short *)(comp))[11];
+	val-=1<<(MC_BITS_VECT-1);
+	mat[2][2]=((float)(val))*MC_SCALE_VECT;
+}
+#endif

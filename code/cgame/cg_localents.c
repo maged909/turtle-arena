@@ -119,6 +119,7 @@ or generates more localentities along a trail.
 ====================================================================================
 */
 
+#ifndef NOTRATEDM // No gibs.
 /*
 ================
 CG_BloodTrail
@@ -154,6 +155,7 @@ void CG_BloodTrail( localEntity_t *le ) {
 		blood->pos.trDelta[2] = 40;
 	}
 }
+#endif
 
 
 /*
@@ -164,12 +166,15 @@ CG_FragmentBounceMark
 void CG_FragmentBounceMark( localEntity_t *le, trace_t *trace ) {
 	int			radius;
 
+#ifndef NOTRATEDM // No gibs.
 	if ( le->leMarkType == LEMT_BLOOD ) {
 
 		radius = 16 + (rand()&31);
 		CG_ImpactMark( cgs.media.bloodMarkShader, trace->endpos, trace->plane.normal, random()*360,
 			1,1,1,1, qtrue, radius, qfalse );
-	} else if ( le->leMarkType == LEMT_BURN ) {
+	} else
+#endif
+	if ( le->leMarkType == LEMT_BURN ) {
 
 		radius = 8 + (rand()&15);
 		CG_ImpactMark( cgs.media.burnMarkShader, trace->endpos, trace->plane.normal, random()*360,
@@ -188,6 +193,7 @@ CG_FragmentBounceSound
 ================
 */
 void CG_FragmentBounceSound( localEntity_t *le, trace_t *trace ) {
+#ifndef NOTRATEDM // No gibs.
 	if ( le->leBounceSoundType == LEBS_BLOOD ) {
 		// half the gibs will make splat sounds
 		if ( rand() & 1 ) {
@@ -203,7 +209,10 @@ void CG_FragmentBounceSound( localEntity_t *le, trace_t *trace ) {
 			}
 			trap_S_StartSound( trace->endpos, ENTITYNUM_WORLD, CHAN_AUTO, s );
 		}
-	} else if ( le->leBounceSoundType == LEBS_BRASS ) {
+	}
+	else
+#endif
+	if ( le->leBounceSoundType == LEBS_BRASS ) {
 
 	}
 
@@ -234,7 +243,7 @@ void CG_ReflectVelocity( localEntity_t *le, trace_t *trace ) {
 	VectorCopy( trace->endpos, le->pos.trBase );
 	le->pos.trTime = cg.time;
 
-
+#ifndef TA_MISC // MATERIALS // ZTM: Stop debris from being in the air when it should fall...
 	// check for stop, making sure that even on low FPS systems it doesn't bobble
 	if ( trace->allsolid || 
 		( trace->plane.normal[2] > 0 && 
@@ -243,6 +252,7 @@ void CG_ReflectVelocity( localEntity_t *le, trace_t *trace ) {
 	} else {
 
 	}
+#endif
 }
 
 /*
@@ -295,10 +305,12 @@ void CG_AddFragment( localEntity_t *le ) {
 
 		trap_R_AddRefEntityToScene( &le->refEntity );
 
+#ifndef NOTRATEDM // No gibs.
 		// add a blood trail
 		if ( le->leBounceSoundType == LEBS_BLOOD ) {
 			CG_BloodTrail( le );
 		}
+#endif
 
 		return;
 	}
@@ -480,13 +492,41 @@ CG_AddExplosion
 ================
 */
 static void CG_AddExplosion( localEntity_t *ex ) {
+#ifdef TA_ENTSYS // EXP_SCALE
+	refEntity_t	re;
+	refEntity_t	*ent;
+	float c;
+
+	re = ex->refEntity;
+	ent = &re;
+
+	c = ( ex->endTime - cg.time ) / ( float ) ( ex->endTime - ex->startTime );
+	if ( c > 1 ) {
+		c = 1.0;	// can happen during connection problems
+	}
+
+	ent->shaderRGBA[0] = 0xff;
+	ent->shaderRGBA[1] = 0xff;
+	ent->shaderRGBA[2] = 0xff;
+	ent->shaderRGBA[3] = 0xff * c * 0.33;
+
+	ent->radius = ent->radius * ( 1.0 - c ) + ex->radius;
+	if (ent->radius != 1.0f) {
+		VectorScale( ent->axis[0], re.radius, ent->axis[0] );
+		VectorScale( ent->axis[1], re.radius, ent->axis[1] );
+		VectorScale( ent->axis[2], re.radius, ent->axis[2] );
+		ent->nonNormalizedAxes = qtrue;
+	}
+#else
 	refEntity_t	*ent;
 
 	ent = &ex->refEntity;
+#endif
 
 	// add the entity
 	trap_R_AddRefEntityToScene(ent);
 
+#ifndef IOQ3ZTM // ZTM: Anything glows!
 	// add the dlight
 	if ( ex->light ) {
 		float		light;
@@ -500,6 +540,7 @@ static void CG_AddExplosion( localEntity_t *ex ) {
 		light = ex->light * light;
 		trap_R_AddLightToScene(ent->origin, light, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
 	}
+#endif
 }
 
 /*
@@ -524,10 +565,15 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 	re.shaderRGBA[3] = 0xff * c * 0.33;
 
 	re.reType = RT_SPRITE;
+#ifdef TA_WEAPSYS // SPR_EXP_SCALE
+	re.radius = le->refEntity.radius * ( 1.0 - c ) + le->radius;
+#else
 	re.radius = 42 * ( 1.0 - c ) + 30;
+#endif
 
 	trap_R_AddRefEntityToScene( &re );
 
+#ifndef IOQ3ZTM // ZTM: Anything glows!
 	// add the dlight
 	if ( le->light ) {
 		float		light;
@@ -541,10 +587,39 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 		light = le->light * light;
 		trap_R_AddLightToScene(re.origin, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
 	}
+#endif
 }
 
+#ifdef IOQ3ZTM // BUBBLES
+/*
+====================
+CG_BubbleThink
+====================
+*/
+void CG_BubbleThink( localEntity_t *le ) {
+	int contents;
+	vec3_t	newOrigin;
+	trace_t	trace;
+
+	CG_AddMoveScaleFade(le);
+
+	// calculate new position
+	BG_EvaluateTrajectory( &le->pos, cg.time, newOrigin );
+
+	// trace a line from previous position to new position
+	CG_Trace( &trace, le->refEntity.origin, NULL, NULL, newOrigin, -1, CONTENTS_SOLID );
+
+	contents = CG_PointContents( trace.endpos, 0 );
+	if ( !( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) ) {
+		// Bubble isn't in water (or slime/lava) anymore, remove it.
+		CG_FreeLocalEntity( le );
+		return;
+	}
+}
+#endif
 
 #ifdef MISSIONPACK
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 /*
 ====================
 CG_AddKamikaze
@@ -669,7 +744,9 @@ void CG_AddKamikaze( localEntity_t *le ) {
 		trap_R_AddRefEntityToScene( &shockwave );
 	}
 }
+#endif
 
+#ifndef TURTLEARENA // POWERS
 /*
 ===================
 CG_AddInvulnerabilityImpact
@@ -693,14 +770,18 @@ void CG_AddInvulnerabilityJuiced( localEntity_t *le ) {
 		le->refEntity.axis[1][1] = (float) 1.0 + 0.3 * (t - 3000) / 2000;
 		le->refEntity.axis[2][2] = (float) 0.7 + 0.3 * (2000 - (t - 3000)) / 2000;
 	}
+#ifndef NOTRATEDM // No gibs.
 	if ( t > 5000 ) {
 		le->endTime = 0;
 		CG_GibPlayer( le->refEntity.origin );
 	}
-	else {
+	else
+#endif
+	{
 		trap_R_AddRefEntityToScene( &le->refEntity );
 	}
 }
+#endif
 
 /*
 ===================
@@ -740,6 +821,24 @@ void CG_AddScorePlum( localEntity_t *le ) {
 		re->shaderRGBA[2] = 0x11;
 	}
 	else {
+#ifdef TURTLEARENA // NIGHTS_ITEMS
+		vec3_t color;
+		int chainValue;
+
+		if (le->leType == LE_CHAINPLUM) {
+			// Use real chain value
+			chainValue = le->bounceFactor;
+		} else {
+			// Fake chain value
+			chainValue = score/10;
+		}
+
+		CG_ColorForChain(chainValue, color);
+
+		re->shaderRGBA[0] = 0xff * color[0];
+		re->shaderRGBA[1] = 0xff * color[1];
+		re->shaderRGBA[2] = 0xff * color[2];
+#else
 		re->shaderRGBA[0] = 0xff;
 		re->shaderRGBA[1] = 0xff;
 		re->shaderRGBA[2] = 0xff;
@@ -752,6 +851,7 @@ void CG_AddScorePlum( localEntity_t *le ) {
 		} else if (score >= 2) {
 			re->shaderRGBA[0] = re->shaderRGBA[2] = 0;
 		}
+#endif
 
 	}
 	if (c < 0.25)
@@ -834,6 +934,22 @@ void CG_AddLocalEntities( void ) {
 			continue;
 		}
 
+#ifdef IOQ3ZTM // ZTM: Anything glows!
+		// add the dlight
+		if ( le->light ) {
+			float		light;
+
+			light = (float)( cg.time - le->startTime ) / ( le->endTime - le->startTime );
+			if ( light < 0.5 ) {
+				light = 1.0;
+			} else {
+				light = 1.0 - ( light - 0.5 ) * 2;
+			}
+			light = le->light * light;
+			trap_R_AddLightToScene(le->refEntity.origin, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+		}
+#endif
+
 		switch ( le->leType ) {
 		default:
 			CG_Error( "Bad leType: %i", le->leType );
@@ -871,19 +987,32 @@ void CG_AddLocalEntities( void ) {
 			break;
 
 		case LE_SCOREPLUM:
+#ifdef TURTLEARENA // NIGHTS_ITEMS
+		case LE_CHAINPLUM:
+#endif
 			CG_AddScorePlum( le );
 			break;
 
+#ifdef IOQ3ZTM // BUBBLES
+		case LE_BUBBLE:
+			CG_BubbleThink( le );
+			break;
+#endif
+
 #ifdef MISSIONPACK
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 		case LE_KAMIKAZE:
 			CG_AddKamikaze( le );
 			break;
+#endif
+#ifndef TURTLEARENA // POWERS
 		case LE_INVULIMPACT:
 			CG_AddInvulnerabilityImpact( le );
 			break;
 		case LE_INVULJUICED:
 			CG_AddInvulnerabilityJuiced( le );
 			break;
+#endif
 		case LE_SHOWREFENTITY:
 			CG_AddRefEntity( le );
 			break;

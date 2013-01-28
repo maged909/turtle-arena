@@ -33,7 +33,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "qcommon.h"
 #include <setjmp.h>
 #ifndef _WIN32
+#ifndef __wii__
 #include <netinet/in.h>
+#endif
 #include <sys/stat.h> // umask
 #else
 #include <winsock.h>
@@ -46,12 +48,25 @@ int demo_protocols[] =
 
 #define MAX_NUM_ARGVS	50
 
-#define MIN_DEDICATED_COMHUNKMEGS 1
-#define MIN_COMHUNKMEGS		56
-#define DEF_COMHUNKMEGS 	128
+#define MIN_DEDICATED_COMHUNKMEGS 16
+#ifdef __wii__
+#define MIN_COMHUNKMEGS		16
+#define DEF_COMHUNKMEGS		26
 #define DEF_COMZONEMEGS		24
+#else
+#define MIN_COMHUNKMEGS		64
+#define DEF_COMHUNKMEGS		256
+#define DEF_COMZONEMEGS		48
+#endif
 #define DEF_COMHUNKMEGS_S	XSTRING(DEF_COMHUNKMEGS)
 #define DEF_COMZONEMEGS_S	XSTRING(DEF_COMZONEMEGS)
+
+#ifdef __wii__
+extern void* SYS_AllocArena2MemLo(unsigned int size, unsigned int align);
+#define Com_calloc SYS_AllocArena2MemLo
+#else
+#define Com_calloc calloc
+#endif
 
 int		com_argc;
 char	*com_argv[MAX_NUM_ARGVS+1];
@@ -81,7 +96,9 @@ cvar_t	*com_logfile;		// 1 = buffer log, 2 = flush after each print
 cvar_t	*com_pipefile;
 cvar_t	*com_showtrace;
 cvar_t	*com_version;
+#ifndef NOBLOOD
 cvar_t	*com_blood;
+#endif
 cvar_t	*com_singlePlayerActive;
 cvar_t	*com_buildScript;	// for automated data building scripts
 cvar_t	*com_introPlayed;
@@ -1403,7 +1420,7 @@ Com_InitZoneMemory
 */
 void Com_InitSmallZoneMemory( void ) {
 	s_smallZoneTotal = 512 * 1024;
-	smallzone = calloc( s_smallZoneTotal, 1 );
+	smallzone = Com_calloc( s_smallZoneTotal, 1 );
 	if ( !smallzone ) {
 		Com_Error( ERR_FATAL, "Small zone data failed to allocate %1.1f megs", (float)s_smallZoneTotal / (1024*1024) );
 	}
@@ -1430,7 +1447,7 @@ void Com_InitZoneMemory( void ) {
 		s_zoneTotal = cv->integer * 1024 * 1024;
 	}
 
-	mainzone = calloc( s_zoneTotal, 1 );
+	mainzone = Com_calloc( s_zoneTotal, 1 );
 	if ( !mainzone ) {
 		Com_Error( ERR_FATAL, "Zone data failed to allocate %i megs", s_zoneTotal / (1024*1024) );
 	}
@@ -1554,7 +1571,7 @@ void Com_InitHunkMemory( void ) {
 		s_hunkTotal = cv->integer * 1024 * 1024;
 	}
 
-	s_hunkData = calloc( s_hunkTotal + 31, 1 );
+	s_hunkData = Com_calloc( s_hunkTotal + 31, 1 );
 	if ( !s_hunkData ) {
 		Com_Error( ERR_FATAL, "Hunk data failed to allocate %i megs", s_hunkTotal / (1024*1024) );
 	}
@@ -2718,6 +2735,15 @@ void Com_Init( char *commandLine ) {
 
 	Com_ExecuteCfg();
 
+#ifdef TURTLEARENA
+	if (!strlen(Cvar_VariableString("com_lastrunversion"))) {
+		// Pre-0.6 config, reset all cvars. Client control binds are left as-is.
+		Cvar_Restart(qtrue);
+	}
+
+	Cvar_Get ("com_lastrunversion", PRODUCT_VERSION, CVAR_ARCHIVE|CVAR_NORESTART);
+#endif
+
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
 
@@ -2740,7 +2766,13 @@ void Com_Init( char *commandLine ) {
 	//
 	com_altivec = Cvar_Get ("com_altivec", "1", CVAR_ARCHIVE);
 	com_maxfps = Cvar_Get ("com_maxfps", "85", CVAR_ARCHIVE);
+#ifndef NOBLOOD
+#ifdef NOTRATEDM // ZTM: Default to no blood.
+	com_blood = Cvar_Get ("com_blood", "0", CVAR_ARCHIVE);
+#else
 	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE);
+#endif
+#endif
 	com_singlePlayerActive = Cvar_Get ("ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM);
 
 	com_logfile = Cvar_Get ("logfile", "0", CVAR_TEMP );
@@ -2835,6 +2867,10 @@ void Com_Init( char *commandLine ) {
 
 	// make sure single player is off by default
 	Cvar_Set("ui_singlePlayerActive", "0");
+#ifdef TA_SP
+	Cvar_Set("savegame_loading", "0");
+	Cvar_Set("savegame_filename", "");
+#endif
 
 	com_fullyInitialized = qtrue;
 

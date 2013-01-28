@@ -123,6 +123,10 @@ cvar_t	*r_singleShader;
 cvar_t	*r_roundImagesDown;
 cvar_t	*r_colorMipLevels;
 cvar_t	*r_picmip;
+#ifdef IOQ3ZTM // CELSHADING
+cvar_t	*r_celshadalgo; // Cel shading algorithm selection.
+cvar_t	*r_celoutline; // Cel border width.
+#endif
 cvar_t	*r_showtris;
 cvar_t	*r_showsky;
 cvar_t	*r_shownormals;
@@ -393,6 +397,29 @@ byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, int *pa
 	return buffer;
 }
 
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+/* 
+================== 
+RB_TakeScreenshot
+================== 
+*/
+void RB_TakeScreenshot(int x, int y, int width, int height, char *fileName)
+{
+	byte *buffer;
+	size_t offset = 0, memcount;
+	int padlen;
+
+	buffer = RB_ReadPixels(x, y, width, height, &offset, &padlen);
+	memcount = (width * 3 + padlen) * height;
+
+	// gamma correct
+	if(glConfig.deviceSupportsGamma)
+		R_GammaCorrect(buffer + offset, memcount);
+
+	RE_SavePNG(fileName, width, height, buffer + offset, padlen);
+	ri.Hunk_FreeTempMemory(buffer);
+}
+#else
 /* 
 ================== 
 RB_TakeScreenshot
@@ -453,6 +480,7 @@ void RB_TakeScreenshot(int x, int y, int width, int height, char *fileName)
 
 	ri.Hunk_FreeTempMemory(allbuf);
 }
+#endif
 
 /* 
 ================== 
@@ -528,7 +556,11 @@ void R_ScreenshotFilename( int lastNumber, char *fileName ) {
 	int		a,b,c,d;
 
 	if ( lastNumber < 0 || lastNumber > 9999 ) {
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+		Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot9999.png" );
+#else
 		Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot9999.tga" );
+#endif
 		return;
 	}
 
@@ -540,8 +572,13 @@ void R_ScreenshotFilename( int lastNumber, char *fileName ) {
 	lastNumber -= c*10;
 	d = lastNumber;
 
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+	Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot%i%i%i%i.png"
+		, a, b, c, d );
+#else
 	Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot%i%i%i%i.tga"
 		, a, b, c, d );
+#endif
 }
 
 /* 
@@ -577,6 +614,107 @@ levelshots are specialized 128*128 thumbnails for
 the menu system, sampled down from full screen distorted images
 ====================
 */
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS PNG_SCREENSHOTS
+void R_LevelShot( qboolean jpg ) {
+	char		fileName[MAX_OSPATH];
+	byte		*source;
+	byte		*resample, *resamplestart;
+	size_t		offset = 0, memcount;
+	int			spadlen, rpadlen;
+	int			padwidth, linelen;
+	GLint		packAlign;
+	byte		*src, *dst;
+	int			x, y;
+	int			r, g, b;
+	float		xScale, yScale;
+	int			xx, yy;
+	int			arg;
+	// ZTM: NOTE: Q3 used 128x128, Team Arena used 192x192
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+	int width = 192;
+	int height = 192;
+#else
+	int width = 128;
+	int height = 128;
+#endif
+
+	// Allow custom resample width/height
+	arg = atoi(ri.Cmd_Argv(2));
+	if (arg > 0)
+		width = height = arg;
+
+	arg = atoi(ri.Cmd_Argv(3));
+	if (arg > 0)
+		height = arg;
+
+	if (width > glConfig.vidWidth)
+		width = glConfig.vidWidth;
+	if (height > glConfig.vidHeight)
+		height = glConfig.vidHeight;
+
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s_small.%s", tr.world->baseName, jpg ? "jpg" : "png");
+#else
+	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s.%s", tr.world->baseName, jpg ? "jpg" : "png");
+#endif
+
+	source = RB_ReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, &offset, &spadlen);
+
+	//
+	// Based on RB_ReadPixels
+	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
+
+	linelen = width * 3;
+	padwidth = PAD(linelen, packAlign);
+
+	// Allocate a few more bytes so that we can choose an alignment we like
+	resample = ri.Hunk_AllocateTempMemory(padwidth * height + offset + packAlign - 1);
+
+	resamplestart = PADP((intptr_t) resample + offset, packAlign);
+
+	offset = resamplestart - resample;
+	rpadlen = padwidth - linelen;
+	//
+
+	// resample from source
+	xScale = glConfig.vidWidth / (float)(width * 4.0f);
+	yScale = glConfig.vidHeight / (float)(height * 3.0f);
+	for ( y = 0 ; y < height ; y++ ) {
+		for ( x = 0 ; x < width ; x++ ) {
+			r = g = b = 0;
+			for ( yy = 0 ; yy < 3 ; yy++ ) {
+				for ( xx = 0 ; xx < 4 ; xx++ ) {
+					src = source + (3 * glConfig.vidWidth + spadlen) * (int)((y*3 + yy) * yScale) +
+						3 * (int) ((x*4 + xx) * xScale);
+					r += src[0];
+					g += src[1];
+					b += src[2];
+				}
+			}
+			dst = resample + 3 * ( y * width + x );
+			dst[0] = r / 12;
+			dst[1] = g / 12;
+			dst[2] = b / 12;
+		}
+	}
+
+	memcount = (width * 3 + rpadlen) * height;
+
+	// gamma correct
+	if(glConfig.deviceSupportsGamma)
+		R_GammaCorrect(resample + offset, memcount);
+
+	if (jpg)
+		RE_SaveJPG(fileName, r_screenshotJpegQuality->integer, width, height, resample + offset, rpadlen);
+	else
+		RE_SavePNG(fileName, width, height, resample + offset, rpadlen);
+
+	ri.Hunk_FreeTempMemory(resample);
+	ri.Hunk_FreeTempMemory(source);
+
+	ri.Printf( PRINT_ALL, "Wrote %s\n", fileName );
+}
+#else
 void R_LevelShot( void ) {
 	char		checkname[MAX_OSPATH];
 	byte		*buffer;
@@ -635,6 +773,7 @@ void R_LevelShot( void ) {
 
 	ri.Printf( PRINT_ALL, "Wrote %s\n", checkname );
 }
+#endif
 
 /* 
 ================== 
@@ -652,11 +791,24 @@ void R_ScreenShot_f (void) {
 	char	checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+	qboolean	levelshot;
+#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+		R_LevelShot(qfalse);
+		levelshot = qtrue;
+#else
 		R_LevelShot();
 		return;
+#endif
 	}
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+	else {
+		levelshot = qfalse;
+	}
+#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
 		silent = qtrue;
@@ -664,9 +816,20 @@ void R_ScreenShot_f (void) {
 		silent = qfalse;
 	}
 
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS PNG_SCREENSHOTS
+	if (levelshot)
+	{
+		sprintf( checkname, "levelshots/%s.png", tr.world->baseName );
+	}
+	else
+#endif
 	if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.png", ri.Cmd_Argv( 1 ) );
+#else
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.tga", ri.Cmd_Argv( 1 ) );
+#endif
 	} else {
 		// scan for a free filename
 
@@ -705,11 +868,24 @@ void R_ScreenShotJPEG_f (void) {
 	char		checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+	qboolean	levelshot;
+#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+		R_LevelShot(qtrue);
+		levelshot = qtrue;
+#else
 		R_LevelShot();
 		return;
+#endif
 	}
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+	else {
+		levelshot = qfalse;
+	}
+#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
 		silent = qtrue;
@@ -717,6 +893,13 @@ void R_ScreenShotJPEG_f (void) {
 		silent = qfalse;
 	}
 
+#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
+	if (levelshot)
+	{
+		sprintf( checkname, "levelshots/%s.jpg", tr.world->baseName );
+	}
+	else
+#endif
 	if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.jpg", ri.Cmd_Argv( 1 ) );
@@ -1031,9 +1214,13 @@ void R_Register( void )
 	r_depthbits = ri.Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_ext_multisample, 0, 4, qtrue );
-	r_overBrightBits = ri.Cvar_Get ("r_overBrightBits", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_overBrightBits = ri.Cvar_Get ("r_overBrightBits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH);
+#ifdef IOQ3ZTM // ZTM: Default to display resolution!
+	r_mode = ri.Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
+#else
 	r_mode = ri.Cvar_Get( "r_mode", "6", CVAR_ARCHIVE | CVAR_LATCH );
+#endif
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE );
 	r_noborder = ri.Cvar_Get("r_noborder", "0", CVAR_ARCHIVE);
 	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1051,7 +1238,7 @@ void R_Register( void )
 	// temporary latched variables that can only change over a restart
 	//
 	r_fullbright = ri.Cvar_Get ("r_fullbright", "0", CVAR_LATCH|CVAR_CHEAT );
-	r_mapOverBrightBits = ri.Cvar_Get ("r_mapOverBrightBits", "2", CVAR_LATCH );
+	r_mapOverBrightBits = ri.Cvar_Get ("r_mapOverBrightBits", "1", CVAR_LATCH );
 	r_intensity = ri.Cvar_Get ("r_intensity", "1", CVAR_LATCH );
 	r_singleShader = ri.Cvar_Get ("r_singleShader", "0", CVAR_CHEAT | CVAR_LATCH );
 
@@ -1060,7 +1247,11 @@ void R_Register( void )
 	//
 	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE|CVAR_CHEAT );
 	r_lodbias = ri.Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE );
+#ifdef IOQ3ZTM // Enable light flares by default
+	r_flares = ri.Cvar_Get ("r_flares", "1", CVAR_ARCHIVE );
+#else
 	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE );
+#endif
 	r_zfar = ri.Cvar_Get("r_zfar", "0", CVAR_CHEAT);
 	r_znear = ri.Cvar_Get( "r_znear", "4", CVAR_CHEAT );
 	ri.Cvar_CheckRange( r_znear, 0.001f, 200, qfalse );
@@ -1125,6 +1316,10 @@ void R_Register( void )
 	r_logFile = ri.Cvar_Get( "r_logFile", "0", CVAR_CHEAT );
 	r_debugSurface = ri.Cvar_Get ("r_debugSurface", "0", CVAR_CHEAT);
 	r_nobind = ri.Cvar_Get ("r_nobind", "0", CVAR_CHEAT);
+#ifdef IOQ3ZTM // CELSHADING
+	r_celshadalgo = ri.Cvar_Get ("r_celshadalgo", "0", CVAR_ARCHIVE|CVAR_LATCH);
+	r_celoutline = ri.Cvar_Get("r_celoutline","0", CVAR_ARCHIVE);
+#endif
 	r_showtris = ri.Cvar_Get ("r_showtris", "0", CVAR_CHEAT);
 	r_showsky = ri.Cvar_Get ("r_showsky", "0", CVAR_CHEAT);
 	r_shownormals = ri.Cvar_Get ("r_shownormals", "0", CVAR_CHEAT);
@@ -1136,7 +1331,7 @@ void R_Register( void )
 	r_noportals = ri.Cvar_Get ("r_noportals", "0", CVAR_CHEAT);
 	r_shadows = ri.Cvar_Get( "cg_shadows", "1", 0 );
 
-	r_marksOnTriangleMeshes = ri.Cvar_Get("r_marksOnTriangleMeshes", "0", CVAR_ARCHIVE);
+	r_marksOnTriangleMeshes = ri.Cvar_Get("r_marksOnTriangleMeshes", "1", CVAR_ARCHIVE);
 
 	// ZTM: FIXME: r_useGlFog doesn't work correctly with some multistage shaders. So when r_vertexLight is 0 it's fine.
 	r_useGlFog = ri.Cvar_Get("r_useGlFog", "0", CVAR_CHEAT);
@@ -1222,6 +1417,10 @@ void R_Init( void ) {
 	R_InitFogTable();
 
 	R_Register();
+
+#ifdef TA_BLOOM
+	R_BloomInit();
+#endif
 
 	max_polys = r_maxpolys->integer;
 	if (max_polys < MAX_POLYS)
@@ -1367,6 +1566,13 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.MarkFragments = R_MarkFragments;
 	re.LerpTag = R_LerpTag;
 	re.ModelBounds = R_ModelBounds;
+
+#ifdef IOQ3ZTM // BONES
+	re.JointIndexForName = RE_JointIndexForName;
+	re.SetupSkeleton = RE_SetupSkeleton;
+	re.SetupPlayerSkeleton = RE_SetupPlayerSkeleton;
+	re.MakeSkeletonAbsolute = R_MakeSkeletonAbsolute;
+#endif
 
 	re.ClearScene = RE_ClearScene;
 	re.AddRefEntityToScene = RE_AddRefEntityToScene;

@@ -132,6 +132,20 @@ void COM_DefaultExtension( char *path, int maxSize, const char *extension )
 		Q_strcat(path, maxSize, extension);
 }
 
+#ifdef IOQ3ZTM
+/*
+==================
+COM_SetExtension
+==================
+*/
+void COM_SetExtension(char *path, int maxSize, const char *extension)
+{
+	COM_StripExtension(path, path, maxSize);
+
+	Q_strcat(path, maxSize, extension);
+}
+#endif
+
 /*
 ============================================================================
 
@@ -998,7 +1012,7 @@ does a varargs printf into a temp buffer, so I don't need to have
 varargs versions of all text functions.
 ============
 */
-char	* QDECL va( char *format, ... ) {
+char	* QDECL va( const char *format, ... ) {
 	va_list		argptr;
 	static char string[2][32000]; // in case va is called by nested functions
 	static int	index = 0;
@@ -1426,7 +1440,164 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep )
 		return s;
 }
 
-#ifndef GAME
+
+#ifdef IOQ3ZTM // FONT_REWRITE
+/*
+=====================================================================
+
+  FONT HANDLING
+
+=====================================================================
+*/
+
+float Com_FontScale( const font_t *font, float scale )
+{
+	float glyphScale;
+
+	if (font && font->fontInfo.name[0]) {
+    	glyphScale = font->fontInfo.glyphScale;
+	} else if (font) {
+		glyphScale = (48.0f / font->pointSize);
+    } else {
+    	glyphScale = 1.0f;
+	}
+
+	if (scale <= 0) {
+		// Use native point scale
+		return (font->pointSize / 48.0f) * glyphScale;
+	}
+
+	return scale * glyphScale;
+}
+
+float Com_FontCharWidth( const font_t *font, int ch, float scale )
+{
+    float width;
+
+	if (font && font->fontInfo.name[0]) {
+    	width = font->fontInfo.glyphs[ch & 0xff].xSkip;
+	} else if (font) {
+		width = font->shaderCharWidth;
+    } else {
+    	width = SMALLCHAR_WIDTH;
+	}
+
+	if (font) {
+		 width += font->kerning;
+	}
+
+    return width * Com_FontScale( font, scale );
+}
+
+float Com_FontCharLeftOffset( const font_t *font, int ch, float scale )
+{
+    float left;
+
+	if (font && font->fontInfo.name[0]) {
+    	left = font->fontInfo.glyphs[ch & 0xff].left;
+    } else {
+    	left = 0;
+	}
+
+    return left * Com_FontScale( font, scale );
+}
+
+float Com_FontCharHeight( const font_t *font, float scale )
+{
+    float height;
+
+	if (font && font->fontInfo.name[0]) {
+    	float vpadding = 0.3f * font->pointSize;
+
+    	height = (font->fontInfo.glyphs['I' & 0xff].imageHeight + vpadding);
+	} else if (font) {
+		height = font->pointSize;
+    } else {
+		height = SMALLCHAR_HEIGHT;
+	}
+
+    return height * Com_FontScale( font, scale );
+}
+
+float Com_FontStringWidthExt( const font_t *font, const char *s, float scale, int limit, qboolean skipColors )
+{
+    float	width;
+    int		len;
+	int		ch;
+    int		i;
+
+	if (!font || !s || !*s) {
+		return 0;
+	}
+
+	len = strlen(s);
+	if (limit > 0 && len > limit) {
+		len = limit;
+	}
+
+	width = 0;
+    for (i = 0; i < len; i++) {
+		if ( skipColors && Q_IsColorString(&s[i]) ) {
+			i += 2;
+			continue;
+		}
+
+		ch = s[i] & 0xff;
+		width += Com_FontCharWidth(font, ch, scale);
+	}
+
+	if (font && width > 0) {
+		 width -= font->kerning;
+	}
+
+    return width;
+}
+
+float Com_FontStringWidth( const font_t *font, const char *s, float scale )
+{
+	return Com_FontStringWidthExt(font, s, scale, 0, qtrue);
+}
+
+float Com_FontStringHeightExt( const font_t *font, const char *s, float scale, int limit, qboolean skipColors )
+{
+    float	height;
+    float	max;
+    int		len;
+	int		ch;
+    int		i;
+
+	if (!font || !font->fontInfo.name[0]) {
+		return Com_FontCharHeight( font, scale );
+	}
+
+	len = strlen(s);
+	if (limit > 0 && len > limit) {
+		len = limit;
+	}
+
+	max = 0;
+    for (i = 0; i < len; i++) {
+		if ( skipColors && Q_IsColorString(&s[i]) ) {
+			i += 2;
+			continue;
+		}
+
+		ch = s[i] & 0xff;
+		height = font->fontInfo.glyphs[ch].height;
+		if (height > max) {
+			max = height;
+		}
+	}
+
+    return max * Com_FontScale( font, scale );
+}
+
+float Com_FontStringHeight( const font_t *font, const char *s, float scale )
+{
+	return Com_FontStringHeightExt(font, s, scale, 0, qtrue);
+}
+#endif
+
 /*
 =================
 Com_LocalClientCvarName
@@ -1473,5 +1644,4 @@ int Com_LocalClientForCvarName(const char *in_cvarName) {
 
 	return 0;
 }
-#endif
 

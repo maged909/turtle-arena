@@ -99,7 +99,7 @@ InSelectPlayerMenu_Draw
 =================
 */
 static void InSelectPlayerMenu_Draw( void ) {
-	UI_DrawBannerString( 320, 16, s_setupplayers.bannerString, UI_CENTER, color_white );
+	UI_DrawBannerString( 320, 16, s_setupplayers.bannerString, UI_CENTER, text_banner_color );
 
 	// standard menu drawing
 	Menu_Draw( &s_setupplayers.menu );
@@ -145,14 +145,23 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 		s_setupplayers.player[i].generic.callback	= InSelectPlayer_Event;
 		s_setupplayers.player[i].string				= s_setupplayers.playerString[i];
 		if (!disableMissingPlayers) {
+#ifdef TURTLEARENA
+			// Have players in game be green and not ingame be red.
+			if (cs->clientNums[i] == -1) {
+				s_setupplayers.player[i].color		= color_red;
+			} else {
+				s_setupplayers.player[i].color		= color_green;
+			}
+#else
 			// Have players in game be red and not ingame be white.
 			if (cs->clientNums[i] == -1) {
 				s_setupplayers.player[i].color		= color_white;
 			} else {
 				s_setupplayers.player[i].color		= color_red;
 			}
+#endif
 		} else {
-			s_setupplayers.player[i].color			= color_red;
+			s_setupplayers.player[i].color			= text_big_color;
 		}
 		s_setupplayers.player[i].style				= UI_CENTER|UI_SMALLFONT;
 
@@ -171,7 +180,7 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 	s_setupplayers.back.generic.id			= ID_BACK;
 	s_setupplayers.back.generic.callback	= InSelectPlayer_Event;
 	s_setupplayers.back.string				= "Back";
-	s_setupplayers.back.color				= color_red;
+	s_setupplayers.back.color				= text_big_color;
 	s_setupplayers.back.style				= UI_CENTER|UI_SMALLFONT;
 
 	Menu_AddItem( &s_setupplayers.menu, &s_setupplayers.frame );

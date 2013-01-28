@@ -35,6 +35,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
+#ifndef TURTLEARENA // NO_AMMO_WARNINGS
 /*
 ==============
 CG_CheckAmmo
@@ -46,15 +47,43 @@ void CG_CheckAmmo( void ) {
 	int		i;
 	int		total;
 	int		previous;
+#ifndef TA_WEAPSYS_EX
 	int		weapons;
+#endif
 
 	// see about how many seconds of ammo we have remaining
+#ifndef TA_WEAPSYS_EX
 	weapons = cg.cur_ps->stats[ STAT_WEAPONS ];
+#endif
 	total = 0;
-	for ( i = WP_MACHINEGUN ; i < WP_NUM_WEAPONS ; i++ ) {
+#ifdef TA_WEAPSYS_EX
+	i = cg.cur_ps->weapon;
+#else
+#ifdef TA_WEAPSYS
+	for ( i = 1 ; i < BG_NumWeaponGroups() ; i++ )
+#else
+	for ( i = WP_MACHINEGUN ; i < WP_NUM_WEAPONS ; i++ )
+#endif
+#endif
+	{
+#ifdef TA_WEAPSYS
+		if (!BG_WeapUseAmmo(i)) {
+#ifndef TA_WEAPSYS_EX
+			continue;
+#endif
+		}
+#ifdef TA_WEAPSYS_EX
+		else
+#endif
+#endif
+#ifndef TA_WEAPSYS_EX
 		if ( ! ( weapons & ( 1 << i ) ) ) {
 			continue;
 		}
+#endif
+#ifdef TA_WEAPSYS
+		total += cg.cur_ps->ammo[i] * bg_weapongroupinfo[i].weapon[0]->attackDelay;
+#else
 		switch ( i ) {
 		case WP_ROCKET_LAUNCHER:
 		case WP_GRENADE_LAUNCHER:
@@ -69,6 +98,7 @@ void CG_CheckAmmo( void ) {
 			total += cg.cur_ps->ammo[i] * 200;
 			break;
 		}
+#endif
 		if ( total >= 5000 ) {
 			cg.cur_lc->lowAmmoWarning = 0;
 			return;
@@ -88,6 +118,7 @@ void CG_CheckAmmo( void ) {
 		trap_S_StartLocalSound( cgs.media.noAmmoSound, CHAN_LOCAL_SOUND );
 	}
 }
+#endif
 
 /*
 ==============
@@ -207,11 +238,26 @@ void CG_Respawn( int clientNum ) {
 			continue;
 		}
 
+#ifndef TA_WEAPSYS_EX
 		// display weapons available
 		cg.localClients[i].weaponSelectTime = cg.time;
 
 		// select the weapon the server says we are using
 		cg.localClients[i].weaponSelect = cg.snap->pss[cg.snap->lcIndex[i]].weapon;
+#endif
+#ifdef TA_HOLDSYS/*2*/
+		cg.localClients[i].holdableSelect = cg.snap->pss[cg.snap->lcIndex[i]].holdableIndex;
+#endif
+#ifdef IOQ3ZTM // NEW_CAM
+		cg.localClients[i].camZoomDir = 0;
+		cg.localClients[i].camZoomIn = qfalse;
+		cg.localClients[i].camZoomOut = qfalse;
+		cg.localClients[i].camRotDir = 0;
+		cg.localClients[i].camLeft = qfalse;
+		cg.localClients[i].camRight = qfalse;
+		cg.localClients[i].camReseting = qfalse;
+		cg.localClients[i].camDistance = 0;
+#endif
 	}
 }
 
@@ -296,10 +342,19 @@ void CG_CheckChangedPredictableEvents( playerState_t *ps ) {
 pushReward
 ==================
 */
-static void pushReward(sfxHandle_t sfx, qhandle_t shader, int rewardCount) {
+#ifdef TA_MISC // COMIC_ANNOUNCER
+static void pushReward(int annoucement, qhandle_t shader, int rewardCount)
+#else
+static void pushReward(sfxHandle_t sfx, qhandle_t shader, int rewardCount)
+#endif
+{
 	if (cg.cur_lc->rewardStack < (MAX_REWARDSTACK-1)) {
 		cg.cur_lc->rewardStack++;
+#ifdef TA_MISC // COMIC_ANNOUNCER
+		cg.cur_lc->rewardAnnoucement[cg.cur_lc->rewardStack] = annoucement;
+#else
 		cg.cur_lc->rewardSound[cg.cur_lc->rewardStack] = sfx;
+#endif
 		cg.cur_lc->rewardShader[cg.cur_lc->rewardStack] = shader;
 		cg.cur_lc->rewardCount[cg.cur_lc->rewardStack] = rewardCount;
 	}
@@ -312,10 +367,13 @@ CG_CheckLocalSounds
 */
 void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 	int			reward;
-#ifdef MISSIONPACK
+#if defined MISSIONPACK && !defined TURTLEARENA // NOARMOR
 	int			health, armor;
 #endif
+
+#ifndef TURTLEARENA // AWARDS
 	sfxHandle_t sfx;
+#endif
 
 	// don't play the sounds if the player just changed teams
 	if ( ps->persistant[PERS_TEAM] != ops->persistant[PERS_TEAM] ) {
@@ -324,7 +382,7 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 
 	// hit changes
 	if ( ps->persistant[PERS_HITS] > ops->persistant[PERS_HITS] ) {
-#ifdef MISSIONPACK
+#if defined MISSIONPACK && !defined TURTLEARENA // NOARMOR
 		armor  = ps->persistant[PERS_ATTACKEE_ARMOR] & 0xff;
 		health = ps->persistant[PERS_ATTACKEE_ARMOR] >> 8;
 		if (armor > 50 ) {
@@ -357,10 +415,15 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 	// reward sounds
 	reward = qfalse;
 	if (ps->persistant[PERS_CAPTURES] != ops->persistant[PERS_CAPTURES]) {
+#ifdef TA_MISC // COMIC_ANNOUNCER
+		pushReward(ANNOUNCE_CAPTURE, cgs.media.medalCapture, ps->persistant[PERS_CAPTURES]);
+#else
 		pushReward(cgs.media.captureAwardSound, cgs.media.medalCapture, ps->persistant[PERS_CAPTURES]);
+#endif
 		reward = qtrue;
 		//Com_Printf("capture\n");
 	}
+#ifndef TURTLEARENA // AWARDS
 	if (ps->persistant[PERS_IMPRESSIVE_COUNT] != ops->persistant[PERS_IMPRESSIVE_COUNT]) {
 #ifdef MISSIONPACK
 		if (ps->persistant[PERS_IMPRESSIVE_COUNT] == 1) {
@@ -403,18 +466,29 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 		reward = qtrue;
 		//Com_Printf("guantlet frag\n");
 	}
+#endif
 	if (ps->persistant[PERS_DEFEND_COUNT] != ops->persistant[PERS_DEFEND_COUNT]) {
+#ifdef TA_MISC // COMIC_ANNOUNCER
+		pushReward(ANNOUNCE_DEFENSE, cgs.media.medalDefend, ps->persistant[PERS_DEFEND_COUNT]);
+#else
 		pushReward(cgs.media.defendSound, cgs.media.medalDefend, ps->persistant[PERS_DEFEND_COUNT]);
+#endif
 		reward = qtrue;
 		//Com_Printf("defend\n");
 	}
 	if (ps->persistant[PERS_ASSIST_COUNT] != ops->persistant[PERS_ASSIST_COUNT]) {
+#ifdef TA_MISC // COMIC_ANNOUNCER
+		pushReward(ANNOUNCE_ASSIST, cgs.media.medalAssist, ps->persistant[PERS_ASSIST_COUNT]);
+#else
 		pushReward(cgs.media.assistSound, cgs.media.medalAssist, ps->persistant[PERS_ASSIST_COUNT]);
+#endif
 		reward = qtrue;
 		//Com_Printf("assist\n");
 	}
+#if !defined NOTRATEDM || !defined TURTLEARENA // AWARDS
 	// if any of the player event bits changed
 	if (ps->persistant[PERS_PLAYEREVENTS] != ops->persistant[PERS_PLAYEREVENTS]) {
+#ifndef TURTLEARENA // AWARDS
 		if ((ps->persistant[PERS_PLAYEREVENTS] & PLAYEREVENT_DENIEDREWARD) !=
 				(ops->persistant[PERS_PLAYEREVENTS] & PLAYEREVENT_DENIEDREWARD)) {
 			trap_S_StartLocalSound( cgs.media.deniedSound, CHAN_ANNOUNCER );
@@ -423,12 +497,16 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 				(ops->persistant[PERS_PLAYEREVENTS] & PLAYEREVENT_GAUNTLETREWARD)) {
 			trap_S_StartLocalSound( cgs.media.humiliationSound, CHAN_ANNOUNCER );
 		}
+#endif
+#ifndef NOTRATEDM // Disable strong lang.
 		else if ((ps->persistant[PERS_PLAYEREVENTS] & PLAYEREVENT_HOLYSHIT) !=
 				(ops->persistant[PERS_PLAYEREVENTS] & PLAYEREVENT_HOLYSHIT)) {
 			trap_S_StartLocalSound( cgs.media.holyShitSound, CHAN_ANNOUNCER );
 		}
+#endif
 		reward = qtrue;
 	}
+#endif
 
 	// check for flag pickup
 	if ( cgs.gametype > GT_TEAM ) {
@@ -436,11 +514,20 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 			(ps->powerups[PW_BLUEFLAG] != ops->powerups[PW_BLUEFLAG] && ps->powerups[PW_BLUEFLAG]) ||
 			(ps->powerups[PW_NEUTRALFLAG] != ops->powerups[PW_NEUTRALFLAG] && ps->powerups[PW_NEUTRALFLAG]) )
 		{
+#ifdef TA_DATA
+			if (cg.snap->numPSs > 1) {
+				trap_S_StartLocalSound( cgs.media.playerHasFlagSound[cg.cur_localClientNum], CHAN_ANNOUNCER );
+			} else
+#endif
 			trap_S_StartLocalSound( cgs.media.youHaveFlagSound, CHAN_ANNOUNCER );
 		}
 	}
 
-	if (reward) {
+	if (reward
+#ifdef TA_SP // Don't talk about lead changes in single player/co-op
+		|| cgs.gametype == GT_SINGLE_PLAYER
+#endif
+	) {
 		// ignore lead changes this frame because a reward sound was played.
 		cg.bestLeadChange = LEAD_IGNORE;
 	} else {
@@ -486,13 +573,26 @@ void CG_CheckGameSounds( void ) {
 	// lead changes
 	switch ( cg.bestLeadChange ) {
 		case LEAD_TAKEN:
+#if 0 //#ifdef TA_MISC // COMIC_ANNOUNCER
+			// ZTM: FIXME: cg.cur_lc isn't valid here, sounds use to be added in CG_CheckLocalSounds (should these be moved back?)
+			CG_AddAnnouncement(ANNOUNCE_YOUHAVETAKENTHELEAD, cg.cur_lc-cg.localClients);
+#else
 			CG_AddBufferedSound(cgs.media.takenLeadSound);
+#endif
 			break;
 		case LEAD_TIED:
+#if 0 //#ifdef TA_MISC // COMIC_ANNOUNCER
+			CG_AddAnnouncement(ANNOUNCE_YOURTIEDFORTHELEAD, cg.cur_lc-cg.localClients);
+#else
 			CG_AddBufferedSound(cgs.media.tiedLeadSound);
+#endif
 			break;
 		case LEAD_LOST:
+#if 0 //#ifdef TA_MISC // COMIC_ANNOUNCER
+			CG_AddAnnouncement(ANNOUNCE_YOULOSTTHELEAD, cg.cur_lc-cg.localClients);
+#else
 			CG_AddBufferedSound(cgs.media.lostLeadSound);
+#endif
 			break;
 		default:
 			break;
@@ -577,8 +677,10 @@ void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops ) {
 		CG_CheckLocalSounds( ps, ops );
 	}
 
+#ifndef TA_WEAPSYS // ZTM: No ammo warnings.
 	// check for going low on ammo
 	CG_CheckAmmo();
+#endif
 
 	// run events
 	CG_CheckPlayerstateEvents( ps, ops );

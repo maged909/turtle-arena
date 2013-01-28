@@ -98,25 +98,31 @@ typedef struct
 } field_t;
 
 field_t fields[] = {
-	{"classname", FOFS(classname), F_STRING},
-	{"origin", FOFS(s.origin), F_VECTOR},
-	{"model", FOFS(model), F_STRING},
-	{"model2", FOFS(model2), F_STRING},
-	{"spawnflags", FOFS(spawnflags), F_INT},
-	{"speed", FOFS(speed), F_FLOAT},
-	{"target", FOFS(target), F_STRING},
-	{"targetname", FOFS(targetname), F_STRING},
-	{"message", FOFS(message), F_STRING},
-	{"team", FOFS(team), F_STRING},
-	{"wait", FOFS(wait), F_FLOAT},
-	{"random", FOFS(random), F_FLOAT},
-	{"count", FOFS(count), F_INT},
-	{"health", FOFS(health), F_INT},
-	{"dmg", FOFS(damage), F_INT},
-	{"angles", FOFS(s.angles), F_VECTOR},
-	{"angle", FOFS(s.angles), F_ANGLEHACK},
-	{"targetShaderName", FOFS(targetShaderName), F_STRING},
-	{"targetShaderNewName", FOFS(targetShaderNewName), F_STRING},
+    {"classname", FOFS(classname), F_STRING},
+    {"origin", FOFS(s.origin), F_VECTOR},
+    {"model", FOFS(model), F_STRING},
+    {"model2", FOFS(model2), F_STRING},
+    {"spawnflags", FOFS(spawnflags), F_INT},
+    {"speed", FOFS(speed), F_FLOAT},
+    {"target", FOFS(target), F_STRING},
+#ifdef TA_ENTSYS
+	{"paintarget", FOFS(paintarget), F_STRING},
+#endif
+    {"targetname", FOFS(targetname), F_STRING},
+    {"message", FOFS(message), F_STRING},
+    {"team", FOFS(team), F_STRING},
+    {"wait", FOFS(wait), F_FLOAT},
+    {"random", FOFS(random), F_FLOAT},
+    {"count", FOFS(count), F_INT},
+    {"health", FOFS(health), F_INT},
+    {"dmg", FOFS(damage), F_INT},
+    {"angles", FOFS(s.angles), F_VECTOR},
+    {"angle", FOFS(s.angles), F_ANGLEHACK},
+    {"targetShaderName", FOFS(targetShaderName), F_STRING},
+    {"targetShaderNewName", FOFS(targetShaderNewName), F_STRING},
+#ifdef TA_WEAPSYS // WIF_CUTS
+	{"mustcut", FOFS(mustcut), F_INT},
+#endif
 
 	{NULL}
 };
@@ -140,6 +146,15 @@ void SP_func_button (gentity_t *ent);
 void SP_func_door (gentity_t *ent);
 void SP_func_train (gentity_t *ent);
 void SP_func_timer (gentity_t *self);
+#ifdef TA_ENTSYS // BREAKABLE
+void SP_func_breakable (gentity_t *self);
+#endif
+#ifdef TA_ENTSYS // FUNC_USE
+void SP_func_use (gentity_t *ent);
+#endif
+#ifdef TA_ENTSYS // FUNC_VOODOO
+void SP_func_voodoo (gentity_t *ent);
+#endif
 
 void SP_trigger_always (gentity_t *ent);
 void SP_trigger_multiple (gentity_t *ent);
@@ -160,6 +175,9 @@ void SP_target_kill (gentity_t *ent);
 void SP_target_position (gentity_t *ent);
 void SP_target_location (gentity_t *ent);
 void SP_target_push (gentity_t *ent);
+#ifdef TA_SP
+void SP_target_level_end (gentity_t *ent);
+#endif
 
 void SP_light (gentity_t *self);
 void SP_info_null (gentity_t *self);
@@ -169,9 +187,15 @@ void SP_path_corner (gentity_t *self);
 
 void SP_misc_teleporter_dest (gentity_t *self);
 void SP_misc_model(gentity_t *ent);
+#ifdef TA_ENTSYS // MISC_OBJECT
+void SP_misc_object(gentity_t *ent);
+#endif
 void SP_misc_portal_camera(gentity_t *ent);
 void SP_misc_portal_surface(gentity_t *ent);
 
+#ifdef TA_WEAPSYS
+void SP_misc_shooter( gentity_t *ent );
+#endif
 void SP_shooter_rocket( gentity_t *ent );
 void SP_shooter_plasma( gentity_t *ent );
 void SP_shooter_grenade( gentity_t *ent );
@@ -188,6 +212,22 @@ void SP_team_redobelisk( gentity_t *ent );
 void SP_team_neutralobelisk( gentity_t *ent );
 #endif
 void SP_item_botroam( gentity_t *ent ) { }
+#ifdef TA_PATHSYS
+void SP_path_start( gentity_t *ent );
+#elif !defined TA_PATHSYS
+void SP_npcpath( gentity_t *ent );
+#endif
+#ifdef TA_WEAPSYS
+void SP_weapon_random( gentity_t *ent );
+#endif
+#ifdef NIGHTSMODE
+void SP_nights_start( gentity_t *ent ); // Ideya Drone
+void SP_nights_target( gentity_t *ent ); // Ideya Capture
+#endif
+#ifdef TA_PATHSYS
+void SP_target_setpath( gentity_t *ent );
+#endif
+
 
 spawn_t	spawns[] = {
 	// info entities don't do anything at all, but provide positional
@@ -209,6 +249,15 @@ spawn_t	spawns[] = {
 	{"func_train", SP_func_train},
 	{"func_group", SP_info_null},
 	{"func_timer", SP_func_timer},			// rename trigger_timer?
+#ifdef TA_ENTSYS // BREAKABLE
+	{"func_breakable", SP_func_breakable},
+#endif
+#ifdef TA_ENTSYS // FUNC_USE
+	{"func_use", SP_func_use},
+#endif
+#ifdef TA_ENTSYS // FUNC_VOODOO
+	{"func_voodoo", SP_func_voodoo},
+#endif
 
 	// Triggers are brush objects that cause an effect when contacted
 	// by a living player, usually involving firing targets.
@@ -236,15 +285,31 @@ spawn_t	spawns[] = {
 	{"target_position", SP_target_position},
 	{"target_location", SP_target_location},
 	{"target_push", SP_target_push},
+#ifdef TA_SP
+	{"target_level_end", SP_target_level_end},
+#endif
 
 	{"light", SP_light},
 	{"path_corner", SP_path_corner},
+#ifdef TA_PATHSYS
+	{"path_start", SP_path_start},
+	{"path_point", SP_path_corner},
+	{"path_axis", SP_path_corner},
+	{"path_end", SP_path_corner},
+#endif
 
 	{"misc_teleporter_dest", SP_misc_teleporter_dest},
 	{"misc_model", SP_misc_model},
+#ifdef TA_ENTSYS // MISC_OBJECT
+	{"misc_gamemodel", SP_misc_object}, // Shows model in NetRadiant
+	{"misc_object", SP_misc_object},
+#endif
 	{"misc_portal_surface", SP_misc_portal_surface},
 	{"misc_portal_camera", SP_misc_portal_camera},
 
+#ifdef TA_WEAPSYS
+	{"misc_shooter", SP_misc_shooter},
+#endif
 	{"shooter_rocket", SP_shooter_rocket},
 	{"shooter_grenade", SP_shooter_grenade},
 	{"shooter_plasma", SP_shooter_plasma},
@@ -262,6 +327,20 @@ spawn_t	spawns[] = {
 #endif
 	{"item_botroam", SP_item_botroam},
 
+#ifdef TA_WEAPSYS
+	{"weapon_random", SP_weapon_random},
+#endif
+#if defined TA_NPCSYS && !defined TA_PATHSYS
+	{"npcpath", SP_npcpath},
+#endif
+#ifdef NIGHTSMODE
+	{"nights_start", SP_nights_start},
+	{"nights_target", SP_nights_target},
+#endif
+#ifdef TA_PATHSYS
+	{"target_setpath", SP_target_setpath},
+#endif
+
 	{NULL, 0}
 };
 
@@ -276,12 +355,46 @@ returning qfalse if not found
 qboolean G_CallSpawn( gentity_t *ent ) {
 	spawn_t	*s;
 	gitem_t	*item;
+#if defined TA_ITEMSYS || defined TA_NPCSYS
+	int i;
+#endif
 
 	if ( !ent->classname ) {
 		G_Printf ("G_CallSpawn: NULL classname\n");
 		return qfalse;
 	}
 
+
+#ifdef TA_NPCSYS
+	// check NPC spawn functions
+	for ( i = 1; i < BG_NumNPCs(); i++ ) {
+		if ( !strcmp(bg_npcinfo[i].classname, ent->classname) ) {
+			G_SpawnNPC( ent, &bg_npcinfo[i] );
+			return qtrue;
+		}
+	}
+#endif
+
+#ifdef IOQ3ZTM // LASERTAG
+	if (g_laserTag.integer) {
+		if ( !strcmp("weapon_random", ent->classname) ) {
+			return qfalse;
+		}
+	} else {
+#endif
+#ifdef TA_ITEMSYS
+	// check item spawn functions
+	for ( i = 1; i < BG_NumItems(); i++ ) {
+		item = &bg_iteminfo[i];
+		if ( item->classname[0] == '\0' ) {
+			continue;
+		}
+		if ( !strcmp(item->classname, ent->classname) ) {
+			G_SpawnItem( ent, item );
+			return qtrue;
+		}
+	}
+#else
 	// check item spawn functions
 	for ( item=bg_itemlist+1 ; item->classname ; item++ ) {
 		if ( !strcmp(item->classname, ent->classname) ) {
@@ -289,6 +402,10 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 			return qtrue;
 		}
 	}
+#endif
+#ifdef IOQ3ZTM // LASERTAG
+	}
+#endif
 
 	// check normal spawn functions
 	for ( s=spawns ; s->name ; s++ ) {
@@ -298,6 +415,16 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 			return qtrue;
 		}
 	}
+
+#ifdef TA_WEAPSYS
+	// Unknown weapon, spawn weapon_random
+	if (Q_stricmpn(ent->classname, "weapon_", 7) == 0)
+	{
+		G_Printf ("%s doesn't have a spawn function, using weapon_random instead\n", ent->classname);
+		SP_weapon_random(ent);
+		return qtrue;
+	}
+#endif
 	G_Printf ("%s doesn't have a spawn function\n", ent->classname);
 	return qfalse;
 }
@@ -406,11 +533,32 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	int			i;
 	gentity_t	*ent;
 	char		*s, *value, *gametypeName;
-	static char *gametypeNames[GT_MAX_GAME_TYPE] = {"ffa", "tournament", "single", "team", "ctf"
-#ifdef MISSIONPACK
-		, "oneflag", "obelisk", "harvester"
+	static char *gametypeNames[GT_MAX_GAME_TYPE] = {
+		"ffa",
+#ifdef TA_MISC // tornament to duel
+		"duel",
+#else
+		"tournament",
 #endif
-		};
+#ifdef TA_SP
+		"coop",
+#else
+		"single",
+#endif
+		"team",
+		"ctf",
+#ifdef MISSIONPACK
+		"oneflag",
+#ifdef TA_MISC // tornament to duel, obelisk to overload
+		"overload",
+#else
+		"obelisk",
+#endif
+#ifdef MISSIONPACK_HARVESTER
+		"harvester"
+#endif
+#endif
+	};
 
 	// get the next free entity
 	ent = G_Spawn();
@@ -420,7 +568,12 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	}
 
 	// check for "notsingle" flag
-	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
+#ifdef TA_SP
+	if ( g_singlePlayer.integer && g_gametype.integer == GT_SINGLE_PLAYER )
+#else
+	if ( g_gametype.integer == GT_SINGLE_PLAYER )
+#endif
+	{
 		G_SpawnInt( "notsingle", "0", &i );
 		if ( i ) {
 			ADJUST_AREAPORTAL();
@@ -445,6 +598,14 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		}
 	}
 
+#ifdef TURTLEARENA
+	G_SpawnInt( "notturtlearena", "0", &i );
+	if ( i ) {
+		ADJUST_AREAPORTAL();
+		G_FreeEntity( ent );
+		return;
+	}
+#else
 #ifdef MISSIONPACK
 	G_SpawnInt( "notta", "0", &i );
 	if ( i ) {
@@ -460,10 +621,42 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		return;
 	}
 #endif
+#endif
 
-	if( G_SpawnString( "gametype", NULL, &value ) ) {
+#ifdef TA_SP // ZTM: Support single player and coop separately.
+	if ( g_singlePlayer.integer && g_gametype.integer == GT_SINGLE_PLAYER )
+		gametypeName = "single";
+	else if ( g_gametype.integer >= 0 && g_gametype.integer < GT_MAX_GAME_TYPE ) {
+		gametypeName = gametypeNames[g_gametype.integer];
+	} else {
+		gametypeName = NULL;
+	}
+#endif
+
+#ifdef IOQ3ZTM // ZTM: Allow not spawning in only some gametypes. Copied from OpenArena (oax)
+	if( G_SpawnString( "!gametype", NULL, &value ) ) {
+#ifndef TA_SP
 		if( g_gametype.integer >= 0 && g_gametype.integer < GT_MAX_GAME_TYPE ) {
 			gametypeName = gametypeNames[g_gametype.integer];
+#endif
+
+			s = strstr( value, gametypeName );
+			if( s ) {
+				ADJUST_AREAPORTAL();
+				G_FreeEntity( ent );
+				return;
+			}
+#ifndef TA_SP
+		}
+#endif
+	}
+#endif
+
+	if( G_SpawnString( "gametype", NULL, &value ) ) {
+#ifndef TA_SP
+		if( g_gametype.integer >= 0 && g_gametype.integer < GT_MAX_GAME_TYPE ) {
+			gametypeName = gametypeNames[g_gametype.integer];
+#endif
 
 			s = strstr( value, gametypeName );
 			if( !s ) {
@@ -471,7 +664,9 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 				G_FreeEntity( ent );
 				return;
 			}
+#ifndef TA_SP
 		}
+#endif
 	}
 
 	// move editor origin to pos
@@ -596,12 +791,31 @@ void SP_worldspawn( void ) {
 
 	G_SpawnString( "gravity", "800", &s );
 	trap_Cvar_Set( "g_gravity", s );
+#ifdef IOQ3ZTM // Don't print message about map changing gravity.
+	G_CvarClearModification(&g_gravity);
+#endif
 
+#ifdef MISSIONPACK
 	G_SpawnString( "enableDust", "0", &s );
 	trap_Cvar_Set( "g_enableDust", s );
+#ifdef IOQ3ZTM // Don't print message about map changing dust.
+	G_CvarClearModification(&g_enableDust);
+#endif
 
 	G_SpawnString( "enableBreath", "0", &s );
 	trap_Cvar_Set( "g_enableBreath", s );
+#ifdef IOQ3ZTM // Don't print message about map changing breath.
+	G_CvarClearModification(&g_enableBreath);
+#endif
+#endif
+
+#ifdef TA_PATHSYS // 2DMODE
+	G_SpawnString( "2dmode", "0", &s );
+	trap_Cvar_Set( "g_2dmode", s );
+#ifdef IOQ3ZTM // Don't print message about map changing 2d mode.
+	G_CvarClearModification(&g_2dmode);
+#endif
+#endif
 
 #if 0 // ZTM: Currently game doesn't need the tracemap
 	level.mapcoordsValid = qfalse;

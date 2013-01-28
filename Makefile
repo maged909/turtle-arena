@@ -1,5 +1,5 @@
 #
-# Spearmint Makefile
+# Turtle Arena Makefile
 #
 # GNU Make required
 #
@@ -42,13 +42,99 @@ ifndef BUILD_BASEGAME
   BUILD_BASEGAME =
 endif
 ifndef BUILD_MISSIONPACK
-  BUILD_MISSIONPACK=
+  BUILD_MISSIONPACK=0
 endif
 ifndef BUILD_RENDERER_REND2
-  BUILD_RENDERER_REND2=
+  BUILD_RENDERER_REND2=0
 endif
 ifndef BUILD_FINAL
   BUILD_FINAL      =0
+endif
+
+
+###################################################################
+# Default Turtle Arena config
+#  - All of this can be overriden by Makefile.local
+###################################################################
+
+# Some of the defines aren't as independent as they should be, TA_WEAPSYS requires TA_PLAYERSYS, etc
+# Please note: TA_*SYS defines are general system changes, not 'totally' specifiy for Turtle Arena
+
+##### ioquake3 defines
+# RAVENMD4				Enable support for loading MDR models.
+# MISSIONPACK			Code for the official Quake III Arena expansion pack, Quake III: Team Arena.
+##### Split from MISSIONPACK define
+# MISSIONPACK_HUD		Use MISSIONPACK UI scripting in cgame for hud and menus.
+# MISSIONPACK_HARVESTER	Enable MISSIONPACK harvester gametype
+
+
+# Turtle Arena "general" defines
+#####
+# IOQ3ZTM				ZTurtleMan's misc changes and fixes to ioquake3 (might be q3 mod compatible)
+# IOQ3ZTM_NO_COMPAT		Changes that are not compatible with quake3 mods
+#
+#   DAMAGE_SKINS; Allows player skins to have shaders to use when damaged.
+#       Adds a new var "skinFraction" to entityState_t and refEntity_t
+#
+# IOQ3ZTM_NO_TEAM_MODEL	Removes team_model and team_headmodel cvars. (Could break Quake III: Team Arena and other mods?)
+#####
+# NOTRATEDM				Disable stuff in Quake3 engine that made it rated M. (default blood to off, remove gibs,
+#							remove strong lang) This however doesn't change the gamedata, like the botfiles strong lang,
+#							bloody textures, netgamers, etc NOTE: This can be defined without defining "NOBLOOD"
+#							ZTM: TODO: Rename this define to ...?
+# NOBLOOD				Removes blood. If this is defined, NOTRATEDM must also be defined.
+# TA_BLOOM				Post-process bloom light effect, based on code from OpenArena.
+#####
+# TA_ITEMSYS			Load items from external text files. Required for TA_WEAPSYS.
+# TA_ITEMSYS_USE_INTERNAL Use the internal item data. The data can be overriden by external items.
+# TA_WEAPSYS			This is the core changes to the weapon system
+#							loads the weapons from a text file, allowing for easy modifing,
+#							and new custom default weapons for players.
+# TA_WEAPSYS_EX			Changes from holding multiple weapons to only one default and one pickup.
+# TA_WEAPSYS_EX_COMPAT	Keeps compatibility with mods not using TA_WEAPSYS_EX
+# TA_GAME_MODELS		Allow "game" to use model tags. Player tags are used for melee weapon attacking.
+# TA_HOLDSYS			Allow players to hold multiple holdable items and change to any holdable.
+#							(Based on Q3's weapon changing)
+# TA_PLAYERSYS			Allows player config to be used in "game", allowing for per-player settings.
+# TA_PATHSYS			General path system using entities like path_corner
+# TA_ENTSYS				Adds new entities and allows all ET_MOVER entities to be breakable.
+# TA_NPCSYS   			WIP NPC system, based on TDC_NPC system and code in Quake3
+# TA_ATMEFFECTS			TODO: Atmospheric effects.
+# TA_SUPPORTQ3			Support falling back to Quake3 player tags, shader names, and stuff...
+#							Currently required as my players use Q3 tag_weapon instead of Turtle Arena tag_hand_primary...
+# TA_SPLITVIEW			Allow a single game client to connect and play using multiple local clients, commonly called splitscreen.
+#						TODO: Split view system for viewing multiple network clients at once.
+
+
+# Turtle Arena specific defines
+#####
+# TURTLEARENA			Turtle Arena game logic changes
+# TA_MISC				Stuff that I don't want in ioq3ztm, but would use in another standalone mod
+#							(Like a NiGHTS into Dreams clone or Sonic Robo Blast Arena...)
+# TA_SP					Single player / co-op mode code
+# TA_DATA				Changes for Turtle Arena data.
+#####
+# NIGHTSMODE			Hardly started NiGHTS into Dreams mode.
+
+BUILD_DEFINES = -DNOTRATEDM -DNOBLOOD \
+					-DIOQ3ZTM -DIOQ3ZTM_NO_COMPAT -DIOQ3ZTM_NO_TEAM_MODEL \
+					-DTA_HOLDSYS -DTA_ITEMSYS \
+					-DTA_WEAPSYS -DTA_PLAYERSYS \
+					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_NPCSYS -DTA_PATHSYS \
+					-DTA_WEAPSYS_EX_COMPAT \
+					-DTA_BLOOM -DTA_SPLITVIEW
+
+BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \
+					-DTA_WEAPSYS_EX -DTA_DATA \
+					-DNIGHTSMODE
+
+# Use model tags for true melee attacking
+DED_USE_MODELS=1
+BUILD_DEFINES += -DTA_GAME_MODELS
+
+# Turtle Arena currently just keeps renderer internal
+ifneq ($(USE_RENDERER_DLOPEN), 1)
+	USE_RENDERER_DLOPEN=0
 endif
 
 #############################################################################
@@ -90,23 +176,23 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=1.36
+VERSION=0.7
 endif
 
 ifndef CLIENTBIN
-CLIENTBIN=spearmint
+CLIENTBIN=turtlearena
 endif
 
 ifndef SERVERBIN
-SERVERBIN=spearmint-server
+SERVERBIN=turtlearena-server
 endif
 
 ifndef BASEGAME
-BASEGAME=baseq3
+BASEGAME=base
 endif
 
 ifndef BASEGAME_CFLAGS
-BASEGAME_CFLAGS=
+BASEGAME_CFLAGS=-DMISSIONPACK
 endif
 
 ifndef MISSIONPACK
@@ -114,7 +200,7 @@ MISSIONPACK=missionpack
 endif
 
 ifndef MISSIONPACK_CFLAGS
-MISSIONPACK_CFLAGS=-DMISSIONPACK -DMISSIONPACK_HUD
+MISSIONPACK_CFLAGS=-DMISSIONPACK -DMISSIONPACK_HUD # -DMISSIONPACK_HARVESTER
 endif
 
 # Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame/ui.
@@ -123,7 +209,7 @@ BUILD_DEFINES =
 endif
 
 ifndef COPYDIR
-COPYDIR="/usr/local/games/quake3"
+COPYDIR="/usr/local/games/turtlearena"
 endif
 
 ifndef COPYBINDIR
@@ -170,16 +256,16 @@ ifndef USE_CODEC_VORBIS
 USE_CODEC_VORBIS=1
 endif
 
+ifndef USE_CODEC_THEORA
+USE_CODEC_THEORA=0
+endif
+
 ifndef USE_MUMBLE
 USE_MUMBLE=1
 endif
 
 ifndef USE_VOIP
 USE_VOIP=1
-endif
-
-ifndef USE_FREETYPE
-USE_FREETYPE=1
 endif
 
 ifndef USE_INTERNAL_SPEEX
@@ -255,6 +341,7 @@ SDLHDIR=$(MOUNT_DIR)/SDL12
 LIBSDIR=$(MOUNT_DIR)/libs
 OGGDIR=$(MOUNT_DIR)/libogg
 VORBISDIR=$(MOUNT_DIR)/libvorbis
+THEORADIR=$(MOUNT_DIR)/libtheora
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -387,14 +474,20 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     endif
   endif
 
+  ifeq ($(USE_CODEC_THEORA),1)
+    CLIENT_LIBS += -ltheora
+  endif
+
   ifeq ($(USE_MUMBLE),1)
     CLIENT_LIBS += -lrt
   endif
 
-  ifeq ($(USE_FREETYPE),1)
-    ifneq ($(USE_INTERNAL_FREETYPE), 1)
-      BASE_CFLAGS += $(FREETYPE_CFLAGS)
-    endif
+  ifeq ($(USE_LOCAL_HEADERS),1)
+    CLIENT_CFLAGS += -I$(SDLHDIR)/include
+  endif
+
+  ifneq ($(USE_INTERNAL_FREETYPE), 1)
+    BASE_CFLAGS += $(FREETYPE_CFLAGS)
   endif
 
   ifeq ($(ARCH),i386)
@@ -451,10 +544,12 @@ ifeq ($(PLATFORM),darwin)
     endif
   endif
 
-  ifeq ($(USE_FREETYPE),1)
-    ifneq ($(USE_INTERNAL_FREETYPE), 1)
-      BASE_CFLAGS += $(FREETYPE_CFLAGS)
-    endif
+  ifneq ($(USE_INTERNAL_FREETYPE), 1)
+    BASE_CFLAGS += $(FREETYPE_CFLAGS)
+  endif
+
+  ifeq ($(USE_CODEC_THEORA),1)
+    CLIENT_LIBS += -ltheora
   endif
 
   BASE_CFLAGS += -D_THREAD_SAFE=1
@@ -541,11 +636,9 @@ ifeq ($(PLATFORM),mingw32)
   CLIENT_LDFLAGS += -mwindows
   CLIENT_LIBS = -lgdi32 -lole32
   RENDERER_LIBS = -lgdi32 -lole32 -lopengl32
-
-  ifeq ($(USE_FREETYPE),1)
-    ifneq ($(USE_INTERNAL_FREETYPE),1)
-      BASE_CFLAGS += -Ifreetype2
-    endif
+  
+  ifneq ($(USE_INTERNAL_FREETYPE),1)
+    BASE_CFLAGS += -Ifreetype2
   endif
 
   ifeq ($(ARCH),x64)
@@ -594,11 +687,22 @@ ifeq ($(PLATFORM),mingw32)
       RENDERER_LIBS += $(WINLIBDIR)/libSDL.dll.a
       SDLDLL=SDL.dll
     endif
+
+    # Extra libs, easier to just include in source tree
+    ifeq ($(USE_CODEC_THEORA),1)
+      CLIENT_CFLAGS += -I$(THEORADIR)/include
+      CLIENT_LIBS += $(WINLIBDIR)/libtheora.a
+    endif
+
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)
     CLIENT_LIBS += $(SDL_LIBS)
     RENDERER_LIBS += $(SDL_LIBS)
     SDLDLL=SDL.dll
+
+    ifeq ($(USE_CODEC_THEORA),1)
+      CLIENT_LIBS += -ltheora
+    endif
   endif
 
 else # ifeq mingw32
@@ -697,6 +801,10 @@ ifeq ($(PLATFORM),openbsd)
     endif
   endif
 
+  ifeq ($(USE_CODEC_THEORA),1)
+    CLIENT_LIBS += -ltheora
+  endif
+
   ifeq ($(USE_CURL),1)
     ifneq ($(USE_CURL_DLOPEN),1)
       CLIENT_LIBS += -lcurl
@@ -768,7 +876,7 @@ ifeq ($(PLATFORM),sunos)
   CC=gcc
   INSTALL=ginstall
   MKDIR=gmkdir
-  COPYDIR="/usr/local/share/games/quake3"
+  COPYDIR="/usr/local/share/games/turtlearena"
 
   ifneq (,$(findstring i86pc,$(shell uname -m)))
     ARCH=i386
@@ -822,6 +930,77 @@ ifeq ($(PLATFORM),sunos)
 else # ifeq sunos
 
 #############################################################################
+# SETUP AND BUILD -- wii
+#############################################################################
+
+ifeq ($(PLATFORM),wii)
+
+# $(DEVKITPPC)/wii_rules
+ifeq ($(strip $(DEVKITPPC)),)
+  $(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPro/devkitPPC)
+endif
+
+export LIBOGC_INC :=	$(DEVKITPRO)/libogc/include
+export LIBOGC_LIB :=	$(DEVKITPRO)/libogc/lib/wii
+
+  MACHDEP =  -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float
+
+# $(DEVKITPPC)/base_rules
+#---------------------------------------------------------------------------------
+# path to tools 
+#---------------------------------------------------------------------------------
+export PORTLIBS := $(DEVKITPRO)/portlibs/ppc
+export PATH := $(DEVKITPPC)/bin:$(PORTLIBS)/bin:$(PATH)
+
+#---------------------------------------------------------------------------------
+# the prefix on the compiler executables
+#---------------------------------------------------------------------------------
+export PREFIX	:=	powerpc-eabi-
+
+export AS	:=	$(PREFIX)as
+export CC	:=	$(PREFIX)gcc
+export CXX	:=	$(PREFIX)g++
+export AR	:=	$(PREFIX)ar
+export OBJCOPY	:=	$(PREFIX)objcopy
+
+CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(LIBOGC_INC)
+CXXFLAGS	=	$(CFLAGS)
+
+LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(B)/$(notdir $@).map
+
+LIBPATHS = -L$(LIBOGC_LIB)
+
+  LIBS = -lwiiuse -lbte -lfat -lwiikeyboard -logc -lm
+
+  HAVE_VM_COMPILED = true
+
+  # No OpenAL or cURL support
+  USE_OPENAL=0
+  USE_CURL=0
+
+  # Doesn't support native libs
+  BUILD_GAME_SO=0
+  USE_MUMBLE=0
+  USE_OPENAL_DLOPEN=0
+  USE_CURL_DLOPEN=0
+
+  # Need to add internal libtheora
+  USE_CODEC_THEORA=0
+
+  ARCH=ppc
+
+  FULLBINEXT=.dol
+
+  BASE_CFLAGS += -DNO_NATIVE_SUPPORT -MMD -MP -MF -DDUMMYFLAG
+  SERVER_CFLAGS =
+  CLIENT_CFLAGS = -I$(LIBOGC_INC)/SDL
+
+  CLIENT_LDFLAGS += $(LDFLAGS)
+  CLIENT_LIBS +=$(SDL_LIBS) -lgl2gx
+
+else # ifeq wii
+
+#############################################################################
 # SETUP AND BUILD -- GENERIC
 #############################################################################
   BASE_CFLAGS=
@@ -839,6 +1018,7 @@ endif #OpenBSD
 endif #NetBSD
 endif #IRIX
 endif #SunOS
+endif #wii
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
@@ -846,10 +1026,6 @@ ifneq ($(HAVE_VM_COMPILED),true)
 endif
 
 TARGETS =
-
-ifeq ($(USE_FREETYPE),1)
-  BASE_CFLAGS += -DBUILD_FREETYPE
-endif
 
 ifndef FULLBINEXT
   FULLBINEXT=.$(ARCH)$(BINEXT)
@@ -927,6 +1103,10 @@ ifeq ($(USE_CODEC_VORBIS),1)
   CLIENT_CFLAGS += -DUSE_CODEC_VORBIS
 endif
 
+ifeq ($(USE_CODEC_THEORA),1)
+  CLIENT_CFLAGS += -DUSE_CIN_THEORA
+endif
+
 ifeq ($(USE_RENDERER_DLOPEN),1)
   CLIENT_CFLAGS += -DUSE_RENDERER_DLOPEN
 endif
@@ -959,13 +1139,11 @@ else
   RENDERER_LIBS += -ljpeg
 endif
 
-ifeq ($(USE_FREETYPE),1)
 ifeq ($(USE_INTERNAL_FREETYPE),1)
   BASE_CFLAGS += -I$(FTDIR)/include \
 					-DFT2_BUILD_LIBRARY
 else
   RENDERER_LIBS += -lfreetype
-endif
 endif
 
 ifeq ($(USE_CODEC_VORBIS),1)
@@ -1135,7 +1313,7 @@ release:
 targets: makedirs
 	@echo ""
 	@echo "Building $(CLIENTBIN) in $(B):"
-	@echo "  IOQ3_REVISION: $(IOQ3_REVISION)"
+	@echo "  IOQ3ZTM_REVISION: $(IOQ3ZTM_REVISION)"
 	@echo "  PLATFORM: $(PLATFORM)"
 	@echo "  ARCH: $(ARCH)"
 	@echo "  VERSION: $(VERSION)"
@@ -1400,6 +1578,7 @@ $(Q3ASM): $(Q3ASMOBJ)
 Q3OBJ = \
   $(B)/client/cl_cgame.o \
   $(B)/client/cl_cin.o \
+  $(B)/client/cl_cin_ogm.o \
   $(B)/client/cl_console.o \
   $(B)/client/cl_input.o \
   $(B)/client/cl_keys.o \
@@ -1609,6 +1788,7 @@ Q3R2STRINGOBJ = \
 Q3ROBJ = \
   $(B)/renderer/tr_animation.o \
   $(B)/renderer/tr_backend.o \
+  $(B)/renderer/tr_bloom.o \
   $(B)/renderer/tr_bsp.o \
   $(B)/renderer/tr_cmds.o \
   $(B)/renderer/tr_curve.o \
@@ -1652,10 +1832,18 @@ ifneq ($(USE_RENDERER_DLOPEN), 0)
     $(B)/renderer/puff.o \
     $(B)/renderer/q_math.o \
     $(B)/renderer/tr_subs.o
+
+#ZTM: if TA_GAME_MODELS
+# client (with built in server) needs model loading too
+ifeq ($(DED_USE_MODELS),1)
+Q3OBJ += \
+      $(B)/ded/tr_model.o \
+      $(B)/ded/tr_model_iqm.o
+endif
 endif
 
 ifneq ($(USE_INTERNAL_JPEG),0)
-  JPGOBJ = \
+  JPGOBJ += \
     $(B)/renderer/jaricom.o \
     $(B)/renderer/jcapimin.o \
     $(B)/renderer/jcapistd.o \
@@ -1704,7 +1892,6 @@ ifneq ($(USE_INTERNAL_JPEG),0)
     $(B)/renderer/jutils.o
 endif
 
-ifeq ($(USE_FREETYPE),1)
 ifneq ($(USE_INTERNAL_FREETYPE),0)
   FTOBJ += \
     $(B)/renderer/ftinit.o \
@@ -1731,7 +1918,6 @@ ifneq ($(USE_INTERNAL_FREETYPE),0)
     $(B)/renderer/type1cid.o \
     $(B)/renderer/type42.o \
     $(B)/renderer/winfnt.o
-endif
 endif
 
 ifeq ($(ARCH),i386)
@@ -1813,10 +1999,13 @@ endif
 ifeq ($(USE_INTERNAL_ZLIB),1)
 Q3OBJ += \
   $(B)/client/adler32.o \
+  $(B)/client/compress.o \
   $(B)/client/crc32.o \
+  $(B)/client/deflate.o \
   $(B)/client/inffast.o \
   $(B)/client/inflate.o \
   $(B)/client/inftrees.o \
+  $(B)/client/trees.o \
   $(B)/client/zutil.o
 endif
 
@@ -1889,6 +2078,17 @@ ifeq ($(USE_MUMBLE),1)
     $(B)/client/libmumblelink.o
 endif
 
+ifeq ($(PLATFORM),wii)
+$(B)/$(CLIENTBIN).dol: $(B)/$(CLIENTBIN).elf
+	$(echo_cmd) "ELF2DOL $@"
+	$(Q)elf2dol $< $@
+
+$(B)/$(CLIENTBIN).elf: $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ) $(LIBSDLMAIN)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(LIBPATHS) \
+		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ) \
+		$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
+else
 ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
@@ -1924,6 +2124,7 @@ ifneq ($(strip $(LIBSDLMAINSRC)),)
 $(LIBSDLMAIN) : $(LIBSDLMAINSRC)
 	cp $< $@
 	ranlib $@
+endif
 endif
 endif
 
@@ -2031,6 +2232,13 @@ ifeq ($(ARCH),x64)
       $(B)/ded/ftola.o
 endif
 
+#ZTM: if TA_GAME_MODELS
+ifeq ($(DED_USE_MODELS),1)
+Q3DOBJ += \
+      $(B)/ded/tr_model.o \
+      $(B)/ded/tr_model_iqm.o
+endif
+
 ifeq ($(USE_INTERNAL_ZLIB),1)
 Q3DOBJ += \
   $(B)/ded/adler32.o \
@@ -2107,9 +2315,20 @@ ifeq ($(PLATFORM),darwin)
     $(B)/ded/sys_osx.o
 endif
 
+
+ifeq ($(PLATFORM),wii)
+$(B)/$(SERVERBIN).dol: $(B)/$(SERVERBIN).elf
+	$(echo_cmd) "ELF2DOL $@"
+	$(Q)elf2dol $< $@
+
+$(B)/$(SERVERBIN).elf: $(Q3DOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -o $@
+else
 $(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(Q3DOBJ) $(LIBS)
+endif
 
 
 
@@ -2253,6 +2472,11 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
 
+#ZTM: Files I added.
+Q3GOBJ_ += $(B)/$(BASEGAME)/game/g_save.o \
+  $(B)/$(BASEGAME)/game/g_paths.o \
+  $(B)/$(BASEGAME)/game/g_npcsys.o
+
 Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
 Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
@@ -2305,6 +2529,11 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/qcommon/q_math.o \
   $(B)/$(MISSIONPACK)/qcommon/q_shared.o
 
+#ZTM: Files I added.
+MPGOBJ_ += $(B)/$(MISSIONPACK)/game/g_save.o \
+  $(B)/$(MISSIONPACK)/game/g_paths.o \
+  $(B)/$(MISSIONPACK)/game/g_npcsys.o
+
 MPGOBJ = $(MPGOBJ_) $(B)/$(MISSIONPACK)/game/g_syscalls.o
 MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
 
@@ -2338,16 +2567,19 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_gameinfo.o \
   $(B)/$(BASEGAME)/ui/ui_ingame.o \
   $(B)/$(BASEGAME)/ui/ui_ingame_selectplayer.o \
+  $(B)/$(BASEGAME)/ui/ui_ingame_server.o \
   $(B)/$(BASEGAME)/ui/ui_joystick.o \
   $(B)/$(BASEGAME)/ui/ui_loadconfig.o \
   $(B)/$(BASEGAME)/ui/ui_menu.o \
   $(B)/$(BASEGAME)/ui/ui_mfield.o \
   $(B)/$(BASEGAME)/ui/ui_mods.o \
+  $(B)/$(BASEGAME)/ui/ui_multiplayer.o \
   $(B)/$(BASEGAME)/ui/ui_network.o \
   $(B)/$(BASEGAME)/ui/ui_options.o \
   $(B)/$(BASEGAME)/ui/ui_playermodel.o \
   $(B)/$(BASEGAME)/ui/ui_players.o \
   $(B)/$(BASEGAME)/ui/ui_playersettings.o \
+  $(B)/$(BASEGAME)/ui/ui_playersetup.o \
   $(B)/$(BASEGAME)/ui/ui_preferences.o \
   $(B)/$(BASEGAME)/ui/ui_qmenu.o \
   $(B)/$(BASEGAME)/ui/ui_removebots.o \
@@ -2360,6 +2592,7 @@ Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_sparena.o \
   $(B)/$(BASEGAME)/ui/ui_specifyserver.o \
   $(B)/$(BASEGAME)/ui/ui_splevel.o \
+  $(B)/$(BASEGAME)/ui/ui_spplayer.o \
   $(B)/$(BASEGAME)/ui/ui_sppostgame.o \
   $(B)/$(BASEGAME)/ui/ui_spskill.o \
   $(B)/$(BASEGAME)/ui/ui_startserver.o \
@@ -2570,6 +2803,12 @@ $(B)/ded/%.o: $(SYSDIR)/%.rc
 
 $(B)/ded/%.o: $(NDIR)/%.c
 	$(DO_DED_CC)
+
+# ZTM: TA_GAME_MODELS ded
+ifeq ($(DED_USE_MODELS),1)
+$(B)/ded/%.o: $(RDIR)/%.c
+	$(DO_DED_CC)
+endif
 
 # Extra dependencies to ensure the git version is incorporated
 ifeq ($(USE_GIT),1)

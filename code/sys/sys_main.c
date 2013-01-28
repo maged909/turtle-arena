@@ -55,6 +55,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
+#ifdef __wii__
+void Sys_Wait(const char *message);
+void Sys_BeginFrame(void);
+void Sys_EndFrame(void);
+#endif
+
 static char binaryPath[ MAX_OSPATH ] = { 0 };
 static char installPath[ MAX_OSPATH ] = { 0 };
 
@@ -225,6 +231,11 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode )
 		if( pidFile != NULL )
 			remove( pidFile );
 	}
+#ifdef __wii__
+	else {
+		Sys_Wait("Sys_Exit: abnormal exit!");
+	}
+#endif
 
 	Sys_PlatformExit( );
 
@@ -411,6 +422,7 @@ int Sys_FileTime( char *path )
 	return buf.st_mtime;
 }
 
+#ifndef NO_NATIVE_SUPPORT
 /*
 =================
 Sys_UnloadDll
@@ -519,6 +531,7 @@ void *Sys_LoadGameDll(const char *name,
 
 	return libHandle;
 }
+#endif
 
 /*
 =================
@@ -646,7 +659,11 @@ int main( int argc, char **argv )
 	Com_Init( commandLine );
 	NET_Init( );
 
+#ifdef __wii__
+	wiiCON_Init( );
+#else
 	CON_Init( );
+#endif
 
 	signal( SIGILL, Sys_SigHandler );
 	signal( SIGFPE, Sys_SigHandler );
@@ -654,10 +671,20 @@ int main( int argc, char **argv )
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
 
+#ifdef __wii__
+	Sys_Wait("Ready to enter main loop");
+#endif
+
 	while( 1 )
 	{
+#ifdef __wii__
+		Sys_BeginFrame( );
+#endif
 		IN_Frame( );
 		Com_Frame( );
+#ifdef __wii__
+		Sys_EndFrame( );
+#endif
 	}
 
 	return 0;

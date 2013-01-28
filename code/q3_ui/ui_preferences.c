@@ -47,10 +47,14 @@ GAME OPTIONS MENU
 
 #define PREFERENCES_X_POS		360
 
+#ifndef TURTLEARENA
 #define ID_CROSSHAIR			127
+#endif
 #define ID_SIMPLEITEMS			128
 #define ID_HIGHQUALITYSKY		129
+#ifndef TURTLEARENA
 #define ID_EJECTINGBRASS		130
+#endif
 #define ID_WALLMARKS			131
 #define ID_DYNAMICLIGHTS		132
 #define ID_IDENTIFYTARGET		133
@@ -62,7 +66,22 @@ GAME OPTIONS MENU
 #define ID_ATMEFFECTS			139
 #define ID_BACK					140
 
+#ifdef IOQ3ZTM // CONTENT_FILTERING
+#ifndef NOBLOOD
+#define ID_SHOWBLOOD			141
+#endif
+#ifndef NOTRATEDM
+#define ID_SHOWGIBS				142
+#endif
+#endif
+
+#ifndef TURTLEARENA
+#ifdef TA_DATA
+#define	NUM_CROSSHAIRS			4
+#else
 #define	NUM_CROSSHAIRS			10
+#endif
+#endif
 
 
 typedef struct {
@@ -72,9 +91,13 @@ typedef struct {
 	menubitmap_s		framel;
 	menubitmap_s		framer;
 
+#ifndef TURTLEARENA
 	menulist_s			crosshair;
+#endif
 	menuradiobutton_s	simpleitems;
+#ifndef TURTLEARENA
 	menuradiobutton_s	brass;
+#endif
 	menuradiobutton_s	wallmarks;
 	menuradiobutton_s	dynamiclights;
 	menuradiobutton_s	identifytarget;
@@ -85,9 +108,19 @@ typedef struct {
 	menuradiobutton_s	allowdownload;
 	menulist_s			splitvertical;
 	menulist_s			atmeffects;
+#ifdef IOQ3ZTM // CONTENT_FILTERING
+#ifndef NOBLOOD
+	menuradiobutton_s	showblood;
+#endif
+#ifndef NOTRATEDM
+	menuradiobutton_s	showgibs;
+#endif
+#endif
 	menubitmap_s		back;
 
+#ifndef TURTLEARENA
 	qhandle_t			crosshairShader[NUM_CROSSHAIRS];
+#endif
 } preferences_t;
 
 static preferences_t s_preferences;
@@ -117,15 +150,23 @@ static const char *atmeffects_names[] =
 };
 
 static void Preferences_SetMenuItems( void ) {
+#ifndef TURTLEARENA
 	s_preferences.crosshair.curvalue		= (int)trap_Cvar_VariableValue( "cg_drawCrosshair" ) % NUM_CROSSHAIRS;
+#endif
 	s_preferences.simpleitems.curvalue		= trap_Cvar_VariableValue( "cg_simpleItems" ) != 0;
+#ifndef TURTLEARENA
 	s_preferences.brass.curvalue			= trap_Cvar_VariableValue( "cg_brassTime" ) != 0;
+#endif
 	s_preferences.wallmarks.curvalue		= trap_Cvar_VariableValue( "cg_marks" ) != 0;
 	s_preferences.identifytarget.curvalue	= trap_Cvar_VariableValue( "cg_drawCrosshairNames" ) != 0;
 	s_preferences.dynamiclights.curvalue	= trap_Cvar_VariableValue( "r_dynamiclight" ) != 0;
 	s_preferences.highqualitysky.curvalue	= trap_Cvar_VariableValue ( "r_fastsky" ) == 0;
 	s_preferences.synceveryframe.curvalue	= trap_Cvar_VariableValue( "r_finish" ) != 0;
+#ifdef TURTLEARENA // NO_CGFORCEMODLE
+	s_preferences.forcemodel.curvalue		= trap_Cvar_VariableValue( "cg_deferPlayers" ) != 0;
+#else
 	s_preferences.forcemodel.curvalue		= trap_Cvar_VariableValue( "cg_forcemodel" ) != 0;
+#endif
 	s_preferences.drawteamoverlay.curvalue	= Com_Clamp( 0, 3, trap_Cvar_VariableValue( "cg_drawTeamOverlay" ) );
 	s_preferences.allowdownload.curvalue	= trap_Cvar_VariableValue( "cl_allowDownload" ) != 0;
 	s_preferences.splitvertical.curvalue	= trap_Cvar_VariableValue( "cg_splitviewVertical" ) != 0;
@@ -135,6 +176,15 @@ static void Preferences_SetMenuItems( void ) {
 		s_preferences.atmeffects.curvalue = 0;
 	else if (s_preferences.atmeffects.curvalue > 2)
 		s_preferences.atmeffects.curvalue = 2;
+
+#ifdef IOQ3ZTM // CONTENT_FILTERING
+#ifndef NOBLOOD
+	s_preferences.showblood.curvalue	= trap_Cvar_VariableValue( "com_blood" ) != 0;
+#endif
+#ifndef NOTRATEDM
+	s_preferences.showgibs.curvalue	= trap_Cvar_VariableValue( "cg_gibs" ) != 0;
+#endif
+#endif
 }
 
 
@@ -144,9 +194,11 @@ static void Preferences_Event( void* ptr, int notification ) {
 	}
 
 	switch( ((menucommon_s*)ptr)->id ) {
+#ifndef TURTLEARENA
 	case ID_CROSSHAIR:
 		trap_Cvar_SetValue( "cg_drawCrosshair", s_preferences.crosshair.curvalue );
 		break;
+#endif
 
 	case ID_SIMPLEITEMS:
 		trap_Cvar_SetValue( "cg_simpleItems", s_preferences.simpleitems.curvalue );
@@ -156,12 +208,14 @@ static void Preferences_Event( void* ptr, int notification ) {
 		trap_Cvar_SetValue( "r_fastsky", !s_preferences.highqualitysky.curvalue );
 		break;
 
+#ifndef TURTLEARENA
 	case ID_EJECTINGBRASS:
 		if ( s_preferences.brass.curvalue )
 			trap_Cvar_Reset( "cg_brassTime" );
 		else
 			trap_Cvar_SetValue( "cg_brassTime", 0 );
 		break;
+#endif
 
 	case ID_WALLMARKS:
 		trap_Cvar_SetValue( "cg_marks", s_preferences.wallmarks.curvalue );
@@ -180,7 +234,11 @@ static void Preferences_Event( void* ptr, int notification ) {
 		break;
 
 	case ID_FORCEMODEL:
+#ifdef TURTLEARENA // NO_CGFORCEMODLE
+		trap_Cvar_SetValue( "cg_deferPlayers", s_preferences.forcemodel.curvalue );
+#else
 		trap_Cvar_SetValue( "cg_forcemodel", s_preferences.forcemodel.curvalue );
+#endif
 		break;
 
 	case ID_DRAWTEAMOVERLAY:
@@ -200,6 +258,19 @@ static void Preferences_Event( void* ptr, int notification ) {
 		trap_Cvar_SetValue( "cg_atmosphericEffects", (float)s_preferences.atmeffects.curvalue/2.0f );
 		break;
 
+#ifdef IOQ3ZTM // CONTENT_FILTERING
+#ifndef NOBLOOD
+	case ID_SHOWBLOOD:
+		trap_Cvar_SetValue( "com_blood", s_preferences.showblood.curvalue );
+		break;
+#endif
+#ifndef NOTRATEDM
+	case ID_SHOWGIBS:
+		trap_Cvar_SetValue( "cg_gibs", s_preferences.showgibs.curvalue );
+		break;
+#endif
+#endif
+
 	case ID_BACK:
 		UI_PopMenu();
 		break;
@@ -207,6 +278,7 @@ static void Preferences_Event( void* ptr, int notification ) {
 }
 
 
+#ifndef TURTLEARENA
 /*
 =================
 Crosshair_Draw
@@ -254,6 +326,7 @@ static void Crosshair_Draw( void *self ) {
 	}
 	UI_DrawHandlePic( x + SMALLCHAR_WIDTH, y - 4, 24, 24, s_preferences.crosshairShader[s->curvalue] );
 }
+#endif
 
 
 static void Preferences_MenuInit( void ) {
@@ -270,7 +343,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.banner.generic.x	   = 320;
 	s_preferences.banner.generic.y	   = 16;
 	s_preferences.banner.string		   = "GAME OPTIONS";
-	s_preferences.banner.color         = color_white;
+	s_preferences.banner.color         = text_banner_color;
 	s_preferences.banner.style         = UI_CENTER;
 
 	s_preferences.framel.generic.type  = MTYPE_BITMAP;
@@ -290,6 +363,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.framer.height  	   = 334;
 
 	y = 144;
+#ifndef TURTLEARENA
 	s_preferences.crosshair.generic.type		= MTYPE_SPINCONTROL;
 	s_preferences.crosshair.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_NODEFAULTINIT|QMF_OWNERDRAW;
 	s_preferences.crosshair.generic.x			= PREFERENCES_X_POS;
@@ -305,6 +379,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.crosshair.numitems			= NUM_CROSSHAIRS;
 
 	y += BIGCHAR_HEIGHT+2+4;
+#endif
 	s_preferences.simpleitems.generic.type        = MTYPE_RADIOBUTTON;
 	s_preferences.simpleitems.generic.name	      = "Simple Items:";
 	s_preferences.simpleitems.generic.flags	      = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -322,6 +397,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.wallmarks.generic.x	          = PREFERENCES_X_POS;
 	s_preferences.wallmarks.generic.y	          = y;
 
+#ifndef TURTLEARENA
 	y += BIGCHAR_HEIGHT+2;
 	s_preferences.brass.generic.type              = MTYPE_RADIOBUTTON;
 	s_preferences.brass.generic.name	          = "Ejecting Brass:";
@@ -330,6 +406,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.brass.generic.id                = ID_EJECTINGBRASS;
 	s_preferences.brass.generic.x	              = PREFERENCES_X_POS;
 	s_preferences.brass.generic.y	              = y;
+#endif
 
 	y += BIGCHAR_HEIGHT+2;
 	s_preferences.dynamiclights.generic.type      = MTYPE_RADIOBUTTON;
@@ -369,7 +446,11 @@ static void Preferences_MenuInit( void ) {
 
 	y += BIGCHAR_HEIGHT+2;
 	s_preferences.forcemodel.generic.type     = MTYPE_RADIOBUTTON;
+#ifdef TURTLEARENA // NO_CGFORCEMODLE
+	s_preferences.forcemodel.generic.name	  = "Defer Player Loading:";
+#else
 	s_preferences.forcemodel.generic.name	  = "Force Player Models:";
+#endif
 	s_preferences.forcemodel.generic.flags	  = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 	s_preferences.forcemodel.generic.callback = Preferences_Event;
 	s_preferences.forcemodel.generic.id       = ID_FORCEMODEL;
@@ -415,6 +496,29 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.atmeffects.generic.y			= y;
 	s_preferences.atmeffects.itemnames			= atmeffects_names;
 
+#ifdef IOQ3ZTM // CONTENT_FILTERING
+#ifndef NOBLOOD
+	y += BIGCHAR_HEIGHT+2;
+	s_preferences.showblood.generic.type     = MTYPE_RADIOBUTTON;
+	s_preferences.showblood.generic.name	   = "Show Blood:";
+	s_preferences.showblood.generic.flags	   = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_preferences.showblood.generic.callback = Preferences_Event;
+	s_preferences.showblood.generic.id       = ID_SHOWBLOOD;
+	s_preferences.showblood.generic.x	       = PREFERENCES_X_POS;
+	s_preferences.showblood.generic.y	       = y;
+#endif
+#ifndef NOTRATEDM
+	y += BIGCHAR_HEIGHT+2;
+	s_preferences.showgibs.generic.type     = MTYPE_RADIOBUTTON;
+	s_preferences.showgibs.generic.name	   = "Show Gibs:";
+	s_preferences.showgibs.generic.flags	   = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_preferences.showgibs.generic.callback = Preferences_Event;
+	s_preferences.showgibs.generic.id       = ID_SHOWGIBS;
+	s_preferences.showgibs.generic.x	       = PREFERENCES_X_POS;
+	s_preferences.showgibs.generic.y	       = y;
+#endif
+#endif
+
 	y += BIGCHAR_HEIGHT+2;
 	s_preferences.back.generic.type	    = MTYPE_BITMAP;
 	s_preferences.back.generic.name     = ART_BACK0;
@@ -431,10 +535,14 @@ static void Preferences_MenuInit( void ) {
 	Menu_AddItem( &s_preferences.menu, &s_preferences.framel );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.framer );
 
+#ifndef TURTLEARENA
 	Menu_AddItem( &s_preferences.menu, &s_preferences.crosshair );
+#endif
 	Menu_AddItem( &s_preferences.menu, &s_preferences.simpleitems );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.wallmarks );
+#ifndef TURTLEARENA
 	Menu_AddItem( &s_preferences.menu, &s_preferences.brass );
+#endif
 	Menu_AddItem( &s_preferences.menu, &s_preferences.dynamiclights );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.identifytarget );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.highqualitysky );
@@ -444,6 +552,14 @@ static void Preferences_MenuInit( void ) {
 	Menu_AddItem( &s_preferences.menu, &s_preferences.allowdownload );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.splitvertical );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.atmeffects );
+#ifdef IOQ3ZTM // CONTENT_FILTERING
+#ifndef NOBLOOD
+	Menu_AddItem( &s_preferences.menu, &s_preferences.showblood );
+#endif
+#ifndef NOTRATEDM
+	Menu_AddItem( &s_preferences.menu, &s_preferences.showgibs );
+#endif
+#endif
 
 	Menu_AddItem( &s_preferences.menu, &s_preferences.back );
 
@@ -457,15 +573,19 @@ Preferences_Cache
 ===============
 */
 void Preferences_Cache( void ) {
+#ifndef TURTLEARENA
 	int		n;
+#endif
 
 	trap_R_RegisterShaderNoMip( ART_FRAMEL );
 	trap_R_RegisterShaderNoMip( ART_FRAMER );
 	trap_R_RegisterShaderNoMip( ART_BACK0 );
 	trap_R_RegisterShaderNoMip( ART_BACK1 );
+#ifndef TURTLEARENA
 	for( n = 0; n < NUM_CROSSHAIRS; n++ ) {
 		s_preferences.crosshairShader[n] = trap_R_RegisterShaderNoMip( va("gfx/2d/crosshair%c", 'a' + n ) );
 	}
+#endif
 }
 
 

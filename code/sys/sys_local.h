@@ -44,7 +44,11 @@ void IN_Restart( void );
 
 // Console
 void CON_Shutdown( void );
+#ifdef __wii__
+void wiiCON_Init( void );
+#else
 void CON_Init( void );
+#endif
 char *CON_Input( void );
 void CON_Print( const char *message );
 

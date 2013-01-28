@@ -105,7 +105,11 @@ typedef struct {
 // the parseEntities array must be large enough to hold PACKET_BACKUP frames of
 // entities, so that when a delta compressed message arives from the server
 // it can be un-deltad from the original 
+#ifdef IOQ3ZTM_NO_COMPAT // MORE_ENTITIES
+#define	MAX_PARSE_ENTITIES	(MAX_GENTITIES*2)
+#else
 #define	MAX_PARSE_ENTITIES	2048
+#endif
 
 extern int g_console_field_width;
 
@@ -116,7 +120,12 @@ typedef struct {
 	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 
 	// cgame communicates a few values to the client system
+#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT
 	int			cgameUserCmdValue;	// current weapon to add to usercmd_t
+#endif
+#ifdef TA_HOLDSYS/*2*/
+	int			cgameHoldableValue;	// current holdable to add to usercmd_t
+#endif
 	float		cgameSensitivity;
 
 	// the client maintains its own idea of view angles, which are
@@ -378,6 +387,12 @@ typedef struct {
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	font_t		fontTiny; // Used for demo recording and voip meter
+	font_t  	fontSmall; // Used by console
+	font_t		fontBig; // Used by "say" and "say_team" overlays
+	//font_t		fontGiant;
+#endif
 } clientStatic_t;
 
 extern	clientStatic_t		cls;
@@ -410,7 +425,9 @@ extern	cvar_t	*cl_freezeDemo;
 extern	cvar_t	*cl_yawspeed[CL_MAX_SPLITVIEW];
 extern	cvar_t	*cl_pitchspeed[CL_MAX_SPLITVIEW];
 extern	cvar_t	*cl_anglespeedkey[CL_MAX_SPLITVIEW];
+#ifndef TURTLEARENA // ALWAYS_RUN
 extern	cvar_t	*cl_run[CL_MAX_SPLITVIEW];
+#endif
 
 extern	cvar_t	*cl_sensitivity;
 extern	cvar_t	*cl_freelook;
@@ -452,6 +469,18 @@ extern	cvar_t	*cl_lanForcePackets;
 extern	cvar_t	*cl_autoRecordDemo;
 
 extern	cvar_t	*cl_consoleKeys;
+
+#ifdef IOQ3ZTM // USE_FREETYPE
+extern	cvar_t  *cl_consoleFont;
+extern	cvar_t  *cl_consoleFontSize;
+extern	cvar_t  *cl_consoleFontKerning;
+#endif
+
+#ifdef IOQ3ZTM // ANALOG
+extern	cvar_t	*cl_thirdPerson[MAX_SPLITVIEW];
+extern	cvar_t	*cl_thirdPersonAngle[MAX_SPLITVIEW];
+extern	cvar_t	*cl_thirdPersonAnalog[MAX_SPLITVIEW];
+#endif
 
 #ifdef USE_MUMBLE
 extern	cvar_t	*cl_useMumble;
@@ -598,10 +627,21 @@ void	SCR_FillRect( float x, float y, float width, float height,
 void	SCR_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
 void	SCR_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+qboolean SCR_LoadFont(font_t *font, const char *ttfName, const char *shaderName, int pointSize,
+				int shaderCharWidth, float fontKerning);
+void	SCR_DrawFontChar( font_t *font, float x, float y, int ch, qboolean adjustFrom640 );
+void	SCR_DrawFontStringExt( font_t *font, float x, float y, const char *string, const float *setColor, qboolean forceColor,
+				qboolean noColorEscape, qboolean drawShadow, qboolean adjustFrom640, int maxChars );
+void	SCR_DrawFontString( font_t *font, int x, int y, const char *s, float alpha );
+void	SCR_DrawFontStringColor( font_t *font, int x, int y, const char *s, vec4_t color );
+#endif
 void	SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape );			// draws a string with embedded color control characters with fade
 void	SCR_DrawBigStringColor( int x, int y, const char *s, vec4_t color, qboolean noColorEscape );	// ignores embedded color control characters
+#ifndef IOQ3ZTM // FONT_REWRITE
 void	SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
 void	SCR_DrawSmallChar( int x, int y, int ch );
+#endif
 
 
 //
@@ -620,6 +660,21 @@ void CIN_SetExtents (int handle, int x, int y, int w, int h);
 void CIN_SetLooping (int handle, qboolean loop);
 void CIN_UploadCinematic(int handle);
 void CIN_CloseAllVideos(void);
+
+// yuv->rgb will be used for Theora(ogm)
+void ROQ_GenYUVTables(void);
+void Frame_yuv_to_rgb24(const unsigned char *y, const unsigned char *u, const unsigned char *v,
+		int width, int height, int y_stride, int uv_stride,
+		int yWShift, int uvWShift, int yHShift, int uvHShift, unsigned int *output);
+
+//
+// cl_cin_ogm.c
+//
+
+int				Cin_OGM_Init(const char *filename);
+int				Cin_OGM_Run(int time);
+unsigned char	*Cin_OGM_GetOutput(int *outWidth, int *outHeight);
+void			Cin_OGM_Shutdown(void);
 
 //
 // cl_cgame.c
@@ -663,4 +718,12 @@ qboolean CL_VideoRecording( void );
 // cl_main.c
 //
 void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+void CL_GetMapMessage(char *buf, int bufLength);
+#ifdef TA_SPLITVIEW
+qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum);
+#else
+qboolean CL_GetClientLocation(char *buf, int bufLength);
+#endif
+#endif
 

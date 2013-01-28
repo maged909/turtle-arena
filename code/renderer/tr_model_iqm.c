@@ -157,8 +157,13 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 
 	LL( header->version );
 	if( header->version != IQM_VERSION ) {
+#ifdef RENDERLESS_MODELS
+		Com_Printf("R_LoadIQM: %s is a unsupported IQM version (%d), only version %d is supported.\n",
+				mod_name, header->version, IQM_VERSION);
+#else
 		ri.Printf(PRINT_WARNING, "R_LoadIQM: %s is a unsupported IQM version (%d), only version %d is supported.\n",
 				mod_name, header->version, IQM_VERSION);
+#endif
 		return qfalse;
 	}
 
@@ -195,8 +200,13 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 
 	// check ioq3 joint limit
 	if ( header->num_joints > IQM_MAX_JOINTS ) {
+#ifdef RENDERLESS_MODELS
+		Com_Printf("R_LoadIQM: %s has more than %d joints (%d).\n",
+				mod_name, IQM_MAX_JOINTS, header->num_joints);
+#else
 		ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %d joints (%d).\n",
 				mod_name, IQM_MAX_JOINTS, header->num_joints);
+#endif
 		return qfalse;
 	}
 
@@ -316,14 +326,24 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		// check ioq3 limits
 		if ( mesh->num_vertexes > SHADER_MAX_VERTEXES ) 
 		{
+#ifdef RENDERLESS_MODELS
+			Com_Printf("R_LoadIQM: %s has more than %i verts on a surface (%i).\n",
+				  mod_name, SHADER_MAX_VERTEXES, mesh->num_vertexes );
+#else
 			ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %i verts on a surface (%i).\n",
 				  mod_name, SHADER_MAX_VERTEXES, mesh->num_vertexes );
+#endif
 			return qfalse;
 		}
 		if ( mesh->num_triangles*3 > SHADER_MAX_INDEXES ) 
 		{
+#ifdef RENDERLESS_MODELS
+			Com_Printf("R_LoadIQM: %s has more than %i triangles on a surface (%i).\n",
+				  mod_name, SHADER_MAX_INDEXES / 3, mesh->num_triangles );
+#else
 			ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %i triangles on a surface (%i).\n",
 				  mod_name, SHADER_MAX_INDEXES / 3, mesh->num_triangles );
+#endif
 			return qfalse;
 		}
 
@@ -441,7 +461,11 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	size += joint_names;					// joint names
 
 	mod->type = MOD_IQM;
+#ifdef RENDERLESS_MODELS
+	iqmData = (iqmData_t *)Hunk_Alloc( size, h_low );
+#else
 	iqmData = (iqmData_t *)ri.Hunk_Alloc( size, h_low );
+#endif
 	mod->modelData = iqmData;
 
 	// fill header
@@ -563,9 +587,13 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		surface->surfaceType = SF_IQM;
 		Q_strncpyz(surface->name, str + mesh->name, sizeof (surface->name));
 		Q_strlwr(surface->name); // lowercase the surface name so skin compares are faster
+#ifdef RENDERLESS_MODELS
+		surface->shader = 0;
+#else
 		surface->shader = R_FindShader( str + mesh->material, LIGHTMAP_NONE, qtrue );
 		if( surface->shader->defaultShader )
 			surface->shader = tr.defaultShader;
+#endif
 		surface->data = iqmData;
 		surface->first_vertex = mesh->first_vertex;
 		surface->num_vertexes = mesh->num_vertexes;
@@ -667,6 +695,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	return qtrue;
 }
 
+#ifndef RENDERLESS_MODELS
 /*
 =============
 R_CullIQM
@@ -833,7 +862,21 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			{
 				if (!strcmp(skin->surfaces[j]->name, surface->name))
 				{
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+					int index;
+
+					if (ent->e.skinFraction == 1.0f) {
+						index = skin->surfaces[j]->numShaders-1;
+					} else if (ent->e.skinFraction == 0.0f) {
+						index = 0;
+					} else { // >= 0 && < 1
+						index = (ent->e.skinFraction * skin->surfaces[j]->numShaders);
+					}
+
+					shader = skin->surfaces[j]->shaders[index];
+#else
 					shader = skin->surfaces[j]->shader;
+#endif
 					break;
 				}
 			}
@@ -849,7 +892,11 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			&& fogNum == 0
 			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) ) 
 			&& shader->sort == SS_OPAQUE ) {
+#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
+			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, qfalse, R_SortOrder(ent) );
+#else
 			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, 0 );
+#endif
 		}
 
 		// projection shadows work fine with personal models
@@ -857,16 +904,25 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			&& fogNum == 0
 			&& (ent->e.renderfx & RF_SHADOW_PLANE )
 			&& shader->sort == SS_OPAQUE ) {
+#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
+			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, qfalse, R_SortOrder(ent) );
+#else
 			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, 0 );
+#endif
 		}
 
 		if( !personalModel ) {
+#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
+			R_AddDrawSurf( (void *)surface, shader, fogNum, qfalse, R_SortOrder(ent) );
+#else
 			R_AddDrawSurf( (void *)surface, shader, fogNum, 0 );
+#endif
 		}
 
 		surface++;
 	}
 }
+#endif
 
 
 static void ComputeJointMats( iqmData_t *data, int frame, int oldframe,
@@ -905,7 +961,65 @@ static void ComputeJointMats( iqmData_t *data, int frame, int oldframe,
 	}
 }
 
+#ifdef IOQ3ZTM // BONES
+void OrientationMultiply( orientation_t a, orientation_t b, orientation_t *out ) {
+	int i, j;
 
+	for (i = 0; i < 3; ++i) {
+		for (j = 0; j < 3; ++j) {
+			out->axis[i][j] = a.axis[i][0] * b.axis[0][j] + a.axis[i][1] * b.axis[1][j] + a.axis[i][2] * b.axis[2][j];
+		}
+		out->origin[i] = a.axis[i][0] * b.origin[0] + a.axis[i][1] * b.origin[1] + a.axis[i][2] * b.origin[2] + a.origin[i];
+	}
+}
+
+// Convert orientation_t to matrix 3x4 (float[12])
+void OrientationToMatrix34(orientation_t orientation, float *mat) {
+	int i;
+
+	for (i = 0; i < 3; ++i) {
+		mat[4*i+0] = orientation.axis[i][0];
+		mat[4*i+1] = orientation.axis[i][1];
+		mat[4*i+2] = orientation.axis[i][2];
+		mat[4*i+3] = orientation.origin[i];
+	}
+}
+
+// Convert matrix 3x4 (float[12]) to orientation_t
+void Matrix34ToOrientation(const float *mat, orientation_t *orientation) {
+	int i;
+
+	for (i = 0; i < 3; ++i) {
+		orientation->axis[i][0] = mat[4*i+0];
+		orientation->axis[i][1] = mat[4*i+1];
+		orientation->axis[i][2] = mat[4*i+2];
+		orientation->origin[i] = mat[4*i+3];
+	}
+}
+
+void ComputeJointRelativeOrientation( iqmData_t *data, int frame, int oldframe,
+			      float backlerp, int joint, orientation_t *orientation ) {
+	float	mat[12];
+	float	*mat1, *mat2;
+
+	if ( oldframe == frame ) {
+		mat1 = data->poseMats + 12 * data->num_joints * frame;
+
+		Com_Memcpy( mat, mat1 + 12*joint, 12 * sizeof(float) );
+	} else  {
+		mat1 = data->poseMats + 12 * data->num_joints * frame;
+		mat2 = data->poseMats + 12 * data->num_joints * oldframe;
+		
+		InterpolateMatrix( mat1 + 12*joint, mat2 + 12*joint,
+				   backlerp, mat );
+	}
+
+	Matrix34ToOrientation(mat, orientation);
+}
+#endif
+
+
+#ifndef RENDERLESS_MODELS
 /*
 =================
 RB_AddIQMSurfaces
@@ -924,6 +1038,29 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	vec2_t		(*outTexCoord)[2] = &tess.texCoords[tess.numVertexes];
 	color4ub_t	*outColor = &tess.vertexColors[tess.numVertexes];
 
+#ifdef IOQ3ZTM // BONES
+	int		*tri;
+	glIndex_t	*ptr;
+	glIndex_t	base;
+
+	RB_CHECKOVERFLOW( surf->num_vertexes, surf->num_triangles * 3 );
+
+	if (backEnd.currentEntity->customSkeleton != -1) {
+		refSkeleton_t *refSkel = &backEnd.refdef.skeletons[backEnd.currentEntity->customSkeleton];
+
+		// Convert to matrix 3x4
+		for( i = 0; i < data->num_joints; i++ ) {
+			OrientationToMatrix34(refSkel->joints[i], jointMats + 12*i);
+		}
+	} else {
+		int	frame = backEnd.currentEntity->e.frame % data->num_frames;
+		int	oldframe = backEnd.currentEntity->e.oldframe % data->num_frames;
+		float	backlerp = backEnd.currentEntity->e.backlerp;
+
+		// compute interpolated joint matrices
+		ComputeJointMats( data, frame, oldframe, backlerp, jointMats );
+	}
+#else
 	int	frame = backEnd.currentEntity->e.frame % data->num_frames;
 	int	oldframe = backEnd.currentEntity->e.oldframe % data->num_frames;
 	float	backlerp = backEnd.currentEntity->e.backlerp;
@@ -936,6 +1073,7 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 
 	// compute interpolated joint matrices
 	ComputeJointMats( data, frame, oldframe, backlerp, jointMats );
+#endif
 
 	// transform vertexes and fill other data
 	for( i = 0; i < surf->num_vertexes;
@@ -1027,6 +1165,7 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	tess.numIndexes += 3 * surf->num_triangles;
 	tess.numVertexes += surf->num_vertexes;
 }
+#endif
 
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 		  int startFrame, int endFrame, 
@@ -1049,6 +1188,9 @@ int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 
 	ComputeJointMats( data, startFrame, endFrame, frac, jointMats );
 
+#ifdef IOQ3ZTM // BONES
+	Matrix34ToOrientation(&jointMats[12 * joint], tag);
+#else
 	tag->axis[0][0] = jointMats[12 * joint + 0];
 	tag->axis[1][0] = jointMats[12 * joint + 1];
 	tag->axis[2][0] = jointMats[12 * joint + 2];
@@ -1061,6 +1203,7 @@ int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 	tag->axis[1][2] = jointMats[12 * joint + 9];
 	tag->axis[2][2] = jointMats[12 * joint + 10];
 	tag->origin[2] = jointMats[12 * joint + 11];
+#endif
 
 	return qtrue;
 }

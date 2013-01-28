@@ -65,12 +65,23 @@ extern vmCvar_t	ui_spAwards;
 extern vmCvar_t	ui_spVideos;
 extern vmCvar_t	ui_spSkill;
 
+#ifdef TA_SP
+extern vmCvar_t	ui_saveVersions;
+extern vmCvar_t	ui_saveFilename;
+#endif
 extern vmCvar_t	ui_spSelection;
+
+#ifdef TA_SP
+extern vmCvar_t	ui_arcadeName;
+#endif
 
 extern vmCvar_t	ui_browserMaster;
 extern vmCvar_t	ui_browserGameType;
 extern vmCvar_t	ui_browserShowFull;
 extern vmCvar_t	ui_browserShowEmpty;
+#ifdef IOQ3ZTM // G_HUMANPLAYERS
+extern vmCvar_t	ui_browserShowBots;
+#endif
 
 extern vmCvar_t	ui_brassTime;
 extern vmCvar_t	ui_drawCrosshair;
@@ -118,11 +129,15 @@ extern vmCvar_t	ui_lastServerRefresh_2;
 extern vmCvar_t	ui_lastServerRefresh_3;
 extern vmCvar_t	ui_singlePlayerActive;
 extern vmCvar_t	ui_scoreAccuracy;
+#ifndef TURTLEARENA // AWARDS
 extern vmCvar_t	ui_scoreImpressives;
 extern vmCvar_t	ui_scoreExcellents;
+#endif
 extern vmCvar_t	ui_scoreDefends;
 extern vmCvar_t	ui_scoreAssists;
+#ifndef TURTLEARENA // AWARDS
 extern vmCvar_t	ui_scoreGauntlets;
+#endif
 extern vmCvar_t	ui_scoreScore;
 extern vmCvar_t	ui_scorePerfect;
 extern vmCvar_t	ui_scoreTeam;
@@ -202,7 +217,12 @@ typedef struct _tag_menuframework
 
 	qboolean	wrapAround;
 	qboolean	fullscreen;
+#ifndef TA_DATA
 	qboolean	showlogo;
+#endif
+#ifdef IOQ3ZTM
+	qboolean	noEscape; // Don't run UI_PopMenu when Esc is pressed
+#endif
 } menuframework_s;
 
 typedef struct
@@ -316,7 +336,9 @@ extern sfxHandle_t	menu_move_sound;
 extern sfxHandle_t	menu_out_sound;
 extern sfxHandle_t	menu_buzz_sound;
 extern sfxHandle_t	menu_null_sound;
+#ifndef TA_WEAPSYS_EX
 extern sfxHandle_t	weaponChangeSound;
+#endif
 extern vec4_t		menu_text_color;
 extern vec4_t		menu_grayed_color;
 extern vec4_t		menu_dark_color;
@@ -337,6 +359,8 @@ extern vec4_t		listbar_color;
 extern vec4_t		text_color_disabled; 
 extern vec4_t		text_color_normal;
 extern vec4_t		text_color_highlight;
+extern vec4_t		text_banner_color;
+extern vec4_t		text_big_color;
 
 extern char	*ui_medalNames[];
 extern char	*ui_medalPicNames[];
@@ -377,6 +401,9 @@ extern void UI_UpdateCvars( void );
 // ui_credits.c
 //
 extern void UI_CreditMenu( void );
+#ifdef TURTLEARENA // LONG_CREDITS
+extern void UI_LongCreditMenu( void );
+#endif
 
 //
 // ui_ingame.c
@@ -496,6 +523,7 @@ extern void DriverInfo_Cache( void );
 // ui_players.c
 //
 
+#ifndef IOQ3ZTM // LERP_FRAME_CLIENT_LESS // moved to bg_misc.h
 //FIXME ripped from cg_local.h
 typedef struct {
 	int			oldFrame;
@@ -515,6 +543,7 @@ typedef struct {
 	animation_t	*animation;
 	int			animationTime;		// time when the first frame of the animation will be exact
 } lerpFrame_t;
+#endif
 
 typedef struct {
 	// model info
@@ -529,13 +558,34 @@ typedef struct {
 	qhandle_t		headModel;
 	qhandle_t		headSkin;
 
-	animation_t		animations[MAX_TOTALANIMATIONS];
+#ifdef IOQ3ZTM // BONES
+	qhandle_t		playerModel;
+	qhandle_t		playerSkin;
+#endif
 
+#ifdef TA_PLAYERSYS
+	bg_playercfg_t	playercfg;
+#else
+	animation_t		animations[MAX_TOTALANIMATIONS];
+#endif
+
+#ifdef TA_WEAPSYS
+	qhandle_t		weaponModel[MAX_HANDS];
+	qhandle_t		barrelModel[MAX_HANDS];
+	qhandle_t		flashModel[MAX_HANDS];
+	vec3_t			flashDlightColor[MAX_HANDS];
+#else
 	qhandle_t		weaponModel;
 	qhandle_t		barrelModel;
 	qhandle_t		flashModel;
 	vec3_t			flashDlightColor;
+#endif
 	int				muzzleFlashTime;
+
+#ifdef IOQ3ZTM
+	vec3_t			color1;
+	byte			c1RGBA[4];
+#endif
 
 	// currently in use drawing parms
 	vec3_t			viewAngles;
@@ -583,10 +633,14 @@ typedef struct {
 	qboolean		debug;
 	qhandle_t		whiteShader;
 	qhandle_t		menuBackShader;
+#ifndef TA_DATA
 	qhandle_t		menuBackNoLogoShader;
+#endif
 	qhandle_t		charset;
 	qhandle_t		charsetProp;
+#ifndef TA_DATA
 	qhandle_t		charsetPropGlow;
+#endif
 	qhandle_t		charsetPropB;
 	qhandle_t		cursor;
 	qhandle_t		rb_on;
@@ -858,12 +912,19 @@ extern void     UI_DrawSides(float x, float y, float w, float h);
 extern void			UI_UpdateScreen( void );
 extern void			UI_SetColor( const float *rgba );
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
+#ifdef IOQ3ZTM // FONT_REWRITE
+extern qboolean		UI_LoadFont(font_t *font, const char *ttfName, const char *shaderName, int pointSize,
+							int shaderCharWidth, float fontKerning);
+extern void			UI_DrawFontChar( font_t *font, float x, float y, int ch, qboolean adjustFrom640 );
+extern void			UI_DrawFontString( font_t *font, int x, int y, const char *s, float alpha );
+extern void			UI_DrawFontStringColor( font_t *font, int x, int y, const char *s, vec4_t color );
+#endif
 extern void			UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color );
 extern float		UI_ProportionalSizeScale( int style );
 extern void			UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
-extern int			UI_ProportionalStringWidth( const char* str );
+extern int			UI_ProportionalStringWidth( const char* str, int style );
 extern void			UI_DrawString( int x, int y, const char* str, int style, vec4_t color );
-extern void			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
+extern int			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
 extern qboolean 	UI_CursorInRect (int x, int y, int width, int height);
 extern void			UI_AdjustFrom640( float *x, float *y, float *w, float *h );
 extern void			UI_DrawTextBox (int x, int y, int width, int lines);
@@ -893,6 +954,11 @@ void UI_SPLevelMenu_ReInit( void );
 // ui_spArena.c
 //
 void UI_SPArena_Start( const char *arenaInfo );
+#ifdef TA_SP
+void UI_SPMenu( void );
+void UI_SPMenu_f( void );
+void UI_SPMenu_Cache( void );
+#endif
 
 //
 // ui_spPostgame.c
@@ -1001,6 +1067,16 @@ void			trap_CIN_DrawCinematic (int handle);
 // allows you to resize the animation dynamically
 void			trap_CIN_SetExtents (int handle, int x, int y, int w, int h);
 
+#ifdef IOQ3ZTM // BONES
+void			trap_R_AddRefEntityToScene_CustomSkeleton( const refEntity_t *re, const refSkeleton_t *rs );
+int				trap_R_JointIndexForName(qhandle_t handle, const char *jointName);
+qboolean		trap_R_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
+qboolean		trap_R_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel,
+								int legsFrame, int legsOldFrame, float legsBacklerp,
+								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
+								int headFrame, int headOldFrame, float headBacklerp);
+void			trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
+#endif
 
 //
 // ui_addbots.c
@@ -1056,9 +1132,11 @@ void UI_NetworkOptionsMenu( void );
 //
 typedef enum {
 	AWARD_ACCURACY,
+#ifndef TURTLEARENA // AWARDS
 	AWARD_IMPRESSIVE,
 	AWARD_EXCELLENT,
 	AWARD_GAUNTLET,
+#endif
 	AWARD_FRAGS,
 	AWARD_PERFECT
 } awardType_t;
@@ -1076,6 +1154,7 @@ int UI_GetNumBots( void );
 void UI_LoadBots( void );
 char *UI_GetBotNameByNumber( int num );
 
+#ifndef TA_SP
 void UI_GetBestScore( int level, int *score, int *skill );
 void UI_SetBestScore( int level, int score );
 int UI_TierCompleted( int levelWon );
@@ -1085,9 +1164,12 @@ int  UI_GetCurrentGame( void );
 void UI_NewGame( void );
 void UI_LogAwardData( int award, int data );
 int UI_GetAwardLevel( int award );
+#endif
 
 void UI_SPUnlock_f( void );
+#ifndef TA_SP
 void UI_SPUnlockMedals_f( void );
+#endif
 
 void UI_InitGameinfo( void );
 
@@ -1114,6 +1196,32 @@ void UI_RankStatusMenu( void );
 
 #define ASSET_BACKGROUND "uiBackground"
 
+#ifdef TA_SP
+// Arcade map gamedata
+#define ARCADE_GAMEDATA_MAGIC "EBXARCADE"
+#define ARCADE_GAMEDATA_VERSION 0
+#define NUM_ARCADE_SCORES 5
+
+typedef struct
+{
+	char name[9];
+	char character[17];
+	int score;
+	int time;
+
+	// Additional CTF data
+	int captures;
+	int redScore;
+	int blueScore;
+} arcadeScore_t;
+
+typedef struct
+{
+	char magic[9];
+	int version;
+	arcadeScore_t scores[NUM_ARCADE_SCORES];
+} arcadeGameData_t;
+#else
 // for tracking sp game info in Team Arena
 typedef struct postGameInfo_s {
 	int score;
@@ -1121,11 +1229,15 @@ typedef struct postGameInfo_s {
 	int blueScore;
 	int perfects;
 	int accuracy;
+#ifndef TURTLEARENA // AWARDS
 	int impressives;
 	int excellents;
+#endif
 	int defends;
 	int assists;
+#ifndef TURTLEARENA // AWARDS
 	int gauntlets;
+#endif
 	int	captures;
 	int time;
 	int timeBonus;
@@ -1133,6 +1245,7 @@ typedef struct postGameInfo_s {
 	int skillBonus;
 	int baseScore;
 } postGameInfo_t;
+#endif
 
 
 

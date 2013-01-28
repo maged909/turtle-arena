@@ -165,7 +165,12 @@ int BotGoForAir(bot_state_t *bs, int tfl, bot_goal_t *ltg, float range) {
 	bot_goal_t goal;
 
 	//if the bot needs air
-	if (bs->lastair_time < FloatTime() - 6) {
+#ifdef TURTLEARENA // DROWNING
+	if (bs->cur_ps.powerups[PW_AIR] < level.time + 9000)
+#else
+	if (bs->lastair_time < FloatTime() - 6)
+#endif
+	{
 		//
 #ifdef DEBUG
 		//BotAI_Print(PRT_MESSAGE, "going for air\n");
@@ -176,6 +181,8 @@ int BotGoForAir(bot_state_t *bs, int tfl, bot_goal_t *ltg, float range) {
 			return qtrue;
 		}
 		else {
+#ifdef TURTLEARENA // DROWNING // ZTM: TODO: If bubble spawning entity is added check for near by bubbles spawn points underwater.
+#endif
 			//get a nearby goal outside the water
 			while(trap_BotChooseNBGItem(bs->gs, bs->origin, bs->inventory, tfl, ltg, range)) {
 				trap_BotGetTopGoal(bs->gs, &goal);
@@ -204,7 +211,10 @@ int BotNearbyGoal(bot_state_t *bs, int tfl, bot_goal_t *ltg, float range) {
 	// if the bot is carrying a flag or cubes
 	if (BotCTFCarryingFlag(bs)
 #ifdef MISSIONPACK
-		|| Bot1FCTFCarryingFlag(bs) || BotHarvesterCarryingCubes(bs)
+		|| Bot1FCTFCarryingFlag(bs)
+#ifdef MISSIONPACK_HARVESTER
+		|| BotHarvesterCarryingCubes(bs)
+#endif
 #endif
 		) {
 		//if the bot is just a few secs away from the base 
@@ -270,10 +280,21 @@ int BotReachedGoal(bot_state_t *bs, bot_goal_t *goal) {
 		}
 	}
 	else if (goal->flags & GFL_AIR) {
+#ifdef TURTLEARENA // DROWNING
+		//if the bot got air
+		if (bs->cur_ps.powerups[PW_AIR] > level.time + 30000) return qtrue;
+
+		//check if goal is underwater
+		if (trap_AAS_PointContents(goal->origin) & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA)) {
+			//go get a new air goal!
+			return qtrue;
+		}
+#else
 		//if touching the goal
 		if (trap_BotTouchingGoal(bs->origin, goal)) return qtrue;
 		//if the bot got air
 		if (bs->lastair_time > FloatTime() - 1) return qtrue;
+#endif
 	}
 	else {
 		//if touching the goal
@@ -966,6 +987,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			return qtrue;
 		}
 	}
+#ifdef MISSIONPACK_HARVESTER
 	else if (gametype == GT_HARVESTER) {
 		//if rushing to the base
 		if (bs->ltgtype == LTG_RUSHBASE) {
@@ -1039,9 +1061,21 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			return qtrue;
 		}
 	}
+#endif // #ifdef MISSIONPACK_HARVESTER
 #endif
+
+#ifdef IOQ3ZTM
+	//normal goal stuff
+	if (BotGetItemLongTermGoal(bs, tfl, goal)) {
+		return qtrue;
+	}
+
+	//must have a long term goal to do normal go for air, so do it here
+	return BotGoForAir(bs, bs->tfl, goal, 400);
+#else
 	//normal goal stuff
 	return BotGetItemLongTermGoal(bs, tfl, goal);
+#endif
 }
 
 /*
@@ -1302,6 +1336,41 @@ BotSelectActivateWeapon
 */
 int BotSelectActivateWeapon(bot_state_t *bs) {
 	//
+#ifdef TA_WEAPSYS_EX
+    // Decide if the pickup waepon is better then default weapon.
+
+	if ((bs->inventory[INVENTORY_WEAPON] == bs->inventory[INVENTORY_DEFAULTWEAPON])
+        || bs->inventory[INVENTORY_WEAPON] <= 0)
+    {
+		return bs->inventory[INVENTORY_DEFAULTWEAPON];
+    }
+
+    // Gun with no ammo.
+    if (BG_WeapUseAmmo(bs->inventory[INVENTORY_WEAPON]) && !bs->inventory[INVENTORY_AMMO])
+		return bs->inventory[INVENTORY_DEFAULTWEAPON];
+
+    return bs->inventory[INVENTORY_WEAPON];
+#elif defined TA_WEAPSYS
+	{
+		int i;
+
+		for (i = 1; i < BG_NumWeaponGroups(); i++)
+		{
+			if (bs->inventory[INVENTORY_WEAPON_START+i-1] > 0)
+			{
+				if (BG_WeaponHasMelee(i))
+					return i;
+				else // WT_GUN
+				{
+					if (bs->inventory[INVENTORY_AMMO_START+i-1] > 0 || bs->inventory[INVENTORY_AMMO_START+i-1] == -1)
+						return i;
+				}
+			}
+		}
+	}
+
+	return -1;
+#else
 	if (bs->inventory[INVENTORY_MACHINEGUN] > 0 && bs->inventory[INVENTORY_BULLETS] > 0)
 		return WEAPONINDEX_MACHINEGUN;
 	else if (bs->inventory[INVENTORY_SHOTGUN] > 0 && bs->inventory[INVENTORY_SHELLS] > 0)
@@ -1329,7 +1398,38 @@ int BotSelectActivateWeapon(bot_state_t *bs) {
 	else {
 		return -1;
 	}
+#endif
 }
+
+#ifdef TA_WEAPSYS
+/*
+==================
+G_CanShootProx
+
+ return qtrue if w can be used to kill a proximity mine
+==================
+*/
+qboolean G_CanShootProx(weapon_t w)
+{
+	int i;
+
+	for (i = 0; i < MAX_HANDS; i++)
+	{
+		if (bg_weapongroupinfo[w].weapon[i]->weapontype != WT_GUN)
+			continue;
+		if (bg_weapongroupinfo[w].weapon[i]->proj->splashDamage <= 0)
+			continue;
+		if (bg_weapongroupinfo[w].weapon[i]->proj->splashRadius <= 0)
+			continue;
+		if (bg_weapongroupinfo[w].weapon[i]->proj->flags & PF_USE_GRAVITY)
+			continue;
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+#endif
 
 /*
 ==================
@@ -1345,6 +1445,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 	bsp_trace_t bsptrace;
 	entityState_t state;
 
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 	// if there is a dead body wearing kamikze nearby
 	if (bs->kamikazebody) {
 		// if the bot's view angles and weapon are not used for movement
@@ -1380,6 +1481,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 			}
 		}
 	}
+#endif
 	if (moveresult->flags & MOVERESULT_BLOCKEDBYAVOIDSPOT) {
 		bs->blockedbyavoidspot_time = FloatTime() + 5;
 	}
@@ -1409,6 +1511,28 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 			VectorSubtract(target, bs->eye, dir);
 			vectoangles(dir, moveresult->ideal_viewangles);
 			// if the bot has a weapon that does splash damage
+#ifdef TA_WEAPSYS_EX
+            if (G_CanShootProx(bs->cur_ps.weapon))
+				moveresult->weapon = bs->cur_ps.weapon;
+            else if (G_CanShootProx(bs->cur_ps.stats[STAT_DEFAULTWEAPON]))
+            	moveresult->weapon = bs->cur_ps.stats[STAT_DEFAULTWEAPON];
+            else {
+            	moveresult->weapon = 0;
+            }
+#elif defined TA_WEAPSYS
+			moveresult->weapon = 0;
+			for (i = 1; i < BG_NumWeaponGroups(); i++)
+			{
+				if (bs->inventory[INVENTORY_WEAPON_START+i-1] > 0
+					&& (bs->inventory[INVENTORY_AMMO_START+i-1] > 0
+					|| bs->inventory[INVENTORY_AMMO_START+i-1] == -1)
+					&& G_CanShootProx(i))
+				{
+					moveresult->weapon = i;
+					break;
+				}
+			}
+#else
 			if (bs->inventory[INVENTORY_PLASMAGUN] > 0 && bs->inventory[INVENTORY_CELLS] > 0)
 				moveresult->weapon = WEAPONINDEX_PLASMAGUN;
 			else if (bs->inventory[INVENTORY_ROCKETLAUNCHER] > 0 && bs->inventory[INVENTORY_ROCKETS] > 0)
@@ -1418,6 +1542,7 @@ void BotClearPath(bot_state_t *bs, bot_moveresult_t *moveresult) {
 			else {
 				moveresult->weapon = 0;
 			}
+#endif
 			if (moveresult->weapon) {
 				//
 				moveresult->flags |= MOVERESULT_MOVEMENTWEAPON | MOVERESULT_MOVEMENTVIEW;
@@ -1461,6 +1586,9 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	int targetvisible;
 	bsp_trace_t bsptrace;
 	aas_entityinfo_t entinfo;
+#ifdef TURTLEARENA // HOLD_SHURIKEN
+	int wantUseShuriken;
+#endif
 
 	if (BotIsObserver(bs)) {
 		BotClearActivateGoalStack(bs);
@@ -1496,30 +1624,81 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	}
 	//
 	goal = &bs->activatestack->goal;
+#ifdef TA_ENTSYS // BREAKABLE
+	// update shoot goal status
+	if (bs->activatestack->shoot) {
+		//if the bot's current goal is dead
+		if (g_entities[goal->entitynum].health <= 0) {
+#ifdef DEBUG
+			BotAI_Print(PRT_MESSAGE, "goal is dead\n");
+#endif //DEBUG
+			bs->activatestack->time = 0;
+		}
+	}
+#endif
 	// initialize target being visible to false
 	targetvisible = qfalse;
 	// if the bot has to shoot at a target to activate something
-	if (bs->activatestack->shoot) {
+	if (bs->activatestack->shoot
+#ifdef TA_ENTSYS // BREAKABLE
+		&& bs->activatestack->time
+#endif
+		) {
 		//
 		BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->activatestack->target, bs->entitynum, MASK_SHOT);
 		// if the shootable entity is visible from the current position
 		if (bsptrace.fraction >= 1.0 || bsptrace.ent == goal->entitynum) {
 			targetvisible = qtrue;
+#ifdef TURTLEARENA // HOLD_SHURIKEN
+			BotEntityInfo(goal->entitynum, &entinfo);
+#endif
 			// if holding the right weapon
 			if (bs->cur_ps.weapon == bs->activatestack->weapon) {
 				VectorSubtract(bs->activatestack->target, bs->eye, dir);
 				vectoangles(dir, ideal_viewangles);
+#ifdef TURTLEARENA // HOLD_SHURIKEN
+				wantUseShuriken = BotWantUseShuriken(bs, goal->entitynum, &entinfo);
+#endif
+#ifdef IOQ3ZTM // ATTACK_WITH_MELEE
+				// check if too far to attack
+				if (
+#ifdef TURTLEARENA // HOLD_SHURIKEN
+					!wantUseShuriken &&
+#endif
+					VectorLength(dir) > 80 &&
+#ifdef TA_WEAPSYS
+					!BG_WeaponHasType(bs->cur_ps.weapon, WT_GUN)
+#else
+					bs->cur_ps.weapon == WP_GAUNTLET
+#endif
+					)
+				{
+					// keep moving toward goal until it is close enough to melee attack
+					targetvisible = 2;
+				}
+				else
+#endif
 				// if the bot is pretty close with its aim
 				if (InFieldOfVision(bs->viewangles, 20, ideal_viewangles)) {
+#ifdef TURTLEARENA // HOLD_SHURIKEN
+					if (wantUseShuriken) {
+						trap_EA_Use(bs->client, wantUseShuriken);
+					} else {
+#endif
 					trap_EA_Attack(bs->client);
+#ifdef TURTLEARENA // HOLD_SHURIKEN
+					}
+#endif
 				}
 			}
 		}
 	}
 	// if the shoot target is visible
 	if (targetvisible) {
+#ifndef TURTLEARENA // HOLD_SHURIKEN
 		// get the entity info of the entity the bot is shooting at
 		BotEntityInfo(goal->entitynum, &entinfo);
+#endif
 		// if the entity the bot shoots at moved
 		if (!VectorCompare(bs->activatestack->origin, entinfo.origin)) {
 #ifdef DEBUG
@@ -1538,6 +1717,12 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			AIEnter_Seek_NBG(bs, "activate entity: time out");
 			return qfalse;
 		}
+#ifdef IOQ3ZTM // ATTACK_WITH_MELEE
+		if (targetvisible == 2) {
+			BotSetupForMovement(bs);
+			trap_BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK);
+		}
+#endif
 		memset(&moveresult, 0, sizeof(bot_moveresult_t));
 	}
 	else {
@@ -1697,10 +1882,12 @@ int AINode_Seek_NBG(bot_state_t *bs) {
 	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 	//
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
+#endif
 	//map specific code
 	BotMapScripts(bs);
 	//no enemy
@@ -1840,10 +2027,12 @@ int AINode_Seek_LTG(bot_state_t *bs)
 	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 	//
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
+#endif
 	//map specific code
 	BotMapScripts(bs);
 	//no enemy
@@ -1897,10 +2086,12 @@ int AINode_Seek_LTG(bot_state_t *bs)
 			if (Bot1FCTFCarryingFlag(bs))
 				range = 50;
 		}
+#ifdef MISSIONPACK_HARVESTER
 		else if (gametype == GT_HARVESTER) {
 			if (BotHarvesterCarryingCubes(bs))
 				range = 80;
 		}
+#endif
 #endif
 		//
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
@@ -2122,10 +2313,12 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 	//
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
+#endif
 	//choose the best weapon to fight with
 	BotChooseWeapon(bs);
 	//do attack movements
@@ -2215,10 +2408,12 @@ int AINode_Battle_Chase(bot_state_t *bs)
 	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 	//
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
+#endif
 	//map specific code
 	BotMapScripts(bs);
 	//create the chase goal
@@ -2423,10 +2618,12 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			if (Bot1FCTFCarryingFlag(bs))
 				range = 50;
 		}
+#ifdef MISSIONPACK_HARVESTER
 		else if (gametype == GT_HARVESTER) {
 			if (BotHarvesterCarryingCubes(bs))
 				range = 80;
 		}
+#endif
 #endif
 		//
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
@@ -2535,10 +2732,12 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	if (bot_grapple.integer) bs->tfl |= TFL_GRAPPLEHOOK;
 	//if in lava or slime the bot should be able to get out
 	if (BotInLavaOrSlime(bs)) bs->tfl |= TFL_LAVA|TFL_SLIME;
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 	//
 	if (BotCanAndWantsToRocketJump(bs)) {
 		bs->tfl |= TFL_ROCKETJUMP;
 	}
+#endif
 	//map specific code
 	BotMapScripts(bs);
 	//update the last time the enemy was visible

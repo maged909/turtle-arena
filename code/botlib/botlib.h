@@ -110,6 +110,9 @@ struct weaponinfo_s;
 #define ACTION_PATROL			0x02000000
 #define ACTION_FOLLOWME			0x08000000
 #define ACTION_JUMPEDLASTFRAME		0x10000000
+#ifdef TA_WEAPSYS_EX // BOTLIB
+#define ACTION_DROP_WEAPON		0x20000000
+#endif
 
 //the bot input, will be converted to a usercmd_t
 typedef struct bot_input_s
@@ -119,7 +122,12 @@ typedef struct bot_input_s
 	float speed;			//speed in the range [0, 400]
 	vec3_t viewangles;		//the view angles
 	int actionflags;		//one of the ACTION_? flags
+#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT // BOTLIB
 	int weapon;				//weapon to use
+#endif
+#ifdef TA_HOLDSYS
+	int holdable;			//holdable to use
+#endif
 } bot_input_t;
 
 #ifndef BSPTRACE
@@ -174,6 +182,21 @@ typedef struct bot_entitystate_s
 	int		legsAnim;		// mask off ANIM_TOGGLEBIT
 	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
 } bot_entitystate_t;
+
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+//game can send extra items not in "botfiles/items.c"
+//note: the items can be any type, not just weapons.
+typedef struct
+{
+	char classname[32];
+	char name[MAX_QPATH];
+	char model[MAX_QPATH];
+	int modelindex;
+	int respawntime;
+	int defaultWeight; // If item isn't in character item weight file use this weight.
+	int inventory;
+} bot_shareditem_t;
+#endif
 
 //bot AI library exported functions
 typedef struct botlib_import_s
@@ -286,7 +309,11 @@ typedef struct ea_export_s
 	void	(*EA_Gesture)(int client);
 	void	(*EA_Talk)(int client);
 	void	(*EA_Attack)(int client);
+#ifdef TA_HOLDSYS
+	void	(*EA_Use)(int client, int holdable);
+#else
 	void	(*EA_Use)(int client);
+#endif
 	void	(*EA_Respawn)(int client);
 	void	(*EA_MoveUp)(int client);
 	void	(*EA_MoveDown)(int client);
@@ -296,7 +323,11 @@ typedef struct ea_export_s
 	void	(*EA_MoveRight)(int client);
 	void	(*EA_Crouch)(int client);
 
+#if defined TA_WEAPSYS_EX && !defined TA_WEAPSYS_EX_COMPAT // BOTLIB
+	void	(*EA_DropWeapon)(int client);
+#else
 	void	(*EA_SelectWeapon)(int client, int weapon);
+#endif
 	void	(*EA_Jump)(int client);
 	void	(*EA_DelayedJump)(int client);
 	void	(*EA_Move)(int client, vec3_t dir, float speed);
@@ -366,7 +397,11 @@ typedef struct ai_export_s
 	int		(*BotGetMapLocationGoal)(char *name, struct bot_goal_s *goal);
 	float	(*BotAvoidGoalTime)(int goalstate, int number);
 	void	(*BotSetAvoidGoalTime)(int goalstate, int number, float avoidtime);
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+	void	(*BotInitLevelItems)(bot_shareditem_t *itemInfos);
+#else
 	void	(*BotInitLevelItems)(void);
+#endif
 	void	(*BotUpdateEntityItems)(void);
 	int		(*BotLoadItemWeights)(int goalstate, char *filename);
 	void	(*BotFreeItemWeights)(int goalstate);
@@ -390,6 +425,7 @@ typedef struct ai_export_s
 	void	(*BotFreeMoveState)(int handle);
 	void	(*BotInitMoveState)(int handle, struct bot_initmove_s *initmove);
 	void	(*BotAddAvoidSpot)(int movestate, vec3_t origin, float radius, int type);
+#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
 	//-----------------------------------
 	// be_ai_weap.h
 	//-----------------------------------
@@ -399,6 +435,7 @@ typedef struct ai_export_s
 	int		(*BotAllocWeaponState)(void);
 	void	(*BotFreeWeaponState)(int weaponstate);
 	void	(*BotResetWeaponState)(int weaponstate);
+#endif
 	//-----------------------------------
 	// be_ai_gen.h
 	//-----------------------------------
@@ -435,7 +472,11 @@ typedef struct botlib_export_s
 	//start a frame in the bot library
 	int (*BotLibStartFrame)(float time);
 	//load a new map in the bot library
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+	int (*BotLibLoadMap)(const char *mapname, bot_shareditem_t *itemInfos);
+#else
 	int (*BotLibLoadMap)(const char *mapname);
+#endif
 	//entity updates
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
 	//just for testing
@@ -507,21 +548,27 @@ name:						default:			module(s):			description:
 "ai_gametype"				"0"					be_ai_goal.c		game type
 "droppedweight"				"1000"				be_ai_goal.c		additional dropped item weight
 "weapindex_rocketlauncher"	"5"					be_ai_move.c		rl weapon index for rocket jumping
+#ifndef TA_WEAPSYS
 "weapindex_bfg10k"			"9"					be_ai_move.c		bfg weapon index for bfg jumping
+#endif
 "weapindex_grapple"			"10"				be_ai_move.c		grapple weapon index for grappling
 "entitytypemissile"			"3"					be_ai_move.c		ET_MISSILE
 "offhandgrapple"			"0"					be_ai_move.c		enable off hand grapple hook
 "cmd_grappleon"				"grappleon"			be_ai_move.c		command to activate off hand grapple
 "cmd_grappleoff"			"grappleoff"		be_ai_move.c		command to deactivate off hand grapple
 "itemconfig"				"items.c"			be_ai_goal.c		item configuration file
+#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
 "weaponconfig"				"weapons.c"			be_ai_weap.c		weapon configuration file
+#endif
 "synfile"					"syn.c"				be_ai_chat.c		file with synonyms
 "rndfile"					"rnd.c"				be_ai_chat.c		file with random strings
 "matchfile"					"match.c"			be_ai_chat.c		file with match strings
 "nochat"					"0"					be_ai_chat.c		disable chats
 "max_messages"				"1024"				be_ai_chat.c		console message heap size
+#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
 "max_weaponinfo"			"32"				be_ai_weap.c		maximum number of weapon info
 "max_projectileinfo"		"32"				be_ai_weap.c		maximum number of projectile info
+#endif
 "max_iteminfo"				"256"				be_ai_goal.c		maximum number of item info
 "max_levelitems"			"256"				be_ai_goal.c		maximum number of level items
 

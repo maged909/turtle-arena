@@ -67,6 +67,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define SB_TIME_X			(SB_SCORELINE_X + 17 * BIGCHAR_WIDTH + 8) // width 5
 #define SB_NAME_X			(SB_SCORELINE_X + 22 * BIGCHAR_WIDTH) // width 15
 
+#ifdef TA_SP // SP_SCOREBOARD
+#define SP_SB_SCORE_X			(SB_SCORELINE_X + 5 * BIGCHAR_WIDTH + 8) // width 6
+#define SP_SB_NAME_X			(SB_SCORELINE_X + 17 * BIGCHAR_WIDTH + 8) // width 15
+#endif
+
 // The new and improved score board
 //
 // In cases where the number of clients is high, the score board heads are interleaved
@@ -91,6 +96,9 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	vec3_t	headAngles;
 	clientInfo_t	*ci;
 	int iconx, headx;
+#ifdef TA_SP // SP_SCOREBOARD
+	int scorex, namex;
+#endif
 	playerState_t *ps;
 
 	if ( score->client < 0 || score->client >= cgs.maxclients ) {
@@ -102,6 +110,11 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 
 	iconx = SB_BOTICON_X + (SB_RATING_WIDTH / 2);
 	headx = SB_HEAD_X + (SB_RATING_WIDTH / 2);
+
+#ifdef TA_SP // SP_SCOREBOARD
+	scorex = cg_singlePlayerActive.integer ? SP_SB_SCORE_X : SB_SCORE_X;
+	namex = cg_singlePlayerActive.integer ? SP_SB_NAME_X : SB_NAME_X;
+#endif
 
 	// draw the handicap or bot skill marker (unless player has flag)
 	if ( ci->powerups & ( 1 << PW_NEUTRALFLAG ) ) {
@@ -177,6 +190,8 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 		}
 	}
 #endif
+
+#ifndef IOQ3ZTM // FONT_REWRITE
 	// draw the score line
 	if ( score->ping == -1 ) {
 		Com_sprintf(string, sizeof(string),
@@ -188,6 +203,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 		Com_sprintf(string, sizeof(string),
 			"%5i %4i %4i %s", score->score, score->ping, score->time, ci->name);
 	}
+#endif
 
 	if (cg.cur_ps) {
 		if (score->client == cg.cur_ps->clientNum) {
@@ -230,11 +246,51 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 		}
 
 		hcolor[3] = fade * 0.7;
+#ifdef IOQ3ZTM // ZTM: Use correct width
+		CG_FillRect( SB_SCORELINE_X + BIGCHAR_WIDTH + (SB_RATING_WIDTH / 2), y, 
+			640 - SB_SCORELINE_X - BIGCHAR_WIDTH - (SB_RATING_WIDTH / 2), BIGCHAR_HEIGHT+1, hcolor );
+#else
 		CG_FillRect( SB_SCORELINE_X + BIGCHAR_WIDTH + (SB_RATING_WIDTH / 2), y, 
 			640 - SB_SCORELINE_X - BIGCHAR_WIDTH, BIGCHAR_HEIGHT+1, hcolor );
+#endif
 	}
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	// draw the score line
+	if ( score->ping == -1 ) {
+		Com_sprintf(string, sizeof(string), "connecting");
+	} else if ( ci->team == TEAM_SPECTATOR ) {
+		Com_sprintf(string, sizeof(string), "SPECT");
+	} else {
+		Com_sprintf(string, sizeof(string), "%5i", score->score);
+	}
+#ifdef TA_SP // SP_SCOREBOARD
+	CG_DrawBigString( scorex + (SB_RATING_WIDTH / 2), y, string, fade );
+#else
+	CG_DrawBigString( SB_SCORE_X + (SB_RATING_WIDTH / 2), y, string, fade );
+#endif
+
+	if ( score->ping != -1
+#ifdef TA_SP // SP_SCOREBOARD
+		&& !cg_singlePlayerActive.integer
+#endif
+		)
+	{
+		Com_sprintf(string, sizeof(string), "%4i", score->ping);
+		CG_DrawBigString( SB_PING_X - (SB_RATING_WIDTH / 2), y, string, fade );
+
+		Com_sprintf(string, sizeof(string), "%4i", score->time);
+		CG_DrawBigString( SB_TIME_X - (SB_RATING_WIDTH / 2), y, string, fade );
+	}
+
+#ifdef TA_SP // SP_SCOREBOARD
+	CG_DrawBigString( namex - (SB_RATING_WIDTH / 2), y, ci->name, fade );
+#else
+	CG_DrawBigString( SB_NAME_X - (SB_RATING_WIDTH / 2), y, ci->name, fade );
+#endif
+#else
 	CG_DrawBigString( SB_SCORELINE_X + (SB_RATING_WIDTH / 2), y, string, fade );
+#endif
 
 	// add the "ready" marker for intermission exiting
 	if ( cg.snap->pss[0].stats[ STAT_CLIENTS_READY ] & ( 1 << score->client ) ) {
@@ -282,7 +338,7 @@ Draw the normal in-game scoreboard
 =================
 */
 qboolean CG_DrawOldScoreboard( void ) {
-	int		x, y, w, i, n1, n2;
+	int		 y, i, n1, n2;
 	float	fade;
 	float	*fadeColor;
 	char	*s;
@@ -306,6 +362,15 @@ qboolean CG_DrawOldScoreboard( void ) {
 		return qfalse;
 	}
 
+#ifdef TA_SP
+	if ( cgs.gametype == GT_SINGLE_PLAYER && cg.cur_lc && cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0
+		&& !cg.cur_lc->showScores )
+	{
+		cg.deferredPlayerLoading = 0;
+		return qfalse;
+	}
+#endif
+
 	if ( !cg.cur_lc || cg.cur_lc->showScores || cg.cur_lc->predictedPlayerState.pm_type == PM_DEAD ||
 		 cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		fade = 1.0;
@@ -322,25 +387,44 @@ qboolean CG_DrawOldScoreboard( void ) {
 	}
 
 
+#ifdef TA_MISC
+	if (cgs.gametype != GT_SINGLE_PLAYER) {
+		s = va( "Time Limit: %2i", cgs.timelimit );
+		CG_DrawBigString( 320-Com_FontStringWidth(&cgs.media.fontBig, s, 0), 20, s, 1.0f);
+
+		if ( cgs.gametype >= GT_CTF ) {
+			s = va( "Capture Limit: %2i", cgs.capturelimit );
+		} else {
+			s = va( "Score Limit: %2i", cgs.fraglimit );
+		}
+		CG_DrawBigString( 328, 20, s, 1.0f);
+	}
+#endif
+
 	// fragged by ... line
 	if ( cg.cur_lc && cg.cur_lc->killerName[0] ) {
+#ifdef NOTRATEDM // frag to KO
+		s = va("Knocked out by %s", cg.cur_lc->killerName );
+#else
 		s = va("Fragged by %s", cg.cur_lc->killerName );
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-		x = ( SCREEN_WIDTH - w ) / 2;
+#endif
 		y = 40;
-		CG_DrawBigString( x, y, s, fade );
+		CG_DrawBigString( CENTER_X, y, s, fade );
 	}
 
 	// current rank
 	if ( cgs.gametype < GT_TEAM) {
-		if (cg.cur_ps && cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR ) {
+		if (cg.cur_ps && cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
+#ifdef TA_SP
+			&& cgs.gametype != GT_SINGLE_PLAYER
+#endif
+			)
+		{
 			s = va("%s place with %i",
 				CG_PlaceString( cg.cur_ps->persistant[PERS_RANK] + 1 ),
 				cg.cur_ps->persistant[PERS_SCORE] );
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-			x = ( SCREEN_WIDTH - w ) / 2;
 			y = 60;
-			CG_DrawBigString( x, y, s, fade );
+			CG_DrawBigString( CENTER_X, y, s, fade );
 		}
 	} else {
 		if ( cg.teamScores[0] == cg.teamScores[1] ) {
@@ -351,19 +435,33 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("Blue leads %i to %i",cg.teamScores[1], cg.teamScores[0] );
 		}
 
-		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
-		x = ( SCREEN_WIDTH - w ) / 2;
 		y = 60;
-		CG_DrawBigString( x, y, s, fade );
+		CG_DrawBigString( CENTER_X, y, s, fade );
 	}
 
 	// scoreboard
 	y = SB_HEADER;
 
+#ifdef TA_SP // SP_SCOREBOARD
+	if (cg_singlePlayerActive.integer)
+	{
+		// Only draw score and name, centered.
+		CG_DrawPic( SP_SB_SCORE_X + (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardScore );
+		CG_DrawPic( SP_SB_NAME_X  - (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardName );
+	}
+	else
+	{
+		CG_DrawPic( SB_SCORE_X + (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardScore );
+		CG_DrawPic( SB_PING_X - (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardPing );
+		CG_DrawPic( SB_TIME_X - (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardTime );
+		CG_DrawPic( SB_NAME_X - (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardName );
+	}
+#else
 	CG_DrawPic( SB_SCORE_X + (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardScore );
 	CG_DrawPic( SB_PING_X - (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardPing );
 	CG_DrawPic( SB_TIME_X - (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardTime );
 	CG_DrawPic( SB_NAME_X - (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardName );
+#endif
 
 	y = SB_TOP;
 
@@ -390,20 +488,20 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 		if ( cg.teamScores[0] >= cg.teamScores[1] ) {
 			n1 = CG_TeamScoreboard( y, TEAM_RED, fade, maxClients, lineHeight );
-			CG_DrawTeamBackground( 0, y - topBorderSize, 640, n1 * lineHeight + bottomBorderSize, 0.33f, TEAM_RED );
+			CG_DrawTeamBackground( 0, y - topBorderSize, 640, n1 * lineHeight + bottomBorderSize, 0.33f, TEAM_RED, -1 );
 			y += (n1 * lineHeight) + BIGCHAR_HEIGHT;
 			maxClients -= n1;
 			n2 = CG_TeamScoreboard( y, TEAM_BLUE, fade, maxClients, lineHeight );
-			CG_DrawTeamBackground( 0, y - topBorderSize, 640, n2 * lineHeight + bottomBorderSize, 0.33f, TEAM_BLUE );
+			CG_DrawTeamBackground( 0, y - topBorderSize, 640, n2 * lineHeight + bottomBorderSize, 0.33f, TEAM_BLUE, -1 );
 			y += (n2 * lineHeight) + BIGCHAR_HEIGHT;
 			maxClients -= n2;
 		} else {
 			n1 = CG_TeamScoreboard( y, TEAM_BLUE, fade, maxClients, lineHeight );
-			CG_DrawTeamBackground( 0, y - topBorderSize, 640, n1 * lineHeight + bottomBorderSize, 0.33f, TEAM_BLUE );
+			CG_DrawTeamBackground( 0, y - topBorderSize, 640, n1 * lineHeight + bottomBorderSize, 0.33f, TEAM_BLUE, -1 );
 			y += (n1 * lineHeight) + BIGCHAR_HEIGHT;
 			maxClients -= n1;
 			n2 = CG_TeamScoreboard( y, TEAM_RED, fade, maxClients, lineHeight );
-			CG_DrawTeamBackground( 0, y - topBorderSize, 640, n2 * lineHeight + bottomBorderSize, 0.33f, TEAM_RED );
+			CG_DrawTeamBackground( 0, y - topBorderSize, 640, n2 * lineHeight + bottomBorderSize, 0.33f, TEAM_RED, -1 );
 			y += (n2 * lineHeight) + BIGCHAR_HEIGHT;
 			maxClients -= n2;
 		}
@@ -441,7 +539,6 @@ CG_CenterGiantLine
 ================
 */
 static void CG_CenterGiantLine( float y, const char *string ) {
-	float		x;
 	vec4_t		color;
 
 	color[0] = 1;
@@ -449,9 +546,7 @@ static void CG_CenterGiantLine( float y, const char *string ) {
 	color[2] = 1;
 	color[3] = 1;
 
-	x = 0.5 * ( 640 - GIANT_WIDTH * CG_DrawStrlen( string ) );
-
-	CG_DrawStringExt( x, y, string, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+	CG_DrawGiantStringColor(CENTER_X, y, string, color);
 }
 
 /*
@@ -516,15 +611,23 @@ void CG_DrawOldTourneyScoreboard( void ) {
 		//
 		// teamplay scoreboard
 		//
-		CG_DrawStringExt( 8, y, "Red Team", color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+		CG_DrawGiantStringColor(8, y, "Red Team", color);
 		s = va("%i", cg.teamScores[0] );
+#ifdef IOQ3ZTM // FONT_REWRITE
+		CG_DrawGiantStringColor( 632 - Com_FontStringWidth(&cgs.media.fontGiant, s, 0), y, s, color);
+#else
 		CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
-		
+#endif
+
 		y += 64;
 
-		CG_DrawStringExt( 8, y, "Blue Team", color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+		CG_DrawGiantStringColor(8, y, "Blue Team", color);
 		s = va("%i", cg.teamScores[1] );
+#ifdef IOQ3ZTM // FONT_REWRITE
+		CG_DrawGiantStringColor( 632 - Com_FontStringWidth(&cgs.media.fontGiant, s, 0), y, s, color);
+#else
 		CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+#endif
 	} else {
 		//
 		// free for all scoreboard
@@ -538,9 +641,13 @@ void CG_DrawOldTourneyScoreboard( void ) {
 				continue;
 			}
 
-			CG_DrawStringExt( 8, y, ci->name, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+			CG_DrawGiantStringColor(8, y, ci->name, color);
 			s = va("%i", ci->score );
+#ifdef IOQ3ZTM // FONT_REWRITE
+			CG_DrawGiantStringColor( 632 - Com_FontStringWidth(&cgs.media.fontGiant, s, 0), y, s, color);
+#else
 			CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
+#endif
 			y += 64;
 		}
 	}

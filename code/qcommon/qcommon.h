@@ -263,9 +263,17 @@ PROTOCOL
 ==============================================================
 */
 
-#define	PROTOCOL_VERSION	71
-#define PROTOCOL_LEGACY_VERSION	68
-// 1.31 - 67
+#define	PROTOCOL_VERSION	9
+#define PROTOCOL_LEGACY_VERSION	0
+// 9 TA 0.6
+// 8 TA 0.5.3
+// 7 TA 0.5.1 / TA 0.5.2
+// 6 TA 0.5.0
+// 5 TA 0.4.1 / 0.4.2 / 0.4.3
+// 4 TA 0.4
+// 3 TA 0.3 development (unreleased)
+// 2 TA 0.2
+// 1 Initial release
 
 // maintain a list of compatible protocols for demo playing
 // NOTE: that stuff only works with two digits protocols
@@ -852,7 +860,9 @@ extern	cvar_t	*com_timescale;
 extern	cvar_t	*com_sv_running;
 extern	cvar_t	*com_cl_running;
 extern	cvar_t	*com_version;
+#ifndef NOBLOOD
 extern	cvar_t	*com_blood;
+#endif
 extern	cvar_t	*com_singlePlayerActive;
 extern	cvar_t	*com_buildScript;		// for building release pak files
 extern	cvar_t	*com_journal;
@@ -1083,9 +1093,11 @@ NON-PORTABLE SYSTEM SERVICES
 void	Sys_Init (void);
 
 // general development dll loading for virtual machine testing
+#ifndef NO_NATIVE_SUPPORT
 void	* QDECL Sys_LoadGameDll( const char *name, intptr_t (QDECL **entryPoint)(int, ...),
 				  intptr_t (QDECL *systemcalls)(intptr_t, ...) );
 void	Sys_UnloadDll( void *dllHandle );
+#endif
 
 void	Sys_UnloadGame( void );
 void	*Sys_GetGameAPI( void *parms );

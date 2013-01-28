@@ -692,7 +692,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		qglDepthRange (0, 1);
 	}
 
-#if 0
+#ifdef IOQ3ZTM
 	RB_DrawSun();
 #endif
 	// darken down any stencil shadows
@@ -1347,6 +1347,25 @@ const void	*RB_SwapBuffers( const void *data ) {
 	return (const void *)(cmd + 1);
 }
 
+#ifdef TA_BLOOM
+/*
+=============
+RB_Bloom
+
+=============
+*/
+const void	*RB_Bloom( const void *data ) {
+	const bloomCommand_t	*cmd;
+
+	cmd = (const bloomCommand_t *)data;
+
+	// Do the bloom effect
+	R_BloomScreen(cmd->x, cmd->y, cmd->w, cmd->h);
+
+	return (const void *)(cmd + 1);
+}
+#endif
+
 /*
 ====================
 RB_ExecuteRenderCommands
@@ -1397,6 +1416,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_CLEARDEPTH:
 			data = RB_ClearDepth(data);
 			break;
+#ifdef TA_BLOOM
+		case RC_BLOOM:
+			data = RB_Bloom(data);
+			break;
+#endif
 		case RC_END_OF_LIST:
 		default:
 			// stop rendering

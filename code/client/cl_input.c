@@ -59,10 +59,22 @@ typedef struct
 {
 	kbutton_t	in_left, in_right, in_forward, in_back;
 	kbutton_t	in_lookup, in_lookdown, in_moveleft, in_moveright;
+#ifdef TURTLEARENA // NO_SPEED_KEY
+	kbutton_t	in_strafe;
+#else
 	kbutton_t	in_strafe, in_speed;
+#endif
 	kbutton_t	in_up, in_down;
 
+#ifdef TURTLEARENA // LOCKON
+	kbutton_t	in_lockon;
+#endif
+
 	kbutton_t	in_buttons[16];
+
+#ifdef TA_PATHSYS // 2DMODE
+	int pathMode;
+#endif
 
 	// NOTE: in_mlooking should be moved here if multiple mice are supported.
 } clientInput_t;
@@ -229,10 +241,16 @@ void IN_MoveleftUp(void) {IN_KeyUp(&cis[0].in_moveleft);}
 void IN_MoverightDown(void) {IN_KeyDown(&cis[0].in_moveright);}
 void IN_MoverightUp(void) {IN_KeyUp(&cis[0].in_moveright);}
 
+#ifndef TURTLEARENA // NO_SPEED_KEY
 void IN_SpeedDown(void) {IN_KeyDown(&cis[0].in_speed);}
 void IN_SpeedUp(void) {IN_KeyUp(&cis[0].in_speed);}
+#endif
 void IN_StrafeDown(void) {IN_KeyDown(&cis[0].in_strafe);}
 void IN_StrafeUp(void) {IN_KeyUp(&cis[0].in_strafe);}
+#ifdef TURTLEARENA // LOCKON
+void IN_LockonDown(void) {IN_KeyDown(&cis[0].in_lockon);IN_KeyDown(&cis[0].in_strafe);}
+void IN_LockonUp(void) {IN_KeyUp(&cis[0].in_lockon);IN_KeyUp(&cis[0].in_strafe);}
+#endif
 
 void IN_2UpDown(void) {IN_KeyDown(&cis[1].in_up);}
 void IN_2UpUp(void) {IN_KeyUp(&cis[1].in_up);}
@@ -255,10 +273,16 @@ void IN_2MoveleftUp(void) {IN_KeyUp(&cis[1].in_moveleft);}
 void IN_2MoverightDown(void) {IN_KeyDown(&cis[1].in_moveright);}
 void IN_2MoverightUp(void) {IN_KeyUp(&cis[1].in_moveright);}
 
+#ifndef TURTLEARENA // NO_SPEED_KEY
 void IN_2SpeedDown(void) {IN_KeyDown(&cis[1].in_speed);}
 void IN_2SpeedUp(void) {IN_KeyUp(&cis[1].in_speed);}
+#endif
 void IN_2StrafeDown(void) {IN_KeyDown(&cis[1].in_strafe);}
 void IN_2StrafeUp(void) {IN_KeyUp(&cis[1].in_strafe);}
+#ifdef TURTLEARENA // LOCKON
+void IN_2LockonDown(void) {IN_KeyDown(&cis[1].in_lockon);IN_KeyDown(&cis[1].in_strafe);}
+void IN_2LockonUp(void) {IN_KeyUp(&cis[1].in_lockon);IN_KeyUp(&cis[1].in_strafe);}
+#endif
 
 void IN_3UpDown(void) {IN_KeyDown(&cis[2].in_up);}
 void IN_3UpUp(void) {IN_KeyUp(&cis[2].in_up);}
@@ -281,10 +305,16 @@ void IN_3MoveleftUp(void) {IN_KeyUp(&cis[2].in_moveleft);}
 void IN_3MoverightDown(void) {IN_KeyDown(&cis[2].in_moveright);}
 void IN_3MoverightUp(void) {IN_KeyUp(&cis[2].in_moveright);}
 
+#ifndef TURTLEARENA // NO_SPEED_KEY
 void IN_3SpeedDown(void) {IN_KeyDown(&cis[2].in_speed);}
 void IN_3SpeedUp(void) {IN_KeyUp(&cis[2].in_speed);}
+#endif
 void IN_3StrafeDown(void) {IN_KeyDown(&cis[2].in_strafe);}
 void IN_3StrafeUp(void) {IN_KeyUp(&cis[2].in_strafe);}
+#ifdef TURTLEARENA // LOCKON
+void IN_3LockonDown(void) {IN_KeyDown(&cis[2].in_lockon);IN_KeyDown(&cis[2].in_strafe);}
+void IN_3LockonUp(void) {IN_KeyUp(&cis[2].in_lockon);IN_KeyUp(&cis[2].in_strafe);}
+#endif
 
 void IN_4UpDown(void) {IN_KeyDown(&cis[3].in_up);}
 void IN_4UpUp(void) {IN_KeyUp(&cis[3].in_up);}
@@ -307,10 +337,16 @@ void IN_4MoveleftUp(void) {IN_KeyUp(&cis[3].in_moveleft);}
 void IN_4MoverightDown(void) {IN_KeyDown(&cis[3].in_moveright);}
 void IN_4MoverightUp(void) {IN_KeyUp(&cis[3].in_moveright);}
 
+#ifndef TURTLEARENA // NO_SPEED_KEY
 void IN_4SpeedDown(void) {IN_KeyDown(&cis[3].in_speed);}
 void IN_4SpeedUp(void) {IN_KeyUp(&cis[3].in_speed);}
+#endif
 void IN_4StrafeDown(void) {IN_KeyDown(&cis[3].in_strafe);}
 void IN_4StrafeUp(void) {IN_KeyUp(&cis[3].in_strafe);}
+#ifdef TURTLEARENA // LOCKON
+void IN_4LockonDown(void) {IN_KeyDown(&cis[3].in_lockon);IN_KeyDown(&cis[3].in_strafe);}
+void IN_4LockonUp(void) {IN_KeyUp(&cis[3].in_lockon);IN_KeyUp(&cis[3].in_strafe);}
+#endif
 
 #ifdef USE_VOIP
 void IN_VoipRecordDown(void)
@@ -497,7 +533,9 @@ cvar_t	*cl_pitchspeed[CL_MAX_SPLITVIEW];
 
 cvar_t	*cl_anglespeedkey[CL_MAX_SPLITVIEW];
 
+#ifndef TURTLEARENA // ALWAYS_RUN
 cvar_t	*cl_run[CL_MAX_SPLITVIEW];
+#endif
 
 /*
 ================
@@ -510,13 +548,23 @@ void CL_AdjustAngles( calc_t *lc, clientInput_t *ci ) {
 	float	speed;
 	int		lcNum = lc - cl.localClients;
 	
-	if ( ci->in_speed.active ) {
+#ifdef TURTLEARENA // LOCKON // NO_SPEED_KEY
+	if ( !ci->in_lockon.active )
+#else
+	if ( ci->in_speed.active )
+#endif
+	{
 		speed = 0.001 * cls.frametime * cl_anglespeedkey[lcNum]->value;
 	} else {
 		speed = 0.001 * cls.frametime;
 	}
 
-	if ( !ci->in_strafe.active ) {
+	if ( !ci->in_strafe.active
+#ifdef TA_PATHSYS // 2DMODE
+		&& ci->pathMode != PATHMODE_SIDE && ci->pathMode != PATHMODE_BACK
+#endif
+		)
+	{
 		lc->viewangles[YAW] -= speed*cl_yawspeed[lcNum]->value*CL_KeyState (&ci->in_right);
 		lc->viewangles[YAW] += speed*cl_yawspeed[lcNum]->value*CL_KeyState (&ci->in_left);
 	}
@@ -541,7 +589,12 @@ void CL_KeyMove( clientInput_t *ci, usercmd_t *cmd ) {
 	// the walking flag is to keep animations consistant
 	// even during acceleration and develeration
 	//
-	if ( ci->in_speed.active ^ cl_run[ci-cis]->integer ) {
+#ifdef TURTLEARENA // LOCKON // ALWAYS_RUN // NO_SPEED_KEY
+	if (!ci->in_lockon.active)
+#else
+	if ( ci->in_speed.active ^ cl_run[ci-cis]->integer )
+#endif
+	{
 		movespeed = 127;
 		cmd->buttons &= ~BUTTON_WALKING;
 	} else {
@@ -552,7 +605,12 @@ void CL_KeyMove( clientInput_t *ci, usercmd_t *cmd ) {
 	forward = 0;
 	side = 0;
 	up = 0;
-	if ( ci->in_strafe.active ) {
+	if ( ci->in_strafe.active
+#ifdef TA_PATHSYS // 2DMODE
+		|| ci->pathMode == PATHMODE_SIDE || ci->pathMode == PATHMODE_BACK
+#endif
+		)
+	{
 		side += movespeed * CL_KeyState (&ci->in_right);
 		side -= movespeed * CL_KeyState (&ci->in_left);
 	}
@@ -621,17 +679,32 @@ void CL_JoystickMove( calc_t *lc, clientInput_t *ci, usercmd_t *cmd ) {
 	float	anglespeed;
 	int		lcNum = lc - cl.localClients;
 
-	if ( !(ci->in_speed.active ^ cl_run[lcNum]->integer) ) {
+#ifdef TURTLEARENA // LOCKON // ALWAYS_RUN // NO_SPEED_KEY
+	if (ci->in_lockon.active)
+#else
+	if ( !(ci->in_speed.active ^ cl_run[lcNum]->integer) )
+#endif
+	{
 		cmd->buttons |= BUTTON_WALKING;
 	}
 
-	if ( ci->in_speed.active ) {
+#ifdef TURTLEARENA // LOCKON // NO_SPEED_KEY
+	if ( !ci->in_lockon.active )
+#else
+	if ( ci->in_speed.active )
+#endif
+	{
 		anglespeed = 0.001 * cls.frametime * cl_anglespeedkey[lcNum]->value;
 	} else {
 		anglespeed = 0.001 * cls.frametime;
 	}
 
-	if ( !ci->in_strafe.active ) {
+	if ( !ci->in_strafe.active
+#ifdef TA_PATHSYS // 2DMODE
+		&& ci->pathMode != PATHMODE_SIDE && ci->pathMode != PATHMODE_BACK
+#endif
+		)
+	{
 		lc->viewangles[YAW] += anglespeed * j_yaw[lcNum]->value * lc->joystickAxis[j_yaw_axis[lcNum]->integer];
 		cmd->rightmove = ClampChar( cmd->rightmove + (int) (j_side[lcNum]->value * lc->joystickAxis[j_side_axis[lcNum]->integer]) );
 	} else {
@@ -728,14 +801,37 @@ void CL_MouseMove(calc_t *lc, clientInput_t *ci, usercmd_t *cmd)
 	my *= lc->cgameSensitivity;
 
 	// add mouse X/Y movement to cmd
-	if(ci->in_strafe.active)
+	if(ci->in_strafe.active
+#ifdef TA_PATHSYS // 2DMODE
+		|| ci->pathMode == PATHMODE_SIDE || ci->pathMode == PATHMODE_BACK
+#endif
+		)
 	{
 		cmd->rightmove = ClampChar(cmd->rightmove + m_side->value * mx);
+#ifdef TURTLEARENA // LOCKON
+		// if walking, don't go over 64 side move
+		if (ci->in_lockon.active)
+		{
+			if (cmd->rightmove > 64)
+				cmd->rightmove = 64;
+			else if (cmd->rightmove < -64)
+				cmd->rightmove = -64;
+		}
+#endif
 	}
 	else
 		lc->viewangles[YAW] -= m_yaw->value * mx;
 
-	if ((in_mlooking || cl_freelook->integer) && !ci->in_strafe.active)
+	if ((in_mlooking || cl_freelook->integer)
+#ifdef TURTLEARENA // LOCKON
+		&& (ci->in_lockon.active || !ci->in_strafe.active)
+#else
+		&& !ci->in_strafe.active
+#endif
+#ifdef TA_PATHSYS // 2DMODE
+		&& ci->pathMode != PATHMODE_SIDE && ci->pathMode != PATHMODE_BACK
+#endif
+		)
 		lc->viewangles[PITCH] += m_pitch->value * my;
 	else
 		cmd->forwardmove = ClampChar(cmd->forwardmove - m_forward->value * my);
@@ -781,14 +877,35 @@ CL_FinishMove
 */
 void CL_FinishMove( calc_t *lc, usercmd_t *cmd ) {
 	int		i;
+#ifdef IOQ3ZTM // ANALOG
+	int		localClientNum;
+#endif
 
 	// copy the state that the cgame is currently sending
+#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT
 	cmd->weapon = lc->cgameUserCmdValue;
+#endif
+#ifdef TA_HOLDSYS/*2*/
+	cmd->holdable = lc->cgameHoldableValue;
+#endif
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
 	cmd->serverTime = cl.serverTime;
 
+#ifdef IOQ3ZTM // ANALOG
+	// If cl_thirdPersonAnalog, always move relative to camera.
+	localClientNum = lc - cl.localClients;
+	if (cl_thirdPerson[localClientNum]->integer && cl_thirdPersonAnalog[localClientNum]->integer
+		&& cl_thirdPersonAngle[localClientNum]->value)
+	{
+		if (cmd->forwardmove || cmd->rightmove || cmd->upmove)
+		{
+			lc->viewangles[YAW] -= cl_thirdPersonAngle[localClientNum]->value;
+			Cvar_Set(Com_LocalClientCvarName(localClientNum, "cg_thirdPersonAngle"), "0");
+		}
+	}
+#endif
 	for (i=0 ; i<3 ; i++) {
 		cmd->angles[i] = ANGLE2SHORT(lc->viewangles[i]);
 	}
@@ -808,6 +925,11 @@ usercmd_t CL_CreateCmd( int localClientNum ) {
 
 	lc = &cl.localClients[localClientNum];
 	ci = &cis[localClientNum];
+
+#ifdef TA_PATHSYS // 2DMODE
+#warning "ZTM: Need to Fix this"
+	//ci->pathMode = DA_ElementPointer(cl.snap.playerStates, cl.snap.lcIndex[localClientNum])->pathMode;
+#endif
 
 	VectorCopy( lc->viewangles, oldAngles );
 
@@ -1212,8 +1334,14 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-moveleft", IN_MoveleftUp);
 	Cmd_AddCommand ("+moveright", IN_MoverightDown);
 	Cmd_AddCommand ("-moveright", IN_MoverightUp);
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	Cmd_AddCommand ("+speed", IN_SpeedDown);
 	Cmd_AddCommand ("-speed", IN_SpeedUp);
+#endif
+#ifdef TURTLEARENA // LOCKON
+	Cmd_AddCommand ("+lockon", IN_LockonDown);
+	Cmd_AddCommand ("-lockon", IN_LockonUp);
+#endif
 	Cmd_AddCommand ("+attack", IN_Button0Down);
 	Cmd_AddCommand ("-attack", IN_Button0Up);
 	Cmd_AddCommand ("+button0", IN_Button0Down);
@@ -1279,8 +1407,14 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-2moveleft", IN_2MoveleftUp);
 	Cmd_AddCommand ("+2moveright", IN_2MoverightDown);
 	Cmd_AddCommand ("-2moveright", IN_2MoverightUp);
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	Cmd_AddCommand ("+2speed", IN_2SpeedDown);
 	Cmd_AddCommand ("-2speed", IN_2SpeedUp);
+#endif
+#ifdef TURTLEARENA // LOCKON
+	Cmd_AddCommand ("+2lockon", IN_2LockonDown);
+	Cmd_AddCommand ("-2lockon", IN_2LockonUp);
+#endif
 	Cmd_AddCommand ("+2attack", IN_2Button0Down);
 	Cmd_AddCommand ("-2attack", IN_2Button0Up);
 	Cmd_AddCommand ("+2button0", IN_2Button0Down);
@@ -1340,8 +1474,14 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-3moveleft", IN_3MoveleftUp);
 	Cmd_AddCommand ("+3moveright", IN_3MoverightDown);
 	Cmd_AddCommand ("-3moveright", IN_3MoverightUp);
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	Cmd_AddCommand ("+3speed", IN_3SpeedDown);
 	Cmd_AddCommand ("-3speed", IN_3SpeedUp);
+#endif
+#ifdef TURTLEARENA // LOCKON
+	Cmd_AddCommand ("+3lockon", IN_3LockonDown);
+	Cmd_AddCommand ("-3lockon", IN_3LockonUp);
+#endif
 	Cmd_AddCommand ("+3attack", IN_3Button0Down);
 	Cmd_AddCommand ("-3attack", IN_3Button0Up);
 	Cmd_AddCommand ("+3button0", IN_3Button0Down);
@@ -1401,8 +1541,14 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-4moveleft", IN_4MoveleftUp);
 	Cmd_AddCommand ("+4moveright", IN_4MoverightDown);
 	Cmd_AddCommand ("-4moveright", IN_4MoverightUp);
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	Cmd_AddCommand ("+4speed", IN_4SpeedDown);
 	Cmd_AddCommand ("-4speed", IN_4SpeedUp);
+#endif
+#ifdef TURTLEARENA // LOCKON
+	Cmd_AddCommand ("+4lockon", IN_4LockonDown);
+	Cmd_AddCommand ("-4lockon", IN_4LockonUp);
+#endif
 	Cmd_AddCommand ("+4attack", IN_4Button0Down);
 	Cmd_AddCommand ("-4attack", IN_4Button0Up);
 	Cmd_AddCommand ("+4button0", IN_4Button0Down);
@@ -1538,8 +1684,14 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-2moveleft");
 	Cmd_RemoveCommand("+2moveright");
 	Cmd_RemoveCommand("-2moveright");
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	Cmd_RemoveCommand("+2speed");
 	Cmd_RemoveCommand("-2speed");
+#endif
+#ifdef TURTLEARENA // LOCKON
+	Cmd_RemoveCommand("+2lockon");
+	Cmd_RemoveCommand("-2lockon");
+#endif
 	Cmd_RemoveCommand("+2attack");
 	Cmd_RemoveCommand("-2attack");
 	Cmd_RemoveCommand("+2button0");
@@ -1597,8 +1749,14 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-3moveleft");
 	Cmd_RemoveCommand("+3moveright");
 	Cmd_RemoveCommand("-3moveright");
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	Cmd_RemoveCommand("+3speed");
 	Cmd_RemoveCommand("-3speed");
+#endif
+#ifdef TURTLEARENA // LOCKON
+	Cmd_RemoveCommand("+3lockon");
+	Cmd_RemoveCommand("-3lockon");
+#endif
 	Cmd_RemoveCommand("+3attack");
 	Cmd_RemoveCommand("-3attack");
 	Cmd_RemoveCommand("+3button0");
@@ -1656,8 +1814,14 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-4moveleft");
 	Cmd_RemoveCommand("+4moveright");
 	Cmd_RemoveCommand("-4moveright");
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	Cmd_RemoveCommand("+4speed");
 	Cmd_RemoveCommand("-4speed");
+#endif
+#ifdef TURTLEARENA // LOCKON
+	Cmd_RemoveCommand("+4lockon");
+	Cmd_RemoveCommand("-4lockon");
+#endif
 	Cmd_RemoveCommand("+4attack");
 	Cmd_RemoveCommand("-4attack");
 	Cmd_RemoveCommand("+4button0");

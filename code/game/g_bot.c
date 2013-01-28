@@ -55,9 +55,11 @@ static botSpawnQueue_t	botSpawnQueue[BOT_SPAWN_QUEUE_DEPTH];
 
 vmCvar_t bot_minplayers;
 
+#ifndef TA_SP
 extern gentity_t	*podium1;
 extern gentity_t	*podium2;
 extern gentity_t	*podium3;
+#endif
 
 
 /*
@@ -149,7 +151,10 @@ static void G_LoadArenasFromFile( char *filename ) {
 G_LoadArenas
 ===============
 */
-static void G_LoadArenas( void ) {
+#ifndef IOQ3ZTM // MAP_ROTATION
+static
+#endif
+void G_LoadArenas( void ) {
 	int			numdirs;
 	vmCvar_t	arenasFile;
 	char		filename[128];
@@ -178,7 +183,7 @@ static void G_LoadArenas( void ) {
 		G_LoadArenasFromFile(filename);
 	}
 	G_DPrintf("%i arenas parsed\n", g_numArenas);
-	
+
 	for( n = 0; n < g_numArenas; n++ ) {
 		Info_SetValueForKey( g_arenaInfos[n], "num", va( "%i", n ) );
 	}
@@ -202,7 +207,80 @@ const char *G_GetArenaInfoByMap( const char *map ) {
 	return NULL;
 }
 
+#ifdef IOQ3ZTM // MAP_ROTATION
+/*
+===============
+G_GetNextArenaInfoByGametype
+===============
+*/
+const char *G_GetNextArenaInfoByGametype( const char *map, gametype_t gametype ) {
+	int			i, n;
+	const char *type;
+	static char *gametypeNames[] = {"ffa", "tourney", "single", "team", "ctf", "oneflag", "overload", "harvester"};
 
+	gametype = gametype % GT_MAX_GAME_TYPE;
+
+	n = 0;
+	if (map && map[0] != '\0') {
+		for( i = 0;  i < g_numArenas; i++ ) {
+			if( Q_stricmp( Info_ValueForKey( g_arenaInfos[i], "map" ), map ) == 0 ) {
+				n = i+1;
+				break;
+			}
+		}
+	}
+
+	for(i = 0; i < g_numArenas-1; i++, n++ ) {
+		if (n >= g_numArenas) {
+			n = 0;
+		}
+
+		type = Info_ValueForKey( g_arenaInfos[n], "type" );
+		// if no type specified, it will be treated as "ffa"
+		if( *type ) {
+			if( strstr( type, gametypeNames[gametype] ) ) {
+				return g_arenaInfos[n];
+			}
+		} else {
+			if( gametype == GT_FFA ) {
+				return g_arenaInfos[n];
+			}
+		}
+	}
+
+	return NULL;
+}
+
+/*
+=================
+G_AdvanceMap
+=================
+*/
+void G_AdvanceMap( void ) {
+	char		map[MAX_QPATH];
+	char		serverinfo[MAX_INFO_STRING];
+	const char	*info;
+
+#ifdef TA_SP
+	// Single player doesn't rotate maps like the other gametypes.
+	if (g_gametype.integer == GT_SINGLE_PLAYER || g_singlePlayer.integer) {
+		return;
+	}
+#endif
+
+	trap_GetServerinfo( serverinfo, sizeof(serverinfo) );
+	Q_strncpyz( map, Info_ValueForKey( serverinfo, "mapname" ), sizeof(map) );
+
+	// Get map info
+	info = G_GetNextArenaInfoByGametype(map, g_gametype.integer);
+	if (info) {
+		trap_Cvar_Set("nextmap", va("map %s", Info_ValueForKey( info, "map" )));
+	}
+}
+#endif
+
+
+#ifndef TA_SP
 /*
 =================
 PlayerIntroSound
@@ -227,6 +305,7 @@ static void PlayerIntroSound( const char *modelAndSkin ) {
 
 	trap_Cmd_ExecuteText( EXEC_APPEND, va( "play sound/player/announce/%s.wav\n", skin ) );
 }
+#endif
 
 /*
 ===============
@@ -527,7 +606,9 @@ G_CheckBotSpawn
 */
 void G_CheckBotSpawn( void ) {
 	int		n;
+#ifndef TA_SP
 	char	userinfo[MAX_INFO_VALUE];
+#endif
 
 	G_CheckMinimumPlayers();
 
@@ -541,10 +622,12 @@ void G_CheckBotSpawn( void ) {
 		ClientBegin( botSpawnQueue[n].clientNum );
 		botSpawnQueue[n].spawnTime = 0;
 
+#ifndef TA_SP
 		if( g_gametype.integer == GT_SINGLE_PLAYER ) {
 			trap_GetUserinfo( botSpawnQueue[n].clientNum, userinfo, sizeof(userinfo) );
 			PlayerIntroSound( Info_ValueForKey (userinfo, "model") );
 		}
+#endif
 	}
 }
 
@@ -716,8 +799,14 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 		model = DEFAULT_MODEL;
 	}
 	Info_SetValueForKey( userinfo, key, model );
+#ifndef IOQ3ZTM_NO_TEAM_MODEL
 	key = "team_model";
 	Info_SetValueForKey( userinfo, key, model );
+#endif
+#ifdef TA_SP // SPMODEL
+	key = "spmodel";
+	Info_SetValueForKey( userinfo, key, model );
+#endif
 
 	key = "headmodel";
 	headmodel = Info_ValueForKey( botinfo, key );
@@ -729,8 +818,14 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 		}
 	}
 	Info_SetValueForKey( userinfo, key, headmodel );
+#ifndef IOQ3ZTM_NO_TEAM_MODEL
 	key = "team_headmodel";
 	Info_SetValueForKey( userinfo, key, headmodel );
+#endif
+#ifdef TA_SP // SPMODEL
+	key = "spheadmodel";
+	Info_SetValueForKey( userinfo, key, headmodel );
+#endif
 
 	key = "color1";
 	s = Info_ValueForKey( botinfo, key );
@@ -742,7 +837,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	key = "color2";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = va("%d", DEFAULT_CLIENT_COLOR2);
+		s =  va("%d", DEFAULT_CLIENT_COLOR2);
 	}
 	Info_SetValueForKey( userinfo, key, s );
 
@@ -853,9 +948,15 @@ void Svcmd_BotList_f( void ) {
 			strcpy(funname, "");
 		}
 		strcpy(model, Info_ValueForKey( g_botInfos[i], "model" ));
+#ifdef TURTLEARENA // DEFAULT_MODEL
+		if ( !*model ) {
+			strcpy(model, "raph/default");
+		}
+#else
 		if ( !*model ) {
 			strcpy(model, DEFAULT_MODEL);
 		}
+#endif
 		strcpy(aifile, Info_ValueForKey( g_botInfos[i], "aifile"));
 		if (!*aifile ) {
 			strcpy(aifile, "bots/default_c.c");
@@ -870,16 +971,23 @@ void Svcmd_BotList_f( void ) {
 G_SpawnBots
 ===============
 */
-static void G_SpawnBots( char *botList, int baseDelay ) {
+#ifdef TA_SP // SP_BOSS
+static void G_SpawnBots( char *botList, int baseDelay, char *team )
+#else
+static void G_SpawnBots( char *botList, int baseDelay )
+#endif
+{
 	char		*bot;
 	char		*p;
 	float		skill;
 	int			delay;
 	char		bots[MAX_INFO_VALUE];
 
+#ifndef TA_SP
 	podium1 = NULL;
 	podium2 = NULL;
 	podium3 = NULL;
+#endif
 
 	skill = trap_Cvar_VariableValue( "g_spSkill" );
 	if( skill < 1 ) {
@@ -916,7 +1024,11 @@ static void G_SpawnBots( char *botList, int baseDelay ) {
 
 		// we must add the bot this way, calling G_AddBot directly at this stage
 		// does "Bad Things"
+#ifdef TA_SP // SP_BOSS
+		trap_Cmd_ExecuteText( EXEC_INSERT, va("addbot %s %f %s %i\n", bot, skill, team, delay) );
+#else
 		trap_Cmd_ExecuteText( EXEC_INSERT, va("addbot %s %f free %i\n", bot, skill, delay) );
+#endif
 
 		delay += BOT_BEGIN_DELAY_INCREMENT;
 	}
@@ -1032,8 +1144,10 @@ G_InitBots
 ===============
 */
 void G_InitBots( qboolean restart ) {
+#ifndef TA_SP
 	int			fragLimit;
 	int			timeLimit;
+#endif
 	const char	*arenainfo;
 	char		*strValue;
 	int			basedelay;
@@ -1041,7 +1155,9 @@ void G_InitBots( qboolean restart ) {
 	char		serverinfo[MAX_INFO_STRING];
 
 	G_LoadBots();
+#ifndef IOQ3ZTM // MAP_ROTATION
 	G_LoadArenas();
+#endif
 
 	trap_Cvar_Register( &bot_minplayers, "bot_minplayers", "0", CVAR_SERVERINFO );
 
@@ -1053,6 +1169,25 @@ void G_InitBots( qboolean restart ) {
 			return;
 		}
 
+#ifndef TA_SP
+#ifdef NOTRATEDM // frag to score
+		strValue = Info_ValueForKey( arenainfo, "scorelimit" );
+		fragLimit = atoi( strValue );
+#if !defined TURTLEARENA || defined TA_SUPPORTQ3
+		// Support Q3 "fraglimit" in arenas.txt
+		if ( !fragLimit )
+		{
+			strValue = Info_ValueForKey( arenainfo, "fraglimit" );
+			fragLimit = atoi( strValue )*50;
+		}
+#endif
+		if ( fragLimit ) {
+			trap_Cvar_Set( "scorelimit", strValue );
+		}
+		else {
+			trap_Cvar_Set( "scorelimit", "0" );
+		}
+#else
 		strValue = Info_ValueForKey( arenainfo, "fraglimit" );
 		fragLimit = atoi( strValue );
 		if ( fragLimit ) {
@@ -1061,6 +1196,7 @@ void G_InitBots( qboolean restart ) {
 		else {
 			trap_Cvar_Set( "fraglimit", "0" );
 		}
+#endif
 
 		strValue = Info_ValueForKey( arenainfo, "timelimit" );
 		timeLimit = atoi( strValue );
@@ -1072,9 +1208,14 @@ void G_InitBots( qboolean restart ) {
 		}
 
 		if ( !fragLimit && !timeLimit ) {
+#ifdef NOTRATEDM // frag to score
+			trap_Cvar_Set( "scorelimit", "1000" );
+#else
 			trap_Cvar_Set( "fraglimit", "10" );
+#endif
 			trap_Cvar_Set( "timelimit", "0" );
 		}
+#endif
 
 		basedelay = BOT_BEGIN_DELAY_BASE;
 		strValue = Info_ValueForKey( arenainfo, "special" );
@@ -1083,7 +1224,12 @@ void G_InitBots( qboolean restart ) {
 		}
 
 		if( !restart ) {
+#ifdef TA_SP // SP_BOSS
+			G_SpawnBots( Info_ValueForKey( arenainfo, "allies" ), basedelay, "free" );
+			G_SpawnBots( Info_ValueForKey( arenainfo, "bots" ), basedelay, "red" );
+#else
 			G_SpawnBots( Info_ValueForKey( arenainfo, "bots" ), basedelay );
+#endif
 		}
 	}
 }

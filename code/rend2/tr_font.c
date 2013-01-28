@@ -31,9 +31,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 // 
 //
 // The font system uses FreeType 2.x to render TrueType fonts for use within the game.
-// As of this writing ( Nov, 2000 ) Team Arena uses these fonts for all of the ui and 
-// about 90% of the cgame presentation. A few areas of the CGAME were left uses the old 
-// fonts since the code is shared with standard Q3A.
+// Quake III: Team Arena uses these fonts for all of the ui and about 90% of the cgame
+// presentation. A few areas of the CGAME were left uses the old fonts since the code
+// is shared with standard Q3A. Turtle Arena replaced the last bits so
+// all text can use FreeType.
 //
 // Q3A 1.25+ and Team Arena were shipped with the font rendering code disabled, there was
 // a patent held by Apple at the time which FreeType MIGHT infringe on.
@@ -48,29 +49,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 // In the UI Scripting code, a scale of 1.0 is equal to a 48 point font. In Team Arena, we
 // use three or four scales, most of them exactly equaling the specific rendered size. We 
 // rendered three sizes in Team Arena, 12, 16, and 20.
-//
-// To generate new font data you need to go through the following steps.
-// 1. delete the fontImage_x_xx.tga files and fontImage_xx.dat files from the fonts path.
-// 2. in a ui script, specificy a font, smallFont, and bigFont keyword with font name and 
-//    point size. the original TrueType fonts must exist in fonts at this point.
-// 3. run the game, you should see things normally.
-// 4. Exit the game and there will be three dat files and at least three tga files. The 
-//    tga's are in 256x256 pages so if it takes three images to render a 24 point font you 
-//    will end up with fontImage_0_24.tga through fontImage_2_24.tga
-// 5. In future runs of the game, the system looks for these images and data files when a
-//    specific point sized font is rendered and loads them for use. 
-// 6. Because of the original beta nature of the FreeType code you will probably want to hand
-//    touch the font bitmaps.
-// 
-// Currently a define in the project turns on or off the FreeType code which is currently 
-// defined out. To pre-render new fonts you need enable the define ( BUILD_FREETYPE ) and 
-// uncheck the exclude from build check box in the FreeType2 area of the Renderer project. 
 
 
 #include "tr_local.h"
 #include "../qcommon/qcommon.h"
 
-#ifdef BUILD_FREETYPE
 #include <ft2build.h>
 #include FT_ERRORS_H
 #include FT_SYSTEM_H
@@ -83,13 +66,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define _TRUNC(x)  ((x) >> 6)
 
 FT_Library ftLibrary = NULL;  
-#endif
 
 #define MAX_FONTS 12
 static int registeredFontCount = 0;
 static fontInfo_t registeredFont[MAX_FONTS];
 
-#ifdef BUILD_FREETYPE
 void R_GetGlyphInfo(FT_GlyphSlot glyph, int *left, int *right, int *width, int *top, int *bottom, int *height, int *pitch) {
 	*left  = _FLOOR( glyph->metrics.horiBearingX );
 	*right = _CEIL( glyph->metrics.horiBearingX + glyph->metrics.width );
@@ -297,7 +278,6 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 
 	return &glyph;
 }
-#endif
 
 static int fdOffset;
 static byte	*fdFile;
@@ -377,7 +357,6 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 	return qfalse;
 }
 
-#ifdef BUILD_FREETYPE
 /*
 ===============
 R_LoadScalableFont
@@ -552,7 +531,6 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 	ri.FS_FreeFile(faceData);
 	return qtrue;
 }
-#endif
 
 /*
 ==================
@@ -581,10 +559,8 @@ static qboolean R_GetFont(const char *name, int pointSize, fontInfo_t *font) {
 		return qfalse;
 	}
 
-#ifdef BUILD_FREETYPE
 	if ( R_LoadScalableFont( name, pointSize, font ) )
 		return qtrue;
-#endif
 
 	if ( R_LoadPreRenderedFont( datName, font ) )
 		return qtrue;
@@ -622,32 +598,24 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
 			return;
 	}
 
-#ifdef BUILD_FREETYPE
 	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s.\n", fontName );
-#else
-	ri.Printf(PRINT_WARNING, "RE_RegisterFont: Failed to register font %s (Note: FreeType code is not available).\n");
-#endif
 }
 
 
 void R_InitFreeType(void) {
-#ifdef BUILD_FREETYPE
 	if (FT_Init_FreeType( &ftLibrary )) {
 		ri.Printf(PRINT_WARNING, "R_InitFreeType: Unable to initialize FreeType.\n");
 	}
-#endif
 
 	registeredFontCount = 0;
 }
 
 
 void R_DoneFreeType(void) {
-#ifdef BUILD_FREETYPE
 	if (ftLibrary) {
 		FT_Done_FreeType( ftLibrary );
 		ftLibrary = NULL;
 	}
-#endif
 
 	registeredFontCount = 0;
 }

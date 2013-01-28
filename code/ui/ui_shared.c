@@ -29,6 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 // 
 // string allocation/managment
+// ZTM: NOTE: Shared by ui and cgame
 
 #include "../qcommon/q_shared.h"
 #include "../game/bg_misc.h"
@@ -552,6 +553,31 @@ qboolean PC_Script_Parse(int handle, const char **out) {
 // display, window, menu, item code
 // 
 
+int UI_SelectForKey(int key)
+{
+	if (key == K_MOUSE1 || key == K_ENTER || key == K_KP_ENTER
+#ifdef IOQ3ZTM // ARROWS
+			|| key == K_MOUSE3 || key == K_RIGHTARROW || key == K_KP_RIGHTARROW
+#endif
+			)
+	{
+		// Next
+		return 1;
+	}
+	else if (key == K_MOUSE2
+#ifdef IOQ3ZTM // ARROWS
+			|| key == K_LEFTARROW || key == K_KP_LEFTARROW
+#endif
+			)
+	{
+		// Previous
+		return -1;
+	}
+
+	// No change
+	return 0;
+}
+
 /*
 ==================
 Init_Display
@@ -1034,6 +1060,12 @@ static void Menu_RunCloseScript(menuDef_t *menu) {
     item.parent = menu;
     Item_RunScript(&item, menu->onClose);
 	}
+
+#ifdef IOQ3ZTM
+	if (DC->Assets.menuExitSound) {
+		DC->startLocalSound(DC->Assets.menuExitSound, CHAN_LOCAL_SOUND);
+	}
+#endif
 }
 
 void Menus_CloseByName(const char *p) {
@@ -1203,14 +1235,22 @@ void Script_SetFocus(itemDef_t *item, char **args) {
 void Script_SetPlayerModel(itemDef_t *item, char **args) {
   const char *name;
   if (String_Parse(args, &name)) {
+#ifdef IOQ3ZTM_NO_TEAM_MODEL
+    DC->setCVar("model", name);
+#else
     DC->setCVar("team_model", name);
+#endif
   }
 }
 
 void Script_SetPlayerHead(itemDef_t *item, char **args) {
   const char *name;
   if (String_Parse(args, &name)) {
+#ifdef IOQ3ZTM_NO_TEAM_MODEL
+    DC->setCVar("headmodel", name);
+#else
     DC->setCVar("team_headmodel", name);
+#endif
   }
 }
 
@@ -1731,7 +1771,10 @@ qboolean Item_ListBox_HandleKey(itemDef_t *item, int key, qboolean down, qboolea
 	int count = DC->feederCount(item->special);
 	int max, viewmax;
 
-	if (force || (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS)) {
+#ifndef IOQ3ZTM // ARROWS // ZTM: NOTE: Force is unused now...
+	if (force || (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS))
+#endif
+	{
 		max = Item_ListBox_MaxScroll(item);
 		if (item->window.flags & WINDOW_HORIZONTAL) {
 			viewmax = (item->window.rect.w / listPtr->elementWidth);
@@ -1935,15 +1978,25 @@ qboolean Item_ListBox_HandleKey(itemDef_t *item, int key, qboolean down, qboolea
 
 qboolean Item_YesNo_HandleKey(itemDef_t *item, int key) {
 
-  if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS && item->cvar) {
-		if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
-	    DC->setCVar(item->cvar, va("%i", !DC->getCVarValue(item->cvar)));
-		  return qtrue;
+#ifdef IOQ3ZTM // ARROWS // This changes the behavor... now it is the same as all of the ownerdraw
+	if (item->cvar)
+	{
+		if (UI_SelectForKey(key) != 0)
+		{
+			DC->setCVar(item->cvar, va("%i", !DC->getCVarValue(item->cvar)));
+			return qtrue;
 		}
-  }
+	}
+#else
+	if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS && item->cvar) {
+		if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
+			DC->setCVar(item->cvar, va("%i", !DC->getCVarValue(item->cvar)));
+			return qtrue;
+		}
+	}
+#endif
 
-  return qfalse;
-
+	return qfalse;
 }
 
 int Item_Multi_CountSettings(itemDef_t *item) {
@@ -2009,13 +2062,29 @@ const char *Item_Multi_Setting(itemDef_t *item) {
 qboolean Item_Multi_HandleKey(itemDef_t *item, int key) {
 	multiDef_t *multiPtr = (multiDef_t*)item->typeData;
 	if (multiPtr) {
+#ifdef IOQ3ZTM // ARROWS // This changes the behavor... now it is the same as all of the ownerdraw
+		if (item->cvar)
+		{
+			int select = UI_SelectForKey(key);
+			if (select != 0) {
+				int current = Item_Multi_FindCvarByValue(item) + select;
+#else
 	  if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS && item->cvar) {
 			if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
 				int current = Item_Multi_FindCvarByValue(item) + 1;
+#endif
 				int max = Item_Multi_CountSettings(item);
+#ifdef IOQ3ZTM // ARROWS
+				if ( current < 0 ) {
+					current = max-1;
+				} else if ( current >= max ) {
+					current = 0;
+				}
+#else
 				if ( current < 0 || current >= max ) {
 					current = 0;
 				}
+#endif
 				if (multiPtr->strDef) {
 					DC->setCVar(item->cvar, multiPtr->cvarStr[current]);
 				} else {
@@ -2031,7 +2100,7 @@ qboolean Item_Multi_HandleKey(itemDef_t *item, int key) {
 			}
 		}
 	}
-  return qfalse;
+	return qfalse;
 }
 
 qboolean Item_TextField_HandleKey(itemDef_t *item, int key) {
@@ -2369,7 +2438,31 @@ qboolean Item_Slider_HandleKey(itemDef_t *item, int key, qboolean down) {
 			}
 		}
 	}
+
+#ifdef IOQ3ZTM // ARROWS // This changes the behavor... now arrows are supported
+	if (item->cvar)
+	{
+		int select = UI_SelectForKey(key);
+		if (select != 0)
+		{
+			editFieldDef_t *editDef = item->typeData;
+			if (editDef) {
+				// 20 is number of steps
+				value = DC->getCVarValue(item->cvar) + (((editDef->maxVal - editDef->minVal)/20) * select);
+
+				if (value < editDef->minVal)
+					value = editDef->minVal;
+				else if (value > editDef->maxVal)
+					value = editDef->maxVal;
+
+				DC->setCVar(item->cvar, va("%f", value));
+				return qtrue;
+			}
+		}
+	}
+#else
 	DC->Print("slider handle key exit\n");
+#endif
 	return qfalse;
 }
 
@@ -2535,6 +2628,12 @@ void  Menus_Activate(menuDef_t *menu) {
 		Item_RunScript(&item, menu->onOpen);
 	}
 
+#ifdef IOQ3ZTM
+	if (DC->Assets.menuEnterSound) {
+		DC->startLocalSound(DC->Assets.menuEnterSound, CHAN_LOCAL_SOUND);
+	}
+#endif
+
 	if (menu->soundName && *menu->soundName) {
 //		DC->stopBackgroundTrack();					// you don't want to do this since it will reset s_rawend
 		DC->startBackgroundTrack(menu->soundName, menu->soundName);
@@ -2656,17 +2755,15 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 	// default handling
 	switch ( key ) {
 
-		case K_F11:
-			if (DC->getCVarValue("developer")) {
-				debugMode ^= 1;
-			}
+		case K_F10:
+			debugMode ^= 1;
+			DC->setCVar("developer", va("%d", debugMode));
 			break;
 
-		case K_F12:
-			if (DC->getCVarValue("developer")) {
-				DC->executeText(EXEC_APPEND, "screenshot\n");
-			}
+		case K_F11:
+			DC->executeText(EXEC_APPEND, "screenshot\n");
 			break;
+
 		case K_KP_UPARROW:
 		case K_UPARROW:
 			Menu_SetPrevCursorItem(menu);
@@ -3134,7 +3231,13 @@ static bind_t g_bindings[] =
 {
 	{"+scores",			 K_TAB,				-1,		-1, -1},
 	{"+button2",		 K_ENTER,			-1,		-1, -1},
+#ifdef TA_HOLDSYS/*2*/
+	{"holdnext",		 K_MWHEELUP,		'\'',	-1, -1},
+	{"holdprev",		 K_MWHEELDOWN,		-1,		-1, -1},
+#endif
+#ifndef TURTLEARENA // NO_SPEED_KEY
 	{"+speed", 			 K_SHIFT,			-1,		-1,	-1},
+#endif
 	{"+forward", 		 K_UPARROW,		-1,		-1, -1},
 	{"+back", 			 K_DOWNARROW,	-1,		-1, -1},
 	{"+moveleft", 	 ',',					-1,		-1, -1},
@@ -3148,7 +3251,9 @@ static bind_t g_bindings[] =
 	{"+lookdown", 	 K_DEL,				-1,		-1, -1},
 	{"+mlook", 			 '/',					-1,		-1, -1},
 	{"centerview", 	 K_END,				-1,		-1, -1},
+#ifndef TURTLEARENA // NOZOOM
 	{"+zoom", 			 -1,						-1,		-1, -1},
+#endif
 	{"weapon 1",		 '1',					-1,		-1, -1},
 	{"weapon 2",		 '2',					-1,		-1, -1},
 	{"weapon 3",		 '3',					-1,		-1, -1},
@@ -3163,8 +3268,12 @@ static bind_t g_bindings[] =
 	{"weapon 12",		 -1,					-1,		-1, -1},
 	{"weapon 13",		 -1,					-1,		-1, -1},
 	{"+attack", 		 K_CTRL,				-1,		-1, -1},
+#ifdef TA_WEAPSYS_EX // +dropweapon
+	{"+button13",		 ';',					-1,		-1, -1},
+#else
 	{"weapprev",		 '[',					-1,		-1, -1},
 	{"weapnext", 		 ']',					-1,		-1, -1},
+#endif
 	{"+button3", 		 K_MOUSE3,			-1,		-1, -1},
 	{"+button4", 		 K_MOUSE4,			-1,		-1, -1},
 	{"prevTeamMember", 'w',					-1,		-1, -1},
@@ -3200,9 +3309,13 @@ static const int g_bindCount = ARRAY_LEN(g_bindings);
 #ifndef MISSIONPACK
 static configcvar_t g_configcvars[] =
 {
+#ifndef TURTLEARENA // ALWAYS_RUN
 	{"cl_run",			0,					0},
+#endif
 	{"m_pitch",			0,					0},
+#ifndef TA_WEAPSYS_EX
 	{"cg_autoswitch",	0,					0},
+#endif
 	{"sensitivity",		0,					0},
 	{"in_joystick",		0,					0},
 	{"joy_threshold",	0,					0},
@@ -3852,16 +3965,13 @@ void Item_OwnerDraw_Paint(itemDef_t *item) {
 
 void Item_Paint(itemDef_t *item) {
   vec4_t red;
-  menuDef_t *parent;
-
+  menuDef_t *parent = (menuDef_t*)item->parent;
   red[0] = red[3] = 1;
   red[1] = red[2] = 0;
 
   if (item == NULL) {
     return;
   }
-
-  parent = (menuDef_t*)item->parent;
 
   if (item->window.flags & WINDOW_ORBITING) {
     if (DC->realTime > item->window.nextTime) {

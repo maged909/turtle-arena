@@ -183,8 +183,10 @@ int Export_BotLibSetup(void)
 	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = EA_Setup();			//be_ea.c
 	if (errnum != BLERR_NOERROR) return errnum;
+#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
 	errnum = BotSetupWeaponAI();	//be_ai_weap.c
 	if (errnum != BLERR_NOERROR)return errnum;
+#endif
 	errnum = BotSetupGoalAI();		//be_ai_goal.c
 	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = BotSetupChatAI();		//be_ai_chat.c
@@ -213,7 +215,9 @@ int Export_BotLibShutdown(void)
 	BotShutdownChatAI();		//be_ai_chat.c
 	BotShutdownMoveAI();		//be_ai_move.c
 	BotShutdownGoalAI();		//be_ai_goal.c
+#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
 	BotShutdownWeaponAI();		//be_ai_weap.c
+#endif
 	BotShutdownWeights();		//be_ai_weight.c
 	BotShutdownCharacters();	//be_ai_char.c
 	//shud down aas
@@ -283,7 +287,11 @@ int Export_BotLibStartFrame(float time)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+int Export_BotLibLoadMap(const char *mapname, bot_shareditem_t *itemInfos)
+#else
 int Export_BotLibLoadMap(const char *mapname)
+#endif
 {
 #ifdef DEBUG
 	int starttime = Sys_MilliSeconds();
@@ -297,7 +305,11 @@ int Export_BotLibLoadMap(const char *mapname)
 	errnum = AAS_LoadMap(mapname);
 	if (errnum != BLERR_NOERROR) return errnum;
 	//initialize the items in the level
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+	BotInitLevelItems(itemInfos);		//be_ai_goal.h
+#else
 	BotInitLevelItems();		//be_ai_goal.h
+#endif
 	BotSetBrushModelTypes();	//be_ai_move.h
 	//
 	botimport.Print(PRT_DEVELOPER, "-------------------------------------\n");
@@ -454,7 +466,11 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 		} //end if
 		botimport.Print(PRT_MESSAGE, "\n");
 		botimport.Print(PRT_MESSAGE, "travel time to goal (%d) = %d\n", botlibglobals.goalareanum,
-					AAS_AreaTravelTimeToGoalArea(newarea, origin, botlibglobals.goalareanum, TFL_DEFAULT|TFL_ROCKETJUMP));
+					AAS_AreaTravelTimeToGoalArea(newarea, origin, botlibglobals.goalareanum, TFL_DEFAULT
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
+					|TFL_ROCKETJUMP
+#endif
+					));
 		/*
 		VectorCopy(origin, end);
 		end[2] += 5;
@@ -574,7 +590,11 @@ int BotExportTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3)
 			reachnum = BotGetReachabilityToGoal(curorigin, curarea,
 										  lastgoalareanum, lastareanum,
 										  avoidreach, avoidreachtimes, avoidreachtries,
-										  &goal, TFL_DEFAULT|TFL_FUNCBOB|TFL_ROCKETJUMP, TFL_DEFAULT|TFL_FUNCBOB|TFL_ROCKETJUMP,
+										  &goal, TFL_DEFAULT|TFL_FUNCBOB
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
+										  |TFL_ROCKETJUMP
+#endif
+										  ,
 										  NULL, 0, &resultFlags);
 			AAS_ReachabilityFromNum(reachnum, &reach);
 			AAS_ShowReachability(&reach);
@@ -760,7 +780,11 @@ static void Init_EA_Export( ea_export_t *ea ) {
 	ea->EA_MoveLeft = EA_MoveLeft;
 	ea->EA_MoveRight = EA_MoveRight;
 
+#if defined TA_WEAPSYS_EX && !defined TA_WEAPSYS_EX_COMPAT // BOTLIB
+	ea->EA_DropWeapon = EA_DropWeapon;
+#else
 	ea->EA_SelectWeapon = EA_SelectWeapon;
+#endif
 	ea->EA_Jump = EA_Jump;
 	ea->EA_DelayedJump = EA_DelayedJump;
 	ea->EA_Move = EA_Move;
@@ -857,6 +881,7 @@ static void Init_AI_Export( ai_export_t *ai ) {
 	ai->BotFreeMoveState = BotFreeMoveState;
 	ai->BotInitMoveState = BotInitMoveState;
 	ai->BotAddAvoidSpot = BotAddAvoidSpot;
+#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
 	//-----------------------------------
 	// be_ai_weap.h
 	//-----------------------------------
@@ -866,6 +891,7 @@ static void Init_AI_Export( ai_export_t *ai ) {
 	ai->BotAllocWeaponState = BotAllocWeaponState;
 	ai->BotFreeWeaponState = BotFreeWeaponState;
 	ai->BotResetWeaponState = BotResetWeaponState;
+#endif
 	//-----------------------------------
 	// be_ai_gen.h
 	//-----------------------------------

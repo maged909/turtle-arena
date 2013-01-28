@@ -797,6 +797,12 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 			{
 				depthFuncBits = 0;
 			}
+#ifdef IOQ3ZTM // IOSTVEF: Support EF keyword (it seems easier to understand.)
+			else if ( !Q_stricmp( token, "disable" ) )
+			{
+				depthFuncBits = 0;
+			}
+#endif
 			else if ( !Q_stricmp( token, "equal" ) )
 			{
 				depthFuncBits = GLS_DEPTHFUNC_EQUAL;
@@ -1000,6 +1006,16 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 					shader.portalRange = atof( token );
 				}
 			}
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS_AGEN
+			else if ( !Q_stricmp( token, "damage" ) )
+			{
+				stage->alphaGen = AGEN_DAMAGE;
+			}
+			else if ( !Q_stricmp( token, "oneMinusDamage" ) )
+			{
+				stage->alphaGen = AGEN_ONE_MINUS_DAMAGE;
+			}
+#endif
 			else
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: unknown alphaGen parameter '%s' in shader '%s'\n", token, shader.name );
@@ -1022,6 +1038,12 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 			{
 				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_MAPPED;
 			}
+#ifdef IOQ3ZTM // ZEQ2_CEL
+			else if ( !Q_stricmp( token, "cel" ) )
+			{
+				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_CELSHADE_MAPPED;
+			}
+#endif
 			else if ( !Q_stricmp( token, "lightmap" ) )
 			{
 				stage->bundle[0].tcGen = TCGEN_LIGHTMAP;
@@ -1072,6 +1094,33 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 
 			continue;
 		}
+		// implicit default mapping to eliminate redundant/incorrect explicit shader stages
+		else if ( !Q_stricmpn( token, "implicit", 8 ) ) {
+			// set implicit mapping state
+			if ( !Q_stricmp( token, "implicitBlend" ) ) {
+				implicitStateBits = GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+				implicitCullType = CT_TWO_SIDED;
+			} else if ( !Q_stricmp( token, "implicitMask" ) )     {
+				implicitStateBits = GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_80;
+				implicitCullType = CT_TWO_SIDED;
+			} else    // "implicitMap"
+			{
+				implicitStateBits = GLS_DEPTHMASK_TRUE;
+				implicitCullType = CT_FRONT_SIDED;
+			}
+
+			// get image
+			token = COM_ParseExt( text, qfalse );
+			if ( token[ 0 ] != '\0' ) {
+				Q_strncpyz( implicitMap, token, sizeof( implicitMap ) );
+			} else {
+				implicitMap[ 0 ] = '-';
+				implicitMap[ 1 ] = '\0';
+			}
+
+			continue;
+		}
+		// unknown directive
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown parameter '%s' in shader '%s'\n", token, shader.name );
@@ -1429,6 +1478,18 @@ infoParm_t	infoParms[] = {
 	{"nolightmap",	0,	SURF_NOLIGHTMAP,0 },	// don't generate a lightmap
 	{"nodlight",	0,	SURF_NODLIGHT, 0 },		// don't ever add dynamic lights
 	{"dust",		0,	SURF_DUST, 0}			// leave a dust trail when walking on this surface
+
+#ifdef TA_MISC // MATERIALS
+	,
+	// material surface types
+	{"dirt",		0,	SURF_DIRT,		0 },
+	{"grass",		0,	SURF_GRASS,		0 },
+	{"wood",		0,	SURF_WOOD,		0 },
+	{"stone",		0,	SURF_STONE,		0 },
+	{"sparks",		0,	SURF_SPARKS,	0 },
+	{"glass",		0,	SURF_GLASS,		0 },
+	{"metal",		0,	SURF_METAL,		0 }
+#endif
 };
 
 
@@ -1459,6 +1520,120 @@ static void ParseSurfaceParm( char **text ) {
 	}
 }
 
+#ifdef IOQ3ZTM // EF2_SHADERS
+/*
+===============
+ParseIf
+
+Based on Elite Force 2, support "if cvar" and "if !cvar"
+
+shader/name/etc
+{
+  mipmaps // etc
+if novertexlight
+  ... shader stages
+endif
+if vertexlight
+  ... shader stages
+endif
+}
+===============
+*/
+static qboolean ParseIf( char **text, int *ifIndent ) {
+	char	*token;
+	int		indent;
+	char	*var;
+	qboolean wantValue;
+	int value;
+
+	indent = 1;
+
+	*ifIndent = *ifIndent + 1;
+
+	token = COM_ParseExt( text, qfalse );
+	if ( !token[0] )
+	{
+		ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'if' keyword in shader '%s'\n", shader.name );
+		return qtrue;
+	}
+
+	// support nozzz and !zzz
+	if ( !Q_stricmpn(token, "no", 2) )
+	{
+		wantValue = qfalse;
+		var = token+2;
+	}
+	else if (!Q_stricmpn(token, "!", 1) )
+	{
+		wantValue = qfalse;
+		var = token+1;
+	}
+	else
+	{
+		wantValue = qtrue;
+		var = token;
+	}
+
+	// Support EF2
+	if ( !Q_stricmp( var, "vertexlight" ) )
+	{
+		value = r_vertexLight->integer;
+	}
+	// Support NOBLOOD define
+	else if ( !Q_stricmp( var, "blood" ) )
+	{
+#ifdef NOBLOOD
+		value = 0;
+#else
+		value = com_blood->integer;
+#endif
+	}
+	else
+	{
+		value = ri.Cvar_VariableIntegerValue(var);
+	}
+
+	if (!wantValue && !value)
+	{
+		return qtrue;
+	}
+	else if (wantValue && value)
+	{
+		return qtrue;
+	}
+
+	// skip if-block
+
+	// Skip tokens inside of if-block
+	while ( 1 )
+	{
+		token = COM_ParseExt( text, qtrue );
+		if ( !token[0] )
+		{
+			ri.Printf( PRINT_WARNING, "WARNING: no concluding '}' in shader %s\n", shader.name );
+			return qfalse;
+		}
+
+		if ( token[0] == '}' && indent == 1)
+		{
+			ri.Printf( PRINT_WARNING, "WARNING: no concluding 'endif' in shader %s\n", shader.name );
+			break;
+		}
+
+		if ( token[0] == '}' )
+			indent--;
+		else if ( token[0] == '{' )
+			indent++;
+		else if ( !Q_stricmp( token, "endif" ) )
+		{
+			*ifIndent = *ifIndent - 1;
+			break;
+		}
+	}
+	return qtrue;
+}
+#endif
+
 /*
 =================
 ParseShader
@@ -1472,6 +1647,9 @@ static qboolean ParseShader( char **text )
 {
 	char *token;
 	int s;
+#ifdef IOQ3ZTM // EF2_SHADERS
+	int ifIndent = 0;
+#endif
 
 	s = 0;
 
@@ -1496,6 +1674,25 @@ static qboolean ParseShader( char **text )
 		{
 			break;
 		}
+#ifdef IOQ3ZTM // EF2_SHADERS
+		else if ( !Q_stricmp( token, "if" ) )
+		{
+			if ( !ParseIf( text, &ifIndent ) )
+			{
+				return qfalse;
+			}
+			continue;
+		}
+		else if ( !Q_stricmp( token, "endif" ) )
+		{
+			ifIndent--;
+			if ( ifIndent < 0 ) {
+				ifIndent = 0;
+				ri.Printf( PRINT_WARNING, "WARNING: 'endif' with no 'if' in shader %s\n", shader.name );
+			}
+			continue;
+		}
+#endif
 		// stage definition
 		else if ( token[0] == '{' )
 		{
@@ -1845,33 +2042,179 @@ static qboolean ParseShader( char **text )
 			ParseSort( text );
 			continue;
 		}
-		// implicit default mapping to eliminate redundant/incorrect explicit shader stages
-		else if ( !Q_stricmpn( token, "implicit", 8 ) ) {
-			// set implicit mapping state
-			if ( !Q_stricmp( token, "implicitBlend" ) ) {
-				implicitStateBits = GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-				implicitCullType = CT_TWO_SIDED;
-			} else if ( !Q_stricmp( token, "implicitMask" ) )     {
-				implicitStateBits = GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_80;
-				implicitCullType = CT_TWO_SIDED;
-			} else    // "implicitMap"
-			{
-				implicitStateBits = GLS_DEPTHMASK_TRUE;
-				implicitCullType = CT_FRONT_SIDED;
-			}
-
-			// get image
+#ifdef IOQ3ZTM // CELSHADING
+		// celoutline
+		else if ( !Q_stricmp( token, "celoutline" ) )
+		{
 			token = COM_ParseExt( text, qfalse );
-			if ( token[ 0 ] != '\0' ) {
-				Q_strncpyz( implicitMap, token, sizeof( implicitMap ) );
-			} else {
-				implicitMap[ 0 ] = '-';
-				implicitMap[ 1 ] = '\0';
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing celoutline parm in shader '%s'\n", shader.name );
+				continue;
 			}
 
+			if (!shader.celoutline.rgbGen) {
+				shader.celoutline.rgbGen = CGEN_CONST;
+				shader.celoutline.constantColor[0] = 0;
+				shader.celoutline.constantColor[1] = 0;
+				shader.celoutline.constantColor[2] = 0;
+			}
+
+			if (!shader.celoutline.alphaGen) {
+				shader.celoutline.alphaGen = AGEN_CONST;
+				shader.celoutline.constantColor[3] = 0xff;
+			}
+
+			shader.celoutline.width = atof(token);
 			continue;
 		}
-		// unknown directive
+		//
+		// celoutlineRgbGen
+		//
+		else if ( !Q_stricmp( token, "celoutlineRgbGen" ) )
+		{
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing parameters for rgbGen in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			if ( !Q_stricmp( token, "wave" ) )
+			{
+				ParseWaveForm( text, &shader.celoutline.rgbWave );
+				shader.celoutline.rgbGen = CGEN_WAVEFORM;
+			}
+			else if ( !Q_stricmp( token, "const" ) )
+			{
+				vec3_t	color;
+
+				ParseVector( text, 3, color );
+				shader.celoutline.constantColor[0] = 255 * color[0];
+				shader.celoutline.constantColor[1] = 255 * color[1];
+				shader.celoutline.constantColor[2] = 255 * color[2];
+
+				shader.celoutline.rgbGen = CGEN_CONST;
+			}
+			else if ( !Q_stricmp( token, "identity" ) )
+			{
+				shader.celoutline.rgbGen = CGEN_IDENTITY;
+			}
+			else if ( !Q_stricmp( token, "identityLighting" ) )
+			{
+				shader.celoutline.rgbGen = CGEN_IDENTITY_LIGHTING;
+			}
+			else if ( !Q_stricmp( token, "entity" ) )
+			{
+				shader.celoutline.rgbGen = CGEN_ENTITY;
+			}
+			else if ( !Q_stricmp( token, "oneMinusEntity" ) )
+			{
+				shader.celoutline.rgbGen = CGEN_ONE_MINUS_ENTITY;
+			}
+			else if ( !Q_stricmp( token, "vertex" ) )
+			{
+				shader.celoutline.rgbGen = CGEN_VERTEX;
+				if ( shader.celoutline.alphaGen == 0 ) {
+					shader.celoutline.alphaGen = AGEN_VERTEX;
+				}
+			}
+			else if ( !Q_stricmp( token, "exactVertex" ) )
+			{
+				shader.celoutline.rgbGen = CGEN_EXACT_VERTEX;
+			}
+			else if ( !Q_stricmp( token, "lightingDiffuse" ) )
+			{
+				shader.celoutline.rgbGen = CGEN_LIGHTING_DIFFUSE;
+			}
+			else if ( !Q_stricmp( token, "oneMinusVertex" ) )
+			{
+				shader.celoutline.rgbGen = CGEN_ONE_MINUS_VERTEX;
+			}
+			else
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: unknown celoutlineRgbGen parameter '%s' in shader '%s'\n", token, shader.name );
+				continue;
+			}
+		}
+		//
+		// celoutlineAlphaGen
+		//
+		else if ( !Q_stricmp( token, "celoutlineAlphaGen" ) )
+		{
+			token = COM_ParseExt( text, qfalse );
+			if ( token[0] == 0 )
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: missing parameters for alphaGen in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			if ( !Q_stricmp( token, "wave" ) )
+			{
+				ParseWaveForm( text, &shader.celoutline.alphaWave );
+				shader.celoutline.alphaGen = AGEN_WAVEFORM;
+			}
+			else if ( !Q_stricmp( token, "const" ) )
+			{
+				token = COM_ParseExt( text, qfalse );
+				shader.celoutline.constantColor[3] = 255 * atof( token );
+				shader.celoutline.alphaGen = AGEN_CONST;
+			}
+			else if ( !Q_stricmp( token, "identity" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_IDENTITY;
+			}
+			else if ( !Q_stricmp( token, "entity" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_ENTITY;
+			}
+			else if ( !Q_stricmp( token, "oneMinusEntity" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_ONE_MINUS_ENTITY;
+			}
+			else if ( !Q_stricmp( token, "vertex" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_VERTEX;
+			}
+			else if ( !Q_stricmp( token, "lightingSpecular" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_LIGHTING_SPECULAR;
+			}
+			else if ( !Q_stricmp( token, "oneMinusVertex" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_ONE_MINUS_VERTEX;
+			}
+			else if ( !Q_stricmp( token, "portal" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_PORTAL;
+				token = COM_ParseExt( text, qfalse );
+				if ( token[0] == 0 )
+				{
+					shader.celoutline.portalRange = 256;
+					ri.Printf( PRINT_WARNING, "WARNING: missing range parameter for alphaGen portal in shader '%s', defaulting to 256\n", shader.name );
+				}
+				else
+				{
+					shader.celoutline.portalRange = atof( token );
+				}
+			}
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS_AGEN
+			else if ( !Q_stricmp( token, "damage" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_DAMAGE;
+			}
+			else if ( !Q_stricmp( token, "oneMinusDamage" ) )
+			{
+				shader.celoutline.alphaGen = AGEN_ONE_MINUS_DAMAGE;
+			}
+#endif
+			else
+			{
+				ri.Printf( PRINT_WARNING, "WARNING: unknown celoutlineAlphaGen parameter '%s' in shader '%s'\n", token, shader.name );
+				continue;
+			}
+		}
+#endif
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
@@ -3144,6 +3487,18 @@ For menu graphics that should never be picmiped
 */
 qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	shader_t	*sh;
+#ifdef IOQ3ZTM // CELSHADING
+	// Remember previous value
+	int			old_r_celshadalgo;
+
+	/*
+	 * This will prevent sprites, like buttons, go through
+	 * cel shading filters, like kuwahara.
+	 * @author gmiranda
+	 */
+	old_r_celshadalgo = r_celshadalgo->integer;
+	r_celshadalgo->integer = 0;
+#endif
 
 	if ( strlen( name ) >= MAX_QPATH ) {
 		ri.Printf( PRINT_ALL, "Shader name exceeds MAX_QPATH\n" );
@@ -3151,6 +3506,11 @@ qhandle_t RE_RegisterShaderNoMip( const char *name ) {
 	}
 
 	sh = R_FindShader( name, LIGHTMAP_2D, qfalse );
+
+#ifdef IOQ3ZTM // CELSHADING
+	// Restore value
+	r_celshadalgo->integer=old_r_celshadalgo;
+#endif
 
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should

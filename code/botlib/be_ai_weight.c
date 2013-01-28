@@ -58,6 +58,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define MAX_WEIGHT_FILES			128
 weightconfig_t	*weightFileList[MAX_WEIGHT_FILES];
 
+#ifdef __wii__
+#define ReadValue beReadValue
+#endif
+
 //===========================================================================
 //
 // Parameter:				-

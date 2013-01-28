@@ -1,23 +1,22 @@
 #!/bin/sh
 CC=gcc-4.0
-APPBUNDLE=spearmint.app
-BINARY=spearmint.ub
-DEDBIN=spearmint-server.ub
-PKGINFO=APPLIOQ3
+APPBUNDLE=turtlearena.app
+BINARY=turtlearena.ub
+DEDBIN=turtlearena-server.ub
+PKGINFO=APPLTUAR
 ICNS=misc/quake3.icns
 DESTDIR=build/release-darwin-ub
-BASEDIR=baseq3
-MPACKDIR=missionpack
+BASEDIR=base
 
 BIN_OBJ="
-	build/release-darwin-x86_64/spearmint.x86_64
-	build/release-darwin-i386/spearmint.i386
-	build/release-darwin-ppc/spearmint.ppc
+	build/release-darwin-x86_64/turtlearena.x86_64
+	build/release-darwin-i386/turtlearena.i386
+	build/release-darwin-ppc/turtlearena.ppc
 "
 BIN_DEDOBJ="
-	build/release-darwin-x86_64/spearmint-server.x86_64
-	build/release-darwin-i386/spearmint-server.i386
-	build/release-darwin-ppc/spearmint-server.ppc
+	build/release-darwin-x86_64/turtlearena-server.x86_64
+	build/release-darwin-i386/turtlearena-server.i386
+	build/release-darwin-ppc/turtlearena-server.ppc
 "
 BASE_OBJ="
 	build/release-darwin-x86_64/$BASEDIR/cgamex86_64.dylib
@@ -29,37 +28,25 @@ BASE_OBJ="
 	build/release-darwin-x86_64/$BASEDIR/gamex86_64.dylib
 	build/release-darwin-i386/$BASEDIR/gamei386.dylib
 	build/release-darwin-ppc/$BASEDIR/gameppc.dylib
-"
-MPACK_OBJ="
-	build/release-darwin-x86_64/$MPACKDIR/cgamex86_64.dylib
-	build/release-darwin-i386/$MPACKDIR/cgamei386.dylib
-	build/release-darwin-ppc/$MPACKDIR/cgameppc.dylib
-	build/release-darwin-x86_64/$MPACKDIR/uix86_64.dylib
-	build/release-darwin-i386/$MPACKDIR/uii386.dylib
-	build/release-darwin-ppc/$MPACKDIR/uippc.dylib
-	build/release-darwin-x86_64/$MPACKDIR/gamex86_64.dylib
-	build/release-darwin-i386/$MPACKDIR/gamei386.dylib
-	build/release-darwin-ppc/$MPACKDIR/gameppc.dylib
-"
-RENDER_OBJ="
-	build/release-darwin-x86_64/renderer_opengl1_smp_x86_64.dylib
-	build/release-darwin-i386/renderer_opengl1_smp_i386.dylib
-	build/release-darwin-ppc/renderer_opengl1_smp_ppc.dylib
-	build/release-darwin-x86_64/renderer_opengl1_x86_64.dylib
-	build/release-darwin-i386/renderer_opengl1_i386.dylib
-	build/release-darwin-ppc/renderer_opengl1_ppc.dylib
-	build/release-darwin-x86_64/renderer_rend2_smp_x86_64.dylib
-	build/release-darwin-i386/renderer_rend2_smp_i386.dylib
-	build/release-darwin-ppc/renderer_rend2_smp_ppc.dylib
-	build/release-darwin-x86_64/renderer_rend2_x86_64.dylib
-	build/release-darwin-i386/renderer_rend2_i386.dylib
-	build/release-darwin-ppc/renderer_rend2_ppc.dylib
+	../install/$BASEDIR/assets0.pk3
+	../install/$BASEDIR/assets1-qvms.pk3
+	../install/$BASEDIR/assets2-music.pk3
 "
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
-	echo "This script must be run from the Spearmint build directory"
+	echo "This script must be run from the Turtle Arena build directory"
 	exit 1
+fi
+
+# Build game assets if needed.
+if [ ! -f ../install/$BASEDIR/assets0.pk3 ]; then
+	echo "Building assets..."
+	(make -C .. assets) || exit 1;
+	if [ ! -f ../install/$BASEDIR/assets0.pk3 ]; then
+		echo "Error: Failed to build assets"
+		exit 1
+	fi
 fi
 
 Q3_VERSION=`grep '^VERSION=' Makefile | sed -e 's/.*=\(.*\)/\1/'`
@@ -165,7 +152,7 @@ fi
 if [ ! -d $DESTDIR/$APPBUNDLE/Contents/Resources ]; then
 	mkdir -p $DESTDIR/$APPBUNDLE/Contents/Resources
 fi
-cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/spearmint.icns || exit 1;
+cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/turtlearena.icns || exit 1;
 echo $PKGINFO > $DESTDIR/$APPBUNDLE/Contents/PkgInfo
 echo "
 	<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -179,15 +166,15 @@ echo "
 		<key>CFBundleExecutable</key>
 		<string>$BINARY</string>
 		<key>CFBundleGetInfoString</key>
-		<string>Spearmint $Q3_VERSION</string>
+		<string>Turtle Arena $Q3_VERSION</string>
 		<key>CFBundleIconFile</key>
-		<string>spearmint.icns</string>
+		<string>turtlearena.icns</string>
 		<key>CFBundleIdentifier</key>
-		<string>org.ioquake.ioquake3</string>
+		<string>org.turtlearena.turtlearena</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>Spearmint</string>
+		<string>Turtle Arena</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -208,8 +195,6 @@ echo "
 lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$BINARY $BIN_OBJ
 lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$DEDBIN $BIN_DEDOBJ
 
-cp $RENDER_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/
 cp $BASE_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR/
-cp $MPACK_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$MPACKDIR/
 cp code/libs/macosx/*.dylib $DESTDIR/$APPBUNDLE/Contents/MacOS/
 

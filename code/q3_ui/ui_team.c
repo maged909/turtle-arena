@@ -168,6 +168,12 @@ void TeamMain_MenuInit( int localClient ) {
 	s_teammain.spectate.color            = colorRed;
 	y += 20;
 
+#ifdef TA_SP
+	if (ui_singlePlayerActive.integer) {
+		s_teammain.spectate.generic.flags |= QMF_GRAYED;
+	}
+#endif
+
 	trap_GetConfigString(CS_SERVERINFO, info, MAX_INFO_STRING);   
 	gametype = atoi( Info_ValueForKey( info,"g_gametype" ) );
 			      

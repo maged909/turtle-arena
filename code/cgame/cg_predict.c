@@ -366,7 +366,11 @@ static void CG_TouchItem( centity_t *cent ) {
 		return;		// can't hold it
 	}
 
+#ifdef TA_ITEMSYS
+	item = BG_ItemForItemNum(cent->currentState.modelindex);
+#else
 	item = &bg_itemlist[ cent->currentState.modelindex ];
+#endif
 
 	// Special case for flags.  
 	// We don't predict touching our own flag
@@ -397,10 +401,17 @@ static void CG_TouchItem( centity_t *cent ) {
 
 	// if it's a weapon, give them some predicted ammo so the autoswitch will work
 	if ( item->giType == IT_WEAPON ) {
+#ifdef TA_WEAPSYS_EX
+		cg.cur_lc->predictedPlayerState.stats[STAT_PENDING_WEAPON] = item->giTag;
+		if ( !cg.cur_lc->predictedPlayerState.stats[STAT_PENDING_AMMO] ) {
+			cg.cur_lc->predictedPlayerState.stats[STAT_PENDING_AMMO] = 1;
+		}
+#else
 		cg.cur_lc->predictedPlayerState.stats[ STAT_WEAPONS ] |= 1 << item->giTag;
 		if ( !cg.cur_lc->predictedPlayerState.ammo[ item->giTag ] ) {
 			cg.cur_lc->predictedPlayerState.ammo[ item->giTag ] = 1;
 		}
+#endif
 	}
 }
 
@@ -535,12 +546,18 @@ void CG_PredictPlayerState( void ) {
 
 	// prepare for pmove
 	cg_pmove.ps = &cg.cur_lc->predictedPlayerState;
+#ifdef TA_PLAYERSYS // Pmove
+	cg_pmove.playercfg = &cgs.clientinfo[ cg.cur_lc->predictedPlayerState.clientNum ].playercfg;
+#endif
 	if (cg.cur_lc->predictedPlayerState.capsule) {
 		cg_pmove.trace = CG_TraceCapsule;
 	} else {
 		cg_pmove.trace = CG_Trace;
 	}
 	cg_pmove.pointcontents = CG_PointContents;
+#ifdef TURTLEARENA // NO_BODY_TRACE
+	cg_pmove.tracemask = MASK_PLAYERSOLID;
+#else
 	if ( cg_pmove.ps->pm_type == PM_DEAD ) {
 		cg_pmove.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;
 	}
@@ -550,6 +567,7 @@ void CG_PredictPlayerState( void ) {
 	if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
 		cg_pmove.tracemask &= ~CONTENTS_BODY;	// spectators can fly through bodies
 	}
+#endif
 	cg_pmove.noFootsteps = ( cgs.dmflags & DF_NO_FOOTSTEPS ) > 0;
 
 	// save the state before the pmove so we can detect transitions
@@ -680,6 +698,10 @@ void CG_PredictPlayerState( void ) {
 
 		Pmove (&cg_pmove);
 
+#ifdef TURTLEARENA
+		cg.cur_lc->waterlevel = cg_pmove.waterlevel;
+#endif
+
 		moved = qtrue;
 
 		// add push trigger movement effects
@@ -688,6 +710,10 @@ void CG_PredictPlayerState( void ) {
 		// check for predictable events that changed from previous predictions
 		//CG_CheckChangedPredictableEvents(&cg.cur_lc->predictedPlayerState);
 	}
+
+#ifdef TA_HOLDSYS/*2*/ // ZTM: Fix for auto changing in PMove!
+	cg.cur_lc->holdableSelect = HI_NO_SELECT;
+#endif
 
 	if ( cg_showmiss.integer > 1 ) {
 		CG_Printf( "[%i : %i] ", cg_pmove.cmd.serverTime, cg.time );

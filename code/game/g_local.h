@@ -34,6 +34,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "bg_misc.h"
 #include "g_public.h"
 
+#ifdef TA_GAME_MODELS
+#ifdef IOQ3ZTM // BONES
+#include "../renderer/tr_types.h"
+#endif
+#endif
+
 //==================================================================
 
 // the "gameversion" client command will print this plus compile date
@@ -47,10 +53,20 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CARNAGE_REWARD_TIME	3000
 #define REWARD_SPRITE_TIME	2000
 
+#ifdef TURTLEARENA // PLAYERS
+#define TIME_BEFORE_WAITING_ANIMATION 7000
+#endif
+
 #define	INTERMISSION_DELAY_TIME	1000
 #define	SP_INTERMISSION_DELAY_TIME	5000
 
 // gentity->flags
+#ifdef TURTLEARENA // DROWNING
+#define	FL_DROWNING_WARNING		0x00000001
+#endif
+#ifdef IOQ3ZTM
+#define	FL_FIRST_TIME			0x00000002
+#endif
 #define	FL_GODMODE				0x00000010
 #define	FL_NOTARGET				0x00000020
 #define	FL_TEAMSLAVE			0x00000400	// not the first on the team
@@ -59,6 +75,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define FL_NO_BOTS				0x00002000	// spawn point not for bot use
 #define FL_NO_HUMANS			0x00004000	// spawn point just for bots
 #define FL_FORCE_GESTURE		0x00008000	// force gesture on client
+#ifdef TA_ENTSYS // MISC_OBJECT
+#define FL_PUSHABLE				0x00010000	// make misc_object pushable
+#define FL_HEAVY				0x00020000  // only pushable by characters with ABILITY_STRENGTH
+#endif
+#ifdef TA_WEAPSYS
+#define FL_MISSILE_NO_DAMAGE_PARENT	0x00040000
+#endif
 
 // movers are things like doors, plats, buttons, etc
 typedef enum {
@@ -68,7 +91,9 @@ typedef enum {
 	MOVER_2TO1
 } moverState_t;
 
+#ifndef TA_SP
 #define SP_PODIUM_MODEL		"models/mapobjects/podium/podium4.md3"
+#endif
 
 //============================================================================
 
@@ -97,6 +122,10 @@ struct gentity_s {
 
 	char		*model;
 	char		*model2;
+
+#ifdef TA_WEAPSYS // XREAL
+	int			spawnTime;			// level.time when the object was spawned
+#endif
 	int			freetime;			// level.time when the object was freed
 	
 	int			eventTime;			// events will be cleared EVENT_VALID_MSEC after set
@@ -120,6 +149,9 @@ struct gentity_s {
 	gentity_t	*parent;
 	gentity_t	*nextTrain;
 	gentity_t	*prevTrain;
+#ifdef TA_PATHSYS
+	int			pathflags;
+#endif
 	vec3_t		pos1, pos2;
 
 	char		*message;
@@ -127,6 +159,9 @@ struct gentity_s {
 	int			timestamp;		// body queue sinking, etc
 
 	char		*target;
+#ifdef TA_ENTSYS
+	char		*paintarget;
+#endif
 	char		*targetname;
 	char		*team;
 	char		*targetShaderName;
@@ -168,9 +203,14 @@ struct gentity_s {
 	gentity_t	*teamchain;		// next entity in team
 	gentity_t	*teammaster;	// master of the team
 
-#ifdef MISSIONPACK
+#if defined MISSIONPACK && !defined TURTLEARENA // NO_KAMIKAZE_ITEM
 	int			kamikazeTime;
 	int			kamikazeShockTime;
+#endif
+
+#ifdef TA_MISC // MATERIALS
+	int			deathMaterial; // death material
+	int			damageMaterial; // damage material
 #endif
 
 	int			watertype;
@@ -183,6 +223,16 @@ struct gentity_s {
 	float		random;
 
 	gitem_t		*item;			// for bonus items
+
+#ifdef TA_ENTSYS // MISC_OBJECT
+	bg_objectcfg_t *objectcfg;
+#endif
+#ifdef TA_NPCSYS
+	bg_npc_t	bgNPC;
+#endif
+#ifdef TA_WEAPSYS
+	int			mustcut; // Only takes damage from WIF_CUTS weapons
+#endif
 };
 
 
@@ -257,6 +307,25 @@ typedef struct {
 	int			voteCount;			// to prevent people from constantly calling votes
 	int			teamVoteCount;		// to prevent people from constantly calling votes
 	qboolean	teamInfo;			// send team overlay updates?
+#ifdef TA_PLAYERSYS
+    bg_playercfg_t playercfg;        // data loaded from animation.cfg
+#endif
+#ifdef TA_GAME_MODELS
+	// loaded using trap_R_RegisterModel, used in trap_R_LerpTag
+	qhandle_t	torsoModel;
+	qhandle_t	legsModel;
+
+	// Used with ps.torsoAnim/legsAnim to find tag locations
+	lerpFrame_t torso, legs;
+
+	// Player axis, setup using G_PlayerAngles
+	vec3_t legsAxis[3], torsoAxis[3], headAxis[3];
+
+#ifdef IOQ3ZTM // BONES
+	qhandle_t		playerModel;
+	refSkeleton_t	playerSkeleton;
+#endif
+#endif
 } clientPersistant_t;
 
 
@@ -265,6 +334,10 @@ typedef struct {
 struct gclient_s {
 	// ps MUST be the first element, because the server expects it
 	playerState_t	ps;				// communicated by server to clients
+
+#ifdef IOQ3ZTM // PEAKING
+	playerState_t savedPS; // Saved ps when following other clients when not a spectator
+#endif
 
 	// the rest of the structure is private to game
 	clientPersistant_t	pers;
@@ -282,16 +355,23 @@ struct gclient_s {
 	int			latched_buttons;
 
 	vec3_t		oldOrigin;
+#if 0 //#ifdef TA_ENTSYS // PUSHABLE
+	float		oldYaw;
+#endif
 
 	// sum up damage over an entire frame, so
 	// shotgun blasts give a single big kick
+#ifndef TURTLEARENA // NOARMOR
 	int			damage_armor;		// damage absorbed by armor
+#endif
 	int			damage_blood;		// damage taken out of health
 	int			damage_knockback;	// impact damage
 	vec3_t		damage_from;		// origin for vector calculation
 	qboolean	damage_fromWorld;	// if true, don't use the damage_from vector
 
+#ifndef TURTLEARENA // AWARDS
 	int			accurateCount;		// for "impressive" reward sound
+#endif
 
 	int			accuracy_shots;		// total number of shots
 	int			accuracy_hits;		// total number of hits
@@ -300,6 +380,13 @@ struct gclient_s {
 	int			lastkilled_client;	// last client that this client killed
 	int			lasthurt_client;	// last client that damaged this client
 	int			lasthurt_mod;		// type of damage the client did
+#ifdef TA_WEAPSYS
+	int			lasthurt_weapon;	// weapon/projectile for mod
+#endif
+
+#ifdef NIGHTSMODE
+	int			mare;				// Client's current mare for NiGHTS mode. 0 means not on a mare.
+#endif
 
 	// timers
 	int			respawnTime;		// can respawn when time > this, force after g_forcerespwan
@@ -307,11 +394,25 @@ struct gclient_s {
 	qboolean	inactivityWarning;	// qtrue if the five seoond warning has been given
 	int			rewardTime;			// clear the EF_AWARD_IMPRESSIVE, etc when time > this
 
+#ifdef TURTLEARENA // PLAYERS
+	int			idleTime;			// swich to BOTH_WAITING animation after awhile
+#endif
+
+#ifndef TURTLEARENA // DROWNING
 	int			airOutTime;
+#endif
 
+#ifndef TURTLEARENA // AWARDS
 	int			lastKillTime;		// for multiple kill rewards
+#endif
 
+#ifdef TA_SP
+	int			finishTime; // when the client finished the level.
+#endif
+
+#ifndef IOQ3ZTM
 	qboolean	fireHeld;			// used for hook
+#endif
 	gentity_t	*hook;				// grapple hook if out
 
 	int			switchTeamTime;		// time the player switched teams
@@ -323,8 +424,25 @@ struct gclient_s {
 #ifdef MISSIONPACK
 	gentity_t	*persistantPowerup;
 	int			portalID;
+#ifdef TA_WEAPSYS
+	int			ammoTimes[MAX_BG_WEAPON_GROUPS];
+#else
 	int			ammoTimes[WP_NUM_WEAPONS];
+#endif
+#ifdef TURTLEARENA // REGEN_SHURIKENS
+	int			holdableTimes[MAX_HOLDABLE];
+#endif
+#ifndef TURTLEARENA // POWERS
 	int			invulnerabilityTime;
+#endif
+#endif
+#ifdef TA_WEAPSYS
+	int melee_debounce; // Delay doing damage for primary weapon
+	int melee_debounce2; // delay doing damage for secondary weapon
+#endif
+#ifdef TURTLEARENA // LOCKON
+	int lockonTime;
+	qboolean hadLockon;
 #endif
 
 	char		*areabits;
@@ -450,10 +568,27 @@ void StopFollowing( gentity_t *ent );
 void BroadcastTeamChange( gclient_t *client, int oldTeam );
 void SetTeam( gentity_t *ent, const char *s );
 void Cmd_FollowCycle_f( gentity_t *ent, int dir );
+#ifdef IOQ3ZTM // PEAKING
+qboolean G_AllowPeaking(void);
+#endif
 
 //
 // g_items.c
 //
+#define	RESPAWN_ARMOR		25
+#define	RESPAWN_HEALTH		35
+#ifdef TURTLEARENA // NIGHTS_ITEMS
+#define	RESPAWN_SCORE		25
+#endif
+#define	RESPAWN_AMMO		40
+#ifdef TURTLEARENA // HOLDABLE
+#define	RESPAWN_HOLDABLE	35
+#else
+#define	RESPAWN_HOLDABLE	60
+#endif
+#define	RESPAWN_MEGAHEALTH	35//120
+#define	RESPAWN_POWERUP		120
+
 void G_CheckTeamItems( void );
 void G_RunItem( gentity_t *ent );
 void RespawnItem( gentity_t *ent );
@@ -474,17 +609,30 @@ void ClearRegisteredItems( void );
 void RegisterItem( gitem_t *item );
 void SaveRegisteredItems( void );
 
+#ifdef TA_WEAPSYS // weapon_random
+gitem_t *G_RandomWeaponItem( gentity_t *ent, int flags );
+#endif
+
 //
 // g_utils.c
 //
-int G_ModelIndex( char *name );
+int		G_ModelIndex( char *name );
 int		G_SoundIndex( char *name );
+#ifdef IOQ3ZTM // Particles
+int		G_ParticleAreaIndex( char *str );
+#endif
+#ifdef TA_ENTSYS // MISC_OBJECT
+int		G_StringIndex( char *name );
+#endif
 void	trap_SendServerCommand( int clientNum, char *cmd );
 void	G_TeamCommand( team_t team, char *cmd );
 void	G_KillBox (gentity_t *ent);
 gentity_t *G_Find (gentity_t *from, int fieldofs, const char *match);
 gentity_t *G_PickTarget (char *targetname);
 void	G_UseTargets (gentity_t *ent, gentity_t *activator);
+#ifdef TA_ENTSYS
+void	G_UseTargets2(gentity_t *ent, gentity_t *activator, const char *target);
+#endif
 void	G_SetMovedir ( vec3_t angles, vec3_t movedir);
 
 void	G_InitGentity( gentity_t *e );
@@ -507,15 +655,30 @@ void G_SetOrigin( gentity_t *ent, vec3_t origin );
 void AddRemap(const char *oldShader, const char *newShader, float timeOffset);
 const char *BuildShaderStateConfig( void );
 
+#ifdef TA_WEAPSYS // XREAL r2785
+gentity_t *G_FindRadius(gentity_t *from, const vec3_t org, float rad);
+qboolean G_IsVisible(int skipEnt, const vec3_t start, const vec3_t goal);
+qboolean G_ValidTarget(gentity_t *source, gentity_t *target,
+		const vec3_t start, const vec3_t dir,
+		float rad, float ang, int tests);
+gentity_t *G_FindTarget(gentity_t *source, const vec3_t start, const vec3_t dir,
+		float rad, float ang);
+#endif
+
 //
 // g_combat.c
 //
 qboolean CanDamage (gentity_t *targ, vec3_t origin);
-void G_Damage (gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int mod);
+qboolean G_Damage (gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int mod);
+#ifdef TA_WEAPSYS
+qboolean G_RadiusDamage (vec3_t origin, gentity_t *inflictor, gentity_t *attacker, float damage, float radius, gentity_t *ignore, int mod);
+#else
 qboolean G_RadiusDamage (vec3_t origin, gentity_t *attacker, float damage, float radius, gentity_t *ignore, int mod);
+#endif
 int G_InvulnerabilityEffect( gentity_t *targ, vec3_t dir, vec3_t point, vec3_t impactpoint, vec3_t bouncedir );
 void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath );
 void TossClientItems( gentity_t *self );
+void TossClientGametypeItems(gentity_t *ent);
 #ifdef MISSIONPACK
 void TossClientPersistantPowerups( gentity_t *self );
 #endif
@@ -529,12 +692,31 @@ void TossClientCubes( gentity_t *self );
 #ifdef MISSIONPACK
 #define DAMAGE_NO_TEAM_PROTECTION	0x00000010  // armor, shields, invulnerability, and godmode have no effect
 #endif
+#ifdef TA_WEAPSYS // WIF_CUTS
+#define DAMAGE_CUTS					0x00000020	// damage mustcut entities
+#endif
 
 //
 // g_missile.c
 //
 void G_RunMissile( gentity_t *ent );
 
+#ifdef TA_WEAPSYS
+#ifdef TURTLEARENA // HOLD_SHURIKEN
+qboolean fire_shuriken (gentity_t *self, vec3_t start, vec3_t forward,
+		vec3_t right, vec3_t up, holdable_t holdable);
+#endif
+
+qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
+		vec3_t right, vec3_t up, int projnum, float quadFactor,
+		int mod, int splashMod, int handSide);
+
+qboolean fire_weapon(gentity_t *self, vec3_t start, vec3_t forward,
+		vec3_t right, vec3_t up, int weaponnum, float quadFactor, int handSide);
+
+qboolean fire_weaponDir(gentity_t *self, vec3_t start, vec3_t dir,
+		int weaponnum, float quadFactor, int handSide);
+#else
 gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t aimdir);
 gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t aimdir);
 gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir);
@@ -544,6 +726,7 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir);
 gentity_t *fire_nail( gentity_t *self, vec3_t start, vec3_t forward, vec3_t right, vec3_t up );
 gentity_t *fire_prox( gentity_t *self, vec3_t start, vec3_t aimdir );
 #endif
+#endif
 
 
 //
@@ -551,6 +734,12 @@ gentity_t *fire_prox( gentity_t *self, vec3_t start, vec3_t aimdir );
 //
 void G_RunMover( gentity_t *ent );
 void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace );
+#ifdef TA_ENTSYS // BREAKABLE
+qboolean G_SeenByHumans( gentity_t *ent );
+#endif
+#ifdef TA_ENTSYS // PUSHABLE
+qboolean G_PlayerPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **obstacle );
+#endif
 
 //
 // g_trigger.c
@@ -574,9 +763,25 @@ void DropPortalDestination( gentity_t *ent );
 qboolean LogAccuracyHit( gentity_t *target, gentity_t *attacker );
 void CalcMuzzlePoint ( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint );
 void SnapVectorTowards( vec3_t v, vec3_t to );
+#ifdef TURTLEARENA // LOCKON HOLD_SHURIKEN
+void G_AutoAim(gentity_t *ent, int projnum, vec3_t start, vec3_t forward, vec3_t right, vec3_t up);
+void G_ThrowShuriken(gentity_t *ent, holdable_t holdable);
+#endif
+#ifdef TA_WEAPSYS // MELEEATTACK
+qboolean G_MeleeDamageSingle(gentity_t *ent, qboolean checkTeamHit, int hand, weapontype_t wt);
+qboolean G_MeleeDamage( gentity_t *ent, qboolean attacking );
+void G_StartMeleeAttack(gentity_t *ent);
+#else
 qboolean CheckGauntletAttack( gentity_t *ent );
+#endif
+#ifdef IOQ3ZTM // GRAPPLE_RETURN
+void Weapon_ForceHookFree (gentity_t *ent);
+#endif
 void Weapon_HookFree (gentity_t *ent);
 void Weapon_HookThink (gentity_t *ent);
+#ifdef TA_NPC
+void NPC_FireWeapon(gentity_t *ent);
+#endif
 
 
 //
@@ -586,16 +791,33 @@ team_t TeamCount( int ignoreClientNum, int team );
 int TeamLeader( int team );
 team_t PickTeam( int ignoreClientNum );
 void SetClientViewAngle( gentity_t *ent, vec3_t angle );
+#ifdef TA_PLAYERSYS
+gentity_t *SelectSpawnPoint (gentity_t *ent, vec3_t origin, vec3_t angles, qboolean isbot);
+#else
 gentity_t *SelectSpawnPoint (vec3_t avoidPoint, vec3_t origin, vec3_t angles, qboolean isbot);
+#endif
 void CopyToBodyQue( gentity_t *ent );
 void ClientRespawn(gentity_t *ent);
 void BeginIntermission (void);
 void InitBodyQue (void);
-void ClientSpawn( gentity_t *ent );
+void ClientSpawn( gentity_t *ent, qboolean firstTime );
 void player_die (gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
+#ifdef TURTLEARENA // NIGHTS_ITEMS
+void AddScoreEx( gentity_t *ent, vec3_t origin, int score, int chain);
+#endif
 void AddScore( gentity_t *ent, vec3_t origin, int score );
 void CalculateRanks( void );
+#ifdef TA_PLAYERSYS
+qboolean SpotWouldTelefrag( gentity_t *spot, gentity_t *ent );
+#else
 qboolean SpotWouldTelefrag( gentity_t *spot );
+#endif
+#ifdef TA_SP
+qboolean G_ClientCompletedLevel(gentity_t *activator, char *nextMap);
+#endif
+#ifdef NIGHTSMODE
+void G_DeNiGHTSizePlayer( gentity_t *ent );
+#endif
 
 //
 // g_svcmds.c
@@ -610,8 +832,23 @@ qboolean G_FilterPacket (char *from);
 // g_weapon.c
 //
 void FireWeapon( gentity_t *ent );
-#ifdef MISSIONPACK
+#if defined MISSIONPACK && !defined TURTLEARENA // NO_KAMIKAZE_ITEM
 void G_StartKamikaze( gentity_t *ent );
+#endif
+
+#ifdef TA_NPCSYS
+//
+// g_npcsys.c
+//
+void ClearRegisteredNPCs( void );
+void RegisterNPC( bg_npcinfo_t *npc );
+void SaveRegisteredNPCs( void );
+void G_SpawnNPC( gentity_t *ent, bg_npcinfo_t *npc );
+void G_RunNPC( gentity_t *ent );
+#endif
+
+#ifdef TA_ENTSYS
+void G_SetMiscAnim(gentity_t *ent, int anim);
 #endif
 
 //
@@ -634,6 +871,9 @@ void SendScoreboardMessageToAllClients( void );
 void QDECL G_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void QDECL G_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void QDECL G_Error( const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 1, 2)));
+#ifdef IOQ3ZTM
+void G_CvarClearModification( vmCvar_t *vmCvar );
+#endif
 
 //
 // g_client.c
@@ -658,6 +898,9 @@ void G_RunClient( gentity_t *ent );
 qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 );
 void Team_CheckDroppedItem( gentity_t *dropped );
 qboolean CheckObeliskAttack( gentity_t *obelisk, gentity_t *attacker );
+#if defined MISSIONPACK && defined TA_WEAPSYS
+void ObeliskPain( gentity_t *self, gentity_t *attacker, int damage );
+#endif
 
 //
 // g_mem.c
@@ -675,12 +918,21 @@ void G_InitSessionData( gclient_t *client, char *userinfo );
 void G_InitWorldSession( void );
 void G_WriteSessionData( void );
 
+#ifdef TA_SP
+void G_ReadCoopSessionData( gclient_t *client );
+void G_InitCoopSessionData( gclient_t *client );
+
+void G_WriteCoopSessionData( qboolean restart );
+#endif
+
 //
 // g_arenas.c
 //
 void UpdateTournamentInfo( void );
+#ifndef TA_SP
 void SpawnModelsOnVictoryPads( void );
 void Svcmd_AbortPodium_f( void );
+#endif
 
 //
 // g_bot.c
@@ -694,6 +946,47 @@ qboolean G_BotConnect( int clientNum, qboolean restart );
 void Svcmd_AddBot_f( void );
 void Svcmd_BotList_f( void );
 void BotInterbreedEndMatch( void );
+#ifdef IOQ3ZTM // MAP_ROTATION
+void G_LoadArenas( void );
+const char *G_GetNextArenaInfoByGametype( const char *map, gametype_t gametype );
+void G_AdvanceMap( void );
+#endif
+
+#ifdef TA_SP // Load/save
+//
+// g_save.c
+//
+qboolean G_SaveGame(const char *savegame);
+void G_LoadGame(void);
+void G_LoadGameClient(int client);
+#endif
+
+#ifdef TA_PATHSYS
+//
+// g_paths.c
+//
+// Path type, save in entities?
+typedef enum
+{
+	PATH_UNKNOWN= 0x00,		// zero value
+
+	// values returned by G_SetupPath
+	PATH_ERROR	= 0x01,		// Path failed linking.
+	PATH_CIRCIT	= 0x02,		// Path is a circit.
+	PATH_LINE	= 0x04,		// Path has a start and end.
+					// ... (rename? doesn't mean its a strait line, just not a circit)
+
+	// other flags (saved in path entities)
+	PATH_FIRST	= 0x08,
+	PATH_LAST	= 0x10,
+
+	PATH_DUMMY
+} gpathtype_e;
+
+gpathtype_e G_SetupPath(gentity_t *ent, const char *target);
+qboolean G_ReachedPath(gentity_t *ent, qboolean check);
+void G_MoveOnPath(gentity_t *ent);
+#endif
 
 // ai_main.c
 #define MAX_FILEPATH			144
@@ -750,7 +1043,9 @@ extern	vmCvar_t	g_synchronousClients;
 extern	vmCvar_t	g_motd;
 extern	vmCvar_t	g_warmup;
 extern	vmCvar_t	g_doWarmup;
+#ifndef NOTRATEDM
 extern	vmCvar_t	g_blood;
+#endif
 extern	vmCvar_t	g_allowVote;
 extern	vmCvar_t	g_teamAutoJoin;
 extern	vmCvar_t	g_teamForceBalance;
@@ -760,17 +1055,41 @@ extern	vmCvar_t	g_obeliskHealth;
 extern	vmCvar_t	g_obeliskRegenPeriod;
 extern	vmCvar_t	g_obeliskRegenAmount;
 extern	vmCvar_t	g_obeliskRespawnDelay;
+#ifdef MISSIONPACK_HARVESTER
 extern	vmCvar_t	g_cubeTimeout;
+#endif
 extern	vmCvar_t	g_redteam;
 extern	vmCvar_t	g_blueteam;
 extern	vmCvar_t	g_smoothClients;
 extern	vmCvar_t	pmove_fixed;
 extern	vmCvar_t	pmove_msec;
 extern	vmCvar_t	g_rankings;
+#ifdef MISSIONPACK
 extern	vmCvar_t	g_enableDust;
 extern	vmCvar_t	g_enableBreath;
+#ifndef TA_SP
 extern	vmCvar_t	g_singlePlayer;
+#endif
+#endif
+#ifdef TA_SP
+extern	vmCvar_t	g_singlePlayer;
+extern	vmCvar_t	g_savegameLoading;
+extern	vmCvar_t	g_savegameFilename;
+extern	vmCvar_t	g_spSaveData;
+extern	vmCvar_t	g_saveVersions;
+extern	vmCvar_t	g_saveFilename;
+extern	vmCvar_t	g_saveMapname;
+#endif
 extern	vmCvar_t	g_proxMineTimeout;
+#ifdef TURTLEARENA // POWERS // PW_FLASHING
+extern	vmCvar_t	g_teleportFluxTime;
+#endif
+#ifdef IOQ3ZTM // LASERTAG
+extern	vmCvar_t	g_laserTag;
+#endif
+#ifdef TA_PATHSYS // 2DMODE
+extern	vmCvar_t	g_2dmode;
+#endif
 
 // Additional shared traps in bg_misc.h
 
@@ -804,12 +1123,32 @@ qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
 int		trap_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void	trap_DebugPolygonDelete(int id);
 
+#ifdef TA_GAME_MODELS
+qhandle_t trap_R_RegisterModel( const char *name );
+int trap_R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame,
+					   float frac, const char *tagName );
+
+#ifdef IOQ3ZTM // BONES
+int trap_R_JointIndexForName(qhandle_t handle, const char *jointName);
+qboolean trap_R_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
+qboolean trap_R_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel,
+								int legsFrame, int legsOldFrame, float legsBacklerp,
+								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
+								int headFrame, int headOldFrame, float headBacklerp);
+void	trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
+#endif
+#endif
+
 int		trap_BotLibSetup( void );
 int		trap_BotLibShutdown( void );
 int		trap_BotLibVarSet(char *var_name, char *value);
 int		trap_BotLibVarGet(char *var_name, char *value, int size);
 int		trap_BotLibStartFrame(float time);
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+int		trap_BotLibLoadMap(const char *mapname, void /* bot_shareditem_t */ *itemInfos);
+#else
 int		trap_BotLibLoadMap(const char *mapname);
+#endif
 int		trap_BotLibUpdateEntity(int ent, void /* struct bot_updateentity_s */ *bue);
 int		trap_BotLibTest(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 
@@ -860,7 +1199,11 @@ void	trap_EA_Action(int client, int action);
 void	trap_EA_Gesture(int client);
 void	trap_EA_Talk(int client);
 void	trap_EA_Attack(int client);
+#ifdef TA_HOLDSYS
+void	trap_EA_Use(int client, int holdable);
+#else
 void	trap_EA_Use(int client);
+#endif
 void	trap_EA_Respawn(int client);
 void	trap_EA_Crouch(int client);
 void	trap_EA_MoveUp(int client);
@@ -869,7 +1212,11 @@ void	trap_EA_MoveForward(int client);
 void	trap_EA_MoveBack(int client);
 void	trap_EA_MoveLeft(int client);
 void	trap_EA_MoveRight(int client);
+#ifdef TA_WEAPSYS_EX // BOTLIB
+void	trap_EA_DropWeapon(int client);
+#else
 void	trap_EA_SelectWeapon(int client, int weapon);
+#endif
 void	trap_EA_Jump(int client);
 void	trap_EA_DelayedJump(int client);
 void	trap_EA_Move(int client, vec3_t dir, float speed);
@@ -928,7 +1275,9 @@ int		trap_BotGetMapLocationGoal(char *name, void /* struct bot_goal_s */ *goal);
 int		trap_BotGetLevelItemGoal(int index, char *classname, void /* struct bot_goal_s */ *goal);
 float	trap_BotAvoidGoalTime(int goalstate, int number);
 void	trap_BotSetAvoidGoalTime(int goalstate, int number, float avoidtime);
+#ifndef TA_WEAPSYS // BOT_ITEM_INFOS
 void	trap_BotInitLevelItems(void);
+#endif
 void	trap_BotUpdateEntityItems(void);
 int		trap_BotLoadItemWeights(int goalstate, char *filename);
 void	trap_BotFreeItemWeights(int goalstate);
@@ -951,11 +1300,13 @@ void	trap_BotFreeMoveState(int handle);
 void	trap_BotInitMoveState(int handle, void /* struct bot_initmove_s */ *initmove);
 void	trap_BotAddAvoidSpot(int movestate, vec3_t origin, float radius, int type);
 
+#ifndef TA_WEAPSYS
 int		trap_BotChooseBestFightWeapon(int weaponstate, int *inventory);
 void	trap_BotGetWeaponInfo(int weaponstate, int weapon, void /* struct weaponinfo_s */ *weaponinfo);
 int		trap_BotLoadWeaponWeights(int weaponstate, char *filename);
 int		trap_BotAllocWeaponState(void);
 void	trap_BotFreeWeaponState(int weaponstate);
 void	trap_BotResetWeaponState(int weaponstate);
+#endif
 
 int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child);

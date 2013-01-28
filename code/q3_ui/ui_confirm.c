@@ -134,7 +134,7 @@ static void MessageMenu_Draw( void ) {
 	y = 188;
 	for(i=0; s_confirm.lines[i]; i++)
 	{
-		UI_DrawProportionalString( 320, y, s_confirm.lines[i], s_confirm.style, color_red );
+		UI_DrawProportionalString( 320, y, s_confirm.lines[i], s_confirm.style, text_big_color );
 		y += 18;
 	}
 
@@ -152,8 +152,8 @@ ConfirmMenu_Draw
 */
 static void ConfirmMenu_Draw( void ) {
 	UI_DrawNamedPic( 142, 118, 359, 256, ART_CONFIRM_FRAME );
-	UI_DrawProportionalString( 320, 204, s_confirm.question, s_confirm.style, color_red );
-	UI_DrawProportionalString( s_confirm.slashX, 265, "/", UI_LEFT|UI_INVERSE, color_red );
+	UI_DrawProportionalString( 320, 204, s_confirm.question, s_confirm.style, text_big_color );
+	UI_DrawProportionalString( s_confirm.slashX, 265, "/", UI_LEFT|UI_INVERSE, text_big_color );
 
 	Menu_Draw( &s_confirm.menu );
 
@@ -188,9 +188,9 @@ void UI_ConfirmMenu_Style( const char *question, int style, void (*draw)( void )
 
 	ConfirmMenu_Cache();
 
-	n1 = UI_ProportionalStringWidth( "YES/NO" );
-	n2 = UI_ProportionalStringWidth( "YES" ) + PROP_GAP_WIDTH;
-	n3 = UI_ProportionalStringWidth( "/" )  + PROP_GAP_WIDTH;
+	n1 = UI_ProportionalStringWidth( "YES/NO", 0 );
+	n2 = UI_ProportionalStringWidth( "YES", 0 ) + PROP_GAP_WIDTH;
+	n3 = UI_ProportionalStringWidth( "/", 0 )  + PROP_GAP_WIDTH;
 	l1 = 320 - ( n1 / 2 );
 	l2 = l1 + n2;
 	l3 = l2 + n3;
@@ -220,7 +220,7 @@ void UI_ConfirmMenu_Style( const char *question, int style, void (*draw)( void )
 	s_confirm.yes.generic.x			= l1;
 	s_confirm.yes.generic.y			= 264;
 	s_confirm.yes.string			= "YES";
-	s_confirm.yes.color				= color_red;
+	s_confirm.yes.color				= text_big_color;
 	s_confirm.yes.style				= UI_LEFT;
 
 	s_confirm.no.generic.type		= MTYPE_PTEXT;      
@@ -230,7 +230,7 @@ void UI_ConfirmMenu_Style( const char *question, int style, void (*draw)( void )
 	s_confirm.no.generic.x		    = l3;
 	s_confirm.no.generic.y		    = 264;
 	s_confirm.no.string				= "NO";
-	s_confirm.no.color			    = color_red;
+	s_confirm.no.color			    = text_big_color;
 	s_confirm.no.style			    = UI_LEFT;
 
 	Menu_AddItem( &s_confirm.menu,	&s_confirm.yes );             
@@ -265,7 +265,7 @@ void UI_Message( const char **lines ) {
 
 	ConfirmMenu_Cache();
 
-	n1 = UI_ProportionalStringWidth( "OK" );
+	n1 = UI_ProportionalStringWidth( "OK", 0 );
 	l1 = 320 - ( n1 / 2 );
 	
 	s_confirm.lines = lines;
@@ -290,7 +290,7 @@ void UI_Message( const char **lines ) {
 	s_confirm.yes.generic.x			= l1;
 	s_confirm.yes.generic.y			= 280;
 	s_confirm.yes.string			= "OK";
-	s_confirm.yes.color				= color_red;
+	s_confirm.yes.color				= text_big_color;
 	s_confirm.yes.style				= UI_LEFT;
 
 	Menu_AddItem( &s_confirm.menu,	&s_confirm.yes );

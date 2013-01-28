@@ -23,6 +23,7 @@
 					<Add option="-D_USRDLL" />
 					<Add option="-DQ3_UI_EXPORTS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Win32">
@@ -43,6 +44,7 @@
 					<Add option="-D_USRDLL" />
 					<Add option="-DQ3_UI_EXPORTS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 			<Target title="Release Linux i386">
@@ -61,6 +63,7 @@
 					<Add option="-D_USRDLL" />
 					<Add option="-DQ3_UI_EXPORTS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux i386">
@@ -81,6 +84,7 @@
 					<Add option="-D_USRDLL" />
 					<Add option="-DQ3_UI_EXPORTS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 			<Target title="Release Linux x86_64">
@@ -99,6 +103,7 @@
 					<Add option="-D_USRDLL" />
 					<Add option="-DQ3_UI_EXPORTS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Linux x86_64">
@@ -119,9 +124,36 @@
 					<Add option="-D_USRDLL" />
 					<Add option="-DQ3_UI_EXPORTS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 		</Build>
+		<Compiler>
+			<Add option="-DNOTRATEDM" />
+			<Add option="-DNOBLOOD" />
+			<Add option="-DIOQ3ZTM" />
+			<Add option="-DIOQ3ZTM_NO_COMPAT" />
+			<Add option="-DIOQ3ZTM_NO_TEAM_MODEL" />
+			<Add option="-DTA_HOLDSYS" />
+			<Add option="-DTA_ITEMSYS" />
+			<Add option="-DTA_WEAPSYS" />
+			<Add option="-DTA_PLAYERSYS" />
+			<Add option="-DTA_SUPPORTQ3" />
+			<Add option="-DTA_ENTSYS" />
+			<Add option="-DTA_NPCSYS" />
+			<Add option="-DTA_PATHSYS" />
+			<Add option="-DTA_WEAPSYS_EX_COMPAT" />
+			<Add option="-DTA_BLOOM" />
+			<Add option="-DTA_SPLITVIEW" />
+			<Add option="-DTURTLEARENA" />
+			<Add option="-DTA_MISC" />
+			<Add option="-DTA_SP" />
+			<Add option="-DTA_HOLDABLE" />
+			<Add option="-DTA_WEAPSYS_EX" />
+			<Add option="-DTA_DATA" />
+			<Add option="-DNIGHTSMODE" />
+			<Add option="-DTA_GAME_MODELS" />
+		</Compiler>
 		<Unit filename="../../code/client/keycodes.h" />
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
@@ -166,6 +198,9 @@
 		<Unit filename="../../code/q3_ui/ui_ingame_selectplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/q3_ui/ui_ingame_server.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/q3_ui/ui_joystick.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -186,6 +221,9 @@
 		<Unit filename="../../code/q3_ui/ui_mods.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/q3_ui/ui_multiplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/q3_ui/ui_network.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -199,6 +237,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/q3_ui/ui_playersettings.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_playersetup.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/q3_ui/ui_preferences.c">
@@ -236,6 +277,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/q3_ui/ui_splevel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/q3_ui/ui_spplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/q3_ui/ui_sppostgame.c">

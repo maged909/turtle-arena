@@ -25,42 +25,44 @@ else
 fi
 
 CC=gcc-4.0
-APPBUNDLE=spearmint.app
-BINARY=spearmint.${BUILDARCH}
-DEDBIN=spearmint-server.${BUILDARCH}
-PKGINFO=APPLIOQ3
+APPBUNDLE=turtlearena.app
+BINARY=turtlearena.${BUILDARCH}
+DEDBIN=turtlearena-server.${BUILDARCH}
+PKGINFO=APPLTUAR
 ICNS=misc/quake3.icns
 DESTDIR=build/release-darwin-${BUILDARCH}
 BASEDIR=baseq3
 MPACKDIR=missionpack
 
 BIN_OBJ="
-	build/release-darwin-${BUILDARCH}/spearmint.${BUILDARCH}
+	build/release-darwin-${BUILDARCH}/turtlearena.${BUILDARCH}
 "
 BIN_DEDOBJ="
-	build/release-darwin-${BUILDARCH}/spearmint-server.${BUILDARCH}
+	build/release-darwin-${BUILDARCH}/turtlearena-server.${BUILDARCH}
 "
 BASE_OBJ="
 	build/release-darwin-${BUILDARCH}/$BASEDIR/cgame${BUILDARCH}.dylib
 	build/release-darwin-${BUILDARCH}/$BASEDIR/ui${BUILDARCH}.dylib
 	build/release-darwin-${BUILDARCH}/$BASEDIR/game${BUILDARCH}.dylib
-"
-MPACK_OBJ="
-	build/release-darwin-${BUILDARCH}/$MPACKDIR/cgame${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/$MPACKDIR/ui${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/$MPACKDIR/game${BUILDARCH}.dylib
-"
-RENDER_OBJ="
-	build/release-darwin-${BUILDARCH}/renderer_opengl1_smp_${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/renderer_opengl1_${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/renderer_rend2_smp_${BUILDARCH}.dylib
-	build/release-darwin-${BUILDARCH}/renderer_rend2_${BUILDARCH}.dylib
+	../install/$BASEDIR/assets0.pk3
+	../install/$BASEDIR/assets1-qvms.pk3
+	../install/$BASEDIR/assets2-music.pk3
 "
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
-	echo "This script must be run from the Spearmint build directory"
+	echo "This script must be run from the Turtle Arena build directory"
 	exit 1
+fi
+
+# Build game assets if needed.
+if [ ! -f ../install/$BASEDIR/assets0.pk3 ]; then
+        echo "Building assets..."
+        (make -C .. assets) || exit 1;
+        if [ ! -f ../install/$BASEDIR/assets0.pk3 ]; then
+                echo "Error: Failed to build assets"
+                exit 1
+        fi
 fi
 
 Q3_VERSION=`grep '^VERSION=' Makefile | sed -e 's/.*=\(.*\)/\1/'`
@@ -99,22 +101,19 @@ NCPU=`sysctl -n hw.ncpu`
 
 
 # intel client and server
-if [ -d build/release-darwin-${BUILDARCH} ]; then
-	rm -r build/release-darwin-${BUILDARCH}
+if [ -d build/release-darwin-x86_64 ]; then
+	rm -r build/release-darwin-x86_64
 fi
-(ARCH=${BUILDARCH} CFLAGS=$ARCH_CFLAGS LDFLAGS=$ARCH_LDFLAGS make -j$NCPU) || exit 1;
+(ARCH=x86_64 CFLAGS=$X86_CFLAGS LDFLAGS=$X86_LDFLAGS make -j$NCPU) || exit 1;
 
 echo "Creating .app bundle $DESTDIR/$APPBUNDLE"
 if [ ! -d $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR ]; then
 	mkdir -p $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR || exit 1;
 fi
-if [ ! -d $DESTDIR/$APPBUNDLE/Contents/MacOS/$MPACKDIR ]; then
-	mkdir -p $DESTDIR/$APPBUNDLE/Contents/MacOS/$MPACKDIR || exit 1;
-fi
 if [ ! -d $DESTDIR/$APPBUNDLE/Contents/Resources ]; then
 	mkdir -p $DESTDIR/$APPBUNDLE/Contents/Resources
 fi
-cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/spearmint.icns || exit 1;
+cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/turtlearena.icns || exit 1;
 echo $PKGINFO > $DESTDIR/$APPBUNDLE/Contents/PkgInfo
 echo "
 	<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -128,15 +127,15 @@ echo "
 		<key>CFBundleExecutable</key>
 		<string>$BINARY</string>
 		<key>CFBundleGetInfoString</key>
-		<string>Spearmint $Q3_VERSION</string>
+		<string>Turtle Arena $Q3_VERSION</string>
 		<key>CFBundleIconFile</key>
-		<string>spearmint.icns</string>
+		<string>turtlearena.icns</string>
 		<key>CFBundleIdentifier</key>
-		<string>org.ioquake.ioquake3</string>
+		<string>org.turtlearena.turtlearena</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>Spearmint</string>
+		<string>Turtle Arena</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -153,12 +152,8 @@ echo "
 	</plist>
 	" > $DESTDIR/$APPBUNDLE/Contents/Info.plist
 
-
-cp $BIN_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$BINARY
-cp $BIN_DEDOBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$DEDBIN
-cp $RENDER_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/
+lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$BINARY $BIN_OBJ
+lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$DEDBIN $BIN_DEDOBJ
 cp $BASE_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR/
-cp $MPACK_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$MPACKDIR/
 cp code/libs/macosx/*.dylib $DESTDIR/$APPBUNDLE/Contents/MacOS/
-cp code/libs/macosx/*.dylib $DESTDIR
 

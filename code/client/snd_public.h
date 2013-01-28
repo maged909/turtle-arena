@@ -90,3 +90,6 @@ void S_StopCapture( void );
 void S_MasterGain( float gain );
 #endif
 
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+void S_GetMusicForIntro(char *intro, char *loop, float *volume);
+#endif

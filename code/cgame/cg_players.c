@@ -45,6 +45,12 @@ char	*cg_customSoundNames[MAX_CUSTOM_SOUNDS] = {
 	"*drown.wav",
 	"*fall1.wav",
 	"*taunt.wav"
+#ifdef IOQ3ZTM // MORE_PLAYER_SOUNDS
+	,
+	"*gurp1.wav",
+	"*gurp2.wav",
+	"*land1.wav"
+#endif
 };
 
 
@@ -87,6 +93,7 @@ CLIENT INFO
 =============================================================================
 */
 
+#ifndef TA_PLAYERSYS // Moved to bg_misc.c BG_ParsePlayerCFGFile
 /*
 ======================
 CG_ParseAnimationFile
@@ -297,6 +304,7 @@ static qboolean	CG_ParseAnimationFile( const char *filename, clientInfo_t *ci ) 
 	//
 	return qtrue;
 }
+#endif
 
 /*
 ==========================
@@ -424,7 +432,7 @@ static qboolean	CG_FindClientHeadFile( char *filename, int length, clientInfo_t 
 
 			if (Q_stricmpn(ext, "$image", 6) == 0) {
 				COM_StripExtension(filename, filename, length);
-				if (trap_R_RegisterShaderNoMip(filename)) {
+ 				if (trap_R_RegisterShaderNoMip(filename)) {
 					return qtrue;
 				}
 			} else if ( CG_FileExists( filename ) ) {
@@ -450,7 +458,7 @@ static qboolean	CG_FindClientHeadFile( char *filename, int length, clientInfo_t 
 
 			if (Q_stricmpn(ext, "$image", 6) == 0) {
 				COM_StripExtension(filename, filename, length);
-				if (trap_R_RegisterShaderNoMip(filename)) {
+ 				if (trap_R_RegisterShaderNoMip(filename)) {
 					return qtrue;
 				}
 			} else if ( CG_FileExists( filename ) ) {
@@ -478,6 +486,21 @@ CG_RegisterClientSkin
 */
 static qboolean	CG_RegisterClientSkin( clientInfo_t *ci, const char *teamName, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName ) {
 	char filename[MAX_QPATH];
+
+#ifdef IOQ3ZTM // BONES
+	// single model player has single skin
+	if (ci->playerModel) {
+		if ( CG_FindClientModelFile( filename, sizeof(filename), ci, teamName, modelName, skinName, "player", "skin" ) ) {
+			ci->playerSkin = trap_R_RegisterSkin( filename );
+		}
+		if (!ci->playerSkin) {
+			Com_Printf( "Player skin load failure: %s\n", filename );
+			return qfalse;
+		}
+
+		return qtrue;
+	}
+#endif
 
 	/*
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/%slower_%s.skin", modelName, teamName, skinName );
@@ -526,9 +549,9 @@ CG_RegisterClientModelname
 ==========================
 */
 static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName, const char *teamName ) {
-	char	filename[MAX_QPATH];
+	char	filename[MAX_QPATH*2];
 	const char		*headName;
-	char newTeamName[MAX_QPATH];
+	char newTeamName[MAX_QPATH*2];
 
 	if ( headModelName[0] == '\0' ) {
 		headName = modelName;
@@ -537,6 +560,14 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 		headName = headModelName;
 	}
 
+#ifdef IOQ3ZTM // BONES
+	// Try loading single model player
+	Com_sprintf( filename, sizeof( filename ), "models/players/%s/player.iqm", modelName );
+	ci->playerModel = trap_R_RegisterModel( filename );
+
+	// Try loading multimodel player
+	if (!ci->playerModel) {
+#endif
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower.md3", modelName );
 	ci->legsModel = trap_R_RegisterModel( filename );
 	if ( !ci->legsModel ) {
@@ -567,6 +598,9 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 		Com_Printf( "Failed to load model file %s\n", filename );
 		return qfalse;
 	}
+#ifdef IOQ3ZTM // BONES
+	}
+#endif
 
 	// if any skins failed to load, return failure
 	if ( !CG_RegisterClientSkin( ci, teamName, modelName, skinName, headName, headSkinName ) ) {
@@ -589,11 +623,17 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 	}
 
 	// load the animations
+#ifdef TA_PLAYERSYS
+	if (!BG_LoadPlayerCFGFile(&ci->playercfg, modelName, headName)) {
+		return qfalse;
+	}
+#else
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/animation.cfg", modelName );
 	if ( !CG_ParseAnimationFile( filename, ci ) ) {
 		Com_Printf( "Failed to load animation file %s\n", filename );
 		return qfalse;
 	}
+#endif
 
 	if ( CG_FindClientHeadFile( filename, sizeof(filename), ci, teamName, headName, headSkinName, "icon", "$image" ) ) {
 		ci->modelIcon = trap_R_RegisterShaderNoMip( filename );
@@ -618,6 +658,51 @@ static void CG_ColorFromString( const char *v, vec3_t color ) {
 
 	val = atoi( v );
 
+#ifdef TA_DATA // MORE_COLOR_EFFECTS
+	switch (val)
+	{
+		case 1: // blue
+		case 2: // green
+		case 3: // cyen
+		case 4: // red
+		case 5: // magenta
+		case 6: // yellow
+		case 7: // white
+			if ( val & 1 ) {
+				color[2] = 1.0f;
+			}
+			if ( val & 2 ) {
+				color[1] = 1.0f;
+			}
+			if ( val & 4 ) {
+				color[0] = 1.0f;
+			}
+			break;
+
+		case 8: // orange
+			VectorSet( color, 1, 0.5f, 0 );
+			break;
+		case 9: // Lime
+			VectorSet( color, 0.5f, 1, 0 );
+			break;
+		case 10: // Vivid green
+			VectorSet( color, 0, 1, 0.5f );
+			break;
+		case 11: // light blue
+			VectorSet( color, 0, 0.5f, 1 );
+			break;
+		case 12: // purple
+			VectorSet( color, 0.5f, 0, 1 );
+			break;
+		case 13: // pink
+			VectorSet( color, 1, 0, 0.5f );
+			break;
+
+		default: // fall back to white
+			VectorSet( color, 1, 1, 1 );
+			break;
+	}
+#else
 	if ( val < 1 || val > 7 ) {
 		VectorSet( color, 1, 1, 1 );
 		return;
@@ -632,6 +717,7 @@ static void CG_ColorFromString( const char *v, vec3_t color ) {
 	if ( val & 4 ) {
 		color[0] = 1.0f;
 	}
+#endif
 }
 
 /*
@@ -647,9 +733,10 @@ static void CG_LoadClientInfo( int clientNum, clientInfo_t *ci ) {
 	int			i, modelloaded;
 	const char	*s;
 	char		teamname[MAX_QPATH];
+	gender_t	gender;
 
 	teamname[0] = 0;
-#ifdef MISSIONPACK
+#if defined MISSIONPACK || defined IOQ3ZTM // Support MissionPack players.
 	if( cgs.gametype >= GT_TEAM) {
 		if( ci->team == TEAM_BLUE ) {
 			Q_strncpyz(teamname, cg_blueTeamName.string, sizeof(teamname) );
@@ -662,6 +749,49 @@ static void CG_LoadClientInfo( int clientNum, clientInfo_t *ci ) {
 	}
 #endif
 	modelloaded = qtrue;
+#ifdef IOQ3ZTM // Support MissionPack players in Q3 and Q3 players in MissionPack.
+	// Try to loading teamname, for Team Arena players.
+	if ( !CG_RegisterClientModelname( ci, ci->modelName, ci->skinName, ci->headModelName, ci->headSkinName, teamname ) ) {
+		if (cgs.gametype < GT_TEAM)
+		{
+			// in non-team, try loading with teamname, for Team Arena players
+			if( ci->team == TEAM_BLUE ) {
+				Q_strncpyz(teamname, cg_blueTeamName.string, sizeof(teamname) );
+			} else {
+				Q_strncpyz(teamname, cg_redTeamName.string, sizeof(teamname) );
+			}
+		}
+		else
+		{
+			// in teamplay, try loading with no teamname, for Q3 players.
+			teamname[0] = 0;
+		}
+		if (!CG_RegisterClientModelname( ci, ci->modelName, ci->skinName, ci->headModelName, ci->headSkinName, teamname ) )
+		{
+			if (cg_buildScript.integer ) {
+				CG_Error( "CG_RegisterClientModelname( %s, %s, %s, %s %s ) failed", ci->modelName, ci->skinName, ci->headModelName, ci->headSkinName, teamname );
+			}
+
+			// fall back to default team name
+			if( cgs.gametype >= GT_TEAM) {
+				// keep skin name
+				if( ci->team == TEAM_BLUE ) {
+					Q_strncpyz(teamname, DEFAULT_BLUETEAM_NAME, sizeof(teamname) );
+				} else {
+					Q_strncpyz(teamname, DEFAULT_REDTEAM_NAME, sizeof(teamname) );
+				}
+				if ( !CG_RegisterClientModelname( ci, DEFAULT_TEAM_MODEL, ci->skinName, DEFAULT_TEAM_HEAD, ci->skinName, teamname ) ) {
+					CG_Error( "DEFAULT_TEAM_MODEL / skin (%s/%s) failed to register", DEFAULT_TEAM_MODEL, ci->skinName );
+				}
+			} else {
+				if ( !CG_RegisterClientModelname( ci, DEFAULT_MODEL, "default", DEFAULT_MODEL, "default", teamname ) ) {
+					CG_Error( "DEFAULT_MODEL (%s) failed to register", DEFAULT_MODEL );
+				}
+			}
+			modelloaded = qfalse;
+		}
+	}
+#else
 	if ( !CG_RegisterClientModelname( ci, ci->modelName, ci->skinName, ci->headModelName, ci->headSkinName, teamname ) ) {
 		if ( cg_buildScript.integer ) {
 			CG_Error( "CG_RegisterClientModelname( %s, %s, %s, %s %s ) failed", ci->modelName, ci->skinName, ci->headModelName, ci->headSkinName, teamname );
@@ -685,22 +815,69 @@ static void CG_LoadClientInfo( int clientNum, clientInfo_t *ci ) {
 		}
 		modelloaded = qfalse;
 	}
+#endif
 
+#ifdef TA_PLAYERSYS
+	CG_ColorFromString( va("%d", ci->playercfg.prefcolor2), ci->prefcolor2 );
+#endif
+
+#if defined TA_PLAYERSYS && defined TA_WEAPSYS // DEFAULT_DEFAULT_WEAPON
+	// If it is the local client update default weapon.
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		if (clientNum == cg.localClients[i].predictedPlayerState.clientNum) {
+			cg.localClients[i].predictedPlayerState.stats[STAT_DEFAULTWEAPON] = cgs.clientinfo[clientNum].playercfg.default_weapon;
+		}
+	}
+#endif
+
+#ifdef TA_WEAPSYS
+	ci->tagInfo = 0;
+#else
 	ci->newAnims = qfalse;
+#endif
 	if ( ci->torsoModel ) {
 		orientation_t tag;
+#ifdef TA_WEAPSYS
+#ifdef TA_SUPPORTQ3
+		if ( trap_R_LerpTag( &tag, ci->torsoModel, 0, 0, 1, "tag_weapon" ) ) {
+			ci->tagInfo |= TI_TAG_WEAPON;
+		}
+		if ( trap_R_LerpTag( &tag, ci->torsoModel, 0, 0, 1, "tag_flag" ) ) {
+			ci->tagInfo |= TI_TAG_FLAG;
+		}
+#endif
+		if ( trap_R_LerpTag( &tag, ci->torsoModel, 0, 0, 1, "tag_hand_primary" ) ) {
+			ci->tagInfo |= TI_TAG_HAND_PRIMARY;
+		}
+		if ( trap_R_LerpTag( &tag, ci->torsoModel, 0, 0, 1, "tag_hand_secondary" ) ) {
+			ci->tagInfo |= TI_TAG_HAND_SECONDARY;
+		}
+		if ( trap_R_LerpTag( &tag, ci->torsoModel, 0, 0, 1, "tag_wp_away_primary" ) ) {
+			ci->tagInfo |= TI_TAG_WP_AWAY_PRIMARY;
+		}
+		if ( trap_R_LerpTag( &tag, ci->torsoModel, 0, 0, 1, "tag_wp_away_secondary" ) ) {
+			ci->tagInfo |= TI_TAG_WP_AWAY_SECONDARY;
+		}
+#else
 		// if the torso model has the "tag_flag"
 		if ( trap_R_LerpTag( &tag, ci->torsoModel, 0, 0, 1, "tag_flag" ) ) {
 			ci->newAnims = qtrue;
 		}
+#endif
 	}
 
 	// sounds
+#ifdef TA_PLAYERSYS // SOUNDPATH
+	dir = ci->playercfg.soundpath;
+	gender = ci->playercfg.gender;
+#else
 	dir = ci->modelName;
+	gender = ci->gender;
+#endif
 	if (cgs.gametype >= GT_TEAM) {
-		fallback = (ci->gender == GENDER_FEMALE) ? DEFAULT_TEAM_MODEL_FEMALE : DEFAULT_TEAM_MODEL_MALE;
+		fallback = (gender == GENDER_FEMALE) ? DEFAULT_TEAM_MODEL_FEMALE : DEFAULT_TEAM_MODEL_MALE;
 	} else {
-		fallback = (ci->gender == GENDER_FEMALE) ? DEFAULT_MODEL_FEMALE : DEFAULT_MODEL_MALE;
+		fallback = (gender == GENDER_FEMALE) ? DEFAULT_MODEL_FEMALE : DEFAULT_MODEL_MALE;
 	}
 
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS ; i++ ) {
@@ -716,6 +893,11 @@ static void CG_LoadClientInfo( int clientNum, clientInfo_t *ci ) {
 		if ( !ci->sounds[i] ) {
 			ci->sounds[i] = trap_S_RegisterSound( va("sound/player/%s/%s", fallback, s + 1), qfalse );
 		}
+#ifdef IOQ3ZTM // MORE_PLAYER_SOUNDS
+		if ( !ci->sounds[i] ) {
+			ci->sounds[i] = trap_S_RegisterSound( va("sound/player/%s", s + 1), qfalse );
+		}
+#endif
 	}
 
 	ci->deferred = qfalse;
@@ -736,9 +918,11 @@ CG_CopyClientInfoModel
 ======================
 */
 static void CG_CopyClientInfoModel( clientInfo_t *from, clientInfo_t *to ) {
+#ifndef TA_PLAYERSYS
 	VectorCopy( from->headOffset, to->headOffset );
 	to->footsteps = from->footsteps;
 	to->gender = from->gender;
+#endif
 
 	to->legsModel = from->legsModel;
 	to->legsSkin = from->legsSkin;
@@ -746,11 +930,24 @@ static void CG_CopyClientInfoModel( clientInfo_t *from, clientInfo_t *to ) {
 	to->torsoSkin = from->torsoSkin;
 	to->headModel = from->headModel;
 	to->headSkin = from->headSkin;
+#ifdef IOQ3ZTM // BONES
+	to->playerModel = from->playerModel;
+	to->playerSkin = from->playerSkin;
+#endif
 	to->modelIcon = from->modelIcon;
 
+#ifdef TA_WEAPSYS
+	to->tagInfo = from->tagInfo;
+#else
 	to->newAnims = from->newAnims;
+#endif
 
+#ifdef TA_PLAYERSYS
+	memcpy( &to->playercfg, &from->playercfg, sizeof( to->playercfg ) );
+	VectorCopy(from->prefcolor2, to->prefcolor2);
+#else
 	memcpy( to->animations, from->animations, sizeof( to->animations ) );
+#endif
 	memcpy( to->sounds, from->sounds, sizeof( to->sounds ) );
 }
 
@@ -948,6 +1145,7 @@ void CG_NewClientInfo( int clientNum ) {
 
 	// model
 	v = Info_ValueForKey( configstring, "model" );
+#ifndef TURTLEARENA // NO_CGFORCEMODLE
 	if ( cg_forceModel.integer ) {
 		// forcemodel makes everyone use a single model
 		// to prevent load hitches
@@ -958,6 +1156,11 @@ void CG_NewClientInfo( int clientNum ) {
 			Q_strncpyz( newInfo.modelName, DEFAULT_TEAM_MODEL, sizeof( newInfo.modelName ) );
 			Q_strncpyz( newInfo.skinName, "default", sizeof( newInfo.skinName ) );
 		} else {
+#ifdef TA_SP // SPMODEL
+			if ( cg_singlePlayerActive.integer )
+				trap_Cvar_VariableStringBuffer( "spmodel", modelStr, sizeof( modelStr ) );
+			else
+#endif
 			trap_Cvar_VariableStringBuffer( "model", modelStr, sizeof( modelStr ) );
 			if ( ( skin = strchr( modelStr, '/' ) ) == NULL) {
 				skin = "default";
@@ -976,7 +1179,10 @@ void CG_NewClientInfo( int clientNum ) {
 				Q_strncpyz( newInfo.skinName, slash + 1, sizeof( newInfo.skinName ) );
 			}
 		}
-	} else {
+	}
+	else
+#endif
+	{
 		Q_strncpyz( newInfo.modelName, v, sizeof( newInfo.modelName ) );
 
 		slash = strchr( newInfo.modelName, '/' );
@@ -992,6 +1198,7 @@ void CG_NewClientInfo( int clientNum ) {
 
 	// head model
 	v = Info_ValueForKey( configstring, "hmodel" );
+#ifndef TURTLEARENA // NO_CGFORCEMODLE
 	if ( cg_forceModel.integer ) {
 		// forcemodel makes everyone use a single model
 		// to prevent load hitches
@@ -1003,6 +1210,11 @@ void CG_NewClientInfo( int clientNum ) {
 			Q_strncpyz( newInfo.headSkinName, "default", sizeof( newInfo.headSkinName ) );
 		} else {
 			trap_Cvar_VariableStringBuffer( "headmodel", modelStr, sizeof( modelStr ) );
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+			if (!modelStr[0]) {
+				trap_Cvar_VariableStringBuffer( "model", modelStr, sizeof( modelStr ) );
+			}
+#endif
 			if ( ( skin = strchr( modelStr, '/' ) ) == NULL) {
 				skin = "default";
 			} else {
@@ -1020,7 +1232,10 @@ void CG_NewClientInfo( int clientNum ) {
 				Q_strncpyz( newInfo.headSkinName, slash + 1, sizeof( newInfo.headSkinName ) );
 			}
 		}
-	} else {
+	}
+	else
+#endif
+	{
 		Q_strncpyz( newInfo.headModelName, v, sizeof( newInfo.headModelName ) );
 
 		slash = strchr( newInfo.headModelName, '/' );
@@ -1098,7 +1313,7 @@ PLAYER ANIMATION
 =============================================================================
 */
 
-
+#ifndef IOQ3ZTM // LERP_FRAME_CLIENT_LESS // Moved to bg_misc.c
 /*
 ===============
 CG_SetLerpFrameAnimation
@@ -1112,11 +1327,15 @@ static void CG_SetLerpFrameAnimation( clientInfo_t *ci, lerpFrame_t *lf, int new
 	lf->animationNumber = newAnimation;
 	newAnimation &= ~ANIM_TOGGLEBIT;
 
-	if ( newAnimation < 0 || newAnimation >= MAX_TOTALANIMATIONS ) {
+	if ( newAnimation < 0 ) {
 		CG_Error( "Bad animation number: %i", newAnimation );
 	}
 
+#ifdef TA_PLAYERSYS
+	anim = &ci->playercfg.animations[ newAnimation ];
+#else
 	anim = &ci->animations[ newAnimation ];
+#endif
 
 	lf->animation = anim;
 	lf->animationTime = lf->frameTime + anim->initialLerp;
@@ -1227,6 +1446,7 @@ static void CG_ClearLerpFrame( clientInfo_t *ci, lerpFrame_t *lf, int animationN
 	CG_SetLerpFrameAnimation( ci, lf, animationNumber );
 	lf->oldFrame = lf->frame = lf->animation->firstFrame;
 }
+#endif // IOQ3ZTM // LERP_FRAME_CLIENT_LESS
 
 
 /*
@@ -1256,22 +1476,86 @@ static void CG_PlayerAnimation( centity_t *cent, int *legsOld, int *legs, float 
 	ci = &cgs.clientinfo[ clientNum ];
 
 	// do the shuffle turn frames locally
-	if ( cent->pe.legs.yawing && ( cent->currentState.legsAnim & ~ANIM_TOGGLEBIT ) == LEGS_IDLE ) {
+	if ( cent->pe.legs.yawing &&
+#ifdef TA_WEAPSYS
+		BG_PlayerStandAnim(&ci->playercfg, AP_LEGS, cent->currentState.legsAnim)
+#else
+		( cent->currentState.legsAnim & ~ANIM_TOGGLEBIT ) == LEGS_IDLE
+#endif
+		)
+	{
+#ifdef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
+		BG_RunLerpFrame( &cent->pe.legs,
+#ifdef TA_PLAYERSYS
+			ci->playercfg.animations,
+#else
+			ci->animations,
+#endif
+			LEGS_TURN, cg.time, speedScale );
+#else
 		CG_RunLerpFrame( ci, &cent->pe.legs, LEGS_TURN, speedScale );
+#endif
 	} else {
+#ifdef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
+		BG_RunLerpFrame( &cent->pe.legs,
+#ifdef TA_PLAYERSYS
+			ci->playercfg.animations,
+#else
+			ci->animations,
+#endif
+			cent->currentState.legsAnim, cg.time, speedScale );
+#else
 		CG_RunLerpFrame( ci, &cent->pe.legs, cent->currentState.legsAnim, speedScale );
+#endif
 	}
 
 	*legsOld = cent->pe.legs.oldFrame;
 	*legs = cent->pe.legs.frame;
 	*legsBackLerp = cent->pe.legs.backlerp;
 
+#ifdef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
+	BG_RunLerpFrame( &cent->pe.torso,
+#ifdef TA_PLAYERSYS
+		ci->playercfg.animations,
+#else
+		ci->animations,
+#endif
+		cent->currentState.torsoAnim, cg.time, speedScale );
+#else
 	CG_RunLerpFrame( ci, &cent->pe.torso, cent->currentState.torsoAnim, speedScale );
+#endif
 
 	*torsoOld = cent->pe.torso.oldFrame;
 	*torso = cent->pe.torso.frame;
 	*torsoBackLerp = cent->pe.torso.backlerp;
 }
+
+#ifdef IOQ3ZTM // BONES
+/*
+===============
+CG_PlayerSkeleton
+===============
+*/
+static void CG_PlayerSkeleton(clientInfo_t *ci, refEntity_t *legs, refEntity_t *torso,
+							refEntity_t *head, refSkeleton_t *absSkeleton)
+{
+	refSkeleton_t skeleton;
+
+	if (!ci->playerModel) {
+		return;
+	}
+
+	if (trap_R_SetupPlayerSkeleton(ci->playerModel, &skeleton,
+								legs->frame, legs->oldframe, legs->backlerp,
+								torso->frame, torso->oldframe, torso->backlerp,
+								head->frame, head->oldframe, head->backlerp))
+	{
+		// ZTM: TODO: Set torso and head axis in playerSkeleton.
+
+		trap_R_MakeSkeletonAbsolute(&skeleton, absSkeleton);
+	}
+}
+#endif
 
 /*
 =============================================================================
@@ -1281,12 +1565,13 @@ PLAYER ANGLES
 =============================================================================
 */
 
+#ifndef IOQ3ZTM // BG_SWING_ANGLES
 /*
 ==================
 CG_SwingAngles
 ==================
 */
-static void CG_SwingAngles( float destination, float swingTolerance, float clampTolerance,
+void CG_SwingAngles( float destination, float swingTolerance, float clampTolerance,
 					float speed, float *angle, qboolean *swinging ) {
 	float	swing;
 	float	move;
@@ -1341,6 +1626,7 @@ static void CG_SwingAngles( float destination, float swingTolerance, float clamp
 		*angle = AngleMod( destination + (clampTolerance - 1) );
 	}
 }
+#endif
 
 /*
 =================
@@ -1358,6 +1644,16 @@ static void CG_AddPainTwitch( centity_t *cent, vec3_t torsoAngles ) {
 
 	f = 1.0 - (float)t / PAIN_TWITCH_TIME;
 
+#if 0 // #ifdef TA_MISC // ZTM: TEST
+	if (cent->currentState.clientNum == cg.cur_lc->predictedPlayerEntity.currentState.clientNum)
+	{
+		Com_Printf("DEBUG: damageYaw=%d\n", cg.cur_lc->predictedPlayerState.damageYaw);
+
+		//torsoAngles[PITCH] += cg.cur_lc->predictedPlayerState.damagePitch * f;
+		torsoAngles[YAW] -= cg.cur_lc->predictedPlayerState.damageYaw * f;
+	}
+	else
+#endif
 	if ( cent->pe.painDirection ) {
 		torsoAngles[ROLL] += 20 * f;
 	} else {
@@ -1394,12 +1690,27 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	VectorClear( legsAngles );
 	VectorClear( torsoAngles );
 
+#ifdef IOQ3ZTM
+	clientNum = cent->currentState.clientNum;
+	if ( clientNum >= 0 && clientNum < MAX_CLIENTS ) {
+		ci = &cgs.clientinfo[ clientNum ];
+	} else {
+		ci = NULL;
+	}
+#endif
+
 	// --------- yaw -------------
 
 	// allow yaw to drift a bit
+#ifdef TA_WEAPSYS
+	if (ci && (!BG_PlayerStandAnim(&ci->playercfg, AP_LEGS, cent->currentState.legsAnim)
+		|| !BG_PlayerStandAnim(&ci->playercfg, AP_TORSO, cent->currentState.torsoAnim)))
+#else
 	if ( ( cent->currentState.legsAnim & ~ANIM_TOGGLEBIT ) != LEGS_IDLE 
 		|| ((cent->currentState.torsoAnim & ~ANIM_TOGGLEBIT) != TORSO_STAND 
-		&& (cent->currentState.torsoAnim & ~ANIM_TOGGLEBIT) != TORSO_STAND2)) {
+		&& (cent->currentState.torsoAnim & ~ANIM_TOGGLEBIT) != TORSO_STAND2))
+#endif
+	{
 		// if not standing still, always point all in the same direction
 		cent->pe.torso.yawing = qtrue;	// always center
 		cent->pe.torso.pitching = qtrue;	// always center
@@ -1420,8 +1731,13 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	torsoAngles[YAW] = headAngles[YAW] + 0.25 * movementOffsets[ dir ];
 
 	// torso
+#ifdef IOQ3ZTM // BG_SWING_ANGLES
+	BG_SwingAngles( torsoAngles[YAW], 25, 90, cg_swingSpeed.value, &cent->pe.torso.yawAngle, &cent->pe.torso.yawing, cg.frametime );
+	BG_SwingAngles( legsAngles[YAW], 40, 90, cg_swingSpeed.value, &cent->pe.legs.yawAngle, &cent->pe.legs.yawing, cg.frametime );
+#else
 	CG_SwingAngles( torsoAngles[YAW], 25, 90, cg_swingSpeed.value, &cent->pe.torso.yawAngle, &cent->pe.torso.yawing );
 	CG_SwingAngles( legsAngles[YAW], 40, 90, cg_swingSpeed.value, &cent->pe.legs.yawAngle, &cent->pe.legs.yawing );
+#endif
 
 	torsoAngles[YAW] = cent->pe.torso.yawAngle;
 	legsAngles[YAW] = cent->pe.legs.yawAngle;
@@ -1429,23 +1745,40 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 
 	// --------- pitch -------------
 
+#ifdef TA_PLAYERSYS // ZTM: If BOTH_* animation, don't have torso pitch
+	if (( ci && ci->playercfg.fixedtorso ) || (cent->currentState.torsoAnim & ~ANIM_TOGGLEBIT) == (cent->currentState.legsAnim & ~ANIM_TOGGLEBIT)) {
+		dest = 0;
+		headAngles[PITCH] = Com_Clamp( -65, 20, headAngles[PITCH] );
+	} else
+#endif
 	// only show a fraction of the pitch angle in the torso
 	if ( headAngles[PITCH] > 180 ) {
 		dest = (-360 + headAngles[PITCH]) * 0.75f;
 	} else {
 		dest = headAngles[PITCH] * 0.75f;
 	}
+#ifdef IOQ3ZTM // BG_SWING_ANGLES
+	BG_SwingAngles( dest, 15, 30, 0.1f, &cent->pe.torso.pitchAngle, &cent->pe.torso.pitching, cg.frametime );
+#else
 	CG_SwingAngles( dest, 15, 30, 0.1f, &cent->pe.torso.pitchAngle, &cent->pe.torso.pitching );
+#endif
 	torsoAngles[PITCH] = cent->pe.torso.pitchAngle;
 
+#ifndef TA_PLAYERSYS
 	//
+#ifndef IOQ3ZTM
 	clientNum = cent->currentState.clientNum;
 	if ( clientNum >= 0 && clientNum < MAX_CLIENTS ) {
 		ci = &cgs.clientinfo[ clientNum ];
-		if ( ci->fixedtorso ) {
+#endif
+		if ( ci->fixedtorso )
+		{
 			torsoAngles[PITCH] = 0.0f;
 		}
+#ifndef IOQ3ZTM
 	}
+#endif
+#endif
 
 	// --------- roll -------------
 
@@ -1468,15 +1801,35 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	}
 
 	//
+#ifndef IOQ3ZTM
 	clientNum = cent->currentState.clientNum;
 	if ( clientNum >= 0 && clientNum < MAX_CLIENTS ) {
 		ci = &cgs.clientinfo[ clientNum ];
-		if ( ci->fixedlegs ) {
+#endif
+#ifdef TA_PLAYERSYS
+		if ( ci && ci->playercfg.fixedlegs )
+#else
+		if ( ci->fixedlegs )
+#endif
+		{
 			legsAngles[YAW] = torsoAngles[YAW];
 			legsAngles[PITCH] = 0.0f;
 			legsAngles[ROLL] = 0.0f;
 		}
+#ifndef IOQ3ZTM
 	}
+#endif
+
+#ifdef TA_PLAYERSYS // LADDER
+	if (cent->currentState.eFlags & EF_LADDER) {
+		// Ladder dir, plaver legs should always face dir
+		vectoangles(cent->currentState.origin2, legsAngles);
+		// If BOTH_* animation, have torso face ladder too
+		if ((cent->currentState.torsoAnim & ~ANIM_TOGGLEBIT) == (cent->currentState.legsAnim & ~ANIM_TOGGLEBIT)) {
+			VectorCopy(legsAngles, torsoAngles);
+		}
+	}
+#endif
 
 	// pain twitch
 	CG_AddPainTwitch( cent, torsoAngles );
@@ -1505,7 +1858,11 @@ static void CG_HasteTrail( centity_t *cent ) {
 	if ( cent->trailTime > cg.time ) {
 		return;
 	}
+#ifdef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
+	anim = cent->currentState.legsAnim & ~ANIM_TOGGLEBIT;
+#else
 	anim = cent->pe.legs.animationNumber & ~ANIM_TOGGLEBIT;
+#endif
 	if ( anim != LEGS_RUN && anim != LEGS_BACK ) {
 		return;
 	}
@@ -1532,6 +1889,77 @@ static void CG_HasteTrail( centity_t *cent ) {
 }
 
 #ifdef MISSIONPACK
+#ifdef IOQ3ZTM // BUBBLES
+/*
+==================
+CG_SpawnBreathBubbles
+
+Based on CG_BubbleTrail
+==================
+*/
+void CG_SpawnBreathBubbles( vec3_t origin ) {
+	int			i;
+	int			numBubbles;
+	float		rnd;
+	qboolean	spawnedLarge; // Only one large bubble.
+
+	spawnedLarge = qfalse;
+	numBubbles = (int)(3 + random()*5);
+
+	for ( i = 0; i < numBubbles; i++ ) {
+		localEntity_t	*le;
+		refEntity_t		*re;
+
+		le = CG_AllocLocalEntity();
+		le->leFlags = LEF_PUFF_DONT_SCALE;
+		le->leType = LE_BUBBLE; // LE_MOVE_SCALE_FADE;
+		le->startTime = cg.time;
+
+		// Bubbles should make it to the surface
+		le->endTime = cg.time + 8000 + random() * 250;
+
+		le->lifeRate = 1.0 / ( le->endTime - le->startTime );
+
+		re = &le->refEntity;
+		re->shaderTime = cg.time / 1000.0f;
+
+		re->reType = RT_SPRITE;
+		re->rotation = 0;
+
+		rnd = random();
+		if (rnd > 0.9f && !spawnedLarge)
+		{
+			spawnedLarge = qtrue;
+			re->radius = 6;
+		}
+		else
+		{
+			re->radius = 1 + rnd * 2;
+		}
+
+		re->customShader = cgs.media.waterBubbleShader;
+		re->shaderRGBA[0] = 0xff;
+		re->shaderRGBA[1] = 0xff;
+		re->shaderRGBA[2] = 0xff;
+		re->shaderRGBA[3] = 0xff;
+
+		le->color[3] = 1.0;
+
+		le->pos.trType = TR_LINEAR;
+		le->pos.trTime = cg.time;
+
+		VectorCopy( origin, le->pos.trBase );
+		le->pos.trBase[0] += crandom();
+		le->pos.trBase[1] += crandom();
+		le->pos.trBase[2] += crandom();
+
+		le->pos.trDelta[0] = crandom()*5;
+		le->pos.trDelta[1] = crandom()*5;
+		le->pos.trDelta[2] = 8 + random()*5;
+	}
+}
+#endif
+
 /*
 ===============
 CG_BreathPuffs
@@ -1544,9 +1972,11 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 
 	ci = &cgs.clientinfo[ cent->currentState.number ];
 
+#ifndef IOQ3ZTM // BUBBLES
 	if (!cg_enableBreath.integer) {
 		return;
 	}
+#endif
 	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson) {
 		return;
 	}
@@ -1554,9 +1984,11 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 		return;
 	}
 	contents = CG_PointContents( head->origin, 0 );
+#ifndef IOQ3ZTM // BUBBLES
 	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
 		return;
 	}
+#endif
 	if ( ci->breathPuffTime > cg.time ) {
 		return;
 	}
@@ -1564,7 +1996,19 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 	VectorSet( up, 0, 0, 8 );
 	VectorMA(head->origin, 8, head->axis[0], origin);
 	VectorMA(origin, -4, head->axis[2], origin);
+#ifdef IOQ3ZTM // BUBBLES // ZTM: Bubbles under water! (and slime/lava?)
+	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
+		CG_SpawnBreathBubbles(origin);
+	}
+	else //if (player is cold...)
+	{
+		if (cg_enableBreath.integer) {
+#endif
 	CG_SmokePuff( origin, up, 16, 1, 1, 1, 0.66f, 1500, cg.time, cg.time + 400, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader );
+#ifdef IOQ3ZTM // BUBBLES
+		}
+	}
+#endif
 	ci->breathPuffTime = cg.time + 2000;
 }
 
@@ -1585,7 +2029,11 @@ static void CG_DustTrail( centity_t *cent ) {
 		return;
 	}
 
+#ifdef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
+	anim = cent->currentState.legsAnim & ~ANIM_TOGGLEBIT;
+#else
 	anim = cent->pe.legs.animationNumber & ~ANIM_TOGGLEBIT;
+#endif
 	if ( anim != LEGS_LANDB && anim != LEGS_LAND ) {
 		return;
 	}
@@ -1618,15 +2066,31 @@ static void CG_DustTrail( centity_t *cent ) {
 
 #endif
 
+#ifndef TA_DATA // FLAG_MODEL
 /*
 ===============
 CG_TrailItem
 ===============
 */
-static void CG_TrailItem( centity_t *cent, qhandle_t hModel ) {
+#ifdef IOQ3ZTM // FLAG
+static void CG_TrailItem( centity_t *cent, int itemIndex )
+#else
+static void CG_TrailItem( centity_t *cent, qhandle_t hModel )
+#endif
+{
 	refEntity_t		ent;
 	vec3_t			angles;
 	vec3_t			axis[3];
+
+#ifdef IOQ3ZTM // FLAG // Don't draw CTF flag for the holder in third person, blocks view.
+	if (cent->currentState.clientNum == cg.cur_lc->predictedPlayerState.clientNum
+		&& cg_thirdPerson[cg.cur_localClientNum].integer)
+	{
+		// if its the current player and their in third person view,
+		//  don't draw the flag, it blocks their view.
+		return;
+	}
+#endif
 
 	VectorCopy( cent->lerpAngles, angles );
 	angles[PITCH] = 0;
@@ -1639,9 +2103,18 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel ) {
 	angles[YAW] += 90;
 	AnglesToAxis( angles, ent.axis );
 
+#ifdef IOQ3ZTM // FLAG
+	ent.hModel = cg_items[itemIndex].models[0];
+	if (cg_items[itemIndex].skin)
+	{
+		ent.customSkin = cg_items[itemIndex].skin;
+	}
+#else
 	ent.hModel = hModel;
+#endif
 	trap_R_AddRefEntityToScene( &ent );
 }
+#endif
 
 
 /*
@@ -1649,37 +2122,168 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel ) {
 CG_PlayerFlag
 ===============
 */
-static void CG_PlayerFlag( centity_t *cent, qhandle_t hSkin, refEntity_t *torso ) {
+#ifdef IOQ3ZTM // FLAG
+static void CG_PlayerFlag( centity_t *cent, powerup_t flagPower, refEntity_t *parent, refSkeleton_t *parentSkeleton )
+#else
+static void CG_PlayerFlag( centity_t *cent, qhandle_t hSkin, refEntity_t *parent, refSkeleton_t *parentSkeleton )
+#endif
+{
 	clientInfo_t	*ci;
 	refEntity_t	pole;
 	refEntity_t	flag;
 	vec3_t		angles, dir;
 	int			legsAnim, flagAnim, updateangles;
 	float		angle, d;
+#ifdef TA_DATA // FLAG_MODEL
+	qboolean trailItem;
+#endif
+#ifdef IOQ3ZTM // FLAG
+	gitem_t *item;
+	int itemIndex;
+#ifndef TA_DATA // FLAG_MODEL
+	qhandle_t hSkin = 0;
+
+	if (flagPower == PW_REDFLAG)
+		hSkin = cgs.media.redFlagFlapSkin;
+	else if (flagPower == PW_BLUEFLAG)
+		hSkin = cgs.media.blueFlagFlapSkin;
+	else
+		hSkin = cgs.media.neutralFlagFlapSkin;
+#endif
+
+	item = BG_FindItemForPowerup(flagPower);
+	itemIndex = ITEM_INDEX(item);
+#endif
+#ifdef TA_DATA // FLAG_MODEL
+	trailItem = qtrue;
+#endif
+
+#ifdef IOQ3ZTM // FLAG
+	ci = &cgs.clientinfo[ cent->currentState.clientNum ];
+#endif
+
+#ifndef TA_DATA // FLAG_MODEL
+#ifdef IOQ3ZTM // FLAG
+#ifdef TA_WEAPSYS
+	if (!(ci->tagInfo & TI_TAG_HAND_SECONDARY)
+#ifdef TA_SUPPORTQ3
+		&& !(ci->tagInfo & TI_TAG_FLAG)
+#endif
+		)
+#else
+	if (!ci->newAnims)
+#endif
+	{
+		CG_TrailItem( cent, itemIndex );
+		return;
+	}
+#endif
+#endif
 
 	// show the flag pole model
 	memset( &pole, 0, sizeof(pole) );
+#ifdef TA_DATA // FLAG_MODEL
+	pole.hModel = cg_items[itemIndex].models[0]; // cgs.media.flagPoleModel;
+	pole.customSkin = cg_items[itemIndex].skin;
+#else
 	pole.hModel = cgs.media.flagPoleModel;
-	VectorCopy( torso->lightingOrigin, pole.lightingOrigin );
-	pole.shadowPlane = torso->shadowPlane;
-	pole.renderfx = torso->renderfx;
-	CG_PositionEntityOnTag( &pole, torso, torso->hModel, "tag_flag" );
+#endif
+	VectorCopy( parent->lightingOrigin, pole.lightingOrigin );
+	pole.shadowPlane = parent->shadowPlane;
+	pole.renderfx = parent->renderfx;
+#ifdef TA_WEAPSYS
+	if (ci->tagInfo & TI_TAG_HAND_SECONDARY)
+	{
+		if (CG_PositionEntityOnTag( &pole, parent, parent->hModel, parentSkeleton, "tag_hand_secondary" ))
+		{
+#ifdef TA_DATA // FLAG_MODEL
+			trailItem = qfalse;
+#endif
+		}
+	}
+#ifdef TA_SUPPORTQ3
+	else if (ci->tagInfo & TI_TAG_FLAG)
+	{
+		if (CG_PositionEntityOnTag( &pole, parent, parent->hModel, parentSkeleton, "tag_flag" ))
+		{
+#ifdef TA_DATA // FLAG_MODEL
+			trailItem = qfalse;
+#endif
+		}
+	}
+#endif
+#elif defined IOQ3ZTM
+	if (CG_PositionEntityOnTag( &pole, parent, parent->hModel, parentSkeleton, "tag_flag" ))
+	{
+#ifdef TA_DATA // FLAG_MODEL
+		trailItem = qfalse;
+#endif
+	}
+#else
+	CG_PositionEntityOnTag( &pole, parent, parent->hModel, parentSkeleton, "tag_flag" );
+#endif
+
+#ifdef TA_DATA // FLAG_MODEL
+	if (trailItem)
+	{
+		vec3_t			angles;
+		vec3_t			axis[3];
+
+#if 0 // #ifdef IOQ3ZTM // FLAG // Don't draw CTF flag for the holder in third person, blocks view.
+						// ZTM: Could we make if transparent instead?
+						//     RF_FORCE_ENT_ALPHA
+		if (cent->currentState.clientNum == cg.cur_lc->predictedPlayerState.clientNum
+			&& cg_thirdPerson.integer)
+		{
+			// if its the current player and their in third person view,
+			//  don't draw the flag, it blocks their view.
+			return;
+		}
+#endif
+
+		VectorCopy( cent->lerpAngles, angles );
+		angles[PITCH] = 0;
+		angles[ROLL] = 0;
+		AnglesToAxis( angles, axis );
+
+		VectorMA( cent->lerpOrigin, -16, axis[0], pole.origin );
+		pole.origin[2] += 16;
+		//angles[YAW] += 90;
+		AnglesToAxis( angles, pole.axis );
+	}
+#endif
 	trap_R_AddRefEntityToScene( &pole );
 
 	// show the flag model
 	memset( &flag, 0, sizeof(flag) );
+#ifdef TA_DATA // FLAG_MODEL
+	flag.hModel = cg_items[itemIndex].models[1]; // cgs.media.flagFlapModel;
+	flag.customSkin = cg_items[itemIndex].skin;
+#else
 	flag.hModel = cgs.media.flagFlapModel;
 	flag.customSkin = hSkin;
-	VectorCopy( torso->lightingOrigin, flag.lightingOrigin );
-	flag.shadowPlane = torso->shadowPlane;
-	flag.renderfx = torso->renderfx;
+#endif
+	VectorCopy( parent->lightingOrigin, flag.lightingOrigin );
+	flag.shadowPlane = parent->shadowPlane;
+	flag.renderfx = parent->renderfx;
 
 	VectorClear(angles);
 
 	updateangles = qfalse;
 	legsAnim = cent->currentState.legsAnim & ~ANIM_TOGGLEBIT;
-	if( legsAnim == LEGS_IDLE || legsAnim == LEGS_IDLECR ) {
+	if(
+#ifdef TA_WEAPSYS
+		BG_PlayerStandAnim(&ci->playercfg, AP_LEGS, legsAnim)
+#else
+		legsAnim == LEGS_IDLE
+#endif
+		|| legsAnim == LEGS_IDLECR )
+	{
 		flagAnim = FLAG_STAND;
+#ifdef IOQ3ZTM // ZTM: Always update flag angle.
+		// ZTM: TODO: Have a idle timer to know if its been awhile since they moved (based on velocity), to NOT updateangles?
+		updateangles = qtrue;
+#endif
 	} else if ( legsAnim == LEGS_WALK || legsAnim == LEGS_WALKCR ) {
 		flagAnim = FLAG_STAND;
 		updateangles = qtrue;
@@ -1722,7 +2326,11 @@ static void CG_PlayerFlag( centity_t *cent, qhandle_t hSkin, refEntity_t *torso 
 			//vectoangles( cent->currentState.pos.trDelta, tmpangles );
 			//angles[YAW] = tmpangles[YAW] + 45 - cent->pe.torso.yawAngle;
 			// change the yaw angle
+#ifdef IOQ3ZTM // BG_SWING_ANGLES
+			BG_SwingAngles( angles[YAW], 25, 90, 0.15f, &cent->pe.flag.yawAngle, &cent->pe.flag.yawing, cg.frametime );
+#else
 			CG_SwingAngles( angles[YAW], 25, 90, 0.15f, &cent->pe.flag.yawAngle, &cent->pe.flag.yawing );
+#endif
 		}
 
 		/*
@@ -1748,20 +2356,26 @@ static void CG_PlayerFlag( centity_t *cent, qhandle_t hSkin, refEntity_t *torso 
 	// set the yaw angle
 	angles[YAW] = cent->pe.flag.yawAngle;
 	// lerp the flag animation frames
+#ifndef TA_WEAPSYS
 	ci = &cgs.clientinfo[ cent->currentState.clientNum ];
+#endif
+#ifdef IOQ3ZTM // LERP_FRAME_CLIENT_LESS // FLAG_ANIMATIONS
+	BG_RunLerpFrame( &cent->pe.flag, cgs.media.flag_animations, flagAnim, cg.time, 1 );
+#else
 	CG_RunLerpFrame( ci, &cent->pe.flag, flagAnim, 1 );
+#endif
 	flag.oldframe = cent->pe.flag.oldFrame;
 	flag.frame = cent->pe.flag.frame;
 	flag.backlerp = cent->pe.flag.backlerp;
 
 	AnglesToAxis( angles, flag.axis );
-	CG_PositionRotatedEntityOnTag( &flag, &pole, pole.hModel, "tag_flag" );
+	CG_PositionRotatedEntityOnTag( &flag, &pole, pole.hModel, NULL, "tag_flag" );
 
 	trap_R_AddRefEntityToScene( &flag );
 }
 
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HARVESTER
 /*
 ===============
 CG_PlayerTokens
@@ -1834,56 +2448,71 @@ static void CG_PlayerTokens( centity_t *cent, int renderfx ) {
 CG_PlayerPowerups
 ===============
 */
-static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
+static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso, refSkeleton_t *torsoSkeleton ) {
 	int		powerups;
+#ifndef IOQ3ZTM // FLAG
 	clientInfo_t	*ci;
+#endif
 
 	powerups = cent->currentState.powerups;
 	if ( !powerups ) {
 		return;
 	}
 
+#ifndef TURTLEARENA // POWERS
 	// quad gives a dlight
 	if ( powerups & ( 1 << PW_QUAD ) ) {
 		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1 );
 	}
+#endif
 
 	// flight plays a looped sound
 	if ( powerups & ( 1 << PW_FLIGHT ) ) {
 		trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, cgs.media.flightSound );
 	}
 
+#ifndef IOQ3ZTM // FLAG
 	ci = &cgs.clientinfo[ cent->currentState.clientNum ];
+#endif
 	// redflag
 	if ( powerups & ( 1 << PW_REDFLAG ) ) {
+#ifdef IOQ3ZTM // FLAG
+		CG_PlayerFlag( cent, PW_REDFLAG, torso, torsoSkeleton );
+#else
 		if (ci->newAnims) {
-			CG_PlayerFlag( cent, cgs.media.redFlagFlapSkin, torso );
-		}
-		else {
+			CG_PlayerFlag( cent, cgs.media.redFlagFlapSkin, torso, torsoSkeleton );
+		} else {
 			CG_TrailItem( cent, cgs.media.redFlagModel );
 		}
+#endif
 		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 0.2f, 0.2f );
 	}
 
 	// blueflag
 	if ( powerups & ( 1 << PW_BLUEFLAG ) ) {
+#ifdef IOQ3ZTM // FLAG
+		CG_PlayerFlag( cent, PW_BLUEFLAG, torso, torsoSkeleton );
+#else
 		if (ci->newAnims){
-			CG_PlayerFlag( cent, cgs.media.blueFlagFlapSkin, torso );
-		}
-		else {
+			CG_PlayerFlag( cent, cgs.media.blueFlagFlapSkin, torso, torsoSkeleton );
+		} else {
 			CG_TrailItem( cent, cgs.media.blueFlagModel );
 		}
+#endif
 		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1.0 );
 	}
 
 	// neutralflag
 	if ( powerups & ( 1 << PW_NEUTRALFLAG ) ) {
+#ifdef IOQ3ZTM // FLAG
+		CG_PlayerFlag( cent, PW_NEUTRALFLAG, torso, torsoSkeleton );
+#else
 		if (ci->newAnims) {
-			CG_PlayerFlag( cent, cgs.media.neutralFlagFlapSkin, torso );
-		}
-		else {
+			CG_PlayerFlag( cent, cgs.media.neutralFlagFlapSkin, torso, torsoSkeleton );
+		} else {
 			CG_TrailItem( cent, cgs.media.neutralFlagModel );
 		}
+#endif
 		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 1.0, 1.0 );
 	}
 
@@ -1901,19 +2530,32 @@ CG_PlayerFloatSprite
 Float a sprite over the player's head
 ===============
 */
-static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
+#ifdef IOQ3ZTM
+static void CG_PlayerFloatSprite( vec3_t origin, int rf, qhandle_t shader )
+#else
+static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader )
+#endif
+{
+#ifndef IOQ3ZTM
 	int				rf;
+#endif
 	refEntity_t		ent;
 
+#ifndef IOQ3ZTM
 	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson ) {
 		rf = RF_ONLY_MIRROR;
 	} else {
 		rf = 0;
 	}
+#endif
 
 	memset( &ent, 0, sizeof( ent ) );
+#ifdef IOQ3ZTM
+	VectorCopy( origin, ent.origin );
+#else
 	VectorCopy( cent->lerpOrigin, ent.origin );
 	ent.origin[2] += 48;
+#endif
 	ent.reType = RT_SPRITE;
 	ent.customShader = shader;
 	ent.radius = 10;
@@ -1934,55 +2576,152 @@ CG_PlayerSprites
 Float sprites over the player's head
 ===============
 */
-static void CG_PlayerSprites( centity_t *cent ) {
+static void CG_PlayerSprites( centity_t *cent
+#ifdef IOQ3ZTM
+	, refEntity_t *head
+#endif
+	)
+{
 	int		team;
+#ifdef IOQ3ZTM
+	int mirrorFlag;
+	vec3_t origin;
+
+	// Lets say the head is 8 units tall.
+	VectorMA(head->origin, 8, head->axis[2], origin);
+
+	// Place 16 units above top of head.
+	origin[2] += 16;
+
+	// Current client's team sprite should only be shown in mirrors.
+	if ( cent->currentState.number == cg.cur_ps->clientNum )
+	{
+		// IOQ3ZTM // RENDER_FLAGS
+		mirrorFlag = RF_ONLY_MIRROR;		// only show in mirrors
+	} else {
+		mirrorFlag = 0;
+	}
+#endif
 
 	if ( cent->currentState.eFlags & EF_CONNECTION ) {
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.connectionShader );
+#else
 		CG_PlayerFloatSprite( cent, cgs.media.connectionShader );
+#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_TALK ) {
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.balloonShader );
+#else
 		CG_PlayerFloatSprite( cent, cgs.media.balloonShader );
+#endif
 		return;
 	}
 
+#ifdef IOQ3ZTM
+	// Don't draw award if they are drawn on the HUD.
+	if ( cent->currentState.number != cg.cur_ps->clientNum
+		|| cg_draw2D.integer == 0 )
+	{
+#endif
+#ifndef TURTLEARENA // AWARDS
 	if ( cent->currentState.eFlags & EF_AWARD_IMPRESSIVE ) {
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.medalImpressive );
+#else
 		CG_PlayerFloatSprite( cent, cgs.media.medalImpressive );
+#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_EXCELLENT ) {
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.medalExcellent );
+#else
 		CG_PlayerFloatSprite( cent, cgs.media.medalExcellent );
+#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_GAUNTLET ) {
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.medalGauntlet );
+#else
 		CG_PlayerFloatSprite( cent, cgs.media.medalGauntlet );
+#endif
 		return;
 	}
+#endif
 
 	if ( cent->currentState.eFlags & EF_AWARD_DEFEND ) {
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.medalDefend );
+#else
 		CG_PlayerFloatSprite( cent, cgs.media.medalDefend );
+#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_ASSIST ) {
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.medalAssist );
+#else
 		CG_PlayerFloatSprite( cent, cgs.media.medalAssist );
+#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_CAP ) {
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.medalCapture );
+#else
 		CG_PlayerFloatSprite( cent, cgs.media.medalCapture );
+#endif
 		return;
 	}
+#ifdef IOQ3ZTM
+	}
+#endif
+
+#ifdef TURTLEARENA // LOCKON
+	// Show local client's target marker over this client
+#ifdef IOQ3ZTM
+	if (cg.cur_ps->enemyEnt == cent->currentState.number)
+	{
+#ifdef IOQ3ZTM
+		CG_PlayerFloatSprite( origin, 0, cgs.media.targetShader );
+#else
+		CG_PlayerFloatSprite( cent, cgs.media.targetShader );
+#endif
+	}
+#endif
+#endif
 
 	team = cgs.clientinfo[ cent->currentState.clientNum ].team;
 	if ( !(cent->currentState.eFlags & EF_DEAD) && 
+#ifdef IOQ3ZTM // SHOW_TEAM_FRIENDS
+		((cg.cur_ps->persistant[PERS_TEAM] == TEAM_SPECTATOR && cgs.media.blueFriendShader)
+			|| cg.cur_ps->persistant[PERS_TEAM] == team) &&
+#else
 		cg.cur_ps->persistant[PERS_TEAM] == team &&
+#endif
 		cgs.gametype >= GT_TEAM) {
 		if (cg_drawFriend.integer) {
+#ifdef IOQ3ZTM // SHOW_TEAM_FRIENDS
+			if (team == TEAM_BLUE && cgs.media.blueFriendShader)
+			{
+				CG_PlayerFloatSprite( origin, mirrorFlag, cgs.media.blueFriendShader );
+			}
+			else
+			{
+				CG_PlayerFloatSprite( origin, mirrorFlag, cgs.media.friendShader );
+			}
+#else
 			CG_PlayerFloatSprite( cent, cgs.media.friendShader );
+#endif
 		}
 		return;
 	}
@@ -2033,6 +2772,13 @@ static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float *shadowPla
 
 	// fade the shadow out with height
 	alpha = 1.0 - trace.fraction;
+
+#ifdef TURTLEARENA // POWERS
+	if ( (cent->currentState.powerups & ( 1 << PW_FLASHING )) && cent->currentState.otherEntityNum2 > 0) {
+		// Fade out shadow when dead body is fading out.
+		alpha *= (float)cent->currentState.otherEntityNum2 / 128.0f;
+	}
+#endif
 
 	// hack / FPE - bogus planes?
 	//assert( DotProduct( trace.plane.normal, trace.plane.normal ) != 0.0f ) 
@@ -2135,6 +2881,77 @@ static void CG_PlayerSplash( centity_t *cent ) {
 
 
 
+#ifdef IOQ3ZTM // BONES
+/*
+===============
+CG_AddRefEntityWithPowerups_CustomSkeleton
+
+Adds a piece with modifications or duplications for powerups
+Also called by CG_Missile for quad rockets, but nobody can tell...
+===============
+*/
+void CG_AddRefEntityWithPowerups_CustomSkeleton( refEntity_t *ent, refSkeleton_t *skeleton, entityState_t *state, int team ) {
+#ifdef TURTLEARENA // POWERS
+	if ( state->powerups & ( 1 << PW_FLASHING ) ) {
+		if (state->otherEntityNum2 > 0) {
+			// Death fade out
+			ent->renderfx |= RF_FORCE_ENT_ALPHA;
+			ent->shaderRGBA[3] = state->otherEntityNum2;
+		}
+		trap_R_AddRefEntityToScene_CustomSkeleton( ent, skeleton );
+
+		ent->customShader = cgs.media.playerTeleportShader;
+		trap_R_AddRefEntityToScene_CustomSkeleton( ent, skeleton );
+	} else
+#endif
+	if ( state->powerups & ( 1 << PW_INVIS ) ) {
+		ent->customShader = cgs.media.invisShader;
+		trap_R_AddRefEntityToScene_CustomSkeleton( ent, skeleton );
+	} else {
+		/*
+		if ( state->eFlags & EF_KAMIKAZE ) {
+			if (team == TEAM_BLUE)
+				ent->customShader = cgs.media.blueKamikazeShader;
+			else
+				ent->customShader = cgs.media.redKamikazeShader;
+			trap_R_AddRefEntityToScene_CustomSkeleton( ent, skeleton );
+		}
+		else {*/
+			trap_R_AddRefEntityToScene_CustomSkeleton( ent, skeleton );
+		//}
+
+#ifndef TURTLEARENA // POWERS
+		if ( state->powerups & ( 1 << PW_QUAD ) )
+		{
+			if (team == TEAM_RED)
+				ent->customShader = cgs.media.redQuadShader;
+			else
+				ent->customShader = cgs.media.quadShader;
+			trap_R_AddRefEntityToScene_CustomSkeleton( ent, skeleton );
+		}
+		if ( state->powerups & ( 1 << PW_REGEN ) ) {
+			if ( ( ( cg.time / 100 ) % 10 ) == 1 ) {
+				ent->customShader = cgs.media.regenShader;
+				trap_R_AddRefEntityToScene_CustomSkeleton( ent, skeleton );
+			}
+		}
+#endif
+		if ( state->powerups & ( 1 << PW_BATTLESUIT ) ) {
+			ent->customShader = cgs.media.battleSuitShader;
+			trap_R_AddRefEntityToScene_CustomSkeleton( ent, skeleton );
+		}
+	}
+}
+
+/*
+===============
+CG_AddRefEntityWithPowerups
+===============
+*/
+void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int team ) {
+	CG_AddRefEntityWithPowerups_CustomSkeleton(ent, NULL, state, team);
+}
+#else
 /*
 ===============
 CG_AddRefEntityWithPowerups
@@ -2144,7 +2961,19 @@ Also called by CG_Missile for quad rockets, but nobody can tell...
 ===============
 */
 void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int team ) {
+#ifdef TURTLEARENA // POWERS
+	if ( state->powerups & ( 1 << PW_FLASHING ) ) {
+		if (state->otherEntityNum2 > 0) {
+			// Death fade out
+			ent->renderfx |= RF_FORCE_ENT_ALPHA;
+			ent->shaderRGBA[3] = state->otherEntityNum2;
+		}
+		trap_R_AddRefEntityToScene( ent );
 
+		ent->customShader = cgs.media.playerTeleportShader;
+		trap_R_AddRefEntityToScene( ent );
+	} else
+#endif
 	if ( state->powerups & ( 1 << PW_INVIS ) ) {
 		ent->customShader = cgs.media.invisShader;
 		trap_R_AddRefEntityToScene( ent );
@@ -2161,6 +2990,7 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 			trap_R_AddRefEntityToScene( ent );
 		//}
 
+#ifndef TURTLEARENA // POWERS
 		if ( state->powerups & ( 1 << PW_QUAD ) )
 		{
 			if (team == TEAM_RED)
@@ -2175,13 +3005,16 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 				trap_R_AddRefEntityToScene( ent );
 			}
 		}
+#endif
 		if ( state->powerups & ( 1 << PW_BATTLESUIT ) ) {
 			ent->customShader = cgs.media.battleSuitShader;
 			trap_R_AddRefEntityToScene( ent );
 		}
 	}
 }
+#endif
 
+#ifndef IOQ3ZTM // UNUSED
 /*
 =================
 CG_LightVerts
@@ -2228,6 +3061,8 @@ int CG_LightVerts( vec3_t normal, int numVerts, polyVert_t *verts )
 	}
 	return qtrue;
 }
+#endif
+
 
 /*
 ===============
@@ -2239,19 +3074,31 @@ void CG_Player( centity_t *cent ) {
 	refEntity_t		legs;
 	refEntity_t		torso;
 	refEntity_t		head;
+#ifdef IOQ3ZTM // BONES
+	refSkeleton_t	skeleton;
+#endif
 	int				clientNum;
 	int				renderfx;
 	qboolean		shadow;
 	float			shadowPlane;
 	refEntity_t		shadowRef;
 	vec3_t			shadowOrigin;
+#ifdef TURTLEARENA // POWERS
+	refEntity_t		powerup;
+#endif
 #ifdef MISSIONPACK
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM POWERS
 	refEntity_t		skull;
 	refEntity_t		powerup;
+#endif
 	int				t;
 	float			c;
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 	float			angle;
 	vec3_t			dir, angles;
+#else
+	vec3_t			angles;
+#endif
 #endif
 
 	// the client number is stored in clientNum.  It can't be derived
@@ -2279,12 +3126,28 @@ void CG_Player( centity_t *cent ) {
 				return;
 			}
 		}
+#ifdef TURTLEARENA // LOCKON
+		// Show target marker for non-client entities.
+#ifdef IOQ3ZTM
+		if (cg.cur_ps->enemyEnt >= MAX_CLIENTS && cg.cur_ps->enemyEnt != ENTITYNUM_NONE)
+		{
+			vec3_t marker;
+			
+			VectorCopy(cg.cur_ps->enemyOrigin, marker);
+			marker[2] += 40;
+			CG_PlayerFloatSprite( marker, 0, cgs.media.targetShader );
+		}
+#endif
+#endif
 	}
 
 
 	memset( &legs, 0, sizeof(legs) );
 	memset( &torso, 0, sizeof(torso) );
 	memset( &head, 0, sizeof(head) );
+#ifdef IOQ3ZTM // BONES
+	memset( &skeleton, 0, sizeof(skeleton) );
+#endif
 
 	// get the rotation information
 	CG_PlayerAngles( cent, legs.axis, torso.axis, head.axis );
@@ -2293,14 +3156,33 @@ void CG_Player( centity_t *cent ) {
 	CG_PlayerAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 		 &torso.oldframe, &torso.frame, &torso.backlerp );
 
+#ifdef IOQ3ZTM // BONES
+	if (ci->playerModel) {
+		// get skeleton
+		CG_PlayerSkeleton(ci, &legs, &torso, &head, &skeleton);
+	}
+#endif
+
+#ifndef IOQ3ZTM
 	// add the talk baloon or disconnect icon
 	CG_PlayerSprites( cent );
+#endif
 
 	// cast shadow from torso origin
 	memcpy(&shadowRef, &torso, sizeof(shadowRef));
 	VectorCopy(cent->lerpOrigin, legs.origin);
 
-	if (CG_PositionRotatedEntityOnTag(&shadowRef, &legs, ci->legsModel, "tag_torso")) {
+	// Shadow from the torso origin
+#ifdef IOQ3ZTM // BONES
+	if (ci->playerModel) {
+		if (CG_PositionRotatedEntityOnTag(&shadowRef, &legs, ci->playerModel, &skeleton, "tag_torso")) {
+			VectorCopy(shadowRef.origin, shadowOrigin);
+		} else {
+			VectorCopy(cent->lerpOrigin, shadowOrigin);
+		}
+	} else
+#endif
+	if (CG_PositionRotatedEntityOnTag(&shadowRef, &legs, ci->legsModel, NULL, "tag_torso")) {
 		VectorCopy(shadowRef.origin, shadowOrigin);
 	} else {
 		VectorCopy(cent->lerpOrigin, shadowOrigin);
@@ -2316,16 +3198,51 @@ void CG_Player( centity_t *cent ) {
 		renderfx |= RF_SHADOW_PLANE;
 	}
 	renderfx |= RF_LIGHTING_ORIGIN;			// use the same origin for all
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HARVESTER
 	if( cgs.gametype == GT_HARVESTER ) {
 		CG_PlayerTokens( cent, renderfx );
 	}
+#endif
+
+#ifdef IOQ3ZTM // BONES
+	if (ci->playerModel) {
+		//
+		// add the player
+		//
+		legs.hModel = ci->playerModel;
+		legs.customSkin = ci->playerSkin;
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+		legs.skinFraction = cent->currentState.skinFraction;
+#endif
+
+		VectorCopy( cent->lerpOrigin, legs.origin );
+
+		VectorCopy( cent->lerpOrigin, legs.lightingOrigin );
+		legs.shadowPlane = shadowPlane;
+		legs.renderfx = renderfx;
+		VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
+
+		CG_AddRefEntityWithPowerups_CustomSkeleton( &legs, &skeleton, &cent->currentState, ci->team );
+
+		VectorCopy( cent->lerpOrigin, torso.lightingOrigin );
+		torso.shadowPlane = shadowPlane;
+		torso.renderfx = renderfx;
+		CG_PositionRotatedEntityOnTag( &torso, &legs, ci->playerModel, &skeleton, "tag_torso");
+
+		VectorCopy( cent->lerpOrigin, head.lightingOrigin );
+		head.shadowPlane = shadowPlane;
+		head.renderfx = renderfx;
+		CG_PositionRotatedEntityOnTag( &head, &torso, ci->playerModel, &skeleton, "tag_head");
+	} else {
 #endif
 	//
 	// add the legs
 	//
 	legs.hModel = ci->legsModel;
 	legs.customSkin = ci->legsSkin;
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+	legs.skinFraction = cent->currentState.skinFraction;
+#endif
 
 	VectorCopy( cent->lerpOrigin, legs.origin );
 
@@ -2350,17 +3267,24 @@ void CG_Player( centity_t *cent ) {
 	}
 
 	torso.customSkin = ci->torsoSkin;
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+	torso.skinFraction = cent->currentState.skinFraction;
+#endif
 
 	VectorCopy( cent->lerpOrigin, torso.lightingOrigin );
 
-	CG_PositionRotatedEntityOnTag( &torso, &legs, ci->legsModel, "tag_torso");
+	CG_PositionRotatedEntityOnTag( &torso, &legs, ci->legsModel, NULL, "tag_torso");
 
 	torso.shadowPlane = shadowPlane;
 	torso.renderfx = renderfx;
 
 	CG_AddRefEntityWithPowerups( &torso, &cent->currentState, ci->team );
+#ifdef IOQ3ZTM // BONES
+	}
+#endif
 
 #ifdef MISSIONPACK
+#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 	if ( cent->currentState.eFlags & EF_KAMIKAZE ) {
 
 		memset( &skull, 0, sizeof(skull) );
@@ -2469,7 +3393,11 @@ void CG_Player( centity_t *cent ) {
 			trap_R_AddRefEntityToScene( &skull );
 		}
 	}
+#endif
 
+#ifdef IOQ3ZTM
+	if ( !(cent->currentState.powerups & ( 1 << PW_INVIS ) ) ) {
+#endif
 	if ( cent->currentState.powerups & ( 1 << PW_GUARD ) ) {
 		memcpy(&powerup, &torso, sizeof(torso));
 		powerup.hModel = cgs.media.guardPowerupModel;
@@ -2502,6 +3430,10 @@ void CG_Player( centity_t *cent ) {
 		powerup.customSkin = 0;
 		trap_R_AddRefEntityToScene( &powerup );
 	}
+#ifdef IOQ3ZTM
+	}
+#endif
+#ifndef TURTLEARENA // POWERS
 	if ( cent->currentState.powerups & ( 1 << PW_INVULNERABILITY ) ) {
 		if ( !ci->invulnerabilityStartTime ) {
 			ci->invulnerabilityStartTime = cg.time;
@@ -2535,6 +3467,7 @@ void CG_Player( centity_t *cent ) {
 		VectorSet( powerup.axis[2], 0, 0, c );
 		trap_R_AddRefEntityToScene( &powerup );
 	}
+#endif
 
 	t = cg.time - ci->medkitUsageTime;
 	if ( ci->medkitUsageTime && t < 500 ) {
@@ -2564,6 +3497,9 @@ void CG_Player( centity_t *cent ) {
 	}
 #endif // MISSIONPACK
 
+#ifdef IOQ3ZTM // BONES
+	if (!ci->playerModel) {
+#endif
 	//
 	// add the head
 	//
@@ -2572,15 +3508,26 @@ void CG_Player( centity_t *cent ) {
 		return;
 	}
 	head.customSkin = ci->headSkin;
+#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+	head.skinFraction = cent->currentState.skinFraction;
+#endif
 
 	VectorCopy( cent->lerpOrigin, head.lightingOrigin );
 
-	CG_PositionRotatedEntityOnTag( &head, &torso, ci->torsoModel, "tag_head");
+	CG_PositionRotatedEntityOnTag( &head, &torso, ci->torsoModel, NULL, "tag_head");
 
 	head.shadowPlane = shadowPlane;
 	head.renderfx = renderfx;
 
 	CG_AddRefEntityWithPowerups( &head, &cent->currentState, ci->team );
+#ifdef IOQ3ZTM // BONES
+	}
+#endif
+
+#ifdef IOQ3ZTM
+	// add the talk baloon or disconnect icon
+	CG_PlayerSprites( cent, &head );
+#endif
 
 #ifdef MISSIONPACK
 	CG_BreathPuffs(cent, &head);
@@ -2591,10 +3538,29 @@ void CG_Player( centity_t *cent ) {
 	//
 	// add the gun / barrel / flash
 	//
-	CG_AddPlayerWeapon( &torso, NULL, cent, ci->team );
+#ifdef IOQ3ZTM // BONES
+	if (ci->playerModel)
+		CG_AddPlayerWeapon( &legs, &skeleton, NULL, cent, ci->team );
+	else
+#endif
+	CG_AddPlayerWeapon( &torso, NULL, NULL, cent, ci->team );
 
 	// add powerups floating behind the player
-	CG_PlayerPowerups( cent, &torso );
+#ifdef IOQ3ZTM // BONES
+	if (ci->playerModel)
+		CG_PlayerPowerups( cent, &legs, &skeleton );
+	else
+#endif
+	CG_PlayerPowerups( cent, &torso, NULL );
+
+#if 0 //#ifdef IOQ3ZTM // ZTM: TODO: Add a speed effect?
+	if ((cent->currentState.powerups & ( 1 << PW_HASTE )
+		|| cent->currentState.powerups & ( 1 << PW_SCOUT ))
+		&& !(cent->currentState.powerups & ( 1 << PW_INVIS )))
+	{
+		// ...
+	}
+#endif
 }
 
 
@@ -2611,8 +3577,18 @@ void CG_ResetPlayerEntity( centity_t *cent ) {
 	cent->errorTime = -99999;		// guarantee no error decay added
 	cent->extrapolated = qfalse;	
 
+#ifdef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
+#ifdef TA_PLAYERSYS
+	BG_ClearLerpFrame( &cent->pe.legs, cgs.clientinfo[ cent->currentState.clientNum ].playercfg.animations, cent->currentState.legsAnim, cg.time );
+	BG_ClearLerpFrame( &cent->pe.torso, cgs.clientinfo[ cent->currentState.clientNum ].playercfg.animations, cent->currentState.torsoAnim, cg.time );
+#else
+	BG_ClearLerpFrame( &cent->pe.legs, cgs.clientinfo[ cent->currentState.clientNum ].animations, cent->currentState.legsAnim, cg.time );
+	BG_ClearLerpFrame( &cent->pe.torso, cgs.clientinfo[ cent->currentState.clientNum ].animations, cent->currentState.torsoAnim, cg.time );
+#endif
+#else
 	CG_ClearLerpFrame( &cgs.clientinfo[ cent->currentState.clientNum ], &cent->pe.legs, cent->currentState.legsAnim );
 	CG_ClearLerpFrame( &cgs.clientinfo[ cent->currentState.clientNum ], &cent->pe.torso, cent->currentState.torsoAnim );
+#endif
 
 	BG_EvaluateTrajectory( &cent->currentState.pos, cg.time, cent->lerpOrigin );
 	BG_EvaluateTrajectory( &cent->currentState.apos, cg.time, cent->lerpAngles );

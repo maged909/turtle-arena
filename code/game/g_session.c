@@ -138,6 +138,10 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 				if ( g_maxGameClients.integer > 0 && 
 					level.numNonSpectatorClients >= g_maxGameClients.integer ) {
 					sess->sessionTeam = TEAM_SPECTATOR;
+#ifdef TA_SP // SP_BOSS
+				} else if (g_gametype.integer == GT_SINGLE_PLAYER && value[0] == 'r') {
+					sess->sessionTeam = TEAM_RED;
+#endif
 				} else {
 					sess->sessionTeam = TEAM_FREE;
 				}
@@ -181,6 +185,21 @@ void G_InitWorldSession( void ) {
 		level.newSession = qtrue;
 		G_Printf( "Gametype changed, clearing session data.\n" );
 	}
+
+#ifdef TA_SP
+	if (g_gametype.integer == GT_SINGLE_PLAYER && !level.newSession) {
+		char	mapname[MAX_STRING_CHARS];
+
+		trap_Cvar_VariableStringBuffer( "coopsession", s, sizeof(s) );
+		trap_Cvar_VariableStringBuffer( "mapname", mapname, sizeof(mapname) );
+
+		// Check if data wasn't meant for this map.
+		if (!*s || Q_stricmpn(s, mapname, strlen(s))) {
+			level.newSession = qtrue;
+			G_Printf( "Co-op next map changed, clearing session data.\n" );
+		}
+	}
+#endif
 }
 
 /*
@@ -200,3 +219,157 @@ void G_WriteSessionData( void ) {
 		}
 	}
 }
+
+#ifdef TA_SP
+/*
+================
+G_WriteClientCoopSessionData
+
+Called on game shutdown
+================
+*/
+void G_WriteClientCoopSessionData( gclient_t *client ) {
+	const char	*s;
+	const char	*var;
+
+	s = va("%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i",
+		client->ps.persistant[PERS_LIVES],
+		client->ps.persistant[PERS_CONTINUES],
+		client->ps.persistant[PERS_SCORE],
+		client->ps.holdableIndex,
+		client->ps.holdable[0],
+		client->ps.holdable[1],
+		client->ps.holdable[2],
+		client->ps.holdable[3],
+		client->ps.holdable[4],
+		client->ps.holdable[5],
+		client->ps.holdable[6],
+		client->ps.holdable[7],
+		client->ps.holdable[8],
+		client->ps.holdable[9],
+		client->ps.holdable[10],
+		client->ps.holdable[11],
+		client->ps.holdable[12],
+		client->ps.holdable[13],
+		client->ps.holdable[14],
+		client->ps.holdable[15]
+		);
+
+	var = va( "coopsession%i", (int)(client - level.clients) );
+
+	trap_Cvar_Set( var, s );
+}
+
+/*
+================
+G_ReadCoopSessionData
+
+Called on a reconnect
+================
+*/
+void G_ReadCoopSessionData( gclient_t *client ) {
+	char	s[MAX_STRING_CHARS];
+	const char	*var;
+
+	if (g_gametype.integer != GT_SINGLE_PLAYER) {
+		return;
+	}
+
+	var = va( "coopsession%i", (int)(client - level.clients) );
+	trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
+
+	sscanf( s, "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i",
+		&client->ps.persistant[PERS_LIVES],
+		&client->ps.persistant[PERS_CONTINUES],
+		&client->ps.persistant[PERS_SCORE],
+		&client->ps.holdableIndex,
+		&client->ps.holdable[0],
+		&client->ps.holdable[1],
+		&client->ps.holdable[2],
+		&client->ps.holdable[3],
+		&client->ps.holdable[4],
+		&client->ps.holdable[5],
+		&client->ps.holdable[6],
+		&client->ps.holdable[7],
+		&client->ps.holdable[8],
+		&client->ps.holdable[9],
+		&client->ps.holdable[10],
+		&client->ps.holdable[11],
+		&client->ps.holdable[12],
+		&client->ps.holdable[13],
+		&client->ps.holdable[14],
+		&client->ps.holdable[15]
+		);
+}
+
+
+/*
+================
+G_InitCoopSessionData
+
+Called on a first-time connect
+================
+*/
+void G_InitCoopSessionData( gclient_t *client ) {
+
+	if (g_gametype.integer != GT_SINGLE_PLAYER) {
+		return;
+	}
+
+	client->ps.holdableIndex = HI_SHURIKEN;
+	client->ps.holdable[HI_SHURIKEN] = 10;
+	client->ps.persistant[PERS_LIVES] = 3;
+
+	if (client->sess.sessionTeam == TEAM_RED) {
+		// Bosses only have 1 life
+		client->ps.persistant[PERS_LIVES] = 1;
+	} else if (g_singlePlayer.integer) {
+		// Give player a continue in single player
+		client->ps.persistant[PERS_CONTINUES] = 1;
+	}
+
+	G_LoadGameClient( client - level.clients );
+
+	G_WriteClientCoopSessionData( client );
+}
+
+/*
+==================
+G_WriteCoopSessionData
+
+==================
+*/
+void G_WriteCoopSessionData( qboolean restart ) {
+	char	s[MAX_STRING_CHARS];
+	int		i;
+	int		connected = 0;
+
+	if (g_gametype.integer != GT_SINGLE_PLAYER) {
+		return;
+	}
+
+	// If map_restart, need to set coopsession to current map to avoid resetting coop session data.
+	if (restart) {
+		trap_Cvar_VariableStringBuffer( "mapname", s, sizeof(s) );
+		trap_Cvar_Set( "coopsession", s );
+		return;
+	}
+
+	trap_Cvar_VariableStringBuffer( "g_saveMapname", s, sizeof(s) );
+	trap_Cvar_Set( "coopsession", s );
+
+	for ( i = 0 ; i < level.maxclients ; i++ ) {
+		if ( level.clients[i].pers.connected == CON_CONNECTED ) {
+			G_WriteClientCoopSessionData( &level.clients[i] );
+			connected++;
+		}
+	}
+
+	// Write persistant savegame
+	if (g_singlePlayer.integer && connected && *s) {
+		trap_Cvar_VariableStringBuffer("g_saveFilename", s, sizeof(s) );
+
+		trap_Cmd_ExecuteText( EXEC_NOW, va("savegame %s\n", s) );
+	}
+}
+#endif

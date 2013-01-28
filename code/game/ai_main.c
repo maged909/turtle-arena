@@ -306,12 +306,14 @@ void BotReportStatus(bot_state_t *bs) {
 			else strcpy(flagstatus, S_COLOR_BLUE"F ");
 		}
 	}
+#ifdef MISSIONPACK_HARVESTER
 	else if (gametype == GT_HARVESTER) {
 		if (BotHarvesterCarryingCubes(bs)) {
 			if (BotTeam(bs) == TEAM_RED) Com_sprintf(flagstatus, sizeof(flagstatus), S_COLOR_RED"%2d", bs->inventory[INVENTORY_REDCUBE]);
 			else Com_sprintf(flagstatus, sizeof(flagstatus), S_COLOR_BLUE"%2d", bs->inventory[INVENTORY_BLUECUBE]);
 		}
 	}
+#endif
 #endif
 
 	switch(bs->ltgtype) {
@@ -376,11 +378,13 @@ void BotReportStatus(bot_state_t *bs) {
 			BotAI_Print(PRT_MESSAGE, "%-20s%s%s: attacking the enemy base\n", netname, leader, flagstatus);
 			break;
 		}
+#ifdef MISSIONPACK_HARVESTER
 		case LTG_HARVEST:
 		{
 			BotAI_Print(PRT_MESSAGE, "%-20s%s%s: harvesting\n", netname, leader, flagstatus);
 			break;
 		}
+#endif
 		default:
 		{
 			BotAI_Print(PRT_MESSAGE, "%-20s%s%s: roaming\n", netname, leader, flagstatus);
@@ -454,12 +458,14 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 			strcpy(carrying, "F ");
 		}
 	}
+#ifdef MISSIONPACK_HARVESTER
 	else if (gametype == GT_HARVESTER) {
 		if (BotHarvesterCarryingCubes(bs)) {
 			if (BotTeam(bs) == TEAM_RED) Com_sprintf(carrying, sizeof(carrying), "%2d", bs->inventory[INVENTORY_REDCUBE]);
 			else Com_sprintf(carrying, sizeof(carrying), "%2d", bs->inventory[INVENTORY_BLUECUBE]);
 		}
 	}
+#endif
 #endif
 
 	switch(bs->ltgtype) {
@@ -524,11 +530,13 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 			Com_sprintf(action, sizeof(action), "attacking the enemy base");
 			break;
 		}
+#ifdef MISSIONPACK_HARVESTER
 		case LTG_HARVEST:
 		{
 			Com_sprintf(action, sizeof(action), "harvesting");
 			break;
 		}
+#endif
 		default:
 		{
 			trap_BotGetTopGoal(bs->gs, &goal);
@@ -846,6 +854,12 @@ void BotInputToUserCommand(bot_input_t *bi, usercmd_t *ucmd, int delta_angles[3]
 	if (bi->actionflags & ACTION_TALK) ucmd->buttons |= BUTTON_TALK;
 	if (bi->actionflags & ACTION_GESTURE) ucmd->buttons |= BUTTON_GESTURE;
 	if (bi->actionflags & ACTION_USE) ucmd->buttons |= BUTTON_USE_HOLDABLE;
+#ifdef TA_HOLDSYS // NEXTHOLDABLE
+	//if (bi->actionflags & ACTION_NEXT_HOLDABLE) ucmd->buttons |= BUTTON_NEXT_HOLDABLE;
+#endif
+#ifdef TA_WEAPON3
+	if (bi->actionflags & ACTION_DROP_WEAPON) ucmd->buttons |= BUTTON_DROP_WEAPON;
+#endif
 	if (bi->actionflags & ACTION_WALK) ucmd->buttons |= BUTTON_WALKING;
 	if (bi->actionflags & ACTION_AFFIRMATIVE) ucmd->buttons |= BUTTON_AFFIRMATIVE;
 	if (bi->actionflags & ACTION_NEGATIVE) ucmd->buttons |= BUTTON_NEGATIVE;
@@ -854,7 +868,12 @@ void BotInputToUserCommand(bot_input_t *bi, usercmd_t *ucmd, int delta_angles[3]
 	if (bi->actionflags & ACTION_PATROL) ucmd->buttons |= BUTTON_PATROL;
 	if (bi->actionflags & ACTION_FOLLOWME) ucmd->buttons |= BUTTON_FOLLOWME;
 	//
+#ifndef TA_WEAPSYS_EX
 	ucmd->weapon = bi->weapon;
+#endif
+#ifdef TA_HOLDSYS/*2*/
+	ucmd->holdable = bi->holdable;
+#endif
 	//set the view angles
 	//NOTE: the ucmd->angles are the angles WITHOUT the delta angles
 	ucmd->angles[PITCH] = ANGLE2SHORT(bi->viewangles[PITCH]);
@@ -1062,10 +1081,39 @@ int BotAI(int client, float thinktime) {
 	bs->eye[2] += bs->cur_ps.viewheight;
 	//get the area the bot is in
 	bs->areanum = BotPointAreaNum(bs->origin);
+#ifdef TA_WEAPSYS_EX
+	//
+    BotChooseWeapon(bs);
+#endif
 	//the real AI
 	BotDeathmatchAI(bs, thinktime);
+#ifdef TA_WEAPSYS_EX
+    if (bs->cur_ps.weapon != bs->weaponnum)
+    {
+        // Wants a different weapon,
+        // so lets see if we can fulfill there want.
+        if (bs->weaponnum == bs->cur_ps.stats[STAT_DEFAULTWEAPON])
+        {
+            // Wants to change to default weapon.
+            trap_EA_DropWeapon(bs->client);
+        }
+        // At the begining of the intermission bots want 0
+        // If they want the new pickup weapon, they have to wait
+        else if (bs->weaponnum != 0
+			&& bs->weaponnum != bs->cur_ps.stats[STAT_PENDING_WEAPON])
+        {
+#if 0 // ZTM: Fixed bots wanting weapons they can't have, so this doesn't happen anymore.
+			if (bs->cur_ps.weapon == bs->cur_ps.stats[STAT_DEFAULTWEAPON])
+				Com_Printf("DEBUG: bot wants weapon %i, but can't have it only %i\n", bs->weaponnum, bs->cur_ps.weapon);
+			else
+				Com_Printf("DEBUG: bot wants weapon %i, but can't have it only %i and %i\n", bs->weaponnum, bs->cur_ps.weapon, bs->cur_ps.stats[STAT_DEFAULTWEAPON]);
+#endif
+        }
+    }
+#else
 	//set the weapon selection every AI frame
 	trap_EA_SelectWeapon(bs->client, bs->weaponnum);
+#endif
 	//subtract the delta angles
 	for (j = 0; j < 3; j++) {
 		bs->viewangles[j] = AngleMod(bs->viewangles[j] - SHORT2ANGLE(bs->cur_ps.delta_angles[j]));
@@ -1209,6 +1257,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 		trap_BotFreeGoalState(bs->gs);
 		return qfalse;
 	}
+#ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 	//allocate a weapon state
 	bs->ws = trap_BotAllocWeaponState();
 	//load the weapon weights
@@ -1219,6 +1268,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 		trap_BotFreeWeaponState(bs->ws);
 		return qfalse;
 	}
+#endif
 	//allocate a chat state
 	bs->cs = trap_BotAllocChatState();
 	//load the chat file
@@ -1228,7 +1278,9 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	if (errnum != BLERR_NOERROR) {
 		trap_BotFreeChatState(bs->cs);
 		trap_BotFreeGoalState(bs->gs);
+#ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 		trap_BotFreeWeaponState(bs->ws);
+#endif
 		return qfalse;
 	}
 	//get the gender characteristic
@@ -1292,8 +1344,10 @@ int BotAIShutdownClient(int client, qboolean restart) {
 	trap_BotFreeGoalState(bs->gs);
 	//free the chat file
 	trap_BotFreeChatState(bs->cs);
+#ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 	//free the weapon weights
 	trap_BotFreeWeaponState(bs->ws);
+#endif
 	//free the bot character
 	trap_BotFreeCharacter(bs->character);
 	//
@@ -1321,7 +1375,11 @@ when the level is changed
 */
 void BotResetState(bot_state_t *bs) {
 	int client, entitynum, inuse;
+#ifdef TA_WEAPSYS // BOT_WEAP_WEIGHTS
+	int movestate, goalstate, chatstate;
+#else
 	int movestate, goalstate, chatstate, weaponstate;
+#endif
 	bot_settings_t settings;
 	int character;
 	playerState_t ps;							//current player state
@@ -1337,7 +1395,9 @@ void BotResetState(bot_state_t *bs) {
 	movestate = bs->ms;
 	goalstate = bs->gs;
 	chatstate = bs->cs;
+#ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 	weaponstate = bs->ws;
+#endif
 	entergame_time = bs->entergame_time;
 	//free checkpoints and patrol points
 	BotFreeWaypoints(bs->checkpoints);
@@ -1348,7 +1408,9 @@ void BotResetState(bot_state_t *bs) {
 	bs->ms = movestate;
 	bs->gs = goalstate;
 	bs->cs = chatstate;
+#ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 	bs->ws = weaponstate;
+#endif
 	memcpy(&bs->cur_ps, &ps, sizeof(playerState_t));
 	memcpy(&bs->settings, &settings, sizeof(bot_settings_t));
 	bs->inuse = inuse;
@@ -1359,7 +1421,9 @@ void BotResetState(bot_state_t *bs) {
 	//reset several states
 	if (bs->ms) trap_BotResetMoveState(bs->ms);
 	if (bs->gs) trap_BotResetGoalState(bs->gs);
+#ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 	if (bs->ws) trap_BotResetWeaponState(bs->ws);
+#endif
 	if (bs->gs) trap_BotResetAvoidGoals(bs->gs);
 	if (bs->ms) trap_BotResetAvoidReach(bs->ms);
 }
@@ -1374,8 +1438,87 @@ int BotAILoadMap( int restart ) {
 	vmCvar_t	mapname;
 
 	if (!restart) {
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+		static bot_shareditem_t itemInfos[MAX_ITEMS];
+		int i;
+		int item;
+
+		Com_Memset(&itemInfos, 0, sizeof(itemInfos));
+
+		// Setup weapon item info.
+		for (i = 1, item = 0; i < BG_NumItems(); i++)
+		{
+			if (!bg_iteminfo[i].classname[0])
+				continue;
+
+			Q_strncpyz(itemInfos[item].classname, bg_iteminfo[i].classname, sizeof (bg_iteminfo[i].classname));
+			Q_strncpyz(itemInfos[item].name, bg_iteminfo[i].pickup_name, sizeof (bg_iteminfo[i].pickup_name));
+			Q_strncpyz(itemInfos[item].model, bg_iteminfo[i].world_model[0], sizeof (bg_iteminfo[i].world_model[0]));
+			itemInfos[item].modelindex = i;
+
+			// ZTM: NOTE: Currently auto weight is only supported for weapons,
+			//              so other weights must be added to base/botfiles/fuzi.c
+			itemInfos[item].defaultWeight = 0;
+			itemInfos[item].inventory = 0;
+
+			switch (bg_iteminfo[i].giType)
+			{
+				case IT_WEAPON:
+					if ( gametype == GT_TEAM  ) {
+						itemInfos[item].respawntime = trap_Cvar_VariableIntegerValue("g_weaponTeamRespawn");
+					} else {
+						itemInfos[item].respawntime = trap_Cvar_VariableIntegerValue("g_weaponrespawn");
+					}
+
+					itemInfos[item].defaultWeight = BotWeaponWeight(i);
+					itemInfos[item].inventory = INVENTORY_WEAPON_START+i-1;
+					break;
+
+				case IT_AMMO:
+					itemInfos[item].respawntime = RESPAWN_AMMO;
+					break;
+
+#ifdef TURTLEARENA // NIGHTS_ITEMS
+				case IT_SCORE:
+					itemInfos[item].respawntime = RESPAWN_SCORE;
+					break;
+#endif
+
+#ifndef TURTLEARENA // NOARMOR
+				case IT_ARMOR:
+					itemInfos[item].respawntime = RESPAWN_ARMOR;
+					break;
+#endif
+
+				case IT_HEALTH:
+					if (bg_iteminfo[i].quantity == 100)
+						itemInfos[item].respawntime = RESPAWN_MEGAHEALTH;
+					else
+						itemInfos[item].respawntime = RESPAWN_HEALTH;
+					break;
+
+				case IT_POWERUP:
+					itemInfos[item].respawntime = RESPAWN_POWERUP;
+					break;
+
+				case IT_HOLDABLE:
+					itemInfos[item].respawntime = RESPAWN_HOLDABLE;
+					break;
+
+				default:
+					itemInfos[item].respawntime = 35;
+					break;
+			}
+
+			item++;
+		}
+
+		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+		trap_BotLibLoadMap( mapname.string, (void*)itemInfos );
+#else
 		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 		trap_BotLibLoadMap( mapname.string );
+#endif
 	}
 
 	for (i = 0; i < MAX_CLIENTS; i++) {
@@ -1410,7 +1553,9 @@ int BotAIStartFrame(int time) {
 
 	G_CheckBotSpawn();
 
+#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 	trap_Cvar_Update(&bot_rocketjump);
+#endif
 	trap_Cvar_Update(&bot_grapple);
 	trap_Cvar_Update(&bot_fastchat);
 	trap_Cvar_Update(&bot_nochat);
@@ -1498,7 +1643,13 @@ int BotAIStartFrame(int time) {
 				continue;
 			}
 			// do not update missiles
-			if (ent->s.eType == ET_MISSILE && ent->s.weapon != WP_GRAPPLING_HOOK) {
+			if (ent->s.eType == ET_MISSILE &&
+#ifdef TA_WEAPSYS
+				!(ent->parent && ent->parent->client && ent == ent->parent->client->hook)
+#else
+				ent->s.weapon != WP_GRAPPLING_HOOK
+#endif
+				) {
 				trap_BotLibUpdateEntity(i, NULL);
 				continue;
 			}
@@ -1661,6 +1812,16 @@ int BotInitLibrary(void) {
 	trap_Cvar_VariableStringBuffer("fs_homepath", buf, sizeof(buf));
 	if (strlen(buf)) trap_BotLibVarSet("homedir", buf);
 	//
+#ifdef TA_WEAPSYS // Use correct index
+	trap_BotLibVarSet("weapindex_rocketlauncher", va("%i", BG_WeaponGroupIndexForName("wp_rocket_launcher")));
+	trap_BotLibVarSet("weapindex_grapple", va("%i", BG_WeaponGroupIndexForName("wp_grappling_hook")));
+#elif defined IOQ3ZTM // ZTM: Always sure these are correct...
+	trap_BotLibVarSet("weapindex_rocketlauncher", va("%i", WP_ROCKET_LAUNCHER));
+	trap_BotLibVarSet("weapindex_grapple", va("%i", WP_GRAPPLING_HOOK));
+#endif
+#ifdef TURTLEARENA
+	trap_PC_AddGlobalDefine("TURTLEARENA");
+#endif
 #ifdef MISSIONPACK
 	trap_PC_AddGlobalDefine("MISSIONPACK");
 #endif

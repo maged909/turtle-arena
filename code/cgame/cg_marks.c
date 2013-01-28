@@ -44,7 +44,10 @@ MARK POLYS
 markPoly_t	cg_activeMarkPolys;			// double linked list
 markPoly_t	*cg_freeMarkPolys;			// single linked list
 markPoly_t	cg_markPolys[MAX_MARK_POLYS];
+#ifndef IOQ3ZTM
 static		int	markTotal;
+#endif
+
 
 /*
 ===================
@@ -135,9 +138,16 @@ passed to the renderer.
 #define	MAX_MARK_FRAGMENTS	128
 #define	MAX_MARK_POINTS		384
 
+#ifdef TA_WEAPSYS
+qboolean CG_ImpactMark( qhandle_t markShader, const vec3_t origin, const vec3_t dir,
+				   float orientation, float red, float green, float blue, float alpha,
+				   qboolean alphaFade, float radius, qboolean temporary )
+#else
 void CG_ImpactMark( qhandle_t markShader, const vec3_t origin, const vec3_t dir, 
 				   float orientation, float red, float green, float blue, float alpha,
-				   qboolean alphaFade, float radius, qboolean temporary ) {
+				   qboolean alphaFade, float radius, qboolean temporary )
+#endif
+{
 	vec3_t			axis[3];
 	float			texCoordScale;
 	vec3_t			originalPoints[4];
@@ -147,18 +157,37 @@ void CG_ImpactMark( qhandle_t markShader, const vec3_t origin, const vec3_t dir,
 	markFragment_t	markFragments[MAX_MARK_FRAGMENTS], *mf;
 	vec3_t			markPoints[MAX_MARK_POINTS];
 	vec3_t			projection;
+#ifdef TA_WEAPSYS
+	qboolean addedMark = qfalse;
+#endif
+
+#ifdef IOQ3ZTM // LASERTAG
+	if ( cg_laserTag.integer ) {
+#ifdef TA_WEAPSYS
+		return qfalse;
+#else
+		return;
+#endif
+	}
+#endif
 
 	if ( !cg_addMarks.integer ) {
+#ifdef TA_WEAPSYS
+		return qfalse;
+#else
 		return;
+#endif
 	}
 
 	if ( radius <= 0 ) {
 		CG_Error( "CG_ImpactMark called with <= 0 radius" );
 	}
 
+#ifndef IOQ3ZTM
 	//if ( markTotal >= MAX_MARK_POLYS ) {
 	//	return;
 	//}
+#endif
 
 	// create the texture axis
 	VectorNormalize2( dir, axis[0] );
@@ -225,8 +254,16 @@ void CG_ImpactMark( qhandle_t markShader, const vec3_t origin, const vec3_t dir,
 		mark->color[2] = blue;
 		mark->color[3] = alpha;
 		memcpy( mark->verts, verts, mf->numPoints * sizeof( verts[0] ) );
+#ifndef IOQ3ZTM
 		markTotal++;
+#endif
+#ifdef TA_WEAPSYS
+		addedMark = qtrue;
+#endif
 	}
+#ifdef TA_WEAPSYS
+	return addedMark;
+#endif
 }
 
 
@@ -261,7 +298,12 @@ void CG_AddMarks( void ) {
 		}
 
 		// fade out the energy bursts
-		if ( mp->markShader == cgs.media.energyMarkShader ) {
+#ifdef IOQ3ZTM // IOQ3BUGFIX: Use alphaFade instead of shader num (As only energyMark used alphaFade)
+		if ( mp->alphaFade )
+#else
+		if ( mp->markShader == cgs.media.energyMarkShader )
+#endif
+		{
 
 			fade = 450 - 450 * ( (cg.time - mp->time ) / 3000.0 );
 			if ( fade < 255 ) {

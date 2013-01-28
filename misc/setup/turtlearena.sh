@@ -5,7 +5,7 @@ readlink() {
     
     if [ -L "$path" ]; then 
         ll="$(LC_ALL=C ls -l "$path" 2> /dev/null)" &&
-        echo "${ll/* -> }"
+        echo "${ll##* -> }"
     else    
         return 1
     fi
@@ -44,7 +44,7 @@ case "$archs" in
 esac
 
 for arch in $archs; do
-	test -x ./ioquake3.$arch || continue
-	exec ./ioquake3.$arch +set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0 +set fs_game demoq3 "$@"
+	test -x ./turtlearena.$arch || continue
+	exec ./turtlearena.$arch "$@"
 done
-echo "could not execute ioquake3" >&2
+echo "could not execute turtlearena" >&2

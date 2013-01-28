@@ -131,9 +131,9 @@ static void UI_Mods_LoadMods( void ) {
 	s_mods.descriptionPtr = s_mods.description;
 	s_mods.fs_gamePtr = s_mods.fs_game;
 
-	// always start off with baseq3
+	// always start off with BASEGAME
 	s_mods.list.numitems = 1;
-	s_mods.list.itemnames[0] = s_mods.descriptionList[0] = "Quake III Arena";
+	s_mods.list.itemnames[0] = s_mods.descriptionList[0] = "Turtle Arena";
 	s_mods.fs_gameList[0] = "";
 
 	numdirs = trap_FS_GetFileList( "$modlist", "", dirlist, sizeof(dirlist) );
@@ -168,7 +168,7 @@ static void UI_Mods_MenuInit( void ) {
 	s_mods.banner.generic.x			= 320;
 	s_mods.banner.generic.y			= 16;
 	s_mods.banner.string			= "MODS";
-	s_mods.banner.color				= color_white;
+	s_mods.banner.color				= text_banner_color;
 	s_mods.banner.style				= UI_CENTER;
 
 	s_mods.framel.generic.type		= MTYPE_BITMAP;

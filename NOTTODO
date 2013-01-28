@@ -1,1 +1,13 @@
-http://wiki.ioquake3.org/NotToDo
+Things we won't ever be doing!
+Autotools.
+
+Scons
+
+New build system of the week.
+
+Punkbuster (unless even balance wants to work with us)
+
+Removing the SDL/OpenAL header files from SVN. Having them in SVN makes it easier
+for non-Linux platforms to compile the game. This isn't changing.
+
+MP3 support. It is already done, see: http://ioquake3.org/extras/patches

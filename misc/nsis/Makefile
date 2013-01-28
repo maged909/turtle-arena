@@ -1,8 +1,10 @@
+COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
+
 ifndef FSNAME
-FSNAME=spearmint
+FSNAME=turtlearena
 endif
 ifndef VERSION
-VERSION=1.36_SVN
+VERSION=0.7
 endif
 ifndef RELEASE
 RELEASE=0
@@ -10,11 +12,14 @@ endif
 ifndef ARCH
 ARCH=x86
 endif
+ifndef ASSETPATH
+ASSETPATH=.
+endif
 ifndef INSTALLDIR
 INSTALLDIR=.
 endif
 ifndef USE_RENDERER_DLOPEN
-USE_RENDERER_DLOPEN=1
+USE_RENDERER_DLOPEN=0
 endif
 ifndef USE_OPENAL_DLOPEN
 USE_OPENAL_DLOPEN=1
@@ -58,14 +63,26 @@ NSISFILENAME=${FSNAME}-${VERSION}-${RELEASE}.$(ARCH).exe
 
 all: $(NSISFILENAME)
 
-ioquake3.$(ARCH).nsi: ioquake3.nsi.in
-	sed 's/XXXFILENAMEXXX/$(NSISFILENAME)/;s/XXXVERSIONXXX/$(VERSION)/;s/XXXRELEASEXXX/$(RELEASE)/;s/x86/$(ARCH)/g;s/SDL.dll/$(SDLDLL)/' < $< > $@
+${FSNAME}.$(ARCH).nsi: ioquake3.nsi.in
+	sed 's|XXXFILENAMEXXX|$(NSISFILENAME)|;s|XXXVERSIONXXX|$(VERSION)|;s|XXXRELEASEXXX|$(RELEASE)|;s|x86|$(ARCH)|g;s|XXXASSETPATHXXX|$(ASSETPATH)|;s|SDL.dll|$(SDLDLL)|' < $< > $@
 
-$(NSISFILENAME): ioquake3.$(ARCH).nsi
-	makensis $(DEFINES) ioquake3.$(ARCH).nsi
+$(NSISFILENAME): ${FSNAME}.$(ARCH).nsi
+	cp "../../../CODE_LICENSE.txt" .
+	cp "../../../CC-BY-SA-3.0.txt" .
+	cp "../../../COPYRIGHTS.txt" .
+	cp "../../../CREDITS.txt" .
+	cp "../../../INSTALLER_README.txt" "README.txt"
+ifneq ($(COMPILE_PLATFORM),mingw32)
+	todos GPL-2.txt
+	todos CC-BY-SA-3.0.txt
+	todos COPYRIGHTS.txt
+	todos CREDITS.txt
+	todos README.txt
+endif
+	makensis $(DEFINES) ${FSNAME}.$(ARCH).nsi
 
 clean:
-	rm -rf *.exe ioquake3.$(ARCH).nsi
+	rm -rf *.exe ${FSNAME}.$(ARCH).nsi CODE_LICENSE.txt CC-BY-SA-3.0.txt COPYRIGHTS.txt CREDITS.txt README.txt
 
 install:
 	mkdir -p $(INSTALLDIR)

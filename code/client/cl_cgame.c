@@ -39,9 +39,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 extern	botlib_export_t	*botlib_export;
 
+#ifndef IOQ3ZTM
 extern qboolean loadCamera(const char *name);
 extern void startCamera(int time);
 extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
+#endif
 
 /*
 ====================
@@ -208,10 +210,18 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot, void *playerS
 CL_SetUserCmdValue
 =====================
 */
+#ifdef TA_HOLDSYS/*2*/
+void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale, int holdableValue, int localClientNum ) {
+	cl.localClients[localClientNum].cgameUserCmdValue = userCmdValue;
+	cl.localClients[localClientNum].cgameSensitivity = sensitivityScale;
+	cl.localClients[localClientNum].cgameHoldableValue = holdableValue;
+}
+#else
 void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale, int localClientNum ) {
 	cl.localClients[localClientNum].cgameUserCmdValue = userCmdValue;
 	cl.localClients[localClientNum].cgameSensitivity = sensitivityScale;
 }
+#endif
 
 /*
 ===============
@@ -681,8 +691,17 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.ClearScene();
 		return 0;
 	case CG_R_ADDREFENTITYTOSCENE:
+#ifdef IOQ3ZTM // BONES
+		re.AddRefEntityToScene( VMA(1), NULL );
+#else
 		re.AddRefEntityToScene( VMA(1) );
+#endif
 		return 0;
+#ifdef IOQ3ZTM // BONES
+	case CG_R_ADDREFENTITYTOSCENE_CUSTOMSKELETON:
+		re.AddRefEntityToScene( VMA(1), VMA(2) );
+		return 0;
+#endif
 	case CG_R_ADDPOLYTOSCENE:
 		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
 		return 0;
@@ -783,7 +802,11 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETUSERCMD:
 		return CL_GetUserCmd( args[1], VMA(2), args[3] );
 	case CG_SETUSERCMDVALUE:
+#if defined TA_HOLDSYS/*2*/
+		CL_SetUserCmdValue( args[1], VMF(2), args[3], args[4] );
+#else
 		CL_SetUserCmdValue( args[1], VMF(2), args[3] );
+#endif
 		return 0;
 	case CG_SET_NET_FIELDS:
 		CL_SetNetFields( args[1], VMA(2), args[3], args[4], VMA(5), args[6] );
@@ -800,6 +823,20 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
     return 0;
   case CG_KEY_GETKEY:
 		return Key_GetKey( VMA(1), args[2] );
+
+#ifdef IOQ3ZTM // BONES
+  case CG_R_JOINTINDEXFORNAME:
+		return re.JointIndexForName(args[1], VMA(2));
+  case CG_R_SETUPSKELETON:
+		return re.SetupSkeleton(args[1], VMA(2), args[3], args[4], VMF(5));
+  case CG_R_SETUPPLAYERSKELETON:
+		return re.SetupPlayerSkeleton(args[1], VMA(2), args[3], args[4], VMF(5),
+										args[6], args[7], VMF(8),
+										args[9], args[10], VMF(11));
+  case CG_R_MAKESKELETONABSOLUTE:
+		re.MakeSkeletonAbsolute(VMA(1), VMA(2));
+		return 0;
+#endif
 
 	case CG_KEY_KEYNUMTOSTRINGBUF:
 		Key_KeynumToStringBuf( args[1], VMA(2), args[3] );

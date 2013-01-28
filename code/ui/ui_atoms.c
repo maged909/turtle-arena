@@ -118,13 +118,35 @@ char *UI_Cvar_VariableString( const char *var_name ) {
 
 
 
+#ifdef TA_SP
+void UI_SetBestScores(arcadeScore_t *newInfo, qboolean postGame) {
+	trap_Cvar_Set("ui_scoreName", 			newInfo->name);
+	trap_Cvar_Set("ui_scoreCharacter", 		newInfo->character);
+	trap_Cvar_Set("ui_scoreScore", 			va("%i", newInfo->score));
+	trap_Cvar_Set("ui_scoreTeam",			va("%i to %i", newInfo->redScore, newInfo->blueScore));
+	trap_Cvar_Set("ui_scoreTime",			va("%02i:%02i", newInfo->time / 60, newInfo->time % 60));
+	trap_Cvar_Set("ui_scoreCaptures",		va("%i", newInfo->captures));
+	if (postGame) {
+		trap_Cvar_Set("ui_scoreName2", 			newInfo->name);
+		trap_Cvar_Set("ui_scoreCharacter2", 	newInfo->character);
+		trap_Cvar_Set("ui_scoreScore2", 		va("%i", newInfo->score));
+		trap_Cvar_Set("ui_scoreTeam2",			va("%i to %i", newInfo->redScore, newInfo->blueScore));
+		trap_Cvar_Set("ui_scoreTime2",			va("%02i:%02i", newInfo->time / 60, newInfo->time % 60));
+		trap_Cvar_Set("ui_scoreCaptures2",		va("%i", newInfo->captures));
+	}
+}
+#else
 void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
 	trap_Cvar_Set("ui_scoreAccuracy",     va("%i%%", newInfo->accuracy));
+#ifndef TURTLEARENA // AWARDS
 	trap_Cvar_Set("ui_scoreImpressives",	va("%i", newInfo->impressives));
 	trap_Cvar_Set("ui_scoreExcellents", 	va("%i", newInfo->excellents));
+#endif
 	trap_Cvar_Set("ui_scoreDefends", 			va("%i", newInfo->defends));
 	trap_Cvar_Set("ui_scoreAssists", 			va("%i", newInfo->assists));
+#ifndef TURTLEARENA // AWARDS
 	trap_Cvar_Set("ui_scoreGauntlets", 		va("%i", newInfo->gauntlets));
+#endif
 	trap_Cvar_Set("ui_scoreScore", 				va("%i", newInfo->score));
 	trap_Cvar_Set("ui_scorePerfect",	 		va("%i", newInfo->perfects));
 	trap_Cvar_Set("ui_scoreTeam",					va("%i to %i", newInfo->redScore, newInfo->blueScore));
@@ -136,11 +158,15 @@ void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
 	trap_Cvar_Set("ui_scoreCaptures",		va("%i", newInfo->captures));
   if (postGame) {
 		trap_Cvar_Set("ui_scoreAccuracy2",     va("%i%%", newInfo->accuracy));
+#ifndef TURTLEARENA // AWARDS
 		trap_Cvar_Set("ui_scoreImpressives2",	va("%i", newInfo->impressives));
 		trap_Cvar_Set("ui_scoreExcellents2", 	va("%i", newInfo->excellents));
+#endif
 		trap_Cvar_Set("ui_scoreDefends2", 			va("%i", newInfo->defends));
 		trap_Cvar_Set("ui_scoreAssists2", 			va("%i", newInfo->assists));
+#ifndef TURTLEARENA // AWARDS
 		trap_Cvar_Set("ui_scoreGauntlets2", 		va("%i", newInfo->gauntlets));
+#endif
 		trap_Cvar_Set("ui_scoreScore2", 				va("%i", newInfo->score));
 		trap_Cvar_Set("ui_scorePerfect2",	 		va("%i", newInfo->perfects));
 		trap_Cvar_Set("ui_scoreTeam2",					va("%i to %i", newInfo->redScore, newInfo->blueScore));
@@ -152,14 +178,44 @@ void UI_SetBestScores(postGameInfo_t *newInfo, qboolean postGame) {
 		trap_Cvar_Set("ui_scoreCaptures2",		va("%i", newInfo->captures));
 	}
 }
+#endif
 
 void UI_LoadBestScores(const char *map, int game)
 {
 	char		fileName[MAX_QPATH];
 	fileHandle_t f;
+#ifdef TA_SP
+	static char *gametypeNames[] = {"ffa", "tourney", "single", "team", "ctf", "oneflag", "overload", "harvester"};
+	arcadeGameData_t gamedata;
+	qboolean	validData;
+#else
 	postGameInfo_t newInfo;
+#endif
 	int protocol, protocolLegacy;
 	
+#ifdef TA_SP
+	// compose file name
+	Com_sprintf(fileName, MAX_QPATH, "scores/%s_%s.score", map, gametypeNames[game]);
+	// see if we have one already
+	validData = qfalse;
+	if (trap_FS_FOpenFile(fileName, &f, FS_READ) >= 0) {
+		trap_FS_Read(&gamedata, sizeof(arcadeGameData_t), f);
+		trap_FS_FCloseFile(f);
+
+		if (!Q_strncmp(gamedata.magic, ARCADE_GAMEDATA_MAGIC, ARRAY_LEN(gamedata.magic)))
+		{
+			if (gamedata.version == ARCADE_GAMEDATA_VERSION) {
+				validData = qtrue;
+			}
+		}
+	}
+
+	if (!validData) {
+		memset(&gamedata, 0, sizeof(arcadeGameData_t));
+	}
+
+	UI_SetBestScores(&gamedata.scores[0], qfalse);
+#else
 	memset(&newInfo, 0, sizeof(postGameInfo_t));
 	Com_sprintf(fileName, MAX_QPATH, "games/%s_%i.game", map, game);
 	if (trap_FS_FOpenFile(fileName, &f, FS_READ) >= 0) {
@@ -171,6 +227,7 @@ void UI_LoadBestScores(const char *map, int game)
 		trap_FS_FCloseFile(f);
 	}
 	UI_SetBestScores(&newInfo, qfalse);
+#endif
 
 	uiInfo.demoAvailable = qfalse;
 
@@ -209,18 +266,31 @@ void UI_ClearScores(void) {
 	char *gameFile;
 	int		i, len, count, size;
 	fileHandle_t f;
+#ifdef TA_SP
+	arcadeGameData_t newInfo;
+
+	count = trap_FS_GetFileList( "scores", "score", gameList, sizeof(gameList) );
+
+	size = sizeof(arcadeGameData_t);
+#else
 	postGameInfo_t newInfo;
 
 	count = trap_FS_GetFileList( "games", "game", gameList, sizeof(gameList) );
 
 	size = sizeof(postGameInfo_t);
+#endif
 	memset(&newInfo, 0, size);
 
 	if (count > 0) {
 		gameFile = gameList;
 		for ( i = 0; i < count; i++ ) {
 			len = strlen(gameFile);
-			if (trap_FS_FOpenFile(va("games/%s",gameFile), &f, FS_WRITE) >= 0) {
+#ifdef TA_SP
+			if (trap_FS_FOpenFile(va("scores/%s",gameFile), &f, FS_WRITE) >= 0)
+#else
+			if (trap_FS_FOpenFile(va("games/%s",gameFile), &f, FS_WRITE) >= 0)
+#endif
+			{
 				trap_FS_Write(&size, sizeof(int), f);
 				trap_FS_Write(&newInfo, size, f);
 				trap_FS_FCloseFile(f);
@@ -229,7 +299,11 @@ void UI_ClearScores(void) {
 		}
 	}
 	
+#ifdef TA_SP
+	UI_SetBestScores(&newInfo.scores[0], qfalse);
+#else
 	UI_SetBestScores(&newInfo, qfalse);
+#endif
 
 }
 
@@ -239,12 +313,120 @@ static void	UI_Cache_f( void ) {
 	Display_CacheAll();
 }
 
+#ifdef TA_SP
+// Returns score pos, or -1 if didn't get high enough score to save it.
+int UI_AddArcadeScore(arcadeGameData_t *gamedata, arcadeScore_t *score)
+{
+	int index, i;
+
+	// Find where to put score
+	for (index = 0; index < NUM_ARCADE_SCORES; ++index) {
+		if (!gamedata->scores[index].time || score->score > gamedata->scores[index].score
+			|| (score->score == gamedata->scores[index].score && score->time < gamedata->scores[index].time)) {
+			// Empty score, higher score or same score and faster
+			break;
+		}
+	}
+
+	// Not a new high score
+	if (index == NUM_ARCADE_SCORES) {
+		return -1;
+	}
+
+	// Move slots to make room for new score
+	for (i = NUM_ARCADE_SCORES-2; i >= index; --i) {
+		memcpy(&gamedata->scores[i+1], &gamedata->scores[i], sizeof (arcadeScore_t));
+	}
+
+	// Add new score
+	memcpy(&gamedata->scores[index], score, sizeof (arcadeScore_t));
+
+	return index;
+}
+#endif
+
 /*
 =======================
 UI_CalcPostGameStats
 =======================
 */
 static void UI_CalcPostGameStats( void ) {
+#ifdef TA_SP
+	static char *gametypeNames[] = {"ffa", "tourney", "single", "team", "ctf", "oneflag", "overload", "harvester"};
+	char		map[MAX_QPATH];
+	char		fileName[MAX_QPATH];
+	char		info[MAX_INFO_STRING];
+	char		name[9];
+	fileHandle_t f;
+	qboolean	validData;
+	int			time, redScore, blueScore;
+	arcadeGameData_t *gamedata;
+	arcadeScore_t *newScore;
+	arcadeGameData_t uiGamedata;
+	arcadeScore_t uiNewScore;
+	int scoreIndex;
+	int gametype;
+
+	gamedata = &uiGamedata;
+	newScore = &uiNewScore;
+
+	trap_GetConfigString( CS_SERVERINFO, info, sizeof(info) );
+	Q_strncpyz( map, Info_ValueForKey( info, "mapname" ), sizeof(map) );
+	gametype = Com_Clamp(0, ARRAY_LEN(gametypeNames), atoi(Info_ValueForKey(info, "g_gametype")));
+
+	// compose file name
+	Com_sprintf(fileName, MAX_QPATH, "scores/%s_%s.score", map, gametypeNames[gametype]);
+	// see if we have one already
+	validData = qfalse;
+	if (trap_FS_FOpenFile(fileName, &f, FS_READ) >= 0) {
+		trap_FS_Read(gamedata, sizeof(arcadeGameData_t), f);
+		trap_FS_FCloseFile(f);
+
+		if (!Q_strncmp(gamedata->magic, ARCADE_GAMEDATA_MAGIC, ARRAY_LEN(gamedata->magic)))
+		{
+			if (gamedata->version == ARCADE_GAMEDATA_VERSION) {
+				validData = qtrue;
+			}
+		}
+	}
+
+	if (!validData) {
+		memset(gamedata, 0, sizeof(arcadeGameData_t));
+	}
+
+	// Get name
+	// TODO: Ask user to enter name
+	trap_Cvar_VariableStringBuffer("name", name, sizeof (name));
+
+	// Setup gamedata
+	memcpy(gamedata->magic, ARCADE_GAMEDATA_MAGIC, ARRAY_LEN(gamedata->magic));
+	gamedata->version = ARCADE_GAMEDATA_VERSION;
+
+	time = (atoi(UI_Argv(1)) - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
+	redScore = atoi(UI_Argv(2));
+	blueScore = atoi(UI_Argv(3));
+
+	// Setup newScore
+	Q_strncpyz(newScore->name, name, STRARRAY_LEN(newScore->name));
+	Q_strncpyz(newScore->character, UI_Argv(4), STRARRAY_LEN(newScore->character));
+	newScore->score = atoi(UI_Argv(5));
+	newScore->time = time;
+
+	// CTF
+	newScore->captures = atoi(UI_Argv(6));
+	newScore->redScore = redScore;
+	newScore->blueScore = blueScore;
+
+	// Add the score
+	scoreIndex = UI_AddArcadeScore(gamedata, newScore);
+	trap_Cvar_Set("ui_scoreIndex", va("%d", scoreIndex));
+
+	// Write updated gamedata
+	if (trap_FS_FOpenFile(fileName, &f, FS_WRITE) >= 0) {
+		trap_FS_Write(gamedata, sizeof(arcadeGameData_t), f);
+		trap_FS_FCloseFile(f);
+	}
+#else
 	char		map[MAX_QPATH];
 	char		fileName[MAX_QPATH];
 	char		info[MAX_INFO_STRING];
@@ -273,6 +455,18 @@ static void UI_CalcPostGameStats( void ) {
 	}					 
 
 	newInfo.accuracy = atoi(UI_Argv(3));
+#ifdef TURTLEARENA // AWARDS
+	newInfo.baseScore = atoi(UI_Argv(4));
+	newInfo.perfects = atoi(UI_Argv(5));
+
+	// Extra data for missionpack
+	newInfo.defends = atoi(UI_Argv(6));
+	newInfo.assists = atoi(UI_Argv(7));
+	newInfo.redScore = atoi(UI_Argv(8));
+	newInfo.blueScore = atoi(UI_Argv(9));
+	time = atoi(UI_Argv(10));
+	newInfo.captures = atoi(UI_Argv(11));
+#else
 	newInfo.impressives = atoi(UI_Argv(4));
 	newInfo.excellents = atoi(UI_Argv(5));
 	newInfo.defends = atoi(UI_Argv(6));
@@ -284,6 +478,7 @@ static void UI_CalcPostGameStats( void ) {
 	newInfo.blueScore = atoi(UI_Argv(12));
 	time = atoi(UI_Argv(13));
 	newInfo.captures = atoi(UI_Argv(14));
+#endif
 
 	newInfo.time = (time - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
 	adjustedTime = uiInfo.mapList[ui_currentMap.integer].timeToBeat[game];
@@ -323,18 +518,28 @@ static void UI_CalcPostGameStats( void ) {
 	if (newInfo.time < oldInfo.time) {
 		uiInfo.newBestTime = uiInfo.uiDC.realTime + 20000;
 	}
+ #endif
  
 	// put back all the ui overrides
 	trap_Cvar_Set("capturelimit", UI_Cvar_VariableString("ui_saveCaptureLimit"));
+#ifdef NOTRATEDM // frag to score
+	trap_Cvar_Set("scorelimit", UI_Cvar_VariableString("ui_saveScoreLimit"));
+#else
 	trap_Cvar_Set("fraglimit", UI_Cvar_VariableString("ui_saveFragLimit"));
+#endif
 	trap_Cvar_Set("cg_drawTimer", UI_Cvar_VariableString("ui_drawTimer"));
 	trap_Cvar_Set("g_doWarmup", UI_Cvar_VariableString("ui_doWarmup"));
 	trap_Cvar_Set("g_Warmup", UI_Cvar_VariableString("ui_Warmup"));
 	trap_Cvar_Set("sv_pure", UI_Cvar_VariableString("ui_pure"));
 	trap_Cvar_Set("g_friendlyFire", UI_Cvar_VariableString("ui_friendlyFire"));
 
+#ifdef TA_SP
+	UI_SetBestScores(&gamedata->scores[0], qtrue);
+	UI_ShowPostGame(scoreIndex == 0);
+#else
 	UI_SetBestScores(&newInfo, qtrue);
 	UI_ShowPostGame(newHigh);
+#endif
 
 
 }

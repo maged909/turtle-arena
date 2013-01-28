@@ -256,11 +256,17 @@ void Con_CheckResize (void)
 	int		i, j, width, oldwidth, oldtotallines, numlines, numchars;
 	short	tbuf[CON_TEXTSIZE];
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	if (cls.glconfig.vidWidth > 0)
+		width = (cls.glconfig.vidWidth / Com_FontCharWidth(&cls.fontSmall, '.', 0)) - 2;
+	else
+#endif
 	width = (SCREEN_WIDTH / SMALLCHAR_WIDTH) - 2;
 
 	if (width == con.linewidth)
 		return;
 
+#ifndef IOQ3ZTM // UNUSED
 	if (width < 1)			// video hasn't been initialized yet
 	{
 		width = DEFAULT_CONSOLE_WIDTH;
@@ -271,6 +277,7 @@ void Con_CheckResize (void)
 			con.text[i] = (ColorIndex(COLOR_WHITE)<<8) | ' ';
 	}
 	else
+#endif
 	{
 		oldwidth = con.linewidth;
 		con.linewidth = width;
@@ -396,6 +403,11 @@ void CL_ConsolePrint( char *txt ) {
 	unsigned char	c;
 	unsigned short	color;
 	qboolean skipnotify = qfalse;		// NERVE - SMF
+#ifdef IOQ3ZTM // FONT_REWRITE
+	float	lineWidth;
+	float	wordWidth;
+	int		i;
+#endif
 
 	// TTimo - prefix for text that shows up in console but not in notify
 	// backported from RTCW
@@ -447,6 +459,28 @@ void CL_ConsolePrint( char *txt ) {
 		}
 
 		// word wrap
+#ifdef IOQ3ZTM // FONT_REWRITE
+		// ZTM: FIXME?: (Not sure this can really be fixed) For this to work correctly at startup we need,
+		//   some cvars and the render started... Cvars can be easily fixed, but to load the font we need the render.
+		if (cls.glconfig.vidWidth && cl_conXOffset) {
+			int screenWidth = cls.glconfig.vidWidth;
+
+			lineWidth = con.xadjust + cl_conXOffset->integer + Com_FontCharWidth(&cls.fontSmall, ']', 0);
+
+			for (i = 0; i < con.x; i++) {
+				lineWidth += Com_FontCharWidth(&cls.fontSmall, con.text[(con.current%con.totallines)*con.linewidth+i]&255, 0);
+			}
+
+			wordWidth = Com_FontStringWidthExt( &cls.fontSmall, txt, 0, l+1, qtrue );
+
+			if (l != con.linewidth && (con.x + l >= con.linewidth)) {
+				Con_Linefeed();
+			} else if (lineWidth + wordWidth >= screenWidth) {
+				Con_Linefeed();
+			}
+		}
+		else
+#endif
 		if (l != con.linewidth && (con.x + l >= con.linewidth) ) {
 			Con_Linefeed();
 
@@ -492,20 +526,73 @@ Draw the editline after a ] prompt
 */
 void Con_DrawInput (void) {
 	int		y;
+	int		x;
 
 	if ( clc.state != CA_DISCONNECTED && !(Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {
 		return;
 	}
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	y = con.vislines - ( Com_FontCharHeight(&cls.fontSmall, 0) * 2 );
+	x = con.xadjust + cl_conXOffset->integer + Com_FontCharWidth(&cls.fontSmall, ']', 0);
+#else
 	y = con.vislines - ( SMALLCHAR_HEIGHT * 2 );
+	x = con.xadjust + 2 * SMALLCHAR_WIDTH;
+#endif
 
 	re.SetColor( con.color );
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	SCR_DrawFontChar(&cls.fontSmall, con.xadjust + cl_conXOffset->integer, y, ']', qfalse);
+
+	Field_Draw( &g_consoleField, x, y,
+		SCREEN_WIDTH - x - Com_FontCharWidth(&cls.fontSmall, ' ', 0), qtrue, qtrue );
+#else
 	SCR_DrawSmallChar( con.xadjust + 1 * SMALLCHAR_WIDTH, y, ']' );
 
-	Field_Draw( &g_consoleField, con.xadjust + 2 * SMALLCHAR_WIDTH, y,
-		SCREEN_WIDTH - 3 * SMALLCHAR_WIDTH, qtrue, qtrue );
+	Field_Draw( &g_consoleField, x, y,
+		SCREEN_WIDTH - x - SMALLCHAR_WIDTH, qtrue, qtrue );
+#endif
 }
+
+#ifdef IOQ3ZTM
+/*
+==========
+SCR_DrawPicFullWidth
+==========
+*/
+void SCR_DrawPicFullWidth(int h480, qhandle_t hShader)
+{
+	float yfrac = (float)h480 / (float)SCREEN_HEIGHT;
+	float x = 0, y = 0, w = cls.glconfig.vidWidth, h = cls.glconfig.vidHeight;
+	const float picX = SCREEN_WIDTH;
+	const float picY = SCREEN_HEIGHT;
+	float yscale = h / picY; // scale shader to fit vertically
+	float xscale = yscale; // w / picX;
+	float s1, t1, s2, t2;
+	float sDelta, tDelta;
+
+	yscale /= yfrac;
+
+	// Get aspect correct coords
+	s1 = x/(picX * xscale);
+	t1 = y/(picY * yscale);
+	s2 = (x+w)/(picX * xscale);
+	t2 = (y+h)/(picY * yscale);
+
+	// Center X
+	sDelta = (1.0f - s2) / 2.0f;
+	s1 += sDelta;
+	s2 += sDelta;
+
+	// Scroll so bottom of image is always at the bottom of the console
+	tDelta = (1.0f - t2);
+	t1 += tDelta;
+	t2 += tDelta;
+
+	re.DrawStretchPic( x, y, w, h * yfrac, s1, t1, s2, t2, hShader );
+}
+#endif
 
 /*
 ================
@@ -522,7 +609,6 @@ void Con_DrawSolidConsole( float frac ) {
 	int				lines;
 //	qhandle_t		conShader;
 	int				currentColor;
-	vec4_t			color;
 
 	lines = cls.glconfig.vidHeight * frac;
 	if (lines <= 0)
@@ -541,42 +627,66 @@ void Con_DrawSolidConsole( float frac ) {
 		y = 0;
 	}
 	else {
+#ifdef IOQ3ZTM
+		SCR_DrawPicFullWidth(y, cls.consoleShader );
+#else
 		SCR_DrawPic( 0, 0, SCREEN_WIDTH, y, cls.consoleShader );
+#endif
 	}
 
-	color[0] = 1;
-	color[1] = 0;
-	color[2] = 0;
-	color[3] = 1;
-	SCR_FillRect( 0, y, SCREEN_WIDTH, 2, color );
+	SCR_FillRect( 0, y, SCREEN_WIDTH, 2, g_color_table[ColorIndex(COLOR_GREEN)] );
 
 
 	// draw the version number
 
-	re.SetColor( g_color_table[ColorIndex(COLOR_RED)] );
+	re.SetColor( g_color_table[ColorIndex(COLOR_GREEN)] );
 
 	i = strlen( Q3_VERSION );
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	float totalwidth = Com_FontStringWidthExt( &cls.fontSmall, Q3_VERSION, 0, 0, qfalse ) + cl_conXOffset->integer;
+	float currentWidthLocation = 0;
+ 	for (x=0 ; x<i ; x++) {
+         SCR_DrawFontChar( &cls.fontSmall, cls.glconfig.vidWidth - totalwidth + currentWidthLocation,
+				lines - Com_FontCharHeight(&cls.fontSmall, 0), Q3_VERSION[x], qfalse );
+        currentWidthLocation += Com_FontCharWidth( &cls.fontSmall, Q3_VERSION[x], 0 );
+ 	}
+#else
 	for (x=0 ; x<i ; x++) {
 		SCR_DrawSmallChar( cls.glconfig.vidWidth - ( i - x + 1 ) * SMALLCHAR_WIDTH,
 			lines - SMALLCHAR_HEIGHT, Q3_VERSION[x] );
 	}
+#endif
 
 
 	// draw the text
 	con.vislines = lines;
+#ifdef IOQ3ZTM // FONT_REWRITE
+	rows = lines/Com_FontCharHeight(&cls.fontSmall, 0);		// rows of text to draw
+
+	y = lines - (Com_FontCharHeight(&cls.fontSmall, 0)*3);
+#else
 	rows = (lines-SMALLCHAR_WIDTH)/SMALLCHAR_WIDTH;		// rows of text to draw
 
 	y = lines - (SMALLCHAR_HEIGHT*3);
+#endif
 
 	// draw from the bottom up
 	if (con.display != con.current)
 	{
 	// draw arrows to show the buffer is backscrolled
 		re.SetColor( g_color_table[ColorIndex(COLOR_RED)] );
+
+#ifdef IOQ3ZTM // FONT_REWRITE
+		int characterWidth = Com_FontCharWidth(&cls.fontSmall, '^', 0);
+		for (x=con.xadjust+characterWidth ; x<cls.glconfig.vidWidth ; x+=4*characterWidth)
+			SCR_DrawFontChar( &cls.fontSmall, x, y, '^', qfalse );
+		y -= Com_FontCharHeight(&cls.fontSmall, 0);
+#else
 		for (x=0 ; x<con.linewidth ; x+=4)
 			SCR_DrawSmallChar( con.xadjust + (x+1)*SMALLCHAR_WIDTH, y, '^' );
 		y -= SMALLCHAR_HEIGHT;
+#endif
 		rows--;
 	}
 	
@@ -589,7 +699,11 @@ void Con_DrawSolidConsole( float frac ) {
 	currentColor = 7;
 	re.SetColor( g_color_table[currentColor] );
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+	for (i=0 ; i<rows ; i++, y -= Com_FontCharHeight(&cls.fontSmall, 0), row--)
+#else
 	for (i=0 ; i<rows ; i++, y -= SMALLCHAR_HEIGHT, row--)
+#endif
 	{
 		if (row < 0)
 			break;
@@ -600,16 +714,26 @@ void Con_DrawSolidConsole( float frac ) {
 
 		text = con.text + (row % con.totallines)*con.linewidth;
 
+#ifdef IOQ3ZTM // USE_FREETYPE
+		float currentWidthLocation = cl_conXOffset->integer;
+#endif
 		for (x=0 ; x<con.linewidth ; x++) {
+#ifndef IOQ3ZTM // USE_FREETYPE
 			if ( ( text[x] & 0xff ) == ' ' ) {
 				continue;
 			}
+#endif
 
 			if ( ( (text[x]>>8)&7 ) != currentColor ) {
 				currentColor = (text[x]>>8)&7;
 				re.SetColor( g_color_table[currentColor] );
 			}
+#ifdef IOQ3ZTM // FONT_REWRITE
+			SCR_DrawFontChar(&cls.fontSmall, con.xadjust + currentWidthLocation, y, text[x] & 0xff, qfalse);
+			currentWidthLocation += Com_FontCharWidth(&cls.fontSmall, text[x], 0);
+#else
 			SCR_DrawSmallChar(  con.xadjust + (x+1)*SMALLCHAR_WIDTH, y, text[x] & 0xff );
+#endif
 		}
 	}
 

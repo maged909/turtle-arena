@@ -64,6 +64,27 @@ typedef u_long	ioctlarg_t;
 static WSADATA	winsockdata;
 static qboolean	winsockInitialized = qfalse;
 
+#elif defined __wii__
+#include <errno.h>
+#include <network.h>
+#include <sys/types.h>
+
+typedef int SOCKET;
+typedef unsigned short int sa_family_t;
+
+# define socketError			errno
+# define closesocket			net_close
+# define sockaddr_storage sockaddr_in
+
+#define ioctlarg_t u_long
+#define sendto net_sendto
+#define select net_select
+#define recvfrom net_recvfrom
+#define socket net_socket
+#define ioctlsocket net_ioctl
+#define setsockopt net_setsockopt
+#define bind net_bind
+
 #else
 
 #	if MAC_OS_X_VERSION_MIN_REQUIRED == 1020
@@ -99,42 +120,57 @@ typedef int	ioctlarg_t;
 
 #endif
 
+#ifndef __wii__
 static qboolean usingSocks = qfalse;
+#endif
 static int networkingEnabled = 0;
 
 static cvar_t	*net_enabled;
 
+#ifndef __wii__
 static cvar_t	*net_socksEnabled;
 static cvar_t	*net_socksServer;
 static cvar_t	*net_socksPort;
 static cvar_t	*net_socksUsername;
 static cvar_t	*net_socksPassword;
+#endif
 
 static cvar_t	*net_ip;
+#ifndef __wii__
 static cvar_t	*net_ip6;
+#endif
 static cvar_t	*net_port;
+#ifndef __wii__
 static cvar_t	*net_port6;
 static cvar_t	*net_mcast6addr;
 static cvar_t	*net_mcast6iface;
+#endif
 
 static cvar_t	*net_dropsim;
 
+#ifndef __wii__
 static struct sockaddr	socksRelayAddr;
+#endif
 
 static SOCKET	ip_socket = INVALID_SOCKET;
+#ifndef __wii__
 static SOCKET	ip6_socket = INVALID_SOCKET;
+#endif
 static SOCKET	socks_socket = INVALID_SOCKET;
+#ifndef __wii__
 static SOCKET	multicast6_socket = INVALID_SOCKET;
 
 // Keep track of currently joined multicast group.
 static struct ipv6_mreq curgroup;
 // And the currently bound address.
 static struct sockaddr_in6 boundto;
+#endif
 
 #ifndef IF_NAMESIZE
   #define IF_NAMESIZE 16
 #endif
 
+#ifndef __wii__
 // use an admin local address per default so that network admins can decide on how to handle quake3 traffic.
 #define NET_MULTICAST_IP6 "ff04::696f:7175:616b:6533"
 
@@ -152,6 +188,8 @@ typedef struct
 
 static nip_localaddr_t localIP[MAX_IPS];
 static int numIP;
+
+#endif
 
 
 //=============================================================================
@@ -228,6 +266,7 @@ static void NetadrToSockadr( netadr_t *a, struct sockaddr *s ) {
 		((struct sockaddr_in *)s)->sin_addr.s_addr = *(int *)&a->ip;
 		((struct sockaddr_in *)s)->sin_port = a->port;
 	}
+#ifndef __wii__
 	else if( a->type == NA_IP6 ) {
 		((struct sockaddr_in6 *)s)->sin6_family = AF_INET6;
 		((struct sockaddr_in6 *)s)->sin6_addr = * ((struct in6_addr *) &a->ip6);
@@ -240,6 +279,7 @@ static void NetadrToSockadr( netadr_t *a, struct sockaddr *s ) {
 		((struct sockaddr_in6 *)s)->sin6_addr = curgroup.ipv6mr_multiaddr;
 		((struct sockaddr_in6 *)s)->sin6_port = a->port;
 	}
+#endif
 }
 
 
@@ -249,6 +289,7 @@ static void SockadrToNetadr( struct sockaddr *s, netadr_t *a ) {
 		*(int *)&a->ip = ((struct sockaddr_in *)s)->sin_addr.s_addr;
 		a->port = ((struct sockaddr_in *)s)->sin_port;
 	}
+#ifndef __wii__
 	else if(s->sa_family == AF_INET6)
 	{
 		a->type = NA_IP6;
@@ -256,9 +297,11 @@ static void SockadrToNetadr( struct sockaddr *s, netadr_t *a ) {
 		a->port = ((struct sockaddr_in6 *)s)->sin6_port;
 		a->scope_id = ((struct sockaddr_in6 *)s)->sin6_scope_id;
 	}
+#endif
 }
 
 
+#ifndef __wii__
 static struct addrinfo *SearchAddrInfo(struct addrinfo *hints, sa_family_t family)
 {
 	while(hints)
@@ -271,6 +314,7 @@ static struct addrinfo *SearchAddrInfo(struct addrinfo *hints, sa_family_t famil
 	
 	return NULL;
 }
+#endif
 
 /*
 =============
@@ -279,6 +323,13 @@ Sys_StringToSockaddr
 */
 static qboolean Sys_StringToSockaddr(const char *s, struct sockaddr *sadr, int sadr_len, sa_family_t family)
 {
+#ifdef __wii__
+	struct sockaddr_in *sadr_in = (struct sockaddr_in *)sadr;
+
+	sadr->sa_family = family;
+
+	return inet_aton(s, &sadr_in->sin_addr);
+#else
 	struct addrinfo hints;
 	struct addrinfo *res = NULL;
 	struct addrinfo *search = NULL;
@@ -339,6 +390,7 @@ static qboolean Sys_StringToSockaddr(const char *s, struct sockaddr *sadr, int s
 		freeaddrinfo(res);
 	
 	return qfalse;
+#endif
 }
 
 /*
@@ -348,6 +400,11 @@ Sys_SockaddrToString
 */
 static void Sys_SockaddrToString(char *dest, int destlen, struct sockaddr *input)
 {
+#ifdef __wii__
+	struct sockaddr_in *sadr_in = (struct sockaddr_in *)input;
+
+	Q_strncpyz(dest, inet_ntoa(sadr_in->sin_addr), destlen);
+#else
 	socklen_t inputlen;
 
 	if (input->sa_family == AF_INET6)
@@ -357,6 +414,7 @@ static void Sys_SockaddrToString(char *dest, int destlen, struct sockaddr *input
 
 	if(getnameinfo(input, inputlen, dest, destlen, NULL, 0, NI_NUMERICHOST) && destlen > 0)
 		*dest = '\0';
+#endif
 }
 
 /*
@@ -368,14 +426,24 @@ qboolean Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family ) {
 	struct sockaddr_storage sadr;
 	sa_family_t fam;
 	
+#ifdef __wii__ // ZTM: FIXME: Unneeded?
+	if (!strcmp (s, "localhost")) {
+		memset (a, 0, sizeof(*a));
+		a->type = NA_LOOPBACK;
+		return qtrue;
+	}
+#endif
+
 	switch(family)
 	{
 		case NA_IP:
 			fam = AF_INET;
 		break;
+#ifndef __wii__
 		case NA_IP6:
 			fam = AF_INET6;
 		break;
+#endif
 		default:
 			fam = AF_UNSPEC;
 		break;
@@ -414,6 +482,7 @@ qboolean NET_CompareBaseAdrMask(netadr_t a, netadr_t b, int netmask)
 		if(netmask < 0 || netmask > 32)
 			netmask = 32;
 	}
+#ifndef __wii__
 	else if(a.type == NA_IP6)
 	{
 		addra = (byte *) &a.ip6;
@@ -422,6 +491,7 @@ qboolean NET_CompareBaseAdrMask(netadr_t a, netadr_t b, int netmask)
 		if(netmask < 0 || netmask > 128)
 			netmask = 128;
 	}
+#endif
 	else
 	{
 		Com_Printf ("NET_CompareBaseAdr: bad address type\n");
@@ -552,6 +622,7 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 
 			memset( ((struct sockaddr_in *)&from)->sin_zero, 0, 8 );
 		
+#ifndef __wii__
 			if ( usingSocks && memcmp( &from, &socksRelayAddr, fromlen ) == 0 ) {
 				if ( ret < 10 || net_message->data[0] != 0 || net_message->data[1] != 0 || net_message->data[2] != 0 || net_message->data[3] != 1 ) {
 					return qfalse;
@@ -565,10 +636,14 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 				net_message->readcount = 10;
 			}
 			else {
+#endif
 				SockadrToNetadr( (struct sockaddr *) &from, net_from );
 				net_message->readcount = 0;
+#ifndef __wii__
 			}
+#endif
 		
+
 			if( ret >= net_message->maxsize ) {
 				Com_Printf( "Oversize packet from %s\n", NET_AdrToString (*net_from) );
 				return qfalse;
@@ -579,6 +654,7 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 		}
 	}
 	
+#ifndef __wii__
 	if(ip6_socket != INVALID_SOCKET && FD_ISSET(ip6_socket, fdr))
 	{
 		fromlen = sizeof(from);
@@ -634,6 +710,7 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 			return qtrue;
 		}
 	}
+#endif
 	
 	
 	return qfalse;
@@ -641,7 +718,9 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 
 //=============================================================================
 
+#ifndef __wii__
 static char socksBuf[4096];
+#endif
 
 /*
 ==================
@@ -658,6 +737,10 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 		return;
 	}
 
+#ifdef __wii__
+	if(ip_socket == INVALID_SOCKET && to.type == NA_IP)
+		return;
+#else
 	if( (ip_socket == INVALID_SOCKET && to.type == NA_IP) ||
 		(ip_socket == INVALID_SOCKET && to.type == NA_BROADCAST) ||
 		(ip6_socket == INVALID_SOCKET && to.type == NA_IP6) ||
@@ -666,10 +749,12 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 
 	if(to.type == NA_MULTICAST6 && (net_enabled->integer & NET_DISABLEMCAST))
 		return;
+#endif
 
 	memset(&addr, 0, sizeof(addr));
 	NetadrToSockadr( &to, (struct sockaddr *) &addr );
 
+#ifndef __wii__
 	if( usingSocks && to.type == NA_IP ) {
 		socksBuf[0] = 0;	// reserved
 		socksBuf[1] = 0;
@@ -682,10 +767,13 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	}
 	else {
 		if(addr.ss_family == AF_INET)
+#endif
 			ret = sendto( ip_socket, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
+#ifndef __wii__
 		else if(addr.ss_family == AF_INET6)
 			ret = sendto( ip6_socket, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 	}
+#endif
 	if( ret == SOCKET_ERROR ) {
 		int err = socketError;
 
@@ -714,9 +802,11 @@ LAN clients will have their rate var ignored
 ==================
 */
 qboolean Sys_IsLANAddress( netadr_t adr ) {
+#ifndef __wii__
 	int		index, run, addrsize;
 	qboolean differed;
 	byte *compareadr, *comparemask, *compareip;
+#endif
 
 	if( adr.type == NA_LOOPBACK ) {
 		return qtrue;
@@ -738,6 +828,7 @@ qboolean Sys_IsLANAddress( netadr_t adr ) {
 		if(adr.ip[0] == 127)
 			return qtrue;
 	}
+#ifndef __wii__
 	else if(adr.type == NA_IP6)
 	{
 		if(adr.ip6[0] == 0xfe && (adr.ip6[1] & 0xc0) == 0x80)
@@ -786,6 +877,7 @@ qboolean Sys_IsLANAddress( netadr_t adr ) {
 		}
 	}
 	
+#endif
 	return qfalse;
 }
 
@@ -795,6 +887,13 @@ Sys_ShowIP
 ==================
 */
 void Sys_ShowIP(void) {
+#ifdef __wii__
+	u32 ip;
+	u8 *splitip = (u8 *)&ip;
+
+	ip = net_gethostip();
+	Com_Printf("IP: %d.%d.%d.%d\n", splitip[0], splitip[1], splitip[2], splitip[3]);
+#else
 	int i;
 	char addrbuf[NET_ADDRSTRMAXLEN];
 
@@ -807,6 +906,7 @@ void Sys_ShowIP(void) {
 		else if(localIP[i].type == NA_IP6)
 			Com_Printf( "IP6: %s\n", addrbuf);
 	}
+#endif
 }
 
 
@@ -881,6 +981,7 @@ int NET_IPSocket( char *net_interface, int port, int *err ) {
 	return newsocket;
 }
 
+#ifndef __wii__
 /*
 ====================
 NET_IP6Socket
@@ -963,6 +1064,7 @@ int NET_IP6Socket( char *net_interface, int port, struct sockaddr_in6 *bindto, i
 
 	return newsocket;
 }
+#endif
 
 /*
 ====================
@@ -972,6 +1074,7 @@ Set the current multicast group
 */
 void NET_SetMulticast6(void)
 {
+#ifndef __wii__
 	struct sockaddr_in6 addr;
 
 	if(!*net_mcast6addr->string || !Sys_StringToSockaddr(net_mcast6addr->string, (struct sockaddr *) &addr, sizeof(addr), AF_INET6))
@@ -988,7 +1091,7 @@ void NET_SetMulticast6(void)
 
 	if(*net_mcast6iface->string)
 	{
-#ifdef _WIN32
+#if defined _WIN32 || defined __wii__
 		curgroup.ipv6mr_interface = net_mcast6iface->integer;
 #else
 		curgroup.ipv6mr_interface = if_nametoindex(net_mcast6iface->string);
@@ -996,6 +1099,7 @@ void NET_SetMulticast6(void)
 	}
 	else
 		curgroup.ipv6mr_interface = 0;
+#endif
 }
 
 /*
@@ -1006,11 +1110,22 @@ Join an ipv6 multicast group
 */
 void NET_JoinMulticast6(void)
 {
+#ifndef __wii__
 	int err;
 	
 	if(ip6_socket == INVALID_SOCKET || multicast6_socket != INVALID_SOCKET || (net_enabled->integer & NET_DISABLEMCAST))
 		return;
 	
+#ifdef __wii__
+// From Linux's in.h, GPL 2.1 or later
+#define IN6_IS_ADDR_UNSPECIFIED(a) \
+	(((__const uint32_t *) (a))[0] == 0				      \
+	 && ((__const uint32_t *) (a))[1] == 0				      \
+	 && ((__const uint32_t *) (a))[2] == 0				      \
+	 && ((__const uint32_t *) (a))[3] == 0)
+
+#define IN6_IS_ADDR_MULTICAST(a) (((__const uint8_t *) (a))[0] == 0xff)
+#endif
 	if(IN6_IS_ADDR_MULTICAST(&boundto.sin6_addr) || IN6_IS_ADDR_UNSPECIFIED(&boundto.sin6_addr))
 	{
 		// The way the socket was bound does not prohibit receiving multi-cast packets. So we don't need to open a new one.
@@ -1052,10 +1167,12 @@ void NET_JoinMulticast6(void)
 			return;
 		}
 	}
+#endif
 }
 
 void NET_LeaveMulticast6()
 {
+#ifndef __wii__
 	if(multicast6_socket != INVALID_SOCKET)
 	{
 		if(multicast6_socket != ip6_socket)
@@ -1065,8 +1182,10 @@ void NET_LeaveMulticast6()
 
 		multicast6_socket = INVALID_SOCKET;
 	}
+#endif
 }
 
+#ifndef __wii__
 /*
 ====================
 NET_OpenSocks
@@ -1349,6 +1468,7 @@ static void NET_GetLocalAddress( void ) {
 		freeaddrinfo(res);
 }
 #endif
+#endif
 
 /*
 ====================
@@ -1359,17 +1479,22 @@ void NET_OpenIP( void ) {
 	int		i;
 	int		err;
 	int		port;
+#ifndef __wii__
 	int		port6;
+#endif
 
 	port = net_port->integer;
+#ifndef __wii__
 	port6 = net_port6->integer;
 
 	NET_GetLocalAddress();
+#endif
 
 	// automatically scan for a valid port, so multiple
 	// dedicated servers can be started without requiring
 	// a different net_port for each one
 
+#ifndef __wii__
 	if(net_enabled->integer & NET_ENABLEV6)
 	{
 		for( i = 0 ; i < 10 ; i++ )
@@ -1389,6 +1514,7 @@ void NET_OpenIP( void ) {
 		if(ip6_socket == INVALID_SOCKET)
 			Com_Printf( "WARNING: Couldn't bind to a v6 ip address.\n");
 	}
+#endif
 
 	if(net_enabled->integer & NET_ENABLEV4)
 	{
@@ -1397,8 +1523,10 @@ void NET_OpenIP( void ) {
 			if (ip_socket != INVALID_SOCKET) {
 				Cvar_SetValue( "net_port", port + i );
 
+#ifndef __wii__
 				if (net_socksEnabled->integer)
 					NET_OpenSocks( port + i );
+#endif
 
 				break;
 			}
@@ -1441,14 +1569,17 @@ static qboolean NET_GetCvars( void ) {
 	modified += net_ip->modified;
 	net_ip->modified = qfalse;
 	
+#ifndef __wii__
 	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
 	modified += net_ip6->modified;
 	net_ip6->modified = qfalse;
+#endif
 	
 	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH );
 	modified += net_port->modified;
 	net_port->modified = qfalse;
 	
+#ifndef __wii__
 	net_port6 = Cvar_Get( "net_port6", va( "%i", PORT_SERVER ), CVAR_LATCH );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
@@ -1485,6 +1616,7 @@ static qboolean NET_GetCvars( void ) {
 	net_socksPassword = Cvar_Get( "net_socksPassword", "", CVAR_LATCH | CVAR_ARCHIVE );
 	modified += net_socksPassword->modified;
 	net_socksPassword->modified = qfalse;
+#endif
 
 	net_dropsim = Cvar_Get("net_dropsim", "", CVAR_TEMP);
 
@@ -1542,6 +1674,7 @@ void NET_Config( qboolean enableNetworking ) {
 			ip_socket = INVALID_SOCKET;
 		}
 
+#ifndef __wii__
 		if(multicast6_socket != INVALID_SOCKET)
 		{
 			if(multicast6_socket != ip6_socket)
@@ -1554,6 +1687,7 @@ void NET_Config( qboolean enableNetworking ) {
 			closesocket( ip6_socket );
 			ip6_socket = INVALID_SOCKET;
 		}
+#endif
 
 		if ( socks_socket != INVALID_SOCKET ) {
 			closesocket( socks_socket );
@@ -1590,6 +1724,26 @@ void NET_Init( void ) {
 
 	winsockInitialized = qtrue;
 	Com_Printf( "Winsock Initialized\n" );
+#elif defined __wii__
+	extern void Sys_Wait(const char *message);
+
+	int i, ret;
+
+	printf("Starting Net_Init()...\n");
+
+	for(i=0; i<10; i++) {
+		ret = net_init();
+		if(ret < 0) {
+			printf("Net_Init() failed. Press A to retry, Home to quit.\n");
+			Sys_Wait("waiting...");
+			continue;
+		} else {
+			break;
+		}
+	}
+	printf("Net_Init() successful.\n");
+
+	Sys_ShowIP();
 #endif
 
 	NET_Config( qtrue );
@@ -1678,6 +1832,7 @@ void NET_Sleep(int msec)
 
 		highestfd = ip_socket;
 	}
+#ifndef __wii__
 	if(ip6_socket != INVALID_SOCKET)
 	{
 		FD_SET(ip6_socket, &fdr);
@@ -1685,6 +1840,7 @@ void NET_Sleep(int msec)
 		if(highestfd == INVALID_SOCKET || ip6_socket > highestfd)
 			highestfd = ip6_socket;
 	}
+#endif
 
 #ifdef _WIN32
 	if(highestfd == INVALID_SOCKET)
@@ -1701,7 +1857,11 @@ void NET_Sleep(int msec)
 	retval = select(highestfd + 1, &fdr, NULL, NULL, &timeout);
 
 	if(retval == SOCKET_ERROR)
+#ifdef __wii__ // ZTM: FIXME: ?
+		;
+#else
 		Com_Printf("Warning: select() syscall failed: %s\n", NET_ErrorString());
+#endif
 	else if(retval > 0)
 		NET_Event(&fdr);
 }

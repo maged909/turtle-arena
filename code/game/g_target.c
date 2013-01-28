@@ -374,6 +374,26 @@ void SP_target_teleporter( gentity_t *self ) {
 	self->use = target_teleporter_use;
 }
 
+#ifdef TA_PATHSYS
+/*QUAKED target_setpath (.5 .5 .5) (-8 -8 -8) (8 8 8)
+"target" is the name of path to use, if blank stops using path mode.
+*/
+void target_setpath_use( gentity_t *self, gentity_t *other, gentity_t *activator ) {
+	if (G_SetupPath(activator, self->target) != PATH_ERROR) {
+		G_ReachedPath(activator, qfalse);
+	}
+}
+
+void SP_target_setpath( gentity_t *self )
+{
+	if (!self->targetname)
+		G_Printf("untargeted %s at %s\n", self->classname, vtos(self->s.origin));
+
+	self->use = target_setpath_use;
+}
+#endif
+
+
 //==========================================================
 
 
@@ -428,8 +448,7 @@ void SP_target_position( gentity_t *self ){
 	G_SetOrigin( self, self->s.origin );
 }
 
-static void target_location_linkup(gentity_t *ent)
-{
+static void target_location_linkup(gentity_t *ent) {
 	int i;
 	int n;
 
@@ -473,3 +492,23 @@ void SP_target_location( gentity_t *self ){
 	G_SetOrigin( self, self->s.origin );
 }
 
+#ifdef TA_SP
+/*QUAKED target_level_end (1 0 0) (-16 -16 -24) (16 16 32)
+when triggered, the level ends
+"message"	use it to set the name of the next level without any extension
+"targetname" to trigger the level end.
+*/
+
+void target_level_end_use( gentity_t *self, gentity_t *other, gentity_t *activator ) {
+	G_ClientCompletedLevel(activator, self->message);
+}
+
+void SP_target_level_end( gentity_t *self ) {
+	self->use = target_level_end_use;
+
+	// Check for invalid map name on spawn, easier to find bugs in maps.
+	if (self->message == NULL || *self->message == '\0') {
+		G_Printf("target_level_end: Invalid map name.\n");
+	}
+}
+#endif

@@ -459,7 +459,11 @@ qboolean S_AL_BufferInit( void )
 	numSfx = 0;
 
 	// Load the default sound, and lock it
+#ifdef TA_DATA // OPENARENA
+	default_sfx = S_AL_BufferFind("sound/misc/silence.wav");
+#else
 	default_sfx = S_AL_BufferFind("sound/feedback/hit.wav");
+#endif
 	S_AL_BufferUse(default_sfx);
 	knownSfx[default_sfx].isLocked = qtrue;
 
@@ -1832,6 +1836,9 @@ static ALuint musicBuffers[NUM_MUSIC_BUFFERS];
 
 static snd_stream_t *mus_stream;
 static snd_stream_t *intro_stream;
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+static float s_backgroundVolume = 1.0f; // volume multiplier for this track
+#endif
 static char s_backgroundLoop[MAX_QPATH];
 
 static byte decode_buffer[MUSIC_BUFFER_SIZE];
@@ -2001,22 +2008,52 @@ S_AL_StartBackgroundTrack
 =================
 */
 static
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+void S_AL_StartBackgroundTrack( const char *_intro, const char *_loop )
+#else
 void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
+#endif
 {
 	int i;
 	qboolean issame;
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+	char intro[MAX_QPATH];
+	char loop[MAX_QPATH];
+#endif
 
 	// Stop any existing music that might be playing
 	S_AL_StopBackgroundTrack();
 
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+	if((!_intro || !*_intro) && (!_loop || !*_loop))
+		return;
+#else
 	if((!intro || !*intro) && (!loop || !*loop))
 		return;
+#endif
 
 	// Allocate a musicSource
 	S_AL_MusicSourceGet();
 	if(musicSourceHandle == -1)
 		return;
 
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+	if (!_loop || !*_loop)
+	{
+		_loop = _intro;
+		issame = qtrue;
+	}
+	else if(_intro && *_intro && !strcmp(_intro, _loop))
+		issame = qtrue;
+	else
+		issame = qfalse;
+
+	strncpy(intro, _intro, MAX_QPATH);
+	strncpy(loop, _loop, MAX_QPATH);
+
+	s_backgroundVolume = 1.0f;
+	S_GetMusicForIntro(intro, loop, &s_backgroundVolume);
+#else
 	if (!loop || !*loop)
 	{
 		loop = intro;
@@ -2026,6 +2063,7 @@ void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
 		issame = qtrue;
 	else
 		issame = qfalse;
+#endif
 
 	// Copy the loop over
 	strncpy( s_backgroundLoop, loop, sizeof( s_backgroundLoop ) );
@@ -2059,7 +2097,11 @@ void S_AL_StartBackgroundTrack( const char *intro, const char *loop )
 	qalSourceQueueBuffers(musicSource, NUM_MUSIC_BUFFERS, musicBuffers);
 
 	// Set the initial gain property
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value * s_backgroundVolume);
+#else
 	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value);
+#endif
 	
 	// Start playing
 	qalSourcePlay(musicSource);
@@ -2102,7 +2144,11 @@ void S_AL_MusicUpdate( void )
 	}
 
 	// Set the gain property
+#ifdef IOQ3ZTM // MUSIC_SCRIPTS
+	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value * s_backgroundVolume);
+#else
 	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value);
+#endif
 }
 
 

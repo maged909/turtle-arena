@@ -32,6 +32,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "tr_types.h"
 
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+#include "../zlib/zlib.h"
+#endif
+
 #define	REF_API_VERSION		8
 
 //
@@ -70,7 +74,11 @@ typedef struct {
 	// a scene is built up by calls to R_ClearScene and the various R_Add functions.
 	// Nothing is drawn until R_RenderScene is called.
 	void	(*ClearScene)( void );
+#ifdef IOQ3ZTM // BONES
+	void	(*AddRefEntityToScene)( const refEntity_t *ent, const refSkeleton_t *customSkeleton );
+#else
 	void	(*AddRefEntityToScene)( const refEntity_t *re );
+#endif
 	void	(*AddPolyToScene)( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 	void	(*AddPolyBufferToScene)( polyBuffer_t* pPolyBuffer );
 	int		(*LightForPoint)( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
@@ -101,6 +109,16 @@ typedef struct {
 	int		(*LerpTag)( orientation_t *tag,  qhandle_t model, int startFrame, int endFrame, 
 					 float frac, const char *tagName );
 	void	(*ModelBounds)( qhandle_t model, vec3_t mins, vec3_t maxs );
+
+#ifdef IOQ3ZTM // BONES
+	int		(*JointIndexForName)(qhandle_t handle, const char *jointName);
+	qboolean (*SetupSkeleton)(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
+	qboolean (*SetupPlayerSkeleton)(qhandle_t handle, refSkeleton_t *refSkel,
+								int legsFrame, int legsOldFrame, float legsBacklerp,
+								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
+								int headFrame, int headOldFrame, float headBacklerp);
+	void	(*MakeSkeletonAbsolute)(const refSkeleton_t *in, refSkeleton_t *out);
+#endif
 
 #ifdef __USEA3D
 	void    (*A3D_RenderGeometry) (void *pVoidA3D, void *pVoidGeom, void *pVoidMat, void *pVoidGeomStatus);
@@ -151,6 +169,10 @@ typedef struct {
 
 	int		(*Cvar_VariableIntegerValue) (const char *var_name);
 
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+	void	(*Cvar_VariableStringBuffer) (const char *var_name, char *buffer, int bufsize);
+#endif
+
 	void	(*Cmd_AddCommand)( const char *name, void(*cmd)(void) );
 	void	(*Cmd_RemoveCommand)( const char *name );
 
@@ -194,6 +216,25 @@ typedef struct {
 	void	(*Sys_GLimpSafeInit)( void );
 	void	(*Sys_GLimpInit)( void );
 	qboolean (*Sys_LowPhysicalMemory)( void );
+
+#ifdef IOQ3ZTM // PNG_SCREENSHOTS
+	// zlib for png screenshots
+	int (*zlib_compress) (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen);
+	uLong (*zlib_crc32) (uLong crc, const Bytef *buf, uInt len);
+
+	// get extra info for png screenshots
+	void	(*CL_GetMapMessage)(char *buf, int bufLength);
+#ifdef TA_SPLITVIEW
+	qboolean (*CL_GetClientLocation)(char *buf, int bufLength, int localClientNum);
+#else
+	qboolean (*CL_GetClientLocation)(char *buf, int bufLength);
+#endif
+#endif
+
+#ifdef TA_GAME_MODELS
+	// server stuff
+	void	(*ServerUpdateUserinfos)(void);
+#endif
 } refimport_t;
 
 

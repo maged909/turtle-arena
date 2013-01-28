@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="yes"?>
-<!-- ioquake3 is the name of the base product -->
-<install product="ioquake3"
-    desc="ioquake3"
+<!-- turtlearena is the name of the base product -->
+<install product="turtlearena"
+    desc="Turtle Arena"
     component="Foo Mod"
     version="1.1"
     >
@@ -10,11 +10,11 @@
 	Foo
 	<!--
 	install symlink 'foo' into $PATH, pointing to a script
-	called startfoo that gets installed into ioquake3's
+	called startfoo that gets installed into Turtle Arena's
 	directory
 	The script could look like this:
 	#!/bin/sh
-	exec ioquake3 +set fs_game foo "$@"
+	exec turtlearena +set fs_game foo "$@"
     	exit 1
 	-->
 	<binary arch="any" libc="any"
@@ -23,7 +23,7 @@
 	    startfoo
 	</binary>
 	<!--
-	extract archive in ioquake3's directory.
+	extract archive in Turtle Arena's directory.
 	the archive must contain a subdirectory of course
 	-->
 	<files>
