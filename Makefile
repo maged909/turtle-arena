@@ -1753,7 +1753,8 @@ Q3R2OBJ = \
   $(B)/rend2/tr_vbo.o \
   $(B)/rend2/tr_world.o \
   \
-  $(B)/renderer/sdl_gamma.o
+  $(B)/renderer/sdl_gamma.o \
+  $(B)/renderer/sdl_glimp.o
 
 Q3R2STRINGOBJ = \
   $(B)/rend2/glsl/bokeh_fp.o \
@@ -2103,7 +2104,7 @@ $(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(JPGOBJ) $(FTOBJ)
 
 $(B)/renderer_rend2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) \
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(FTOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 else
 $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) $(FTOBJ) $(LIBSDLMAIN)
