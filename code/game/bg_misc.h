@@ -1660,21 +1660,21 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 #define DEFAULT_CLIENT_COLOR2	4
 
 // Default player model names for the splitscreen clients
-#define DEFAULT_MODEL			"leo"
-#define DEFAULT_HEAD			"leo"
+#define DEFAULT_MODEL			"exa"
+#define DEFAULT_HEAD			"exa"
 
-#define DEFAULT_MODEL2			"don"
-#define DEFAULT_HEAD2			"don"
+#define DEFAULT_MODEL2			"cloe"
+#define DEFAULT_HEAD2			"cloe"
 
-#define DEFAULT_MODEL3			"raph"
-#define DEFAULT_HEAD3			"raph"
+#define DEFAULT_MODEL3			"mossy"
+#define DEFAULT_HEAD3			"mossy"
 
-#define DEFAULT_MODEL4			"mike"
-#define DEFAULT_HEAD4			"mike"
+#define DEFAULT_MODEL4			"raz"
+#define DEFAULT_HEAD4			"raz"
 
 // For fallback sounds
-#define DEFAULT_MODEL_MALE		"raph" // ZTM: Only raph has sounds...
-#define DEFAULT_MODEL_FEMALE	"raph" // ZTM: TODO: Add female model/sounds
+#define DEFAULT_MODEL_MALE		"exa"
+#define DEFAULT_MODEL_FEMALE	"cloe"
 
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL
