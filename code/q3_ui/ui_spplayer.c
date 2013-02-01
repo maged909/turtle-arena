@@ -53,7 +53,7 @@ MAIN GAME PLAYER / CHARACTER SELECT MENU
 #define ID_CLIENT0					12
 #define ID_CLIENT0_ENABLED			(ID_CLIENT0+MAX_SPLITVIEW)
 
-const char *spCharacterNames[NUM_SP_CHARACTERS] = { "leo", "don", "raph", "mike" };
+const char *spCharacterNames[NUM_SP_CHARACTERS] = { DEFAULT_MODEL, DEFAULT_MODEL2, DEFAULT_MODEL3, DEFAULT_MODEL4 };
 
 // Player#
 char *spPnum[MAX_SPLITVIEW] = { "P1", "P2", "P3", "P4" };
