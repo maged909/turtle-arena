@@ -586,8 +586,7 @@ typedef enum {
 	PW_NONE,
 
 #ifdef TURTLEARENA // POWERS
-	// ZTM: TODO: Limited time version of PW_AMMOREGEN?
-	// pw_infinity, // Green [White in TMNT3] crystal: Unlimited Shuriken for a limited period.
+	// ZTM: TODO: Limited time version of PW_AMMOREGEN? Unlimited Shurikens and/or ammo for a limited period.
 
 	// Limited time powerups
 
