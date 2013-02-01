@@ -56,7 +56,7 @@ typedef struct
 } creditSection_t;
 
 creditSection_t credits[] = {
-	{"Turtle Arena", { NULL } },
+	{"Extraordinary Beat X", { NULL } },
 	{"Designed by", { "Zack Middleton", NULL } },
 	{"Art by", { "Zack Middleton", NULL } },
 	{"Fonts by", { "M+ Fonts Project", NULL } },
@@ -168,7 +168,7 @@ UI_CreditMenu_Draw_QuitMessage
 */
 static void UI_CreditMenu_Draw_QuitMessage( void ) {
 	int		y;
-	int		numItems = 6; // 5 text lines, 1 blank line
+	int		numItems = 3; // 2 text lines, 1 blank line
 
 	// Force exit after 20 seconds
 	if (uis.realtime > s_credits.startTime + 20000) {
@@ -177,21 +177,14 @@ static void UI_CreditMenu_Draw_QuitMessage( void ) {
 
 	y = (SCREEN_HEIGHT - numItems * (1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE)) / 2;
 
-	// This is a unoffial game
-	UI_DrawProportionalString( 320, y, "Turtle Arena developer(s) are in", UI_CENTER|UI_SMALLFONT, color_white );
-	y += 1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE;
-	UI_DrawProportionalString( 320, y, "no way affiliated with", UI_CENTER|UI_SMALLFONT, color_white );
-	y += 1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE;
-	UI_DrawProportionalString( 320, y, "Viacom, Nickelodeon, or Ubisoft.", UI_CENTER|UI_SMALLFONT, color_white );
+	UI_DrawProportionalString( 320, y, "Thanks for playing", UI_CENTER|UI_SMALLFONT, color_white );
 
-	// Copyright
 	y += (1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE) * 2;
-	UI_DrawProportionalString( 320, y, "TMNT(c) Viacom", UI_CENTER|UI_SMALLFONT, color_white );
-	y += 1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE;
-	UI_DrawProportionalString( 320, y, "Turtle Arena(c) 2009-2013 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
 
-	// Website
-	UI_DrawString( 320, 459, "http://turtlearena.googlecode.com/", UI_CENTER|UI_SMALLFONT, color_red );
+	UI_DrawProportionalString( 320, y, "Extraordianry Beat X (c) 2013 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
+
+
+	UI_DrawString( 320, 459, "http://ztm.x10host.com/ebx", UI_CENTER|UI_SMALLFONT, color_red );
 }
 
 /*
