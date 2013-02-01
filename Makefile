@@ -1,5 +1,5 @@
 #
-# Turtle Arena Makefile
+# EBX Makefile
 #
 # GNU Make required
 #
@@ -132,7 +132,7 @@ BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \
 DED_USE_MODELS=1
 BUILD_DEFINES += -DTA_GAME_MODELS
 
-# Turtle Arena currently just keeps renderer internal
+# Keep renderer internal until Rend2 is supported
 ifneq ($(USE_RENDERER_DLOPEN), 1)
 	USE_RENDERER_DLOPEN=0
 endif
@@ -180,15 +180,15 @@ VERSION=0.7
 endif
 
 ifndef CLIENTBIN
-CLIENTBIN=turtlearena
+CLIENTBIN=ebx
 endif
 
 ifndef SERVERBIN
-SERVERBIN=turtlearena-server
+SERVERBIN=ebx-server
 endif
 
 ifndef BASEGAME
-BASEGAME=base
+BASEGAME=baseebx
 endif
 
 ifndef BASEGAME_CFLAGS
@@ -198,7 +198,7 @@ endif
 BASEGAME_CFLAGS+=-DMODDIR=\"$(BASEGAME)\"
 
 ifndef MISSIONPACK
-MISSIONPACK=missionpack
+MISSIONPACK=baseebxmp
 endif
 
 ifndef MISSIONPACK_CFLAGS
@@ -213,7 +213,7 @@ BUILD_DEFINES =
 endif
 
 ifndef COPYDIR
-COPYDIR="/usr/local/games/turtlearena"
+COPYDIR="/usr/local/games/ebx"
 endif
 
 ifndef COPYBINDIR
@@ -880,7 +880,7 @@ ifeq ($(PLATFORM),sunos)
   CC=gcc
   INSTALL=ginstall
   MKDIR=gmkdir
-  COPYDIR="/usr/local/share/games/turtlearena"
+  COPYDIR="/usr/local/share/games/ebx"
 
   ifneq (,$(findstring i86pc,$(shell uname -m)))
     ARCH=i386

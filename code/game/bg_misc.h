@@ -31,11 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // bg_misc.h -- definitions shared by both the server game and client game modules
 
 #ifndef MODDIR
-  #ifdef MISSIONPACK
-    #define MODDIR "missionpack"
-  #else
-    #define MODDIR "baseq3"
-  #endif
+  #define MODDIR "baseebx"
 #endif
 
 // because games can change separately from the main system version, we need a
