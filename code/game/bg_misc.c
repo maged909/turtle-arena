@@ -1474,7 +1474,7 @@ vmNetField_t	bg_playerStateFields[] =
 { PSF(maxs[1]), 0 },
 { PSF(maxs[2]), 0 }
 #ifdef TA_HOLDSYS
-,{ PSF(holdableIndex), 5 }
+,{ PSF(holdableIndex), HOLDABLENUM_BITS }
 #endif
 #ifdef TURTLEARENA // HOLD_SHURIKEN
 ,{ PSF(holdableTime), -16 }
@@ -5405,9 +5405,13 @@ int BG_ComposeUserCmdValue( int weapon, int holdable ) {
 	int value = 0;
 	int bitsUsed = 0;
 
+#ifndef TA_WEAPSYS_EX
 	BG_ComposeBits( &value, &bitsUsed, weapon, WEAPONNUM_BITS );
+#endif
 
-	value |= ( holdable & 0xFF ) << 8;
+#ifdef TA_HOLDSYS/*2*/
+	BG_ComposeBits( &value, &bitsUsed, holdable, HOLDABLENUM_BITS );
+#endif
 
 	return value;
 }
@@ -5420,11 +5424,13 @@ BG_DecomposeUserCmdValue
 void BG_DecomposeUserCmdValue( int value, int *weapon, int *holdable ) {
 	int		bitsUsed = 0;
 
+#ifndef TA_WEAPSYS_EX
 	BG_DecomposeBits( value, &bitsUsed, weapon, WEAPONNUM_BITS );
+#endif
 
-	if (holdable) {
-		*holdable = ( value >> 8 ) & 0xFF;
-	}
+#ifdef TA_HOLDSYS/*2*/
+	BG_DecomposeBits( value, &bitsUsed, holdable, HOLDABLENUM_BITS );
+#endif
 }
 
 int cmdcmp( const void *a, const void *b ) {
