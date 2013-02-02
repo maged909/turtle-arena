@@ -261,7 +261,7 @@ typedef struct entityState_s {
 #define	MAX_STATS				16
 #define	MAX_PERSISTANT			16
 #define	MAX_POWERUPS			16 // entityState_t::powerups bit field limits this to <= 32.
-#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT
+#ifndef TA_WEAPSYS_EX
 #define	MAX_WEAPONS				(1<<WEAPONNUM_BITS) // playerState_t::stats[STAT_WEAPONS] bit field limits this to <= 16.
 #endif
 #ifdef TA_HOLDSYS
@@ -378,7 +378,7 @@ typedef struct playerState_s {
 	int			stats[MAX_STATS];
 	//int			persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
 	int			powerups[MAX_POWERUPS];	// level.time that the powerup runs out
-#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT
+#ifndef TA_WEAPSYS_EX
 	int			ammo[MAX_WEAPONS];
 #endif
 #ifdef TA_HOLDSYS

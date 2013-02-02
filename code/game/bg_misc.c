@@ -1427,7 +1427,7 @@ vmNetField_t	bg_playerStateFields[] =
 { PSF(eFlags), 32 },
 { PSA(stats), -16 },
 { PSA(persistant), -16 },
-#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT
+#ifndef TA_WEAPSYS_EX
 { PSA(ammo), -16 },
 #endif
 { PSA(powerups), 32 },
