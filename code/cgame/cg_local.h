@@ -2450,13 +2450,8 @@ int			trap_GetCurrentCmdNumber( void );
 
 qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum );
 
-#if defined TA_HOLDSYS/*2*/
-// used for the weapon select, holdable select, and zoom
-void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int holdableValue, int localClientNum );
-#else
 // used for the weapon select and zoom
 void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum );
-#endif
 
 // send a string to the server over the network
 void		trap_SendClientCommand( const char *s );

@@ -2142,7 +2142,7 @@ static void PM_FinishWeaponChange( void ) {
 #ifdef TA_WEAPSYS_EX
 	weapon = pm->ps->stats[STAT_PENDING_WEAPON];
 #else
-	weapon = pm->cmd.weapon;
+	BG_DecomposeUserCmdValue( pm->cmd.stateValue, &weapon, NULL );
 #endif
 	if ( weapon < WP_NONE ||
 #ifdef TA_WEAPSYS
@@ -2150,8 +2150,7 @@ static void PM_FinishWeaponChange( void ) {
 #else
 		weapon >= WP_NUM_WEAPONS
 #endif
-		)
-	{
+		) {
 		weapon = WP_NONE;
 	}
 
@@ -2457,6 +2456,12 @@ Generates weapon events and modifes the weapon counter
 */
 static void PM_Weapon( void ) {
 	int		addTime;
+#ifndef TA_WEAPSYS_EX
+	int		newWeapon;
+#endif
+#ifdef TA_HOLDSYS
+	int		newHoldable;
+#endif
 
 	// don't allow attack until all buttons are up
 	if ( pm->ps->pm_flags & PMF_RESPAWNED ) {
@@ -2479,8 +2484,9 @@ static void PM_Weapon( void ) {
 #ifdef TA_HOLDSYS
 	// Check if valid, in cgame we have to pass HI_NO_SELECT (255)
 	//   so bg can change to the next holdable.
-	if (pm->cmd.holdable != HI_NONE && pm->cmd.holdable < BG_NumHoldableItems() && pm->ps->holdable[pm->cmd.holdable] != 0) {
-		pm->ps->holdableIndex = pm->cmd.holdable;
+	BG_DecomposeUserCmdValue( pm->cmd.stateValue, NULL, &newHoldable );
+	if ( newHoldable != HI_NONE && newHoldable < BG_NumHoldableItems() && pm->ps->holdable[ newHoldable ] != 0 ) {
+		pm->ps->holdableIndex = newHoldable;
 	}
 #endif
 
@@ -2592,8 +2598,9 @@ static void PM_Weapon( void ) {
 			PM_BeginWeaponChange( pm->ps->stats[STAT_PENDING_WEAPON] );
 		}
 #else
-		if ( pm->ps->weapon != pm->cmd.weapon ) {
-			PM_BeginWeaponChange( pm->cmd.weapon );
+		BG_DecomposeUserCmdValue( pm->cmd.stateValue, &newWeapon, NULL );
+		if ( pm->ps->weapon != newWeapon ) {
+			PM_BeginWeaponChange( newWeapon );
 		}
 #endif
 #ifdef TURTLEARENA // WEAPONS

@@ -1247,12 +1247,7 @@ typedef struct usercmd_s {
 	int				serverTime;
 	int				angles[3];
 	int 			buttons;
-#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT
-	byte			weapon;           // weapon 
-#endif
-#ifdef TA_HOLDSYS/*2*/
-	byte			holdable;         // holdable
-#endif
+	int				stateValue;
 	signed char	forwardmove, rightmove, upmove;
 } usercmd_t;
 

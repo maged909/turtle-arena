@@ -1727,8 +1727,10 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	int		inwater;
 	float	mouseSensitivity;
 	int		weaponSelect;
+	int		holdableSelect;
 	qboolean renderClientViewport[MAX_SPLITVIEW];
 	int		i;
+	int		stateValue;
 #ifdef TURTLEARENA
 	qboolean	twodMode;
 #endif
@@ -1822,10 +1824,12 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		weaponSelect = cg.cur_lc->weaponSelect;
 #endif
 #ifdef TA_HOLDSYS/*2*/
-		trap_SetUserCmdValue( weaponSelect, mouseSensitivity, cg.cur_lc->holdableSelect, cg.cur_localClientNum );
+		holdableSelect = cg.cur_lc->holdableSelect;
 #else
-		trap_SetUserCmdValue( weaponSelect, mouseSensitivity, cg.cur_localClientNum );
+		holdableSelect = 0;
 #endif
+		stateValue = BG_ComposeUserCmdValue( weaponSelect, holdableSelect );
+		trap_SetUserCmdValue( stateValue, mouseSensitivity, cg.cur_localClientNum );
 
 		// update cg.predictedPlayerState
 		CG_PredictPlayerState();

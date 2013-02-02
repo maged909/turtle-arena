@@ -835,6 +835,7 @@ BotInputToUserCommand
 */
 void BotInputToUserCommand(bot_input_t *bi, usercmd_t *ucmd, int delta_angles[3], int time) {
 	vec3_t angles, forward, right;
+	int weapon, holdable;
 	short temp;
 	int j;
 	float f, r, u, m;
@@ -868,12 +869,17 @@ void BotInputToUserCommand(bot_input_t *bi, usercmd_t *ucmd, int delta_angles[3]
 	if (bi->actionflags & ACTION_PATROL) ucmd->buttons |= BUTTON_PATROL;
 	if (bi->actionflags & ACTION_FOLLOWME) ucmd->buttons |= BUTTON_FOLLOWME;
 	//
-#ifndef TA_WEAPSYS_EX
-	ucmd->weapon = bi->weapon;
+#ifdef TA_WEAPSYS_EX
+	weapon = 0;
+#else
+	weapon = bi->weapon;
 #endif
 #ifdef TA_HOLDSYS/*2*/
-	ucmd->holdable = bi->holdable;
+	holdable = bi->holdable;
+#else
+	holdable = 0;
 #endif
+	ucmd->stateValue = BG_ComposeUserCmdValue( weapon, holdable );
 	//set the view angles
 	//NOTE: the ucmd->angles are the angles WITHOUT the delta angles
 	ucmd->angles[PITCH] = ANGLE2SHORT(bi->viewangles[PITCH]);

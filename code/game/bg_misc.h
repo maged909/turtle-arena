@@ -2248,6 +2248,8 @@ void	BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTime );
 
+int		BG_ComposeUserCmdValue( int weapon, int holdable );
+void	BG_DecomposeUserCmdValue( int value, int *weapon, int *holdable );
 
 #ifdef TA_SP
 #define ARENAS_PER_TIER		2

@@ -5370,6 +5370,35 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 #endif
 }
 
+/*
+========================
+BG_ComposeUserCmdValue
+========================
+*/
+int BG_ComposeUserCmdValue( int weapon, int holdable ) {
+	int value;
+
+	value = weapon & 0xFF;
+
+	value |= ( holdable & 0xFF ) << 8;
+
+	return value;
+}
+
+/*
+========================
+BG_DecomposeUserCmdValue
+========================
+*/
+void BG_DecomposeUserCmdValue( int value, int *weapon, int *holdable ) {
+	if (weapon) {
+		*weapon = value & 0xFF;
+	}
+	if (holdable) {
+		*holdable = ( value >> 8 ) & 0xFF;
+	}
+}
+
 int cmdcmp( const void *a, const void *b ) {
   return Q_stricmp( (const char *)a, ((dummyCmd_t *)b)->name );
 }

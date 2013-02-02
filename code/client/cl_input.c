@@ -882,12 +882,7 @@ void CL_FinishMove( calc_t *lc, usercmd_t *cmd ) {
 #endif
 
 	// copy the state that the cgame is currently sending
-#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT
-	cmd->weapon = lc->cgameUserCmdValue;
-#endif
-#ifdef TA_HOLDSYS/*2*/
-	cmd->holdable = lc->cgameHoldableValue;
-#endif
+	cmd->stateValue = lc->cgameUserCmdValue;
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating

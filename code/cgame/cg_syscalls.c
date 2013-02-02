@@ -469,15 +469,9 @@ qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum ) {
 	return syscall( CG_GETUSERCMD, cmdNumber, ucmd, localClientNum );
 }
 
-#if defined TA_HOLDSYS/*2*/
-void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int holdableValue, int localClientNum ) {
-	syscall( CG_SETUSERCMDVALUE, stateValue, PASSFLOAT(sensitivityScale), holdableValue, localClientNum );
-}
-#else
 void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum ) {
 	syscall( CG_SETUSERCMDVALUE, stateValue, PASSFLOAT(sensitivityScale), localClientNum );
 }
-#endif
 
 void		trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
 						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {

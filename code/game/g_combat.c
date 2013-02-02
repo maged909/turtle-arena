@@ -196,7 +196,7 @@ void TossClientItems( gentity_t *self ) {
 	if ( weapon == WP_MACHINEGUN || weapon == WP_GRAPPLING_HOOK ) {
 #endif
 		if ( self->client->ps.weaponstate == WEAPON_DROPPING ) {
-			weapon = self->client->pers.cmd.weapon;
+			BG_DecomposeUserCmdValue( self->client->pers.cmd.stateValue, &weapon );
 		}
 		if ( !( self->client->ps.stats[STAT_WEAPONS] & ( 1 << weapon ) ) ) {
 			weapon = WP_NONE;
