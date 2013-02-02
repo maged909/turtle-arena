@@ -934,77 +934,6 @@ ifeq ($(PLATFORM),sunos)
 else # ifeq sunos
 
 #############################################################################
-# SETUP AND BUILD -- wii
-#############################################################################
-
-ifeq ($(PLATFORM),wii)
-
-# $(DEVKITPPC)/wii_rules
-ifeq ($(strip $(DEVKITPPC)),)
-  $(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPro/devkitPPC)
-endif
-
-export LIBOGC_INC :=	$(DEVKITPRO)/libogc/include
-export LIBOGC_LIB :=	$(DEVKITPRO)/libogc/lib/wii
-
-  MACHDEP =  -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float
-
-# $(DEVKITPPC)/base_rules
-#---------------------------------------------------------------------------------
-# path to tools 
-#---------------------------------------------------------------------------------
-export PORTLIBS := $(DEVKITPRO)/portlibs/ppc
-export PATH := $(DEVKITPPC)/bin:$(PORTLIBS)/bin:$(PATH)
-
-#---------------------------------------------------------------------------------
-# the prefix on the compiler executables
-#---------------------------------------------------------------------------------
-export PREFIX	:=	powerpc-eabi-
-
-export AS	:=	$(PREFIX)as
-export CC	:=	$(PREFIX)gcc
-export CXX	:=	$(PREFIX)g++
-export AR	:=	$(PREFIX)ar
-export OBJCOPY	:=	$(PREFIX)objcopy
-
-CFLAGS	= -g -O2 -Wall $(MACHDEP) -I$(LIBOGC_INC)
-CXXFLAGS	=	$(CFLAGS)
-
-LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(B)/$(notdir $@).map
-
-LIBPATHS = -L$(LIBOGC_LIB)
-
-  LIBS = -lwiiuse -lbte -lfat -lwiikeyboard -logc -lm
-
-  HAVE_VM_COMPILED = true
-
-  # No OpenAL or cURL support
-  USE_OPENAL=0
-  USE_CURL=0
-
-  # Doesn't support native libs
-  BUILD_GAME_SO=0
-  USE_MUMBLE=0
-  USE_OPENAL_DLOPEN=0
-  USE_CURL_DLOPEN=0
-
-  # Need to add internal libtheora
-  USE_CODEC_THEORA=0
-
-  ARCH=ppc
-
-  FULLBINEXT=.dol
-
-  BASE_CFLAGS += -DNO_NATIVE_SUPPORT -MMD -MP -MF -DDUMMYFLAG
-  SERVER_CFLAGS =
-  CLIENT_CFLAGS = -I$(LIBOGC_INC)/SDL
-
-  CLIENT_LDFLAGS += $(LDFLAGS)
-  CLIENT_LIBS +=$(SDL_LIBS) -lgl2gx
-
-else # ifeq wii
-
-#############################################################################
 # SETUP AND BUILD -- GENERIC
 #############################################################################
   BASE_CFLAGS=
@@ -1022,7 +951,6 @@ endif #OpenBSD
 endif #NetBSD
 endif #IRIX
 endif #SunOS
-endif #wii
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
@@ -2083,17 +2011,6 @@ ifeq ($(USE_MUMBLE),1)
     $(B)/client/libmumblelink.o
 endif
 
-ifeq ($(PLATFORM),wii)
-$(B)/$(CLIENTBIN).dol: $(B)/$(CLIENTBIN).elf
-	$(echo_cmd) "ELF2DOL $@"
-	$(Q)elf2dol $< $@
-
-$(B)/$(CLIENTBIN).elf: $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ) $(LIBSDLMAIN)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(LIBPATHS) \
-		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ) \
-		$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
-else
 ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
@@ -2129,7 +2046,6 @@ ifneq ($(strip $(LIBSDLMAINSRC)),)
 $(LIBSDLMAIN) : $(LIBSDLMAINSRC)
 	cp $< $@
 	ranlib $@
-endif
 endif
 endif
 
@@ -2320,20 +2236,9 @@ ifeq ($(PLATFORM),darwin)
     $(B)/ded/sys_osx.o
 endif
 
-
-ifeq ($(PLATFORM),wii)
-$(B)/$(SERVERBIN).dol: $(B)/$(SERVERBIN).elf
-	$(echo_cmd) "ELF2DOL $@"
-	$(Q)elf2dol $< $@
-
-$(B)/$(SERVERBIN).elf: $(Q3DOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -o $@
-else
 $(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(Q3DOBJ) $(LIBS)
-endif
 
 
 

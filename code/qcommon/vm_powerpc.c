@@ -28,14 +28,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 
-#ifndef __wii__
-#define PPC_MMAP
-#endif
-
-#ifdef PPC_MMAP
 #include <sys/types.h> /* needed by sys/mman.h on OSX */
 #include <sys/mman.h>
-#endif
 #include <sys/time.h>
 #include <time.h>
 #include <stddef.h>
@@ -1829,7 +1823,6 @@ PPC_ComputeCode( vm_t *vm )
 		+ sizeof( unsigned int ) * data_acc
 		+ sizeof( ppc_instruction_t ) * codeInstructions;
 
-#ifdef PPC_MMAP
 	// get the memory for the generated code, smarter ppcs need the
 	// mem to be marked as executable (whill change later)
 	unsigned char *dataAndCode = mmap( NULL, codeLength,
@@ -1837,13 +1830,6 @@ PPC_ComputeCode( vm_t *vm )
 
 	if (dataAndCode == MAP_FAILED)
 		DIE( "Not enough memory" );
-#else
-	// get the memory for the generated code
-	unsigned char *dataAndCode = PPC_Malloc(codeLength);
-
-	if (dataAndCode == NULL)
-		DIE( "Not enough memory" );
-#endif
 
 	ppc_instruction_t *codeNow, *codeBegin;
 	codeNow = codeBegin = (ppc_instruction_t *)( dataAndCode + VM_Data_Offset( data[ data_acc ] ) );
@@ -1994,12 +1980,10 @@ PPC_ComputeCode( vm_t *vm )
 static void
 VM_Destroy_Compiled( vm_t *self )
 {
-#ifdef PPC_MMAP
 	if ( self->codeBase ) {
 		if ( munmap( self->codeBase, self->codeLength ) )
 			Com_Printf( S_COLOR_RED "Memory unmap failed, possible memory leak\n" );
 	}
-#endif
 	self->codeBase = NULL;
 }
 
@@ -2009,16 +1993,12 @@ VM_Compile( vm_t *vm, vmHeader_t *header )
 	long int pc = 0;
 	unsigned long int i_count;
 	char* code;
-#ifndef __wii__
 	struct timeval tvstart = {0, 0};
-#endif
 	source_instruction_t *i_first /* dummy */, *i_last = NULL, *i_now;
 
 	vm->compiled = qfalse;
 
-#ifndef __wii__
 	gettimeofday(&tvstart, NULL);
-#endif
 
 	PPC_MakeFastMask( vm->dataMask );
 
@@ -2093,7 +2073,6 @@ VM_Compile( vm_t *vm, vmHeader_t *header )
 			Com_Printf( S_COLOR_RED "Pointer %ld not initialized !\n", i );
 #endif
 
-#ifdef PPC_MMAP
 	/* mark memory as executable and not writeable */
 	if ( mprotect( vm->codeBase, vm->codeLength, PROT_READ|PROT_EXEC ) ) {
 
@@ -2101,25 +2080,20 @@ VM_Compile( vm_t *vm, vmHeader_t *header )
 		VM_Destroy_Compiled( vm );
 		DIE( "mprotect failed" );
 	}
-#endif
 
 	vm->destroy = VM_Destroy_Compiled;
 	vm->compiled = qtrue;
 
 	{
-#ifndef __wii__
 		struct timeval tvdone = {0, 0};
 		struct timeval dur = {0, 0};
-#endif
 		Com_Printf( "VM file %s compiled to %i bytes of code (%p - %p)\n",
 			vm->name, vm->codeLength, vm->codeBase, vm->codeBase+vm->codeLength );
 
-#ifndef __wii__
 		gettimeofday(&tvdone, NULL);
 		timersub(&tvdone, &tvstart, &dur);
 		Com_Printf( "compilation took %lu.%06lu seconds\n",
 			(long unsigned int)dur.tv_sec, (long unsigned int)dur.tv_usec );
-#endif
 	}
 }
 

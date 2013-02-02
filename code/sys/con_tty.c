@@ -37,18 +37,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 #include <unistd.h>
-#include <sys/time.h>
-#ifdef __wii__
-#include <string.h>
-#include <gctypes.h>
-#include <wiikeyboard/keyboard.h>
-#else
 #include <signal.h>
 #include <termios.h>
 #include <fcntl.h>
-#endif
-
-
+#include <sys/time.h>
 
 /*
 =============================================================
@@ -60,27 +52,18 @@ called before and after a stdout or stderr output
 =============================================================
 */
 
-#ifdef __wii__
-// general flag to tell about keyboard state
-static qboolean keyboard_connected = qfalse;
-
-static FILE *con_log;
-#else
 extern qboolean stdinIsATTY;
 static qboolean stdin_active;
-#endif
 // general flag to tell about tty console mode
 static qboolean ttycon_on = qfalse;
 static int ttycon_hide = 0;
 static int ttycon_show_overdue = 0;
 
-#ifndef __wii__
 // some key codes that the terminal may be using, initialised on start up
 static int TTY_erase;
 static int TTY_eof;
 
 static struct termios TTY_tc;
-#endif
 
 static field_t TTY_con;
 
@@ -209,11 +192,6 @@ Never exit without calling this, or your terminal will be left in a pretty bad s
 */
 void CON_Shutdown( void )
 {
-#ifdef __wii__
-  CON_Back(); // Delete "]"
-  KEYBOARD_Deinit();
-  fclose(con_log);
-#else
 	if (ttycon_on)
 	{
 		CON_Hide();
@@ -222,7 +200,6 @@ void CON_Shutdown( void )
 
 	// Restore blocking to stdin reads
 	fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) & ~O_NONBLOCK);
-#endif
 }
 
 /*
@@ -308,11 +285,7 @@ set attributes if user did CTRL+Z and then does fg again.
 
 void CON_SigCont(int signum)
 {
-#ifdef __wii__
-	wiiCON_Init();
-#else
 	CON_Init();
-#endif
 }
 
 /*
@@ -322,29 +295,8 @@ CON_Init
 Initialize the console input (tty mode if possible)
 ==================
 */
-#ifdef __wii__
-void wiiCON_Init( void )
-#else
 void CON_Init( void )
-#endif
 {
-#ifdef __wii__
-	int ret;
-
-	ret = KEYBOARD_Init(NULL);
-
-	if (ret >= 1) {
-		keyboard_connected = qtrue;
-	} else {
-		keyboard_connected = qfalse;
-	}
-
-	con_log = fopen("/ta-log.txt", "wb");
-
-	Field_Clear(&TTY_con);
-
-	ttycon_on = qtrue;
-#else
 	struct termios tc;
 
 	// If the process is backgrounded (running non interactively)
@@ -393,7 +345,6 @@ void CON_Init( void )
 	ttycon_on = qtrue;
 	ttycon_hide = 1; // Mark as hidden, so prompt is shown in CON_Show
 	CON_Show();
-#endif
 }
 
 /*
@@ -407,33 +358,18 @@ char *CON_Input( void )
 	static char text[MAX_EDIT_LINE];
 	int avail;
 	char key;
-#ifdef __wii__
-	keyboard_event event;
-#else
 	field_t *history;
-#endif
 	size_t UNUSED_VAR size;
 
 	if(ttycon_on)
 	{
-#ifdef __wii__
-		avail = KEYBOARD_GetEvent(&event);
-		if (avail && event.type == KEYBOARD_PRESSED)
-		{
-			key = event.keycode;
-#else
 		avail = read(STDIN_FILENO, &key, 1);
 		if (avail != -1)
 		{
-#endif
 			// we have something
 			// backspace?
 			// NOTE TTimo testing a lot of values .. seems it's the only way to get it to work everywhere
-			if (
-#ifndef __wii__
-				(key == TTY_erase) ||
-#endif
-				(key == 127) || (key == 8))
+			if ((key == TTY_erase) || (key == 127) || (key == 8))
 			{
 				if (TTY_con.cursor > 0)
 				{
@@ -490,9 +426,6 @@ char *CON_Input( void )
 					CON_Show();
 					return NULL;
 				}
-#ifdef __wii__
-				Com_DPrintf("droping ISCTL sequence: %d\n", key);
-#else
 				avail = read(STDIN_FILENO, &key, 1);
 				if (avail != -1)
 				{
@@ -538,7 +471,6 @@ char *CON_Input( void )
 					}
 				}
 				Com_DPrintf("droping ISCTL sequence: %d, TTY_erase: %d\n", key, TTY_erase);
-#endif
 				CON_FlushIn();
 				return NULL;
 			}
@@ -547,15 +479,12 @@ char *CON_Input( void )
 			// push regular character
 			TTY_con.buffer[TTY_con.cursor] = key;
 			TTY_con.cursor++; // next char will always be '\0'
-#ifndef __wii__
 			// print the current line (this is differential)
 			size = write(STDOUT_FILENO, &key, 1);
-#endif
 		}
 
 		return NULL;
 	}
-#ifndef __wii__
 	else if (stdin_active)
 	{
 		int     len;
@@ -582,7 +511,6 @@ char *CON_Input( void )
 
 		return text;
 	}
-#endif
 	return NULL;
 }
 
@@ -596,11 +524,6 @@ void CON_Print( const char *msg )
 	if (!msg[0])
 		return;
 
-#ifdef __wii__
-	printf(msg);
-	fputs(msg, con_log);
-	fflush(con_log);
-#else
 	CON_Hide( );
 
 	if( com_ansiColor && com_ansiColor->integer )
@@ -629,5 +552,4 @@ void CON_Print( const char *msg )
 		// Defer calling CON_Show
 		ttycon_show_overdue++;
 	}
-#endif
 }

@@ -48,11 +48,7 @@ void CON_Shutdown( void )
 CON_Init
 ==================
 */
-#ifdef __wii__
-void wiiCON_Init( void )
-#else
 void CON_Init( void )
-#endif
 {
 }
 

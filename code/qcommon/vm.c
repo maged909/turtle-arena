@@ -533,7 +533,6 @@ vm_t *VM_Restart(vm_t *vm, qboolean unpure)
 {
 	vmHeader_t	*header;
 
-#ifndef NO_NATIVE_SUPPORT
 	// DLL's can't be restarted in place
 	if ( vm->dllHandle ) {
 		char	name[MAX_QPATH];
@@ -547,7 +546,6 @@ vm_t *VM_Restart(vm_t *vm, qboolean unpure)
 		vm = VM_Create( name, systemCall, VMI_NATIVE );
 		return vm;
 	}
-#endif
 
 	// load the image
 	Com_Printf("VM_Restart()\n");
@@ -615,9 +613,6 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 		
 		if(retval == VMI_NATIVE)
 		{
-#ifdef NO_NATIVE_SUPPORT
-			Com_Printf("Skipping dll file %s, not supported\n", filename);
-#else
 			Com_DPrintf("Try loading dll file %s\n", filename);
 
 			vm->dllHandle = Sys_LoadGameDll(filename, &vm->entryPoint, VM_DllSyscall);
@@ -629,7 +624,6 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 			}
 			
 			Com_Printf("Failed loading dll, trying next\n");
-#endif
 		}
 		else if(retval == VMI_COMPILED)
 		{
@@ -712,12 +706,10 @@ void VM_Free( vm_t *vm ) {
 	if(vm->destroy)
 		vm->destroy(vm);
 
-#ifndef NO_NATIVE_SUPPORT
 	if ( vm->dllHandle ) {
 		Sys_UnloadDll( vm->dllHandle );
 		Com_Memset( vm, 0, sizeof( *vm ) );
 	}
-#endif
 #if 0	// now automatically freed by hunk
 	if ( vm->codeBase ) {
 		Z_Free( vm->codeBase );
@@ -990,12 +982,10 @@ void VM_VmInfo_f( void ) {
 			break;
 		}
 		Com_Printf( "%s : ", vm->name );
-#ifndef NO_NATIVE_SUPPORT
 		if ( vm->dllHandle ) {
 			Com_Printf( "native\n" );
 			continue;
 		}
-#endif
 		if ( vm->compiled ) {
 			Com_Printf( "compiled on load\n" );
 		} else {
