@@ -716,9 +716,7 @@ float AngleDelta ( float angle1, float angle2 );
 float AngleBetweenVectors(const vec3_t a, const vec3_t b);
 #endif
 
-#ifndef BSPC // ZTM: BSP2
 qboolean PlaneFromPoints( vec4_t plane, const vec3_t a, const vec3_t b, const vec3_t c );
-#endif
 void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal );
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees );
 void RotateAroundDirection( vec3_t axis[3], float yaw );
@@ -761,9 +759,7 @@ void	COM_SetExtension(char *path, int maxSize, const char *extension);
 
 void	COM_BeginParseSession( const char *name );
 int		COM_GetCurrentParseLine( void );
-#ifndef BSPC // ZTM: BSP2
 char	*COM_Parse( char **data_p );
-#endif
 char	*COM_ParseExt( char **data_p, qboolean allowLineBreaks );
 char	*COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter );
 int		COM_Compress( char *data_p );
@@ -1028,9 +1024,7 @@ PlaneTypeForNormal
 =================
 */
 
-#ifndef BSPC // ZTM: BSP2
 #define PlaneTypeForNormal( x ) ( x[0] == 1.0 ? PLANE_X : ( x[1] == 1.0 ? PLANE_Y : ( x[2] == 1.0 ? PLANE_Z : ( x[0] == 0.f && x[1] == 0.f && x[2] == 0.f ? PLANE_NON_PLANAR : PLANE_NON_AXIAL ) ) ) )
-#endif
 
 // plane_t structure
 // !!! if this is changed, it must be changed in asm code too !!!
