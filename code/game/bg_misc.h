@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // bg_misc.h -- definitions shared by both the server game and client game modules
 
 #ifndef MODDIR
-  #define MODDIR "baseebx"
+  #define MODDIR "baseturtle"
 #endif
 
 // because games can change separately from the main system version, we need a

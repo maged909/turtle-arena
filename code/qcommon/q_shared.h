@@ -41,7 +41,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define GAMENAME_FOR_MASTER			"Spearmint"	// must NOT contain whitespace
 
 #ifndef BASEGAME
-	#define BASEGAME				"baseebx"
+	#define BASEGAME				"baseturtle"
 #endif
 
 #ifndef PRODUCT_VERSION

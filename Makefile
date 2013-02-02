@@ -1,5 +1,5 @@
 #
-# EBX Makefile
+# Turtle Arena Makefile
 #
 # GNU Make required
 #
@@ -180,15 +180,15 @@ VERSION=0.7
 endif
 
 ifndef CLIENTBIN
-CLIENTBIN=ebx
+CLIENTBIN=turtlearena
 endif
 
 ifndef SERVERBIN
-SERVERBIN=ebx-server
+SERVERBIN=turtlearena-server
 endif
 
 ifndef BASEGAME
-BASEGAME=baseebx
+BASEGAME=baseturtle
 endif
 
 ifndef BASEGAME_CFLAGS
@@ -198,7 +198,7 @@ endif
 BASEGAME_CFLAGS+=-DMODDIR=\"$(BASEGAME)\"
 
 ifndef MISSIONPACK
-MISSIONPACK=baseebxmp
+MISSIONPACK=baseturtlemp
 endif
 
 ifndef MISSIONPACK_CFLAGS
@@ -213,7 +213,7 @@ BUILD_DEFINES =
 endif
 
 ifndef COPYDIR
-COPYDIR="/usr/local/games/ebx"
+COPYDIR="/usr/local/games/turtlearena"
 endif
 
 ifndef COPYBINDIR
@@ -880,7 +880,7 @@ ifeq ($(PLATFORM),sunos)
   CC=gcc
   INSTALL=ginstall
   MKDIR=gmkdir
-  COPYDIR="/usr/local/share/games/ebx"
+  COPYDIR="/usr/local/share/games/turtlearena"
 
   ifneq (,$(findstring i86pc,$(shell uname -m)))
     ARCH=i386
