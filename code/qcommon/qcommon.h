@@ -103,9 +103,6 @@ float	MSG_ReadAngle16 (msg_t *sb);
 void	MSG_ReadData (msg_t *sb, void *buffer, int size);
 int		MSG_LookaheadByte (msg_t *msg);
 
-void MSG_WriteDeltaUsercmd( msg_t *msg, struct usercmd_s *from, struct usercmd_s *to );
-void MSG_ReadDeltaUsercmd( msg_t *msg, struct usercmd_s *from, struct usercmd_s *to );
-
 void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *to );
 
@@ -433,10 +430,12 @@ then searches for a command or variable that matches the first token.
 */
 
 typedef void (*xcommand_t) (void);
+typedef void (*icommand_t) (int);
 
 void	Cmd_Init (void);
 
 void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
+void	Cmd_AddIntCommand( const char *cmd_name, icommand_t function, int value );
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory

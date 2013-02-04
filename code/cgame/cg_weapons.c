@@ -38,7 +38,7 @@ CG_NextHoldable
 Based on CG_NextWeapon
 ===============
 */
-void CG_NextHoldable( int localClient ) {
+void CG_NextHoldable_f( int localClient ) {
 	int		i;
 	int		original;
 	playerState_t	*ps;
@@ -101,7 +101,7 @@ CG_PrevHoldable
 Based on CG_PrevWeapon
 ===============
 */
-void CG_PrevHoldable( int localClient ) {
+void CG_PrevHoldable_f( int localClient ) {
 	int		i;
 	int		original;
 	playerState_t	*ps;
@@ -164,7 +164,7 @@ CG_Holdable
 Based on CG_Weapon
 ===============
 */
-void CG_Holdable( int localClient ) {
+void CG_Holdable_f( int localClient ) {
 	int		num;
 	playerState_t	*ps;
 	cglc_t			*lc;
@@ -195,54 +195,6 @@ void CG_Holdable( int localClient ) {
 	//}
 
 	lc->holdableSelect = num;
-}
-
-void CG_NextHoldable_f( void ) {
-	CG_NextHoldable( 0 );
-}
-
-void CG_PrevHoldable_f( void ) {
-	CG_PrevHoldable( 0 );
-}
-
-void CG_Holdable_f( void ) {
-	CG_Holdable( 0 );
-}
-
-void CG_2NextHoldable_f( void ) {
-	CG_NextHoldable( 1 );
-}
-
-void CG_2PrevHoldable_f( void ) {
-	CG_PrevHoldable( 1 );
-}
-
-void CG_2Holdable_f( void ) {
-	CG_Holdable( 1 );
-}
-
-void CG_3NextHoldable_f( void ) {
-	CG_NextHoldable( 2 );
-}
-
-void CG_3PrevHoldable_f( void ) {
-	CG_PrevHoldable( 2 );
-}
-
-void CG_3Holdable_f( void ) {
-	CG_Holdable( 2 );
-}
-
-void CG_4NextHoldable_f( void ) {
-	CG_NextHoldable( 3 );
-}
-
-void CG_4PrevHoldable_f( void ) {
-	CG_PrevHoldable( 3 );
-}
-
-void CG_4Holdable_f( void ) {
-	CG_Holdable( 3 );
 }
 #endif
 
@@ -3482,10 +3434,10 @@ static qboolean CG_WeaponSelectable( playerState_t *ps, int i ) {
 
 /*
 ===============
-CG_NextWeapon
+CG_NextWeapon_f
 ===============
 */
-void CG_NextWeapon( int localClient ) {
+void CG_NextWeapon_f( int localClient ) {
 	int		i;
 	int		original;
 	playerState_t	*ps;
@@ -3536,10 +3488,10 @@ void CG_NextWeapon( int localClient ) {
 
 /*
 ===============
-CG_PrevWeapon
+CG_PrevWeapon_f
 ===============
 */
-void CG_PrevWeapon( int localClient ) {
+void CG_PrevWeapon_f( int localClient ) {
 	int		i;
 	int		original;
 	playerState_t	*ps;
@@ -3590,10 +3542,10 @@ void CG_PrevWeapon( int localClient ) {
 
 /*
 ===============
-CG_Weapon
+CG_Weapon_f
 ===============
 */
-void CG_Weapon( int localClient ) {
+void CG_Weapon_f( int localClient ) {
 	int		num;
 	playerState_t	*ps;
 	cglc_t			*lc;
@@ -3633,54 +3585,6 @@ void CG_Weapon( int localClient ) {
 	}
 
 	lc->weaponSelect = num;
-}
-
-void CG_NextWeapon_f( void ) {
-	CG_NextWeapon( 0 );
-}
-
-void CG_PrevWeapon_f( void ) {
-	CG_PrevWeapon( 0 );
-}
-
-void CG_Weapon_f( void ) {
-	CG_Weapon( 0 );
-}
-
-void CG_2NextWeapon_f( void ) {
-	CG_NextWeapon( 1 );
-}
-
-void CG_2PrevWeapon_f( void ) {
-	CG_PrevWeapon( 1 );
-}
-
-void CG_2Weapon_f( void ) {
-	CG_Weapon( 1 );
-}
-
-void CG_3NextWeapon_f( void ) {
-	CG_NextWeapon( 2 );
-}
-
-void CG_3PrevWeapon_f( void ) {
-	CG_PrevWeapon( 2 );
-}
-
-void CG_3Weapon_f( void ) {
-	CG_Weapon( 2 );
-}
-
-void CG_4NextWeapon_f( void ) {
-	CG_NextWeapon( 3 );
-}
-
-void CG_4PrevWeapon_f( void ) {
-	CG_PrevWeapon( 3 );
-}
-
-void CG_4Weapon_f( void ) {
-	CG_Weapon( 3 );
 }
 
 /*
