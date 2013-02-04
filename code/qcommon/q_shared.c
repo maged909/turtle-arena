@@ -1601,8 +1601,6 @@ float Com_FontStringHeight( const font_t *font, const char *s, float scale )
 /*
 =================
 Com_LocalClientCvarName
-
-Used by client, cgame, and q3_ui. (In the future ui will probably use it too.)
 =================
 */
 char *Com_LocalClientCvarName(int localClient, const char *in_cvarName) {
@@ -1631,6 +1629,11 @@ char *Com_LocalClientCvarName(int localClient, const char *in_cvarName) {
 	return localClientCvarName;
 }
 
+/*
+=================
+Com_LocalClientForCvarName
+=================
+*/
 int Com_LocalClientForCvarName(const char *in_cvarName) {
 	const char *p = in_cvarName;
 	
@@ -1643,5 +1646,28 @@ int Com_LocalClientForCvarName(const char *in_cvarName) {
 	}
 
 	return 0;
+}
+
+/*
+=================
+Com_LocalClientBaseCvarName
+=================
+*/
+const char *Com_LocalClientBaseCvarName(const char *in_cvarName) {
+	static char baseName[MAX_CVAR_VALUE_STRING];
+	int localClientNum;
+
+	localClientNum = Com_LocalClientForCvarName( in_cvarName );
+
+	if ( localClientNum == 0 ) {
+		Q_strncpyz( baseName, in_cvarName, sizeof ( baseName ) );
+	} else if ( in_cvarName[0] == '+' || in_cvarName[0] == '-' ) {
+		baseName[0] = in_cvarName[0];
+		Q_strncpyz( baseName + 1, in_cvarName + 2, sizeof ( baseName ) - 1 );
+	} else {
+		Q_strncpyz( baseName, in_cvarName + 1, sizeof ( baseName ) );
+	}
+
+	return baseName;
 }
 
