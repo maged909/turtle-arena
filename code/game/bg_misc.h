@@ -2098,8 +2098,8 @@ void Pmove (pmove_t *pmove);
 //===================================================================================
 
 #ifdef TURTLEARENA // DEFAULT_TEAMS
-#define DEFAULT_REDTEAM_NAME		"Clover"
-#define DEFAULT_BLUETEAM_NAME		"Shell"
+#define DEFAULT_REDTEAM_NAME		"Sais"
+#define DEFAULT_BLUETEAM_NAME		"Katanas"
 #else
 #define DEFAULT_REDTEAM_NAME		"Pagans"
 #define DEFAULT_BLUETEAM_NAME		"Stroggs"
