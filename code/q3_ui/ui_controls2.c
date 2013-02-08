@@ -422,7 +422,7 @@ static bind_t g_bindings[] =
 	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_CTRL,			-1,		-1, -1},
 #endif
 #ifdef TA_WEAPSYS_EX
-	{"+button13",		"drop weapon",		ID_WEAPDROP,	ANIM_IDLE,		'e',			';',	-1, -1},
+	{"+dropweapon",		"drop weapon",		ID_WEAPDROP,	ANIM_IDLE,		'e',			';',	-1, -1},
 #else
 	{"weapprev",		"prev weapon",		ID_WEAPPREV,	ANIM_IDLE,		'[',			-1,		-1, -1},
 	{"weapnext", 		"next weapon",		ID_WEAPNEXT,	ANIM_IDLE,		']',			-1,		-1, -1},

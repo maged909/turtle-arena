@@ -127,6 +127,26 @@ static void CG_AttackUp_f( int localPlayerNum ) {
 	CG_ButtonEvent( localPlayerNum, 0, qfalse );
 }
 
+#ifdef TA_WEAPSYS_EX
+/*
+=============
+CG_DropWeaponDown_f
+=============
+*/
+static void CG_DropWeaponDown_f( int localPlayerNum ) {
+	CG_ButtonEvent( localPlayerNum, 1, qtrue );
+}
+
+/*
+=============
+CG_DropWeaponUp_f
+=============
+*/
+static void CG_DropWeaponUp_f( int localPlayerNum ) {
+	CG_ButtonEvent( localPlayerNum, 1, qfalse );
+}
+#endif
+
 /*
 =============
 CG_ScoresDown
@@ -697,6 +717,10 @@ typedef struct {
 static playerConsoleCommand_t	playerCommands[] = {
 	{ "+attack", CG_AttackDown_f },
 	{ "-attack", CG_AttackUp_f },
+#ifdef TA_WEAPSYS_EX
+	{ "+dropweapon", CG_DropWeaponDown_f },
+	{ "-dropweapon", CG_DropWeaponUp_f },
+#endif
 #ifdef IOQ3ZTM // NEW_CAM
 	{ "camreset", CG_CamReset_f },
 	{ "+camleft", CG_CamLeftDown_f },

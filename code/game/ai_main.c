@@ -855,9 +855,6 @@ void BotInputToUserCommand(bot_input_t *bi, usercmd_t *ucmd, int delta_angles[3]
 	if (bi->actionflags & ACTION_TALK) ucmd->buttons |= BUTTON_TALK;
 	if (bi->actionflags & ACTION_GESTURE) ucmd->buttons |= BUTTON_GESTURE;
 	if (bi->actionflags & ACTION_USE) ucmd->buttons |= BUTTON_USE_HOLDABLE;
-#ifdef TA_HOLDSYS // NEXTHOLDABLE
-	//if (bi->actionflags & ACTION_NEXT_HOLDABLE) ucmd->buttons |= BUTTON_NEXT_HOLDABLE;
-#endif
 #ifdef TA_WEAPSYS_EX
 	if (bi->actionflags & ACTION_DROP_WEAPON) ucmd->buttons |= BUTTON_DROP_WEAPON;
 #endif
