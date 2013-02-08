@@ -1219,13 +1219,6 @@ typedef struct sharedPlayerState_s {
 
 #define BUTTONS_GENERATED (BUTTON_TALK|BUTTON_WALKING|BUTTON_ANY)
 
-#ifdef TA_HOLDSYS // NEXTHOLDABLE
-#define	BUTTON_NEXT_HOLDABLE			4096
-#endif
-#ifdef TA_WEAPSYS_EX
-#define BUTTON_DROP_WEAPON			8192
-#endif
-
 #define	MOVE_RUN			120			// if forwardmove or rightmove are >= MOVE_RUN,
 										// then BUTTON_WALKING should be set
 

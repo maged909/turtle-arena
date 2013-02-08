@@ -4697,7 +4697,7 @@ static qboolean Character_Parse(char **p) {
 	  /* ZTM: NOTE: About characters block in teaminfo.txt ...
 	               In Team Arena they just list "male" and "female"
 	                   for the base model meaning James and Janet.
-	               I plan to just list the name (Casey/April/Raph/...), but it is left for compatiblity.
+	               I plan to just list the name, but it is left for compatibility.
 	  */
 	  if (tempStr && (!Q_stricmp(tempStr, "female"))) {
         uiInfo.characterList[uiInfo.characterCount].base = String_Alloc("Janet");

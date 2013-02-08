@@ -947,15 +947,9 @@ void Svcmd_BotList_f( void ) {
 			strcpy(funname, "");
 		}
 		strcpy(model, Info_ValueForKey( g_botInfos[i], "model" ));
-#ifdef TURTLEARENA // DEFAULT_MODEL
-		if ( !*model ) {
-			strcpy(model, "raph/default");
-		}
-#else
 		if ( !*model ) {
 			strcpy(model, DEFAULT_MODEL);
 		}
-#endif
 		strcpy(aifile, Info_ValueForKey( g_botInfos[i], "aifile"));
 		if (!*aifile ) {
 			strcpy(aifile, "bots/default_c.c");

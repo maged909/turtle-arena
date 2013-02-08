@@ -3268,8 +3268,8 @@ static bind_t g_bindings[] =
 	{"weapon 12",		 -1,					-1,		-1, -1},
 	{"weapon 13",		 -1,					-1,		-1, -1},
 	{"+attack", 		 K_CTRL,				-1,		-1, -1},
-#ifdef TA_WEAPSYS_EX // +dropweapon
-	{"+button13",		 ';',					-1,		-1, -1},
+#ifdef TA_WEAPSYS_EX
+	{"+dropweapon",		 ';',					-1,		-1, -1},
 #else
 	{"weapprev",		 '[',					-1,		-1, -1},
 	{"weapnext", 		 ']',					-1,		-1, -1},

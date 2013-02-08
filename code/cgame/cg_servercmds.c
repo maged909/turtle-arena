@@ -770,9 +770,6 @@ void CG_LoadVoiceChats( void ) {
 #endif
 	// First loaded voice chat is default
 	CG_HeadModelVoiceChats("scripts/default.vc");
-
-	// ZTM: TODO?: Pre-cache voice chats? ( currently have no voice chats )
-	//CG_HeadModelVoiceChats("scripts/raph.vc");
 #else
 	CG_ParseVoiceChats( "scripts/female1.voice", &voiceChatLists[0], MAX_VOICECHATS );
 	CG_ParseVoiceChats( "scripts/female2.voice", &voiceChatLists[1], MAX_VOICECHATS );
