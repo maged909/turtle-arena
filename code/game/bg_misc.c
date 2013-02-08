@@ -6317,7 +6317,7 @@ Based on Quake3's CG_ParseAnimationFile
   This way it is a lot easier to make changes to animation.cfg loading...
 
 Read a configuration file containing animation and game config for the player.
-models/players/raph/animation.cfg, etc
+models/players/[model name]/animation.cfg, models/players/heads/[head name]/animation.cfg
 
 Supports Quake3 and Elite Force animation styles.
 
@@ -6578,7 +6578,6 @@ qboolean BG_ParsePlayerCFGFile(const char *filename, bg_playercfg_t *playercfg, 
 			continue;
 		}
 		// prefcolor1/prefcolor2 are used as color1/color2 in single player
-		// prefcolor2 is used as the status bar background color in non-team
 		else if ( !Q_stricmp( token, "prefcolor1" ) ) {
 			token = COM_Parse( &text_p );
 			if ( !*token ) {
