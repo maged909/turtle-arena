@@ -3073,12 +3073,20 @@ then loads the zip headers
 */
 void FS_AddGameDirectory( const char *path, const char *dir ) {
 	searchpath_t	*sp;
-	int				i;
 	searchpath_t	*search;
 	pack_t			*pak;
 	char			curpath[MAX_OSPATH + 1], *pakfile;
 	int				numfiles;
 	char			**pakfiles;
+	int				pakfilesi;
+	char			**pakfilestmp;
+	int				numdirs;
+	char			**pakdirs;
+	int				pakdirsi;
+	char			**pakdirstmp;
+
+	int				pakwhich;
+	int				len;
 
 	// Unique
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
@@ -3093,29 +3101,95 @@ void FS_AddGameDirectory( const char *path, const char *dir ) {
 	Q_strncpyz(curpath, FS_BuildOSPath(path, dir, ""), sizeof(curpath));
 	curpath[strlen(curpath) - 1] = '\0';	// strip the trailing slash
 
+	// Get .pk3 files
 	pakfiles = Sys_ListFiles(curpath, ".pk3", NULL, &numfiles, qfalse);
 
 	qsort( pakfiles, numfiles, sizeof(char*), paksort );
 
-	for ( i = 0 ; i < numfiles ; i++ ) {
-		pakfile = FS_BuildOSPath( path, dir, pakfiles[i] );
-		if ( ( pak = FS_LoadZipFile( pakfile, pakfiles[i] ) ) == 0 )
-			continue;
+	if ( fs_numServerPaks ) {
+		numdirs = 0;
+		pakdirs = NULL;
+	} else {
+		// Get top level directories (we'll filter them later since the Sys_ListFiles filtering is terrible)
+		pakdirs = Sys_ListFiles(curpath, "/", NULL, &numdirs, qfalse);
 
-		Q_strncpyz(pak->pakPathname, curpath, sizeof(pak->pakPathname));
-		// store the game name for downloading
-		Q_strncpyz(pak->pakGamename, dir, sizeof(pak->pakGamename));
+		qsort( pakdirs, numdirs, sizeof(char *), paksort );
+	}
 
-		fs_packFiles += pak->numfiles;
+	pakfilesi = 0;
+	pakdirsi = 0;
 
-		search = Z_Malloc (sizeof(searchpath_t));
-		search->pack = pak;
-		search->next = fs_searchpaths;
-		fs_searchpaths = search;
+	while((pakfilesi < numfiles) || (pakdirsi < numdirs))
+	{
+		// Check if a pakfile or pakdir comes next
+		if (pakfilesi >= numfiles) {
+			// We've used all the pakfiles, it must be a pakdir.
+			pakwhich = 0;
+		}
+		else if (pakdirsi >= numdirs) {
+			// We've used all the pakdirs, it must be a pakfile.
+			pakwhich = 1;
+		}
+		else {
+			// Could be either, compare to see which name comes first
+			// Need tmp variables for appropriate indirection for paksort()
+			pakfilestmp = &pakfiles[pakfilesi];
+			pakdirstmp = &pakdirs[pakdirsi];
+			pakwhich = (paksort(pakfilestmp, pakdirstmp) < 0);
+		}
+
+		if (pakwhich) {
+			// The next .pk3 file is before the next .pk3dir
+			pakfile = FS_BuildOSPath(path, dir, pakfiles[pakfilesi]);
+			if ((pak = FS_LoadZipFile(pakfile, pakfiles[pakfilesi])) == 0) {
+				// This isn't a .pk3! Next!
+				pakfilesi++;
+				continue;
+			}
+
+			Q_strncpyz(pak->pakPathname, curpath, sizeof(pak->pakPathname));
+			// store the game name for downloading
+			Q_strncpyz(pak->pakGamename, dir, sizeof(pak->pakGamename));
+
+			fs_packFiles += pak->numfiles;
+
+			search = Z_Malloc(sizeof(searchpath_t));
+			search->pack = pak;
+			search->next = fs_searchpaths;
+			fs_searchpaths = search;
+
+			pakfilesi++;
+		}
+		else {
+			// The next .pk3dir is before the next .pk3 file
+			// But wait, this could be any directory, we're filtering to only ending with ".pk3dir" here.
+			len = strlen(pakdirs[pakdirsi]);
+			if (!FS_IsExt(pakdirs[pakdirsi], ".pk3dir", len)) {
+				// This isn't a .pk3dir! Next!
+				pakdirsi++;
+				continue;
+			}
+
+			pakfile = FS_BuildOSPath(path, dir, pakdirs[pakdirsi]);
+
+			// add the directory to the search path
+			search = Z_Malloc(sizeof(searchpath_t));
+			search->dir = Z_Malloc(sizeof(*search->dir));
+
+			Q_strncpyz(search->dir->path, curpath, sizeof(search->dir->path));	// c:\quake3\baseq3
+			Q_strncpyz(search->dir->fullpath, pakfile, sizeof(search->dir->fullpath));	// c:\quake3\baseq3\mypak.pk3dir
+			Q_strncpyz(search->dir->gamedir, pakdirs[pakdirsi], sizeof(search->dir->gamedir)); // mypak.pk3dir
+
+			search->next = fs_searchpaths;
+			fs_searchpaths = search;
+
+			pakdirsi++;
+		}
 	}
 
 	// done
 	Sys_FreeFileList( pakfiles );
+	Sys_FreeFileList( pakdirs );
 
 	//
 	// add the directory to the search path
@@ -3693,10 +3767,6 @@ static void FS_CheckPaks( void )
 	char			badGames[512];
 	int				pak;
 
-	// If we're not pure don't check
-	if (com_fs_pure && !com_fs_pure->integer)
-		return;
-
 	FS_ClearPakChecksums();
 	basePaksums = FS_LoadPakChecksums( com_basegame->string );
 	FS_LoadPakChecksums( fs_basegame->string );
@@ -3746,15 +3816,17 @@ static void FS_CheckPaks( void )
 		FS_AddModToList( badGames, sizeof ( badGames ), com_purePaks[pak].gamename );
 	}
 
-	if ( !basePaksums || !fs_numPaksums || missingPak || invalidPak )
-	{
+	if ( basePaksums && fs_numPaksums > 0 && !missingPak && !invalidPak ) {
+		// have basegame pure list and pure pk3s
+		Cvar_Set( "fs_pure", "1" );
+	} else {
 #ifndef DEDICATED
 		dialogType_t type = DT_WARNING;
 #endif
 		char line1[256];
 		char line2[256];
 
-		// server can't ever be pure (sv_pure), as we're missing the pure files.
+		// missing basegame pure list or pure pk3s
 		Cvar_Set("fs_pure", "0");
 
 		if ( !strlen ( badGames ) ) {
@@ -3767,6 +3839,9 @@ static void FS_CheckPaks( void )
 			if ( hasBaseGamePakFile ) {
 				Q_strncpyz( line1, "Found a Pk3 file, but missing file containing Pk3 checksums.", sizeof ( line1 ) );
 				Com_sprintf( line2, sizeof (line2), "You need a %s/PAKSUMS file to enable pure mode.", com_basegame->string );
+			} else if ( FS_ReadFile( "default.cfg", NULL ) > 0 ) {
+				// found default.cfg, but no pk3s/checksums? probably a game under development.
+				return;
 			} else {
 #ifndef DEDICATED
 				type = DT_ERROR;
@@ -3777,11 +3852,11 @@ static void FS_CheckPaks( void )
 			// found paksums, but no checksums? probably a game under development.
 			return;
 		} else if ( missingPak && invalidPak ) {
-			Q_strncpyz( line1, "Default Pk3 file(s) are missing, corrupt, or modified.", sizeof ( line1 ) );
+			Com_sprintf( line1, sizeof ( line1 ), "Default Pk3 %s missing, corrupt, or modified.", fs_numPaksums == 1 ? "file is" : "files are" );
 		} else if ( invalidPak ) {
-			Q_strncpyz( line1, "Default Pk3 file(s) are corrupt or modified.", sizeof ( line1 ) );
+			Com_sprintf( line1, sizeof ( line1 ), "Default Pk3 %s corrupt or modified.", fs_numPaksums == 1 ? "file is" : "files are" );
 		} else {
-			Q_strncpyz( line1, "Missing default Pk3 file(s).", sizeof ( line1 ) );
+			Com_sprintf( line1, sizeof ( line1 ), "Missing default Pk3 %s.", fs_numPaksums == 1 ? "file" : "files" );
 		}
 
 		Com_Printf(S_COLOR_YELLOW "WARNING: %s\n%s\n", line1, line2);
