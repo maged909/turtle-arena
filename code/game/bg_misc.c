@@ -1750,27 +1750,7 @@ materialInfo_t materialInfo[NUM_MATERIAL_TYPES] = {
 #endif
 
 #ifdef TA_ITEMSYS
-static qboolean bg_itemsys_init = qfalse;
-
-bg_iteminfo_t bg_iteminfo[MAX_ITEMS];
-static int bg_numitems = 1;
-static int bg_numholdables = 0;
-
-#ifdef TA_WEAPSYS
-bg_projectileinfo_t bg_projectileinfo[MAX_BG_PROJ];
-bg_weaponinfo_t bg_weaponinfo[MAX_BG_WEAPONS];
-bg_weapongroupinfo_t bg_weapongroupinfo[MAX_BG_WEAPON_GROUPS];
-static int bg_numprojectiles = 0;
-static int bg_numweapons = 0;
-static int bg_numweapongroups = 0;
-#endif
-
-// These are in game, cgame, and ui, but not in bg - so its okay to use here...
-int		trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
-void	trap_FS_Read( void *buffer, int len, fileHandle_t f );
-void	trap_FS_Write( const void *buffer, int len, fileHandle_t f );
-void	trap_FS_FCloseFile( fileHandle_t f );
-int		trap_FS_GetFileList( const char *path, const char *extension, char *listbuf, int bufsize );
+bg_commonInfo_t *bg_common = NULL;
 
 int BG_ItemNumForItem( bg_iteminfo_t *item )
 {
@@ -3392,17 +3372,14 @@ void BG_InitItemInfo(void)
 	int j;
 #endif
 
+	// ZTM: NOTE: game/cgame/ui DLLs share the same memory and only parse files once!
+	// QVMs do not support it as of writting (Feb 13 2013).
+	bg_common = trap_Alloc( sizeof ( bg_commonInfo_t ), "bg_common" );
+
 	if (bg_itemsys_init)
 		return;
 
-	// Clear Data
-	Com_Memset(bg_iteminfo, 0, sizeof (bg_iteminfo));
-
 #ifdef TA_WEAPSYS
-	Com_Memset(bg_projectileinfo, 0, sizeof (bg_projectileinfo));
-	Com_Memset(bg_weaponinfo, 0, sizeof (bg_weaponinfo));
-	Com_Memset(bg_weapongroupinfo, 0, sizeof (bg_weapongroupinfo));
-
 	// Setup dummys (0 means not valid or not found)
 	strcpy(bg_projectileinfo[0].name, "p_none");
 	bg_projectileinfo[0].numProjectiles = 1;
@@ -3422,6 +3399,8 @@ void BG_InitItemInfo(void)
 	BG_SetupWeaponGroup(&bg_weapongroupinfo[0], &bg_iteminfo[0], "wp_none", 0);
 	strcpy(bg_iteminfo[0].pickup_name, "None");
 #endif
+
+	bg_common->numitems = 1;
 
 #ifdef TA_ITEMSYS_USE_INTERNAL
 	// Load internal items
