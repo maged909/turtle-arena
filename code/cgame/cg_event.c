@@ -450,12 +450,7 @@ static void CG_UseItem( centity_t *cent ) {
 	es = &cent->currentState;
 	
 	itemNum = (es->event & ~EV_EVENT_BITS) - EV_USE_ITEM0;
-#ifdef TA_ITEMSYS
-	if ( itemNum < 0 || itemNum > BG_NumHoldableItems() )
-#else
-	if ( itemNum < 0 || itemNum > HI_NUM_HOLDABLE )
-#endif
-	{
+	if ( itemNum < 0 || itemNum > BG_NumHoldableItems() ) {
 		itemNum = 0;
 	}
 
@@ -540,15 +535,10 @@ A new item was picked up this frame
 */
 static void CG_ItemPickup( int localClientNum, int itemNum ) {
 	cglc_t *lc = &cg.localClients[localClientNum];
-#if defined TA_ITEMSYS || defined TA_HOLDSYS || defined TURTLEARENA // NIGTHS_ITEMS
 	gitem_t *item;
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(itemNum);
-#else
-	item = &bg_itemlist[itemNum];
-#endif
-#endif
+
 #ifdef TURTLEARENA // NIGTHS_ITEMS
 	if (item->giType == IT_SCORE) {
 		lc->scorePickupTime = cg.time;
@@ -579,32 +569,21 @@ static void CG_ItemPickup( int localClientNum, int itemNum ) {
 	}
 #endif
 	// see if it should be the grabbed weapon
-#ifdef TA_ITEMSYS
-	if ( item->giType == IT_WEAPON )
-#else
-	if ( bg_itemlist[itemNum].giType == IT_WEAPON )
-#endif
-	{
+	if ( item->giType == IT_WEAPON ) {
 		// select it immediately
 #ifdef TA_WEAPSYS_EX
 		// always switch
 #elif defined TA_WEAPSYS || defined IOQ3ZTM
 		if ( cg_autoswitch[localClientNum].integer )
-#elif defined TA_ITEMSYS
-		if ( cg_autoswitch[localClientNum].integer && item->giTag != WP_MACHINEGUN )
 #else
-		if ( cg_autoswitch[localClientNum].integer && bg_itemlist[itemNum].giTag != WP_MACHINEGUN )
+		if ( cg_autoswitch[localClientNum].integer && item->giTag != WP_MACHINEGUN )
 #endif
 		{
 #ifdef TA_WEAPSYS_EX // The weapon "should" be selected in game and sent in the next snap too
 			lc->predictedPlayerState.stats[STAT_PENDING_WEAPON] = item->giTag;
 #else
 			lc->weaponSelectTime = cg.time;
-#ifdef TA_ITEMSYS
 			lc->weaponSelect = item->giTag;
-#else
-			lc->weaponSelect = bg_itemlist[itemNum].giTag;
-#endif
 #endif
 		}
 	}
@@ -1056,27 +1035,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 			index = es->eventParm;		// player predicted
 
-#ifdef TA_ITEMSYS
-			if ( index < 1 || index >= BG_NumItems() )
-#else
-			if ( index < 1 || index >= bg_numItems )
-#endif
-			{
+			if ( index < 1 || index >= BG_NumItems() ) {
 				break;
 			}
-#ifdef TA_ITEMSYS
+
 			item = BG_ItemForItemNum(index);
-#else
-			item = &bg_itemlist[ index ];
-#endif
 
 #ifdef TURTLEARENA // POWERS
-#ifdef TA_ITEMSYS
-			if ( item->pickup_sound[0] )
-#else
-			if ( item->pickup_sound )
-#endif
-			{
+			if ( item->pickup_sound[0] ) {
 				trap_S_StartSound (NULL, es->number, CHAN_AUTO,	trap_S_RegisterSound( item->pickup_sound, qfalse ) );
 			}
 #else
@@ -1124,29 +1090,16 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 			index = es->eventParm;		// player predicted
 
-#ifdef TA_ITEMSYS
-			if ( index < 1 || index >= BG_NumItems() )
-#else
-			if ( index < 1 || index >= bg_numItems )
-#endif
-			{
+			if ( index < 1 || index >= BG_NumItems() ) {
 				break;
 			}
-#ifdef TA_ITEMSYS
+
 			item = BG_ItemForItemNum(index);
 
 			// powerup pickups are global
 			if( item->pickup_sound[0] ) {
 				trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
 			}
-#else
-			item = &bg_itemlist[ index ];
-
-			// powerup pickups are global
-			if( item->pickup_sound ) {
-				trap_S_StartSound (NULL, thisClientNum, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
-			}
-#endif
 
 			// show icon and name on status bar
 			for (i = 0; i < CG_MaxSplitView(); i++) {

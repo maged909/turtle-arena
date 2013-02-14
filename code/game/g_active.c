@@ -589,12 +589,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 #ifndef TURTLEARENA // POWERS // Guards having health regen makes them pretty much unkillable, and removed regen powerup.
 		// regenerate
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-		if( BG_ItemForItemNum(client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-		if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-		{
+		if( BG_ItemForItemNum(client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 			maxHealth = client->ps.stats[STAT_MAX_HEALTH] / 2;
 		}
 		else if ( client->ps.powerups[PW_REGEN] ) {
@@ -650,12 +645,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 #endif
 	}
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_AMMOREGEN )
-#else
-	if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN )
-#endif
-	{
+	if( BG_ItemForItemNum(client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_AMMOREGEN ) {
 #ifdef TA_WEAPSYS_EX
 		int w, max, inc, t;
 
@@ -1389,12 +1379,7 @@ void ClientThink_real( gentity_t *ent ) {
 #endif
 
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT )
-#else
-	if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT )
-#endif
-	{
+	if( BG_ItemForItemNum(client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 		client->ps.speed *= 1.5;
 	}
 	else
@@ -2178,36 +2163,16 @@ void ClientEndFrame( gentity_t *ent ) {
 
 #ifdef MISSIONPACK
 	// set powerup for player animation
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(ent->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-	if( bg_itemlist[ent->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-	{
+	if( BG_ItemForItemNum(ent->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 		ent->client->ps.powerups[PW_GUARD] = level.time;
 	}
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(ent->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT )
-#else
-	if( bg_itemlist[ent->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT )
-#endif
-	{
+	if( BG_ItemForItemNum(ent->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 		ent->client->ps.powerups[PW_SCOUT] = level.time;
 	}
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(ent->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_DOUBLER )
-#else
-	if( bg_itemlist[ent->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_DOUBLER )
-#endif
-	{
+	if( BG_ItemForItemNum(ent->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_DOUBLER ) {
 		ent->client->ps.powerups[PW_DOUBLER] = level.time;
 	}
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(ent->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_AMMOREGEN )
-#else
-	if( bg_itemlist[ent->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN )
-#endif
-	{
+	if( BG_ItemForItemNum(ent->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_AMMOREGEN ) {
 		ent->client->ps.powerups[PW_AMMOREGEN] = level.time;
 	}
 #ifndef TURTLEARENA // POWERS

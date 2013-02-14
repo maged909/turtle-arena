@@ -914,19 +914,11 @@ static void CG_RegisterItemSounds( int itemNum ) {
 	char			*s, *start;
 	int				len;
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(itemNum);
 
 	if( item->pickup_sound[0] ) {
 		trap_S_RegisterSound( item->pickup_sound, qfalse );
 	}
-#else
-	item = &bg_itemlist[ itemNum ];
-
-	if( item->pickup_sound ) {
-		trap_S_RegisterSound( item->pickup_sound, qfalse );
-	}
-#endif
 
 	// parse the space seperated precache string for other media
 	s = item->sounds;
@@ -1204,12 +1196,7 @@ static void CG_RegisterSounds( void ) {
 	// only register the items that the server says we need
 	Q_strncpyz(items, CG_ConfigString(CS_ITEMS), sizeof(items));
 
-#ifdef TA_ITEMSYS
-	for ( i = 1 ; i < BG_NumItems() ; i++ )
-#else
-	for ( i = 1 ; i < bg_numItems ; i++ )
-#endif
-	{
+	for ( i = 1 ; i < BG_NumItems() ; i++ ) {
 //		if ( items[ i ] == '1' || cg_buildScript.integer ) {
 			CG_RegisterItemSounds( i );
 //		}
@@ -1713,12 +1700,7 @@ static void CG_RegisterGraphics( void ) {
 	// only register the items that the server says we need
 	Q_strncpyz(items, CG_ConfigString(CS_ITEMS), sizeof(items));
 
-#ifdef TA_ITEMSYS
-	for ( i = 1 ; i < BG_NumItems() ; i++ )
-#else
-	for ( i = 1 ; i < bg_numItems ; i++ )
-#endif
-	{
+	for ( i = 1 ; i < BG_NumItems() ; i++ ) {
 		if ( items[ i ] == '1' || cg_buildScript.integer ) {
 #ifndef TURTLEARENA // NO_LOADING_ICONS
 			CG_LoadingItem( i );
@@ -2807,11 +2789,9 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 
 	cg.loading = qtrue;		// force players to load instead of defer
 
-#ifdef TA_ITEMSYS
 	CG_LoadingString( "items" );
 
 	BG_InitItemInfo();
-#endif
 
 #ifdef TA_ENTSYS // MISC_OBJECT
 	CG_LoadingString( "objects" );

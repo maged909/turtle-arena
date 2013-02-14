@@ -355,9 +355,7 @@ returning qfalse if not found
 qboolean G_CallSpawn( gentity_t *ent ) {
 	spawn_t	*s;
 	gitem_t	*item;
-#if defined TA_ITEMSYS || defined TA_NPCSYS
-	int i;
-#endif
+	int		i;
 
 	if ( !ent->classname ) {
 		G_Printf ("G_CallSpawn: NULL classname\n");
@@ -382,7 +380,6 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 		}
 	} else {
 #endif
-#ifdef TA_ITEMSYS
 	// check item spawn functions
 	for ( i = 1; i < BG_NumItems(); i++ ) {
 		item = &bg_iteminfo[i];
@@ -394,15 +391,6 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 			return qtrue;
 		}
 	}
-#else
-	// check item spawn functions
-	for ( item=bg_itemlist+1 ; item->classname ; item++ ) {
-		if ( !strcmp(item->classname, ent->classname) ) {
-			G_SpawnItem( ent, item );
-			return qtrue;
-		}
-	}
-#endif
 #ifdef IOQ3ZTM // LASERTAG
 	}
 #endif

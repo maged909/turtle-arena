@@ -465,7 +465,6 @@ materialInfo_t materialInfo[NUM_MATERIAL_TYPES] = {
 };
 #endif
 
-#ifdef TA_ITEMSYS
 bg_commonInfo_t *bg_common = NULL;
 
 int BG_ItemNumForItem( bg_iteminfo_t *item )
@@ -2194,7 +2193,6 @@ void BG_InitItemInfo(void)
 		}
 	}
 }
-#endif
 
 #ifdef TA_WEAPSYS
 /*
@@ -2982,7 +2980,6 @@ Returns 0 if not found.
 */
 int BG_ItemNumForHoldableNum(holdable_t holdablenum)
 {
-#ifdef TA_ITEMSYS
 	gitem_t	*it;
 	int i;
 
@@ -2997,17 +2994,6 @@ int BG_ItemNumForHoldableNum(holdable_t holdablenum)
 			return i;
 		}
 	}
-#else
-	int i;
-	for (i = 1; i < bg_numItems; ++i)
-	{
-		if (bg_itemlist[i].giType == IT_HOLDABLE
-			&& bg_itemlist[i].giTag == holdablenum)
-		{
-			return i;
-		}
-	}
-#endif
 	return 0;
 }
 #endif
@@ -3018,7 +3004,6 @@ BG_FindItemForPowerup
 ==============
 */
 gitem_t	*BG_FindItemForPowerup( powerup_t pw ) {
-#ifdef TA_ITEMSYS
 	gitem_t	*it;
 	int i;
 
@@ -3035,18 +3020,6 @@ gitem_t	*BG_FindItemForPowerup( powerup_t pw ) {
 			return it;
 		}
 	}
-#else
-	int		i;
-
-	for ( i = 0 ; i < bg_numItems ; i++ ) {
-		if ( (bg_itemlist[i].giType == IT_POWERUP || 
-					bg_itemlist[i].giType == IT_TEAM ||
-					bg_itemlist[i].giType == IT_PERSISTANT_POWERUP) && 
-			bg_itemlist[i].giTag == pw ) {
-			return &bg_itemlist[i];
-		}
-	}
-#endif
 
 	return NULL;
 }
@@ -3058,7 +3031,6 @@ BG_FindItemForHoldable
 ==============
 */
 gitem_t	*BG_FindItemForHoldable( holdable_t pw ) {
-#ifdef TA_ITEMSYS
 	gitem_t	*it;
 	int i;
 
@@ -3071,19 +3043,6 @@ gitem_t	*BG_FindItemForHoldable( holdable_t pw ) {
 			return it;
 		}
 	}
-#else
-	int		i;
-
-	for ( i = 0 ; i < bg_numItems ; i++ ) {
-		if ( bg_itemlist[i].giType == IT_HOLDABLE && bg_itemlist[i].giTag == pw ) {
-			return &bg_itemlist[i];
-		}
-	}
-#endif
-
-#ifndef TA_ITEMSYS
-	Com_Error( ERR_DROP, "HoldableItem not found" );
-#endif
 
 	return NULL;
 }
@@ -3096,7 +3055,6 @@ BG_FindItemForWeapon
 ===============
 */
 gitem_t	*BG_FindItemForWeapon( weapon_t weapon ) {
-#ifdef TA_ITEMSYS
 	gitem_t	*it;
 	int i;
 
@@ -3105,19 +3063,11 @@ gitem_t	*BG_FindItemForWeapon( weapon_t weapon ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
-#else
-	gitem_t	*it;
-	
-	for ( it = bg_itemlist + 1 ; it->classname ; it++) {
-#endif
 		if ( it->giType == IT_WEAPON && it->giTag == weapon ) {
 			return it;
 		}
 	}
 
-#ifndef TA_ITEMSYS
-	Com_Error( ERR_DROP, "Couldn't find item for weapon %i", weapon);
-#endif
 	return NULL;
 }
 
@@ -3128,7 +3078,6 @@ BG_FindItem
 ===============
 */
 gitem_t	*BG_FindItem( const char *pickupName ) {
-#ifdef TA_ITEMSYS
 	gitem_t	*it;
 	int i;
 
@@ -3137,11 +3086,6 @@ gitem_t	*BG_FindItem( const char *pickupName ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
-#else
-	gitem_t	*it;
-	
-	for ( it = bg_itemlist + 1 ; it->classname ; it++ ) {
-#endif
 		if ( !Q_stricmp( it->pickup_name, pickupName ) )
 			return it;
 	}
@@ -3156,7 +3100,6 @@ BG_FindItemForClassname
 ===============
 */
 gitem_t	*BG_FindItemForClassname( const char *classname ) {
-#ifdef TA_ITEMSYS
 	gitem_t	*it;
 	int i;
 
@@ -3165,11 +3108,6 @@ gitem_t	*BG_FindItemForClassname( const char *classname ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
-#else
-	gitem_t	*it;
-	
-	for ( it = bg_itemlist + 1 ; it->classname ; it++ ) {
-#endif
 		if ( !Q_stricmp( it->classname, classname ) )
 			return it;
 	}
@@ -3220,20 +3158,11 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 	int		upperBound;
 #endif
 
-#ifdef TA_ITEMSYS
-	if ( ent->modelindex < 0 || ent->modelindex >= BG_NumItems() )
-#else
-	if ( ent->modelindex < 1 || ent->modelindex >= bg_numItems )
-#endif
-	{
+	if ( ent->modelindex < 0 || ent->modelindex >= BG_NumItems() ) {
 		Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: index out of range" );
 	}
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(ent->modelindex);
-#else
-	item = &bg_itemlist[ent->modelindex];
-#endif
 
 #ifdef IOQ3ZTM // DROP_ITEM_FIX
 	// If it was dropped by this player and is still in their Bounding Box
@@ -3316,22 +3245,12 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 #ifndef TURTLEARENA // NOARMOR
 	case IT_ARMOR:
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT )
-#else
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT )
-#endif
-		{
+		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 			return qfalse;
 		}
 
 		// we also clamp armor to the maxhealth for handicapping
-#ifdef TA_ITEMSYS
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-		{
+		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 			upperBound = ps->stats[STAT_MAX_HEALTH];
 		}
 		else {
@@ -3353,12 +3272,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		// small and mega healths will go over the max, otherwise
 		// don't pick up if already at max
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-		{
+		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 			upperBound = ps->stats[STAT_MAX_HEALTH];
 		}
 		else
@@ -3380,14 +3294,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 
 	case IT_POWERUP:
 #if defined IOQ3ZTM && defined MISSIONPACK // Scout overrides haste, so don't pick it up.
-		if (item->giTag == PW_HASTE &&
-#ifdef TA_ITEMSYS
-			BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT
-#else
-			bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT
-#endif
-			)
-		{
+		if (item->giTag == PW_HASTE && BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 			return qfalse;
 		}
 #endif

@@ -73,9 +73,7 @@ UI_PlayerInfo_SetWeapon
 ===============
 */
 static void UI_PlayerInfo_SetWeapon( playerInfo_t *pi, weapon_t weaponNum ) {
-#ifdef TA_ITEMSYS
 	int			i;
-#endif
 #ifndef TA_WEAPSYS
 	gitem_t *	item;
 #endif
@@ -124,16 +122,10 @@ tryagain:
 		VectorCopy(bg_weapongroupinfo[weaponNum].weapon[i]->flashColor, pi->flashDlightColor[i]);
 	}
 #else
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(0);
-	for (i = BG_NumItems()-1; i > 0; i--)
-#else
-	for ( item = bg_itemlist + 1; item->classname ; item++ )
-#endif
-	{
-#ifdef TA_ITEMSYS
+	for (i = BG_NumItems()-1; i > 0; i--) {
 		item = BG_ItemForItemNum(i);
-#endif
+
 		if ( item->giType != IT_WEAPON ) {
 			continue;
 		}

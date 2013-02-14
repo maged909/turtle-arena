@@ -5135,9 +5135,7 @@ void _UI_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	UI_RegisterCvars();
 	UI_InitMemory();
-#ifdef TA_ITEMSYS
 	BG_InitItemInfo();
-#endif
 
 	// cache redundant calulations
 	trap_GetGlconfig( &uiInfo.uiDC.glconfig );

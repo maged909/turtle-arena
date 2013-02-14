@@ -2518,10 +2518,8 @@ static void PM_Weapon( void ) {
 			if (
 #ifdef TA_HOLDSYS
 			pm->ps->holdableIndex == HI_MEDKIT
-#elif defined TA_ITEMSYS
-			BG_ItemForItemNum(pm->ps->stats[STAT_HOLDABLE_ITEM])->giTag == HI_MEDKIT
 #else
-			bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag == HI_MEDKIT
+			BG_ItemForItemNum(pm->ps->stats[STAT_HOLDABLE_ITEM])->giTag == HI_MEDKIT
 #endif
 				&& pm->ps->stats[STAT_HEALTH] >= (pm->ps->stats[STAT_MAX_HEALTH] + 25) ) {
 				// don't use medkit if at max health
@@ -2533,10 +2531,8 @@ static void PM_Weapon( void ) {
 #endif
 #ifdef TA_HOLDSYS
 				PM_AddEvent( EV_USE_ITEM0 + pm->ps->holdableIndex );
-#elif defined TA_ITEMSYS
-				PM_AddEvent( EV_USE_ITEM0 + BG_ItemForItemNum(pm->ps->stats[STAT_HOLDABLE_ITEM])->giTag );
 #else
-				PM_AddEvent( EV_USE_ITEM0 + bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag );
+				PM_AddEvent( EV_USE_ITEM0 + BG_ItemForItemNum(pm->ps->stats[STAT_HOLDABLE_ITEM])->giTag );
 #endif
 #ifdef TA_HOLDSYS
 				if (pm->ps->holdable[pm->ps->holdableIndex] > 0
@@ -2863,21 +2859,11 @@ static void PM_Weapon( void ) {
 #endif
 
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(pm->ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT )
-#else
-	if( bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT )
-#endif
-	{
+	if( BG_ItemForItemNum(pm->ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 		addTime /= 1.5;
 	}
 	else
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(pm->ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_AMMOREGEN )
-#else
-	if( bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN )
-#endif
-	{
+	if( BG_ItemForItemNum(pm->ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_AMMOREGEN ) {
 		addTime /= 1.3;
   }
   else

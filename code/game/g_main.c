@@ -648,9 +648,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	// reserve some spots for dead player bodies
 	InitBodyQue();
 
-#ifdef TA_ITEMSYS
 	BG_InitItemInfo();
-#endif
 #ifdef TA_ENTSYS // MISC_OBJECT
 	BG_InitObjectConfig();
 #endif

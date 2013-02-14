@@ -785,7 +785,6 @@ typedef enum {
 
 #define MAX_ITEM_MODELS 4
 
-#ifdef TA_ITEMSYS
 typedef struct bg_iteminfo_s {
 	char		classname[MAX_QPATH];	// spawning name
 	char		pickup_sound[MAX_QPATH];
@@ -819,30 +818,9 @@ int BG_NumHoldableItems(void);
 
 void BG_InitItemInfo(void);
 
+// ZTM: TODO: Remove gitem_s/gitem_t
 #define gitem_s bg_iteminfo_s
 #define gitem_t bg_iteminfo_t
-#else
-typedef struct gitem_s {
-	char		*classname;	// spawning name
-	char		*pickup_sound;
-	char		*world_model[MAX_ITEM_MODELS];
-
-	char		*icon;
-	char		*pickup_name;	// for printing on pickup
-
-	int			quantity;		// for ammo how much, or duration of powerup
-	itemType_t  giType;			// IT_* flags
-
-	int			giTag;
-
-#ifdef IOQ3ZTM // FLAG_MODEL
-	char		*skin;			// So flags don't need multiple models.
-#else
-	char		*precaches;		// string of all models and images this item will use
-#endif
-	char		*sounds;		// string of all sounds this item will use
-} gitem_t;
-#endif
 
 #ifdef TA_WEAPSYS
 // Currently only support two hands
@@ -1161,7 +1139,6 @@ int BG_WeaponGroupTotalDamage(int weaponGroup);
 int BG_ItemNumForHoldableNum(holdable_t holdablenum);
 #endif
 
-#ifdef TA_ITEMSYS
 // Shared by game, cgame, and ui (DLLs reference the same memory!)
 typedef struct
 {
@@ -1204,7 +1181,6 @@ extern bg_commonInfo_t *bg_common;
 #define bg_numprojectiles bg_common->numprojectiles
 #define bg_numweapons bg_common->numweapons
 #define	bg_numweapongroups bg_common->numweapongroups
-#endif
 #endif
 
 // reward sounds (stored in ps->persistant[PERS_PLAYEREVENTS])
@@ -2237,12 +2213,6 @@ extern int modNamesSize;
 
 //---------------------------------------------------------
 
-#ifndef TA_ITEMSYS
-// included in both the game dll and the client
-extern	gitem_t	bg_itemlist[];
-extern	int		bg_numItems;
-#endif
-
 gitem_t	*BG_FindItem( const char *pickupName );
 gitem_t	*BG_FindItemForWeapon( weapon_t weapon );
 gitem_t	*BG_FindItemForPowerup( powerup_t pw );
@@ -2250,11 +2220,8 @@ gitem_t	*BG_FindItemForHoldable( holdable_t pw );
 #ifdef IOQ3ZTM
 gitem_t	*BG_FindItemForClassname( const char *classname );
 #endif
-#ifdef TA_ITEMSYS
+// ZTM: TODO: Remove ITEM_INDEX
 #define	ITEM_INDEX(x) (BG_ItemNumForItem(x))
-#else
-#define	ITEM_INDEX(x) ((x)-bg_itemlist)
-#endif
 
 qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps );
 

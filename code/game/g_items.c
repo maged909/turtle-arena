@@ -397,12 +397,7 @@ int Pickup_Health (gentity_t *ent, gentity_t *other) {
 
 	// small and mega healths will go over the max
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-	if( bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-	{
+	if( BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 		max = other->client->ps.stats[STAT_MAX_HEALTH];
 	}
 	else
@@ -425,22 +420,12 @@ int Pickup_Health (gentity_t *ent, gentity_t *other) {
 
 #ifdef TURTLEARENA // Guards having health regen makes them pretty much unkillable.
 			// So get 2x health from pickups!
-#ifdef TA_ITEMSYS
-	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-	if( other->client && bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-	{
+	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 		other->health += quantity*2;
 	}
 	else
 	// And cut health that scout gets?
-#ifdef TA_ITEMSYS
-	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT )
-#else
-	if( other->client && bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT )
-#endif
-	{
+	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 		other->health += quantity*0.5f;
 	}
 	else
@@ -468,12 +453,7 @@ int Pickup_Armor( gentity_t *ent, gentity_t *other ) {
 
 	other->client->ps.stats[STAT_ARMOR] += ent->item->quantity;
 
-#ifdef TA_ITEMSYS
-	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-	if( other->client && bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-	{
+	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 		upperBound = other->client->ps.stats[STAT_MAX_HEALTH];
 	}
 	else {
@@ -1161,11 +1141,7 @@ void RegisterItem( gitem_t *item ) {
 	int itemNum;
 #endif
 	if ( !item ) {
-#ifdef TA_ITEMSYS
 		return;
-#else
-		G_Error( "RegisterItem: NULL" );
-#endif
 	}
 #ifdef TA_WEAPSYS
 	itemNum = ITEM_INDEX(item);
@@ -1195,12 +1171,7 @@ void SaveRegisteredItems( void ) {
 	int		count;
 
 	count = 0;
-#ifdef TA_ITEMSYS
-	for ( i = 0 ; i < BG_NumItems() ; i++ )
-#else
-	for ( i = 0 ; i < bg_numItems ; i++ )
-#endif
-	{
+	for ( i = 0 ; i < BG_NumItems() ; i++ ) {
 		if ( itemRegistered[i] ) {
 			count++;
 			string[i] = '1';
@@ -1208,11 +1179,7 @@ void SaveRegisteredItems( void ) {
 			string[i] = '0';
 		}
 	}
-#ifdef TA_ITEMSYS
 	string[ BG_NumItems() ] = 0;
-#else
-	string[ bg_numItems ] = 0;
-#endif
 
 	G_DPrintf( "%i items registered\n", count );
 	trap_SetConfigstring(CS_ITEMS, string);

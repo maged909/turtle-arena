@@ -1325,12 +1325,7 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( attacker->client && attacker != targ ) {
 		max = attacker->client->ps.stats[STAT_MAX_HEALTH];
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-		if( BG_ItemForItemNum(attacker->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-		if( bg_itemlist[attacker->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-		{
+		if( BG_ItemForItemNum(attacker->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 			max /= 2;
 		}
 #endif

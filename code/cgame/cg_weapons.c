@@ -1331,7 +1331,6 @@ void CG_RegisterWeapon( int weaponNum )
 	memset( weaponInfo, 0, sizeof( *weaponInfo ) );
 	weaponInfo->registered = qtrue;
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(0);
 	for (i = BG_NumItems()-1; i > 0; i--)
 	{
@@ -1342,23 +1341,6 @@ void CG_RegisterWeapon( int weaponNum )
 			break;
 		}
 	}
-#else
-	for ( item = bg_itemlist + 1 ; item->classname ; item++ ) {
-		if ( item->giType == IT_WEAPON && item->giTag == weaponNum ) {
-			weaponInfo->item = item;
-			break;
-		}
-	}
-
-	if ( !item->classname ) {
-		CG_Error( "Couldn't find weapon %i", weaponNum );
-	}
-#ifdef IOQ3ZTM
-	CG_RegisterItemVisuals( ITEM_INDEX(item) );
-#else
-	CG_RegisterItemVisuals( item - bg_itemlist );
-#endif
-#endif
 
 	// load cmodel before model so filecache works
 #ifdef TA_WEAPSYS
@@ -1409,8 +1391,7 @@ void CG_RegisterWeapon( int weaponNum )
 #ifndef TURTLEARENA // WEAPONS
 	weaponInfo->ammoIcon = trap_R_RegisterShader( item->icon );
 
-#ifdef TA_ITEMSYS
-	ammo = NULL; // stop warning
+	ammo = NULL;
 	for (i = BG_NumItems()-1; i > 0; i--)
 	{
 		ammo = BG_ItemForItemNum(i);
@@ -1420,19 +1401,8 @@ void CG_RegisterWeapon( int weaponNum )
 			break;
 		}
 	}
-#else
-	for ( ammo = bg_itemlist + 1 ; ammo->classname ; ammo++ ) {
-		if ( ammo->giType == IT_AMMO && ammo->giTag == weaponNum ) {
-			break;
-		}
-	}
-#endif
 
-	if (
-#ifdef TA_ITEMSYS // stop warning
-	ammo &&
-#endif
-	ammo->classname && ammo->world_model[0] ) {
+	if ( ammo && ammo->classname && ammo->world_model[0] ) {
 		weaponInfo->ammoModel = trap_R_RegisterModel( ammo->world_model[0] );
 	}
 #endif
@@ -1641,26 +1611,16 @@ void CG_RegisterItemVisuals( int itemNum ) {
 	itemInfo_t		*itemInfo;
 	gitem_t			*item;
 
-#ifdef TA_ITEMSYS
 	if ( itemNum < 0 || itemNum >= BG_NumItems() ) {
 		CG_Error( "CG_RegisterItemVisuals: itemNum %d out of range [0-%d]", itemNum, BG_NumItems()-1 );
 	}
-#else
-	if ( itemNum < 0 || itemNum >= bg_numItems ) {
-		CG_Error( "CG_RegisterItemVisuals: itemNum %d out of range [0-%d]", itemNum, bg_numItems-1 );
-	}
-#endif
 
 	itemInfo = &cg_items[ itemNum ];
 	if ( itemInfo->registered ) {
 		return;
 	}
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(itemNum);
-#else
-	item = &bg_itemlist[ itemNum ];
-#endif
 
 	memset( itemInfo, 0, sizeof( &itemInfo ) );
 	itemInfo->registered = qtrue;

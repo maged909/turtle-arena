@@ -2167,9 +2167,7 @@ CG_DrawPickupItem
 static int CG_DrawPickupItem( int y ) {
 	int		value;
 	float	*fadeColor;
-#ifdef TA_ITEMSYS
 	gitem_t *item;
-#endif
 
 	if ( cg.cur_ps->stats[STAT_HEALTH] <= 0 ) {
 		return y;
@@ -2178,9 +2176,8 @@ static int CG_DrawPickupItem( int y ) {
 	y -= ICON_SIZE;
 
 	value = cg.cur_lc->itemPickup;
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(value);
-#endif
+
 #ifdef TA_WEAPSYS
 	if (item && item->giType == IT_WEAPON
 		&& item->giTag == WP_DEFAULT)
@@ -2195,11 +2192,7 @@ static int CG_DrawPickupItem( int y ) {
 			CG_RegisterItemVisuals( value );
 			trap_R_SetColor( fadeColor );
 			CG_DrawPic( 8, y, ICON_SIZE, ICON_SIZE, cg_items[ value ].icon );
-#ifdef TA_ITEMSYS
 			CG_DrawBigString( ICON_SIZE + 16, y + (ICON_SIZE/2 - BIGCHAR_HEIGHT/2), item->pickup_name, fadeColor[0] );
-#else
-			CG_DrawBigString( ICON_SIZE + 16, y + (ICON_SIZE/2 - BIGCHAR_HEIGHT/2), bg_itemlist[ value ].pickup_name, fadeColor[0] );
-#endif
 			trap_R_SetColor( NULL );
 		}
 	}

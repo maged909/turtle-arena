@@ -845,9 +845,7 @@ void UI_InitGameinfo( void ) {
 
 	UI_InitMemory();
 	UI_LoadArenas();
-#ifdef TA_ITEMSYS
 	BG_InitItemInfo();
-#endif
 	UI_LoadBots();
 
 	uis.demoversion = qfalse;
