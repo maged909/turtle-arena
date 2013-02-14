@@ -1643,6 +1643,7 @@ void Hunk_Clear( void ) {
 	CL_ShutdownUI();
 #endif
 	SV_ShutdownGameProgs();
+	VM_ClearMemoryTags();
 #ifndef DEDICATED
 	CIN_CloseAllVideos();
 #endif
