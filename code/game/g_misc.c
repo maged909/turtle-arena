@@ -473,11 +473,7 @@ void DropPortalDestination( gentity_t *player ) {
 	player->client->ps.holdableIndex = HI_PORTAL;
 	player->client->ps.holdable[HI_PORTAL]++;
 #else
-#ifdef IOQ3ZTM
-	player->client->ps.stats[STAT_HOLDABLE_ITEM] = ITEM_INDEX( BG_FindItem( "Portal" ) );
-#else
-	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_FindItem( "Portal" ) - bg_itemlist;
-#endif
+	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemIndexForName( "Portal" ) );
 #endif
 }
 

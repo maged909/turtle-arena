@@ -2152,7 +2152,7 @@ static void CG_PlayerFlag( centity_t *cent, qhandle_t hSkin, refEntity_t *parent
 #endif
 
 	item = BG_FindItemForPowerup(flagPower);
-	itemIndex = ITEM_INDEX(item);
+	itemIndex = BG_ItemNumForItem(item);
 #endif
 #ifdef TA_DATA // FLAG_MODEL
 	trailItem = qtrue;

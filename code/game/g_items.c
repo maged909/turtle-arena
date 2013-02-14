@@ -126,11 +126,7 @@ int Pickup_PersistantPowerup( gentity_t *ent, gentity_t *other ) {
 	float	handicap;
 	int		max;
 
-#ifdef IOQ3ZTM
-	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = ITEM_INDEX(ent->item);
-#else
-	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = ent->item - bg_itemlist;
-#endif
+	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = BG_ItemNumForItem(ent->item);
 	other->client->persistantPowerup = ent;
 
 	handicap = ClientHandicap( other->client );
@@ -195,11 +191,7 @@ int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 		other->client->ps.holdable[other->client->ps.holdableIndex] = MAX_SHURIKENS;
 	}
 #else
-#ifdef IOQ3ZTM
-	other->client->ps.stats[STAT_HOLDABLE_ITEM] = ITEM_INDEX(ent->item);
-#else
-	other->client->ps.stats[STAT_HOLDABLE_ITEM] = ent->item - bg_itemlist;
-#endif
+	other->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemNumForItem(ent->item);
 #endif
 
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
@@ -553,7 +545,7 @@ void RespawnItem( gentity_t *ent ) {
 		item = G_RandomWeaponItem(ent, ent->spawnflags>>1);
 		if (item) {
 			ent->item = item;
-			ent->s.modelindex = ITEM_INDEX(item);
+			ent->s.modelindex = BG_ItemNumForItem(item);
 		}
 	}
 #endif
@@ -776,11 +768,7 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	dropped = G_Spawn();
 
 	dropped->s.eType = ET_ITEM;
-#ifdef IOQ3ZTM
-	dropped->s.modelindex = ITEM_INDEX(item);	// store item number in modelindex
-#else
-	dropped->s.modelindex = item - bg_itemlist;	// store item number in modelindex
-#endif
+	dropped->s.modelindex = BG_ItemNumForItem(item);	// store item number in modelindex
 	dropped->s.modelindex2 = 1; // This is non-zero is it's a dropped item
 
 	dropped->classname = item->classname;
@@ -920,11 +908,7 @@ void FinishSpawningItem( gentity_t *ent ) {
 	VectorSet( ent->s.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
 
 	ent->s.eType = ET_ITEM;
-#ifdef IOQ3ZTM
-	ent->s.modelindex = ITEM_INDEX(ent->item);		// store item number in modelindex
-#else
-	ent->s.modelindex = ent->item - bg_itemlist;		// store item number in modelindex
-#endif
+	ent->s.modelindex = BG_ItemNumForItem(ent->item);		// store item number in modelindex
 	ent->s.modelindex2 = 0; // zero indicates this isn't a dropped item
 
 	ent->s.contents = CONTENTS_TRIGGER;
@@ -996,21 +980,11 @@ void G_CheckTeamItems( void ) {
 
 		// check for the two flags
 		item = BG_FindItem( "Red Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_redflag in map\n" );
 		}
 		item = BG_FindItem( "Blue Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_blueflag in map\n" );
 		}
 	}
@@ -1020,30 +994,15 @@ void G_CheckTeamItems( void ) {
 
 		// check for all three flags
 		item = BG_FindItem( "Red Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_redflag in map\n" );
 		}
 		item = BG_FindItem( "Blue Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_blueflag in map\n" );
 		}
 		item = BG_FindItem( "Neutral Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_neutralflag in map\n" );
 		}
 	}
@@ -1144,7 +1103,7 @@ void RegisterItem( gitem_t *item ) {
 		return;
 	}
 #ifdef TA_WEAPSYS
-	itemNum = ITEM_INDEX(item);
+	itemNum = BG_ItemNumForItem(item);
 	if (itemNum < 0 || itemNum >= MAX_ITEMS)
 	{
 		G_Error( "RegisterItem: itemNum %d out of range [0-%d]\n", itemNum, MAX_ITEMS-1);

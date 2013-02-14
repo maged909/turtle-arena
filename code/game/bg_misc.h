@@ -2220,8 +2220,6 @@ gitem_t	*BG_FindItemForHoldable( holdable_t pw );
 #ifdef IOQ3ZTM
 gitem_t	*BG_FindItemForClassname( const char *classname );
 #endif
-// ZTM: TODO: Remove ITEM_INDEX
-#define	ITEM_INDEX(x) (BG_ItemNumForItem(x))
 
 qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps );
 

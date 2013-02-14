@@ -521,7 +521,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 	if (!item) {
 		return;
 	}
-	itemIndex = ITEM_INDEX(item);
+	itemIndex = BG_ItemNumForItem(item);
 
 	if ( !force2D && cg_draw3dIcons.integer )
 	{
@@ -608,7 +608,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 			return;
 		}
 		if (item) {
-		  CG_DrawPic( x, y, w, h, cg_items[ ITEM_INDEX(item) ].icon );
+		  CG_DrawPic( x, y, w, h, cg_items[ BG_ItemNumForItem(item) ].icon );
 		}
 	}
 #endif
@@ -2183,7 +2183,7 @@ static int CG_DrawPickupItem( int y ) {
 		&& item->giTag == WP_DEFAULT)
 	{
 		item = BG_FindItemForWeapon(cgs.clientinfo[cg.cur_ps->clientNum].playercfg.default_weapon);
-		value = ITEM_INDEX(item);
+		value = BG_ItemNumForItem(item);
 	}
 #endif
 	if ( value ) {
