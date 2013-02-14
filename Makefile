@@ -85,7 +85,6 @@ endif
 # NOBLOOD				Removes blood. If this is defined, NOTRATEDM must also be defined.
 # TA_BLOOM				Post-process bloom light effect, based on code from OpenArena.
 #####
-# TA_ITEMSYS			Load items from external text files. Required for TA_WEAPSYS.
 # TA_WEAPSYS			This is the core changes to the weapon system
 #							loads the weapons from a text file, allowing for easy modifing,
 #							and new custom default weapons for players.
@@ -117,7 +116,7 @@ endif
 
 BUILD_DEFINES = -DNOTRATEDM -DNOBLOOD \
 					-DIOQ3ZTM -DIOQ3ZTM_NO_COMPAT -DIOQ3ZTM_NO_TEAM_MODEL \
-					-DTA_HOLDSYS -DTA_ITEMSYS \
+					-DTA_HOLDSYS \
 					-DTA_WEAPSYS -DTA_PLAYERSYS \
 					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_NPCSYS -DTA_PATHSYS \
 					-DTA_WEAPSYS_EX_COMPAT \
