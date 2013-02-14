@@ -86,7 +86,6 @@ endif
 # TA_BLOOM				Post-process bloom light effect, based on code from OpenArena.
 #####
 # TA_ITEMSYS			Load items from external text files. Required for TA_WEAPSYS.
-# TA_ITEMSYS_USE_INTERNAL Use the internal item data. The data can be overriden by external items.
 # TA_WEAPSYS			This is the core changes to the weapon system
 #							loads the weapons from a text file, allowing for easy modifing,
 #							and new custom default weapons for players.
