@@ -561,6 +561,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
 
+	case G_ALLOC:
+		return VM_Alloc( args[1], VMA(2) );
+
 #ifdef TA_GAME_MODELS
 	case G_REGISTERMODEL:
 		return RE_RegisterModel( VMA(1) );
