@@ -2135,13 +2135,13 @@ static void CG_PlayerFlag( centity_t *cent, qhandle_t hSkin, refEntity_t *parent
 	int			legsAnim, flagAnim, updateangles;
 	float		angle, d;
 #ifdef TA_DATA // FLAG_MODEL
-	qboolean trailItem;
+	qboolean	trailItem;
 #endif
 #ifdef IOQ3ZTM // FLAG
-	gitem_t *item;
-	int itemIndex;
+	bg_iteminfo_t	*item;
+	int				itemIndex;
 #ifndef TA_DATA // FLAG_MODEL
-	qhandle_t hSkin = 0;
+	qhandle_t		hSkin = 0;
 
 	if (flagPower == PW_REDFLAG)
 		hSkin = cgs.media.redFlagFlapSkin;

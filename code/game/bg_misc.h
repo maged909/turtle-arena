@@ -763,7 +763,7 @@ typedef enum {
 } weapon_t;
 #endif
 
-// gitem_t->type
+// bg_iteminfo_t->type
 typedef enum {
 	IT_BAD,
 	IT_WEAPON,				// EFX: rotate + upscale + minlight
@@ -817,10 +817,6 @@ int BG_NumItems(void);
 int BG_NumHoldableItems(void);
 
 void BG_InitItemInfo(void);
-
-// ZTM: TODO: Remove gitem_s/gitem_t
-#define gitem_s bg_iteminfo_s
-#define gitem_t bg_iteminfo_t
 
 #ifdef TA_WEAPSYS
 // Currently only support two hands
@@ -2213,12 +2209,12 @@ extern int modNamesSize;
 
 //---------------------------------------------------------
 
-gitem_t	*BG_FindItem( const char *pickupName );
-gitem_t	*BG_FindItemForWeapon( weapon_t weapon );
-gitem_t	*BG_FindItemForPowerup( powerup_t pw );
-gitem_t	*BG_FindItemForHoldable( holdable_t pw );
+bg_iteminfo_t	*BG_FindItem( const char *pickupName );
+bg_iteminfo_t	*BG_FindItemForWeapon( weapon_t weapon );
+bg_iteminfo_t	*BG_FindItemForPowerup( powerup_t pw );
+bg_iteminfo_t	*BG_FindItemForHoldable( holdable_t pw );
 #ifdef IOQ3ZTM
-gitem_t	*BG_FindItemForClassname( const char *classname );
+bg_iteminfo_t	*BG_FindItemForClassname( const char *classname );
 #endif
 
 qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps );

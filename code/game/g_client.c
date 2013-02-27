@@ -1780,7 +1780,7 @@ void ClientSpawn(gentity_t *ent, qboolean firstTime) {
 	{
 		// ZTM: Start with default weapon.
 #ifndef TA_WEAPSYS_EX
-		gitem_t *item = NULL;
+		bg_iteminfo_t *item = NULL;
 #endif
 		weapon_t weapon;
 
@@ -2256,7 +2256,7 @@ void Drone_Touch(gentity_t *self, gentity_t *other, trace_t *trace )
 // Ideya Drone
 void SP_nights_start( gentity_t *ent )
 {
-	gitem_t *item;
+	bg_iteminfo_t *item;
 
 	// Touch this to go into NiGHTS mode
 	//    and go to current mare.
@@ -2320,7 +2320,7 @@ void Capture_Touch(gentity_t *self, gentity_t *other, trace_t *trace )
 // Touch to use collected Spheres to damage Ideya Capture
 void SP_nights_target( gentity_t *ent )
 {
-	gitem_t *item;
+	bg_iteminfo_t *item;
 
 	VectorSet( ent->s.mins, -15, -15, -15 );
 	VectorSet( ent->s.maxs, 15, 15, 15 );

@@ -506,7 +506,7 @@ Used for both the status bar and the scoreboard
 */
 void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean force2D ) {
 #ifdef TA_DATA // FLAG_MODEL
-	gitem_t *item;
+	bg_iteminfo_t *item;
 	int itemIndex;
 
 	if( team == TEAM_RED ) {
@@ -596,7 +596,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		}
 		CG_Draw3DModel( x, y, w, h, handle, 0, origin, angles );
 	} else if ( cg_drawIcons.integer ) {
-		gitem_t *item;
+		bg_iteminfo_t *item;
 
 		if( team == TEAM_RED ) {
 			item = BG_FindItemForPowerup( PW_REDFLAG );
@@ -1550,7 +1550,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	int plyrs;
 	char st[16];
 	clientInfo_t *ci;
-	gitem_t	*item;
+	bg_iteminfo_t	*item;
 	int ret_y, count;
 	int team;
 
@@ -1821,7 +1821,7 @@ static float CG_DrawScores( float y ) {
 	int			h;
 	vec4_t		color;
 	float		y1;
-	gitem_t		*item;
+	bg_iteminfo_t	*item;
 	const int	FLAG_SIZE = 64;
 
 	s1 = cgs.scores1;
@@ -2032,7 +2032,7 @@ static float CG_DrawPowerups( float y ) {
 	int		active;
 	playerState_t	*ps;
 	int		t;
-	gitem_t	*item;
+	bg_iteminfo_t	*item;
 	int		x;
 	int		color;
 	float	size;
@@ -2165,9 +2165,9 @@ CG_DrawPickupItem
 */
 #ifndef MISSIONPACK_HUD
 static int CG_DrawPickupItem( int y ) {
-	int		value;
-	float	*fadeColor;
-	gitem_t *item;
+	int				value;
+	float			*fadeColor;
+	bg_iteminfo_t	*item;
 
 	if ( cg.cur_ps->stats[STAT_HEALTH] <= 0 ) {
 		return y;

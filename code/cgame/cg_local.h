@@ -648,7 +648,7 @@ typedef struct weaponGroupInfo_s {
 // weapon and its effects
 typedef struct weaponInfo_s {
 	qboolean		registered;
-	gitem_t			*item;
+	bg_iteminfo_t	*item;
 
 	qhandle_t		handsModel;			// the hands don't actually draw, they just position the weapon
 	qhandle_t		weaponModel;

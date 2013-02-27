@@ -909,7 +909,7 @@ The server says this item is used on this level
 =================
 */
 static void CG_RegisterItemSounds( int itemNum ) {
-	gitem_t			*item;
+	bg_iteminfo_t	*item;
 	char			data[MAX_QPATH];
 	char			*s, *start;
 	int				len;
@@ -2366,7 +2366,7 @@ static clientInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex
 }
 
 static const char *CG_FeederItemText(float feederID, int index, int column, qhandle_t *handle) {
-	gitem_t *item;
+	bg_iteminfo_t *item;
 	int scoreIndex = 0;
 	clientInfo_t *info = NULL;
 	int team = -1;

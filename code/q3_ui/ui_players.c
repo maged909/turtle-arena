@@ -73,7 +73,7 @@ UI_PlayerInfo_SetWeapon
 static void UI_PlayerInfo_SetWeapon( playerInfo_t *pi, weapon_t weaponNum ) {
 	int			i;
 #ifndef TA_WEAPSYS
-	gitem_t *	item;
+	bg_iteminfo_t *item;
 #endif
 	char		path[MAX_QPATH];
 

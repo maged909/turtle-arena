@@ -441,11 +441,11 @@ CG_UseItem
 ===============
 */
 static void CG_UseItem( centity_t *cent ) {
-	clientInfo_t *ci;
-	int			itemNum, clientNum;
-	gitem_t		*item;
-	entityState_t *es;
-	int			i;
+	clientInfo_t	*ci;
+	int				itemNum, clientNum;
+	bg_iteminfo_t	*item;
+	entityState_t	*es;
+	int				i;
 
 	es = &cent->currentState;
 	
@@ -534,9 +534,10 @@ A new item was picked up this frame
 ================
 */
 static void CG_ItemPickup( int localClientNum, int itemNum ) {
-	cglc_t *lc = &cg.localClients[localClientNum];
-	gitem_t *item;
+	cglc_t			*lc;
+	bg_iteminfo_t	*item;
 
+	lc = &cg.localClients[localClientNum];
 	item = BG_ItemForItemNum(itemNum);
 
 #ifdef TURTLEARENA // NIGTHS_ITEMS
@@ -1030,8 +1031,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_ITEM_PICKUP:
 		DEBUGNAME("EV_ITEM_PICKUP");
 		{
-			gitem_t	*item;
-			int		index;
+			bg_iteminfo_t	*item;
+			int				index;
 
 			index = es->eventParm;		// player predicted
 
@@ -1085,8 +1086,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_GLOBAL_ITEM_PICKUP:
 		DEBUGNAME("EV_GLOBAL_ITEM_PICKUP");
 		{
-			gitem_t	*item;
-			int		index;
+			bg_iteminfo_t	*item;
+			int				index;
 
 			index = es->eventParm;		// player predicted
 
