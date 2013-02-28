@@ -67,6 +67,7 @@ vmCvar_t	g_forcerespawn;
 vmCvar_t	g_inactivity;
 vmCvar_t	g_debugMove;
 vmCvar_t	g_debugDamage;
+vmCvar_t	g_debugAlloc;
 vmCvar_t	g_weaponRespawn;
 vmCvar_t	g_weaponTeamRespawn;
 vmCvar_t	g_motd;
@@ -193,6 +194,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_inactivity, "g_inactivity", "0", 0, 0, qtrue },
 	{ &g_debugMove, "g_debugMove", "0", 0, 0, qfalse },
 	{ &g_debugDamage, "g_debugDamage", "0", 0, 0, qfalse },
+	{ &g_debugAlloc, "g_debugAlloc", "0", 0, 0, qfalse },
 	{ &g_motd, "g_motd", "", 0, 0, qfalse },
 #ifndef NOTRATEDM
 	{ &g_blood, "com_blood", "1", 0, 0, qfalse },
@@ -263,6 +265,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart );
 void G_RunFrame( int levelTime );
 void G_ShutdownGame( int restart );
 qboolean G_SnapshotCallback( int entityNum, int clientNum );
+void G_VidRestart( void );
 void CheckExitRules( void );
 
 
@@ -308,6 +311,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return ConsoleCommand();
 	case GAME_SNAPSHOT_CALLBACK:
 		return G_SnapshotCallback( arg0, arg1 );
+	case GAME_VID_RESTART:
+		G_VidRestart();
+		return 0;
 	case BOTAI_START_FRAME:
 		return BotAIStartFrame( arg0 );
 	}
@@ -567,6 +573,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_ProcessIPBans();
 
+	G_InitMemory();
+
 	// tell server entity and player state size and network field info
 	trap_SetNetFields( sizeof (entityState_t), bg_entityStateFields, bg_numEntityStateFields,
 					   sizeof (playerState_t), bg_playerStateFields, bg_numPlayerStateFields );
@@ -746,6 +754,27 @@ qboolean G_SnapshotCallback( int entityNum, int clientNum ) {
 	}
 
 	return qtrue;
+}
+
+/*
+=================
+G_VidRestart
+
+Model handles are no longer valid, re-register all models.
+=================
+*/
+void G_VidRestart( void ) {
+#ifdef TA_GAME_MODELS
+	int i;
+
+	for ( i = 0; i < level.maxclients; i++) {
+		if ( g_clients[i].pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+
+		ClientUserinfoChanged( i );
+	}
+#endif
 }
 
 //===================================================================

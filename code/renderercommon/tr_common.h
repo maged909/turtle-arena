@@ -34,9 +34,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 /*#include "../qcommon/qfiles.h"*/
 /*#include "../qcommon/qcommon.h"*/
 #include "../renderercommon/tr_public.h"
-#ifndef RENDERLESS_MODELS
 #include "qgl.h"
-#endif
 
 extern	refimport_t		ri;
 extern glconfig_t	glConfig;		// outside of TR since it shouldn't be cleared during ref re-init

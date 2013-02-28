@@ -157,13 +157,8 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 
 	LL( header->version );
 	if( header->version != IQM_VERSION ) {
-#ifdef RENDERLESS_MODELS
-		Com_Printf("R_LoadIQM: %s is a unsupported IQM version (%d), only version %d is supported.\n",
-				mod_name, header->version, IQM_VERSION);
-#else
 		ri.Printf(PRINT_WARNING, "R_LoadIQM: %s is a unsupported IQM version (%d), only version %d is supported.\n",
 				mod_name, header->version, IQM_VERSION);
-#endif
 		return qfalse;
 	}
 
@@ -200,13 +195,8 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 
 	// check ioq3 joint limit
 	if ( header->num_joints > IQM_MAX_JOINTS ) {
-#ifdef RENDERLESS_MODELS
-		Com_Printf("R_LoadIQM: %s has more than %d joints (%d).\n",
-				mod_name, IQM_MAX_JOINTS, header->num_joints);
-#else
 		ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %d joints (%d).\n",
 				mod_name, IQM_MAX_JOINTS, header->num_joints);
-#endif
 		return qfalse;
 	}
 
@@ -326,24 +316,14 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		// check ioq3 limits
 		if ( mesh->num_vertexes > SHADER_MAX_VERTEXES ) 
 		{
-#ifdef RENDERLESS_MODELS
-			Com_Printf("R_LoadIQM: %s has more than %i verts on a surface (%i).\n",
-				  mod_name, SHADER_MAX_VERTEXES, mesh->num_vertexes );
-#else
 			ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %i verts on a surface (%i).\n",
 				  mod_name, SHADER_MAX_VERTEXES, mesh->num_vertexes );
-#endif
 			return qfalse;
 		}
 		if ( mesh->num_triangles*3 > SHADER_MAX_INDEXES ) 
 		{
-#ifdef RENDERLESS_MODELS
-			Com_Printf("R_LoadIQM: %s has more than %i triangles on a surface (%i).\n",
-				  mod_name, SHADER_MAX_INDEXES / 3, mesh->num_triangles );
-#else
 			ri.Printf(PRINT_WARNING, "R_LoadIQM: %s has more than %i triangles on a surface (%i).\n",
 				  mod_name, SHADER_MAX_INDEXES / 3, mesh->num_triangles );
-#endif
 			return qfalse;
 		}
 
@@ -461,11 +441,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	size += joint_names;					// joint names
 
 	mod->type = MOD_IQM;
-#ifdef RENDERLESS_MODELS
-	iqmData = (iqmData_t *)Hunk_Alloc( size, h_low );
-#else
 	iqmData = (iqmData_t *)ri.Hunk_Alloc( size, h_low );
-#endif
 	mod->modelData = iqmData;
 
 	// fill header
@@ -587,13 +563,9 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		surface->surfaceType = SF_IQM;
 		Q_strncpyz(surface->name, str + mesh->name, sizeof (surface->name));
 		Q_strlwr(surface->name); // lowercase the surface name so skin compares are faster
-#ifdef RENDERLESS_MODELS
-		surface->shader = 0;
-#else
 		surface->shader = R_FindShader( str + mesh->material, LIGHTMAP_NONE, qtrue );
 		if( surface->shader->defaultShader )
 			surface->shader = tr.defaultShader;
-#endif
 		surface->data = iqmData;
 		surface->first_vertex = mesh->first_vertex;
 		surface->num_vertexes = mesh->num_vertexes;
@@ -695,7 +667,6 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	return qtrue;
 }
 
-#ifndef RENDERLESS_MODELS
 /*
 =============
 R_CullIQM
@@ -922,7 +893,6 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 		surface++;
 	}
 }
-#endif
 
 
 static void ComputeJointMats( iqmData_t *data, int frame, int oldframe,
@@ -1019,7 +989,6 @@ void ComputeJointRelativeOrientation( iqmData_t *data, int frame, int oldframe,
 #endif
 
 
-#ifndef RENDERLESS_MODELS
 /*
 =================
 RB_AddIQMSurfaces
@@ -1165,7 +1134,6 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	tess.numIndexes += 3 * surf->num_triangles;
 	tess.numVertexes += surf->num_vertexes;
 }
-#endif
 
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 		  int startFrame, int endFrame, 

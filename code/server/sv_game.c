@@ -33,12 +33,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../botlib/botlib.h"
 
-#ifdef TA_GAME_MODELS
-#ifdef IOQ3ZTM // BONES
-#include "../renderercommon/tr_types.h"
-#endif
-#endif
-
 botlib_export_t	*botlib_export;
 
 // these functions must be used instead of pointer arithmetic, because
@@ -318,20 +312,6 @@ static int	FloatAsInt( float f ) {
 	return fi.i;
 }
 
-#ifdef TA_GAME_MODELS
-qhandle_t	RE_RegisterModel( const char *name );
-int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame,
-					 float frac, const char *tagName );
-#ifdef IOQ3ZTM // BONES
-int RE_JointIndexForName(qhandle_t handle, const char *jointName);
-qboolean RE_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
-qboolean RE_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int legsFrame, int legsOldFrame, float legsBacklerp,
-								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
-								int headFrame, int headOldFrame, float headBacklerp);
-void R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
-#endif
-#endif
-
 /*
 ====================
 SV_GameSystemCalls
@@ -564,25 +544,26 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_ALLOC:
 		return VM_Alloc( args[1], VMA(2) );
 
-#ifdef TA_GAME_MODELS
-	case G_REGISTERMODEL:
-		return RE_RegisterModel( VMA(1) );
-	case G_LERPTAG:
-		return R_LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
+	case G_R_REGISTERMODEL:
+		return re.RegisterModel( VMA(1) );
+	case G_R_LERPTAG:
+		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
+	case G_R_MODELBOUNDS:
+		re.ModelBounds( args[1], VMA(2), VMA(3) );
+		return 0;
 
 #ifdef IOQ3ZTM // BONES
 	case G_JOINTINDEXFORNAME:
-		return RE_JointIndexForName(args[1], VMA(2));
+		return re.JointIndexForName(args[1], VMA(2));
 	case G_SETUPSKELETON:
-		return RE_SetupSkeleton(args[1], VMA(2), args[3], args[4], VMF(5));
+		return re.SetupSkeleton(args[1], VMA(2), args[3], args[4], VMF(5));
 	case G_SETUPPLAYERSKELETON:
-		return RE_SetupPlayerSkeleton(args[1], VMA(2), args[3], args[4], VMF(5),
+		return re.SetupPlayerSkeleton(args[1], VMA(2), args[3], args[4], VMF(5),
 										args[6], args[7], VMF(8),
 										args[9], args[10], VMF(11));
 	case G_MAKESKELETONABSOLUTE:
-		R_MakeSkeletonAbsolute(VMA(1), VMA(2));
+		re.MakeSkeletonAbsolute(VMA(1), VMA(2));
 		return 0;
-#endif
 #endif
 
 		//====================================
@@ -1092,5 +1073,19 @@ qboolean SV_GameCommand( void ) {
 	}
 
 	return VM_Call( gvm, GAME_CONSOLE_COMMAND );
+}
+
+/*
+===============
+SV_GameVidRestart
+
+Called every time client restarts renderer while running server
+===============
+*/
+void SV_GameVidRestart( void ) {
+	if ( !gvm ) {
+		return;
+	}
+	VM_Call( gvm, GAME_VID_RESTART );
 }
 

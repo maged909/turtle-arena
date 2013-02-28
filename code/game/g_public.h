@@ -252,6 +252,10 @@ typedef enum {
 
 	G_SET_NET_FIELDS,
 
+	G_R_REGISTERMODEL, // ( const char *name );
+	G_R_LERPTAG, // ( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, float frac, const char *tagName );
+	G_R_MODELBOUNDS, // ( qhandle_t handle, vec3_t mins, vec3_t maxs );
+
 	BOTLIB_SETUP = 200,				// ( void );
 	BOTLIB_SHUTDOWN,				// ( void );
 	BOTLIB_LIBVAR_SET,
@@ -416,16 +420,11 @@ typedef enum {
 	BOTLIB_AAS_PREDICT_ROUTE,
 	BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX,
 
-#ifdef TA_GAME_MODELS
-	G_REGISTERMODEL = 600,	// CG_R_REGISTERMODEL
-	G_LERPTAG,				// CG_R_LERPTAG
-
 #ifdef IOQ3ZTM // BONES
-	G_JOINTINDEXFORNAME,
+	G_JOINTINDEXFORNAME = 600,
 	G_SETUPSKELETON,
 	G_SETUPPLAYERSKELETON,
 	G_MAKESKELETONABSOLUTE,
-#endif
 #endif
 
 } gameImport_t;
@@ -470,5 +469,9 @@ typedef enum {
 
 	GAME_SNAPSHOT_CALLBACK,         // ( int entityNum, int clientNum );
 	// return qfalse if you don't want it to be added
+
+	GAME_VID_RESTART,				// ( void );
+	// caused by vid_restart on localhost server.
+	// model handles are no longer valid, must re-register all models.
 } gameExport_t;
 

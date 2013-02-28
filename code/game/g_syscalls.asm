@@ -86,6 +86,9 @@ equ trap_DebugPolygonDelete				-125
 equ trap_TraceCapsule					-126
 equ trap_EntityContactCapsule			-127
 equ trap_SetNetFields					-128
+equ trap_R_RegisterModel				-129
+equ trap_R_LerpTag						-130
+equ trap_R_ModelBounds					-131
 
 
 equ trap_BotLibSetup					-201
@@ -250,12 +253,9 @@ equ trap_AAS_PredictRoute				-577
 equ trap_AAS_PointReachabilityAreaIndex	-578
 
 
-;; ZTM: For TA_GAME_MODELS
-equ trap_R_RegisterModel		-601
-equ trap_R_LerpTag				-602
 ;; IOQ3ZTM // BONES
-equ trap_R_JointIndexForName	-603
-equ trap_R_SetupSkeleton		-604
-equ trap_R_SetupPlayerSkeleton	-605
-equ trap_R_MakeSkeletonAbsolute	-606
+equ trap_R_JointIndexForName	-601
+equ trap_R_SetupSkeleton		-602
+equ trap_R_SetupPlayerSkeleton	-603
+equ trap_R_MakeSkeletonAbsolute	-604
 

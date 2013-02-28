@@ -277,16 +277,6 @@ void trap_SnapVector( float *v ) {
 	syscall( G_SNAPVECTOR, v );
 }
 
-#ifdef TA_GAME_MODELS
-qhandle_t trap_R_RegisterModel( const char *name ) {
-	return syscall( G_REGISTERMODEL, name );
-}
-
-int		trap_R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame,
-					   float frac, const char *tagName ) {
-	return syscall( G_LERPTAG, tag, handle, startFrame, endFrame, PASSFLOAT(frac), tagName );
-}
-
 #ifdef IOQ3ZTM // BONES
 int trap_R_JointIndexForName(qhandle_t handle, const char *jointName)
 {
@@ -313,7 +303,6 @@ void trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out)
 	syscall( G_MAKESKELETONABSOLUTE, in, out );
 }
 #endif
-#endif
 
 void trap_AddCommand( const char *cmdName ) {
 	syscall( G_ADDCOMMAND, cmdName );
@@ -321,6 +310,19 @@ void trap_AddCommand( const char *cmdName ) {
 
 void trap_RemoveCommand( const char *cmdName ) {
 	syscall( G_REMOVECOMMAND, cmdName );
+}
+
+qhandle_t trap_R_RegisterModel( const char *name ) {
+	return syscall( G_R_REGISTERMODEL, name );
+}
+
+int trap_R_LerpTag( orientation_t *tag, clipHandle_t handle, int startFrame, int endFrame,
+					   float frac, const char *tagName ) {
+	return syscall( G_R_LERPTAG, tag, handle, startFrame, endFrame, PASSFLOAT(frac), tagName );
+}
+
+void trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs ) {
+	syscall( G_R_MODELBOUNDS, handle, mins, maxs );
 }
 
 // BotLib traps start here

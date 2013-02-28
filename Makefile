@@ -127,13 +127,7 @@ BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \
 					-DNIGHTSMODE
 
 # Use model tags for true melee attacking
-DED_USE_MODELS=1
 BUILD_DEFINES += -DTA_GAME_MODELS
-
-# Keep renderer internal until Rend2 is supported
-ifneq ($(USE_RENDERER_DLOPEN), 1)
-	USE_RENDERER_DLOPEN=0
-endif
 
 #############################################################################
 #
@@ -308,6 +302,10 @@ endif
 
 ifndef USE_RENDERER_DLOPEN
 USE_RENDERER_DLOPEN=1
+endif
+
+ifndef SERVER_USE_RENDERER_DLOPEN
+SERVER_USE_RENDERER_DLOPEN=0
 endif
 
 ifndef DEBUG_CFLAGS
@@ -1080,6 +1078,10 @@ ifeq ($(USE_RENDERER_DLOPEN),1)
   CLIENT_CFLAGS += -DUSE_RENDERER_DLOPEN
 endif
 
+ifeq ($(SERVER_USE_RENDERER_DLOPEN),1)
+  SERVER_CFLAGS += -DUSE_RENDERER_DLOPEN
+endif
+
 ifeq ($(USE_MUMBLE),1)
   CLIENT_CFLAGS += -DUSE_MUMBLE
 endif
@@ -1785,14 +1787,6 @@ ifneq ($(USE_RENDERER_DLOPEN), 0)
     $(B)/renderergl1/puff.o \
     $(B)/renderergl1/q_math.o \
     $(B)/renderergl1/tr_subs.o
-
-#ZTM: if TA_GAME_MODELS
-# client (with built in server) needs model loading too
-ifeq ($(DED_USE_MODELS),1)
-  Q3OBJ += \
-    $(B)/ded/tr_model.o \
-    $(B)/ded/tr_model_iqm.o
-endif
 endif
 
 ifneq ($(USE_INTERNAL_JPEG),0)
@@ -2296,6 +2290,13 @@ Q3DOBJ = \
   $(B)/ded/con_log.o \
   $(B)/ded/sys_main.o
 
+ifneq ($(SERVER_USE_RENDERER_DLOPEN),1)
+  Q3DOBJ += \
+    $(B)/ded/sv_ref.o \
+    $(B)/ded/tr_model.o \
+    $(B)/ded/tr_model_iqm.o
+endif
+
 ifeq ($(ARCH),i386)
   Q3DOBJ += \
       $(B)/ded/matha.o \
@@ -2322,13 +2323,6 @@ ifeq ($(ARCH),x64)
   Q3DOBJ += \
       $(B)/ded/snapvector.o \
       $(B)/ded/ftola.o
-endif
-
-#ZTM: if TA_GAME_MODELS
-ifeq ($(DED_USE_MODELS),1)
-Q3DOBJ += \
-      $(B)/ded/tr_model.o \
-      $(B)/ded/tr_model_iqm.o
 endif
 
 ifeq ($(USE_INTERNAL_ZLIB),1)
@@ -2537,6 +2531,7 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/g_cmds.o \
   $(B)/$(BASEGAME)/game/g_combat.o \
   $(B)/$(BASEGAME)/game/g_items.o \
+  $(B)/$(BASEGAME)/game/g_mem.o \
   $(B)/$(BASEGAME)/game/g_misc.o \
   $(B)/$(BASEGAME)/game/g_missile.o \
   $(B)/$(BASEGAME)/game/g_mover.o \
@@ -2593,6 +2588,7 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/g_cmds.o \
   $(B)/$(MISSIONPACK)/game/g_combat.o \
   $(B)/$(MISSIONPACK)/game/g_items.o \
+  $(B)/$(MISSIONPACK)/game/g_mem.o \
   $(B)/$(MISSIONPACK)/game/g_misc.o \
   $(B)/$(MISSIONPACK)/game/g_missile.o \
   $(B)/$(MISSIONPACK)/game/g_mover.o \
@@ -2906,11 +2902,8 @@ $(B)/ded/%.o: $(SYSDIR)/%.rc
 $(B)/ded/%.o: $(NDIR)/%.c
 	$(DO_DED_CC)
 
-# ZTM: TA_GAME_MODELS ded
-ifeq ($(DED_USE_MODELS),1)
 $(B)/ded/%.o: $(RGL1DIR)/%.c
 	$(DO_DED_CC)
-endif
 
 # Extra dependencies to ensure the git version is incorporated
 ifeq ($(USE_GIT),1)

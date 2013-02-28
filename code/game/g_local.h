@@ -34,10 +34,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "bg_misc.h"
 #include "g_public.h"
 
-#ifdef TA_GAME_MODELS
 #ifdef IOQ3ZTM // BONES
 #include "../renderercommon/tr_types.h"
-#endif
 #endif
 
 //==================================================================
@@ -903,6 +901,13 @@ void ObeliskPain( gentity_t *self, gentity_t *attacker, int damage );
 #endif
 
 //
+// g_mem.c
+//
+void *G_Alloc( int size );
+void G_InitMemory( void );
+void Svcmd_GameMem_f( void );
+
+//
 // g_session.c
 //
 void G_ReadSessionData( gclient_t *client );
@@ -1028,6 +1033,7 @@ extern	vmCvar_t	g_quadfactor;
 extern	vmCvar_t	g_forcerespawn;
 extern	vmCvar_t	g_inactivity;
 extern	vmCvar_t	g_debugMove;
+extern	vmCvar_t	g_debugAlloc;
 extern	vmCvar_t	g_debugDamage;
 extern	vmCvar_t	g_weaponRespawn;
 extern	vmCvar_t	g_weaponTeamRespawn;
@@ -1115,9 +1121,9 @@ qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
 int		trap_DebugPolygonCreate(int color, int numPoints, vec3_t *points);
 void	trap_DebugPolygonDelete(int id);
 
-#ifdef TA_GAME_MODELS
 qhandle_t trap_R_RegisterModel( const char *name );
-int trap_R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame,
+void trap_R_ModelBounds( clipHandle_t handle, vec3_t mins, vec3_t maxs );
+int trap_R_LerpTag( orientation_t *tag, clipHandle_t handle, int startFrame, int endFrame,
 					   float frac, const char *tagName );
 
 #ifdef IOQ3ZTM // BONES
@@ -1128,7 +1134,6 @@ qboolean trap_R_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel,
 								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
 								int headFrame, int headOldFrame, float headBacklerp);
 void	trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
-#endif
 #endif
 
 int		trap_BotLibSetup( void );
