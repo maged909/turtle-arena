@@ -320,7 +320,7 @@ itemconfig_t *LoadItemConfig(char *filename)
 			if (!PC_ExpectTokenType(source, TT_STRING, 0, &token))
 			{
 				FreeMemory(ic);
-				FreeMemory(source);
+				FreeSource(source);
 				return NULL;
 			} //end if
 			StripDoubleQuotes(token.string);
@@ -717,10 +717,9 @@ void BotInitLevelItems(void)
 	}
 #endif
 
-	//update the modelindexes of the item info
+	//validate the modelindexes of the item info
 	for (i = 0; i < ic->numiteminfo; i++)
 	{
-		//ic->iteminfo[i].modelindex = AAS_IndexFromModel(ic->iteminfo[i].model);
 		if (!ic->iteminfo[i].modelindex)
 		{
 			Log_Write("item %s has modelindex 0", ic->iteminfo[i].classname);
