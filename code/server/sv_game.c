@@ -35,7 +35,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifdef TA_GAME_MODELS
 #ifdef IOQ3ZTM // BONES
-#include "../renderer/tr_types.h"
+#include "../renderercommon/tr_types.h"
 #endif
 #endif
 

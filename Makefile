@@ -2908,7 +2908,7 @@ $(B)/ded/%.o: $(NDIR)/%.c
 
 # ZTM: TA_GAME_MODELS ded
 ifeq ($(DED_USE_MODELS),1)
-$(B)/ded/%.o: $(RDIR)/%.c
+$(B)/ded/%.o: $(RGL1DIR)/%.c
 	$(DO_DED_CC)
 endif
 
