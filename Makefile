@@ -129,11 +129,6 @@ BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \
 # Use model tags for true melee attacking
 BUILD_DEFINES += -DTA_GAME_MODELS
 
-# Keep renderer internal until Rend2 is supported
-ifneq ($(USE_RENDERER_DLOPEN), 1)
-	USE_RENDERER_DLOPEN=0
-endif
-
 #############################################################################
 #
 # If you require a different configuration from the defaults below, create a
