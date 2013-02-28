@@ -230,11 +230,6 @@ typedef struct {
 	qboolean (*CL_GetClientLocation)(char *buf, int bufLength);
 #endif
 #endif
-
-#ifdef TA_GAME_MODELS
-	// server stuff
-	void	(*ServerUpdateUserinfos)(void);
-#endif
 } refimport_t;
 
 

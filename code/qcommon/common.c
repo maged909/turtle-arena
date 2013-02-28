@@ -3074,12 +3074,6 @@ void Com_InitRef( refimport_t *ri ) {
 	ri->Cvar_VariableStringBuffer = Cvar_VariableStringBuffer;
 #endif
 
-#ifdef TA_GAME_MODELS
-	// XXX
-	extern void SV_UpdateUserinfos(void);
-	ri->ServerUpdateUserinfos = SV_UpdateUserinfos;
-#endif
-
 	ri->ftol = Q_ftol;
 
 	ri->Sys_SetEnv = Sys_SetEnv;

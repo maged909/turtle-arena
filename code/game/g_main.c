@@ -764,7 +764,17 @@ Model handles are no longer valid, re-register all models.
 =================
 */
 void G_VidRestart( void ) {
+#ifdef TA_GAME_MODELS
+	int i;
 
+	for ( i = 0; i < level.maxclients; i++) {
+		if ( g_clients[i].pers.connected != CON_CONNECTED ) {
+			continue;
+		}
+
+		ClientUserinfoChanged( i );
+	}
+#endif
 }
 
 //===================================================================

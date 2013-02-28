@@ -29,10 +29,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 // tr_models.c -- model loading and caching
 
-#ifdef TA_GAME_MODELS
-#include "../server/server.h"
-#endif
-
 #include "tr_local.h"
 
 #define	LL(x) x=LittleLong(x)
@@ -1317,14 +1313,6 @@ void R_ModelInit( void ) {
 
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
-
-#ifdef TA_GAME_MODELS
-#ifdef RENDERLESS_MODELS
-	SV_UpdateUserinfos();
-#else
-	ri.ServerUpdateUserinfos();
-#endif
-#endif
 }
 
 

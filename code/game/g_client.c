@@ -935,7 +935,7 @@ void G_LoadPlayer(int clientNum, const char *inModelName, const char *inHeadMode
 
 #ifdef TA_GAME_MODELS
 	// Load model (needed for tags / skeleton)
-	// Game and cgame share the same models so an extra ClientUserinfoChanged is called on model reset (R_ModelInit),
+	// Game and cgame share the same models so an extra ClientUserinfoChanged is called on model reset (G_VidRestart),
 	//   otherwise the model numbers may be incorrect after video restart.
 	client->pers.torsoModel = 0;
 	client->pers.legsModel = 0;
