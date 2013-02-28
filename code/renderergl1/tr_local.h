@@ -42,12 +42,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../renderercommon/tr_public.h"
 #include "../renderercommon/tr_common.h"
 #include "../renderercommon/iqm.h"
-#ifdef RENDERLESS_MODELS
-#define GLuint unsigned int
-#define GLboolean qboolean
-#else
 #include "../renderercommon/qgl.h"
-#endif
 
 #define GL_INDEX_TYPE		GL_UNSIGNED_INT
 typedef unsigned int glIndex_t;
@@ -1067,7 +1062,6 @@ typedef struct {
 ** by the frontend.
 */
 typedef struct {
-#ifndef RENDERLESS_MODELS
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
 
 	int						visCount;		// incremented every time a new vis cluster is entered
@@ -1147,11 +1141,9 @@ typedef struct {
 	// put large tables at the end, so most elements will be
 	// within the +/32K indexed range on risc processors
 	//
-#endif
 	model_t					*models[MAX_MOD_KNOWN];
 	int						numModels;
 
-#ifndef RENDERLESS_MODELS
 	int						numImages;
 	image_t					*images[MAX_DRAWIMAGES];
 
@@ -1172,9 +1164,9 @@ typedef struct {
 	float					inverseSawToothTable[FUNCTABLE_SIZE];
 	float					noiseTable[FUNCTABLE_SIZE];
 	float					fogTable[FOG_TABLE_SIZE];
-#endif
 } trGlobals_t;
 
+extern qboolean		refHeadless;	// qtrue if loaded by dedicated server, no rendering will be done.
 extern backEndState_t	backEnd;
 extern trGlobals_t	tr;
 extern glstate_t	glState;		// outside of TR since it shouldn't be cleared during ref re-init

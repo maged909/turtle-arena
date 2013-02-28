@@ -35,24 +35,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "tr_local.h"
 
-#ifdef RENDERLESS_MODELS
-trGlobals_t tr;
-
-void R_ModelInit( void );
-
-/*
-===============
-R_Init
-===============
-*/
-void R_Init( void ) {
-	// clear all our internal state
-	Com_Memset( &tr, 0, sizeof( tr ) );
-
-	R_ModelInit();
-}
-#endif
-
 #define	LL(x) x=LittleLong(x)
 
 static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, const char *name );
@@ -1295,7 +1277,6 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
 
 //=============================================================================
 
-#ifndef RENDERLESS_MODELS
 /*
 ** RE_BeginRegistration
 */
@@ -1303,7 +1284,9 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 
 	R_Init();
 
-	*glconfigOut = glConfig;
+	if ( glconfigOut ) {
+		*glconfigOut = glConfig;
+	}
 
 	R_IssuePendingRenderCommands();
 
@@ -1318,7 +1301,6 @@ void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	// first time the level shot would not be drawn
 //	RE_StretchPic(0, 0, 0, 0, 0, 0, 1, 1, 0);
 }
-#endif
 
 //=============================================================================
 

@@ -30,11 +30,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "server.h"
 
-#if defined TA_GAME_MODELS && defined DEDICATED
-// tr_model.c
-void R_Init(void);
-#endif
-
 /*
 ===============
 SV_SendConfigstring
@@ -434,6 +429,24 @@ static void SV_TouchCGame(void) {
 	}
 }
 
+#ifdef DEDICATED
+/*
+================
+SV_InitDedicatedRef
+================
+*/
+static void SV_InitDedicatedRef( void ) {
+	refimport_t ri;
+
+	Com_ShutdownRef();
+
+	Com_Memset( &ri, 0, sizeof ( refimport_t ) );
+	Com_InitRef( &ri );
+
+	re.BeginRegistration( NULL );
+}
+#endif
+
 /*
 ================
 SV_SpawnServer
@@ -467,18 +480,11 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
 
-#ifdef TA_GAME_MODELS
 	// Restart renderer
 #ifdef DEDICATED
-	R_Init();
+	SV_InitDedicatedRef();
 #else
 	CL_StartHunkUsers( qtrue );
-#endif
-#else
-#ifndef DEDICATED
-	// Restart renderer
-	CL_StartHunkUsers( qtrue );
-#endif
 #endif
 
 	// clear collision map data
@@ -837,6 +843,10 @@ void SV_Shutdown( char *finalmsg ) {
 	SV_RemoveOperatorCommands();
 	SV_MasterShutdown();
 	SV_ShutdownGameProgs();
+
+#ifdef DEDICATED
+	Com_ShutdownRef();
+#endif
 
 	// free current level
 	SV_ClearServer();
