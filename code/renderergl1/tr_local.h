@@ -32,10 +32,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
-#if defined TA_GAME_MODELS && defined DEDICATED
-#define RENDERLESS_MODELS // ZTM: Ded server needs the tags for melee attacks
-#endif
-
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
 #include "../qcommon/qcommon.h"
