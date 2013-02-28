@@ -18,11 +18,7 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-DGAME" />
-					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -38,11 +34,7 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-DGAME" />
-					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -60,8 +52,6 @@
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -79,11 +69,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DBUILDING_REF_GL" />
-					<Add option="-DDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -101,8 +86,6 @@
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -120,11 +103,6 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
-					<Add option="-D_DEBUG" />
-					<Add option="-DBUILDING_REF_GL" />
-					<Add option="-DDEBUG" />
-					<Add option="-DGLOBALRANK" />
-					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
@@ -222,9 +200,6 @@
 		</Unit>
 		<Unit filename="../../code/game/g_local.h" />
 		<Unit filename="../../code/game/g_main.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/game/g_mem.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/g_misc.c">

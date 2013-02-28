@@ -33,1290 +33,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "bg_misc.h"
 
-#if !defined TA_ITEMSYS || defined TA_ITEMSYS_USE_INTERNAL
-/*QUAKED item_***** ( 0 0 0 ) (-16 -16 -16) (16 16 16) suspended
-DO NOT USE THIS CLASS, IT JUST HOLDS GENERAL INFORMATION.
-The suspended flag will allow items to hang in the air, otherwise they are dropped to the next surface.
-
-If an item is the target of another entity, it will not spawn in until fired.
-
-An item fires all of its targets when it is picked up.  If the toucher can't carry it, the targets won't be fired.
-
-"notfree" if set to 1, don't spawn in free for all games
-"notteam" if set to 1, don't spawn in team games
-"notsingle" if set to 1, don't spawn in single player games
-"wait"	override the default wait before respawning.  -1 = never respawn automatically, which can be used with targeted spawning.
-"random" random number of plus or minus seconds varied from the respawn time
-"count" override quantity or duration on most items.
-*/
-
-#ifdef TA_WEAPSYS
-#define EMPTY_GITEM "item_dummy", \
-		"sound/items/s_health.wav", \
-        { "models/powerups/holdable/medkit.md3", \
-		NULL, \
-		NULL, NULL }, \
-		"icons/iconh_mega", \
-		"Dummy", \
-		1, \
-		IT_HEALTH, \
-		0, \
-		"", \
-		""
-#endif
-
-#ifdef TA_ITEMSYS_USE_INTERNAL
-typedef struct oldgitem_s {
-	char		*classname;	// spawning name
-	char		*pickup_sound;
-	char		*world_model[MAX_ITEM_MODELS];
-
-	char		*icon;
-	char		*pickup_name;	// for printing on pickup
-
-	int			quantity;		// for ammo how much, or duration of powerup
-	itemType_t  giType;			// IT_* flags
-
-	int			giTag;
-
-#ifdef IOQ3ZTM // FLAG_MODEL
-	char		*skin;			// So flags don't need multiple models.
-#else
-	char		*precaches;		// string of all models and images this item will use
-#endif
-	char		*sounds;		// string of all sounds this item will use
-} oldgitem_t;
-
-oldgitem_t bg_itemlist[] = 
-#else
-gitem_t	bg_itemlist[] = 
-#endif
-{
-	{
-		NULL,
-		NULL,
-		{ NULL,
-		NULL,
-		NULL, NULL} ,
-/* icon */		NULL,
-/* pickup */	NULL,
-		0,
-		0,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},	// leave index 0 alone
-
-#ifndef TURTLEARENA // NOARMOR
-	//
-	// ARMOR
-	//
-
-/*QUAKED item_armor_shard (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_armor_shard", 
-		"sound/misc/ar1_pkup.wav",
-		{ "models/powerups/armor/shard.md3", 
-		"models/powerups/armor/shard_sphere.md3",
-		NULL, NULL} ,
-/* icon */		"icons/iconr_shard",
-/* pickup */	"Armor Shard",
-		5,
-		IT_ARMOR,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_armor_combat (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_armor_combat", 
-		"sound/misc/ar2_pkup.wav",
-        { "models/powerups/armor/armor_yel.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/iconr_yellow",
-/* pickup */	"Armor",
-		50,
-		IT_ARMOR,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_armor_body (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_armor_body", 
-		"sound/misc/ar2_pkup.wav",
-        { "models/powerups/armor/armor_red.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/iconr_red",
-/* pickup */	"Heavy Armor",
-		100,
-		IT_ARMOR,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-	//
-	// health
-	//
-/*QUAKED item_health_small (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_health_small",
-		"sound/items/s_health.wav",
-#ifdef TA_DATA
-        { "models/powerups/health/small.md3",
-		NULL, NULL, NULL },
-#else
-        { "models/powerups/health/small_cross.md3", 
-		"models/powerups/health/small_sphere.md3", 
-		NULL, NULL },
-#endif
-#ifdef TA_DATA
-/* icon */		"icons/iconh_small",
-#else
-/* icon */		"icons/iconh_green",
-#endif
-#ifdef TA_DATA
-/* pickup */	"5% Health",
-#else
-/* pickup */	"5 Health",
-#endif
-		5,
-		IT_HEALTH,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_health",
-		"sound/items/n_health.wav",
-#ifdef TA_DATA
-        { "models/powerups/health/medium.md3",
-		NULL, NULL, NULL },
-#else
-        { "models/powerups/health/medium_cross.md3", 
-		"models/powerups/health/medium_sphere.md3", 
-		NULL, NULL },
-#endif
-#ifdef TA_DATA
-/* icon */		"icons/iconh_medium",
-#else
-/* icon */		"icons/iconh_yellow",
-#endif
-#ifdef TA_DATA
-/* pickup */	"25% Health",
-#else
-/* pickup */	"25 Health",
-#endif
-		25,
-		IT_HEALTH,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_health_large (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_health_large",
-		"sound/items/l_health.wav",
-#ifdef TA_DATA
-        { "models/powerups/health/large.md3",
-		NULL, NULL, NULL },
-#else
-        { "models/powerups/health/large_cross.md3", 
-		"models/powerups/health/large_sphere.md3", 
-		NULL, NULL },
-#endif
-#ifdef TA_DATA
-/* icon */		"icons/iconh_large",
-#else
-/* icon */		"icons/iconh_red",
-#endif
-#ifdef TA_DATA
-/* pickup */	"50% Health",
-#else
-/* pickup */	"50 Health",
-#endif
-		50,
-		IT_HEALTH,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_health_mega (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_health_mega",
-		"sound/items/m_health.wav",
-#ifdef TA_DATA
-        { "models/powerups/health/mega.md3",
-		NULL, NULL, NULL },
-#else
-        { "models/powerups/health/mega_cross.md3", 
-		"models/powerups/health/mega_sphere.md3", 
-		NULL, NULL },
-#endif
-/* icon */		"icons/iconh_mega",
-#ifdef TA_DATA
-/* pickup */	"100% Health",
-#else
-/* pickup */	"Mega Health",
-#endif
-		100,
-		IT_HEALTH,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-
-	//
-	// WEAPONS 
-	//
-#ifdef TA_WEAPSYS
-#ifndef TURTLEARENA
-	// Keep the model indexs correct for items after weapons.
-	{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },
-	{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },
-#endif
-#else
-/*QUAKED weapon_gauntlet (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_gauntlet", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/gauntlet/gauntlet.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_gauntlet",
-/* pickup */	"Gauntlet",
-		0,
-		IT_WEAPON,
-		WP_GAUNTLET,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_shotgun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_shotgun", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/shotgun/shotgun.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_shotgun",
-/* pickup */	"Shotgun",
-		10,
-		IT_WEAPON,
-		WP_SHOTGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_machinegun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_machinegun", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/machinegun/machinegun.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_machinegun",
-/* pickup */	"Machinegun",
-		40,
-		IT_WEAPON,
-		WP_MACHINEGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_grenadelauncher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_grenadelauncher",
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/grenadel/grenadel.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_grenade",
-/* pickup */	"Grenade Launcher",
-		10,
-		IT_WEAPON,
-		WP_GRENADE_LAUNCHER,
-/* precache */ "",
-/* sounds */ "sound/weapons/grenade/hgrenb1a.wav sound/weapons/grenade/hgrenb2a.wav"
-	},
-
-/*QUAKED weapon_rocketlauncher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_rocketlauncher",
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/rocketl/rocketl.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_rocket",
-/* pickup */	"Rocket Launcher",
-		10,
-		IT_WEAPON,
-		WP_ROCKET_LAUNCHER,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_lightning (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_lightning", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/lightning/lightning.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_lightning",
-/* pickup */	"Lightning Gun",
-		100,
-		IT_WEAPON,
-		WP_LIGHTNING,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_railgun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_railgun", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/railgun/railgun.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_railgun",
-/* pickup */	"Railgun",
-		10,
-		IT_WEAPON,
-		WP_RAILGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_plasmagun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_plasmagun", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/plasma/plasma.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_plasma",
-/* pickup */	"Plasma Gun",
-		50,
-		IT_WEAPON,
-		WP_PLASMAGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_bfg (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_bfg",
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/bfg/bfg.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_bfg",
-/* pickup */	"BFG10K",
-		20,
-		IT_WEAPON,
-		WP_BFG,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_grapplinghook (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_grapplinghook",
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/grapple/grapple.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_grapple",
-/* pickup */	"Grappling Hook",
-		0,
-		IT_WEAPON,
-		WP_GRAPPLING_HOOK,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-#ifdef TA_WEAPSYS
-#ifndef TURTLEARENA
-	// Keep the model indexs correct for items after ammo.
-	{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },
-	{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },
-#endif
-#else
-	//
-	// AMMO ITEMS
-	//
-
-/*QUAKED ammo_shells (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_shells",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/shotgunam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_shotgun",
-/* pickup */	"Shells",
-		10,
-		IT_AMMO,
-		WP_SHOTGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_bullets (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_bullets",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/machinegunam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_machinegun",
-/* pickup */	"Bullets",
-		50,
-		IT_AMMO,
-		WP_MACHINEGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_grenades (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_grenades",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/grenadeam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_grenade",
-/* pickup */	"Grenades",
-		5,
-		IT_AMMO,
-		WP_GRENADE_LAUNCHER,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_cells (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_cells",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/plasmaam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_plasma",
-/* pickup */	"Cells",
-		30,
-		IT_AMMO,
-		WP_PLASMAGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_lightning (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_lightning",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/lightningam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_lightning",
-/* pickup */	"Lightning",
-		60,
-		IT_AMMO,
-		WP_LIGHTNING,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_rockets (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_rockets",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/rocketam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_rocket",
-/* pickup */	"Rockets",
-		5,
-		IT_AMMO,
-		WP_ROCKET_LAUNCHER,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_slugs (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_slugs",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/railgunam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_railgun",
-/* pickup */	"Slugs",
-		10,
-		IT_AMMO,
-		WP_RAILGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_bfg (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_bfg",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/bfgam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_bfg",
-/* pickup */	"Bfg Ammo",
-		15,
-		IT_AMMO,
-		WP_BFG,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-#ifndef TURTLEARENA // HOLDABLE // no q3 teleprter
-	//
-	// HOLDABLE ITEMS
-	//
-/*QUAKED holdable_teleporter (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_teleporter", 
-		"sound/items/holdable.wav",
-        { "models/powerups/holdable/teleporter.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/teleporter",
-/* pickup */	"Personal Teleporter",
-#ifdef TA_HOLDSYS
-		0,	// Only ever have one use, even if picked up 2 (or 100)
-#else
-		60,
-#endif
-		IT_HOLDABLE,
-		HI_TELEPORTER,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-/*QUAKED holdable_medkit (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_medkit", 
-		"sound/items/holdable.wav",
-        { 
-		"models/powerups/holdable/medkit.md3", 
-#ifdef TA_DATA
-		NULL,
-#else
-		"models/powerups/holdable/medkit_sphere.md3",
-#endif
-		NULL, NULL},
-/* icon */		"icons/medkit",
-#ifdef TA_DATA
-/* pickup */	"Pizza-to-Go",
-#else
-/* pickup */	"Medkit",
-#endif
-#ifdef TA_HOLDSYS
-		0,	// Only ever have one use, even if picked up 2 (or 100)
-#else
-		60,
-#endif
-		IT_HOLDABLE,
-		HI_MEDKIT,
-/* precache */ "",
-/* sounds */ "sound/items/use_medkit.wav"
-	},
-
-#ifdef TURTLEARENA // HOLDABLE
-/*QUAKED holdable_shuriken (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_shuriken",
-		"sound/items/holdable.wav",
-        {
-		"models/powerups/holdable/shuriken.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/shuriken",
-/* pickup */	"Shurikens",
-		10,
-		IT_HOLDABLE,
-		HI_SHURIKEN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED holdable_shurikenelectric (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_shurikenelectric",
-		"sound/items/holdable.wav",
-        {
-		"models/powerups/holdable/shurikenelectric.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/shurikenelectric",
-/* pickup */	"Electric Shurikens",
-		10,
-		IT_HOLDABLE,
-		HI_ELECTRICSHURIKEN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED holdable_shurikenfire (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_shurikenfire",
-		"sound/items/holdable.wav",
-        {
-		"models/powerups/holdable/shurikenfire.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/shurikenfire",
-/* pickup */	"Fire Shurikens",
-		10,
-		IT_HOLDABLE,
-		HI_FIRESHURIKEN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED holdable_shurikenlaser (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_shurikenlaser",
-		"sound/items/holdable.wav",
-        {
-		"models/powerups/holdable/shurikenlaser.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/shurikenlaser",
-/* pickup */	"Laser Shurikens",
-		10,
-		IT_HOLDABLE,
-		HI_LASERSHURIKEN,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-	//
-	// POWERUP ITEMS
-	//
-/*QUAKED item_quad (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-#ifdef TURTLEARENA // POWERS
-		"item_strength",
-		"sound/items/powerup_pickup.ogg",
-        { "models/powerups/instant/strength.md3",
-        NULL, NULL, NULL },
-/* icon */		"icons/strength",
-/* pickup */	"Increased Strength",
-#else
-		"item_quad", 
-		"sound/items/quaddamage.wav",
-        { "models/powerups/instant/quad.md3", 
-        "models/powerups/instant/quad_ring.md3",
-		NULL, NULL },
-/* icon */		"icons/quad",
-/* pickup */	"Quad Damage",
-#endif
-		30,
-		IT_POWERUP,
-		PW_QUAD,
-/* precache */ "",
-/* sounds */ "sound/items/damage2.wav sound/items/damage3.wav"
-	},
-
-/*QUAKED item_enviro (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-#ifdef TURTLEARENA // POWERS
-		"item_defense",
-		"sound/items/powerup_pickup.ogg",
-        { "models/powerups/instant/defense.md3",
-		NULL, NULL, NULL },
-/* icon */		"icons/defense",
-/* pickup */	"Increased Defense",
-#else
-		"item_enviro",
-		"sound/items/protect.wav",
-        { "models/powerups/instant/enviro.md3", 
-		"models/powerups/instant/enviro_ring.md3", 
-		NULL, NULL },
-/* icon */		"icons/envirosuit",
-/* pickup */	"Battle Suit",
-#endif
-		30,
-		IT_POWERUP,
-		PW_BATTLESUIT,
-/* precache */ "",
-/* sounds */ "sound/items/airout.wav sound/items/protect3.wav"
-	},
-
-/*QUAKED item_haste (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-#ifdef TURTLEARENA // POWERS
-		"item_speed",
-		"sound/items/powerup_pickup.ogg",
-        { "models/powerups/instant/speed.md3",
-		NULL, NULL, NULL },
-/* icon */		"icons/speed",
-/* pickup */	"Increased Speed",
-#else
-		"item_haste",
-		"sound/items/haste.wav",
-        { "models/powerups/instant/haste.md3", 
-		"models/powerups/instant/haste_ring.md3", 
-		NULL, NULL },
-/* icon */		"icons/haste",
-/* pickup */	"Speed",
-#endif
-		30,
-		IT_POWERUP,
-		PW_HASTE,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_invis (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_invis",
-#ifdef TURTLEARENA // POWERS
-		"sound/items/powerup_pickup.ogg",
-#else
-		"sound/items/invisibility.wav",
-#endif
-        { "models/powerups/instant/invis.md3", 
-		"models/powerups/instant/invis_ring.md3", 
-		NULL, NULL },
-/* icon */		"icons/invis",
-/* pickup */	"Invisibility",
-		30,
-		IT_POWERUP,
-		PW_INVIS,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-#ifndef TURTLEARENA // POWERS
-/*QUAKED item_regen (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_regen",
-		"sound/items/regeneration.wav",
-        { "models/powerups/instant/regen.md3", 
-		"models/powerups/instant/regen_ring.md3", 
-		NULL, NULL },
-/* icon */		"icons/regen",
-/* pickup */	"Regeneration",
-		30,
-		IT_POWERUP,
-		PW_REGEN,
-/* precache */ "",
-/* sounds */ "sound/items/regen.wav"
-	},
-#endif
-
-/*QUAKED item_flight (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_flight",
-#ifdef TURTLEARENA // POWERS
-		"sound/items/powerup_pickup.ogg",
-#else
-		"sound/items/flight.wav",
-#endif
-        { "models/powerups/instant/flight.md3", 
-		"models/powerups/instant/flight_ring.md3", 
-		NULL, NULL },
-/* icon */		"icons/flight",
-/* pickup */	"Flight",
-#ifdef NIGHTSMODE
-		120,
-#else
-		60,
-#endif
-		IT_POWERUP,
-		PW_FLIGHT,
-/* precache */ "",
-/* sounds */ "sound/items/flight.wav"
-	},
-
-#ifdef TURTLEARENA // POWERS
-/*QUAKED item_invul (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_invul",
-		"sound/items/powerup_pickup.ogg",
-        { "models/powerups/instant/invul.md3",
-        NULL, NULL, NULL },
-/* icon */		"icons/invul",
-/* pickup */	"Invulnerability",
-		30,
-		IT_POWERUP,
-		PW_INVUL,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-/*QUAKED team_CTF_redflag (1 0 0) (-16 -16 -16) (16 16 16)
-Only in CTF games
-*/
-	{
-		"team_CTF_redflag",
-		NULL,
-#ifdef TA_DATA // FLAG_MODEL
-        { "models/flag2/flagpole.md3",
-		"models/flag2/flagflap3.md3", NULL, NULL },
-#else
-        { "models/flags/r_flag.md3",
-		NULL, NULL, NULL },
-#endif
-/* icon */		"icons/iconf_red1",
-/* pickup */	"Red Flag",
-		0,
-		IT_TEAM,
-		PW_REDFLAG,
-#ifdef TA_DATA // FLAG_MODEL
-		"models/flag2/red.skin",
-#else
-/* precache */ "",
-#endif
-/* sounds */ ""
-	},
-
-/*QUAKED team_CTF_blueflag (0 0 1) (-16 -16 -16) (16 16 16)
-Only in CTF games
-*/
-	{
-		"team_CTF_blueflag",
-		NULL,
-#ifdef TA_DATA // FLAG_MODEL
-        { "models/flag2/flagpole.md3",
-		"models/flag2/flagflap3.md3", NULL, NULL },
-#else
-        { "models/flags/b_flag.md3",
-		NULL, NULL, NULL },
-#endif
-/* icon */		"icons/iconf_blu1",
-/* pickup */	"Blue Flag",
-		0,
-		IT_TEAM,
-		PW_BLUEFLAG,
-#ifdef TA_DATA // FLAG_MODEL
-		"models/flag2/blue.skin",
-#else
-/* precache */ "",
-#endif
-/* sounds */ ""
-	},
-
-#ifdef MISSIONPACK
-#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
-/*QUAKED holdable_kamikaze (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_kamikaze", 
-		"sound/items/holdable.wav",
-        { "models/powerups/kamikazi.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/kamikaze",
-/* pickup */	"Kamikaze",
-#ifdef TA_HOLDSYS
-		0,	// Only ever has one use, even if picked up 2 (or 100)
-#else
-		60,
-#endif
-		IT_HOLDABLE,
-		HI_KAMIKAZE,
-/* precache */ "",
-/* sounds */ "sound/items/kamikazerespawn.wav"
-	},
-#endif
-
-/*QUAKED holdable_portal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_portal", 
-		"sound/items/holdable.wav",
-        { "models/powerups/holdable/porter.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/portal",
-/* pickup */	"Portal",
-#ifdef TA_HOLDSYS
-		0,	// Only ever has one use, even if picked up 2 (or 100)
-#else
-		60,
-#endif
-		IT_HOLDABLE,
-		HI_PORTAL,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-#ifndef TURTLEARENA // POWERS
-/*QUAKED holdable_invulnerability (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"holdable_invulnerability", 
-		"sound/items/holdable.wav",
-        { "models/powerups/holdable/invulnerability.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/invulnerability",
-/* pickup */	"Invulnerability",
-#ifdef TA_HOLDSYS
-		0,	// Only ever has one use, even if picked up 2 (or 100)
-#else
-		60,
-#endif
-		IT_HOLDABLE,
-		HI_INVULNERABILITY,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-#ifdef TA_WEAPSYS
-#ifndef TURTLEARENA
-	// Keep the model indexs correct for items after ammo.
-	{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },
-#endif
-#else
-/*QUAKED ammo_nails (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_nails",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/nailgunam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_nailgun",
-/* pickup */	"Nails",
-		20,
-		IT_AMMO,
-		WP_NAILGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_mines (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_mines",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/proxmineam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_proxlauncher",
-/* pickup */	"Proximity Mines",
-		10,
-		IT_AMMO,
-		WP_PROX_LAUNCHER,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED ammo_belt (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"ammo_belt",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/ammo/chaingunam.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/icona_chaingun",
-/* pickup */	"Chaingun Belt",
-		100,
-		IT_AMMO,
-		WP_CHAINGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-	//
-	// PERSISTANT POWERUP ITEMS
-	//
-/*QUAKED item_scout (.3 .3 1) (-16 -16 -16) (16 16 16) suspended redTeam blueTeam
-*/
-	{
-		"item_scout",
-#ifdef TURTLEARENA // POWERS
-		"sound/items/powerup_pickup.ogg",
-#else
-		"sound/items/scout.wav",
-#endif
-        { "models/powerups/scout.md3", 
-		NULL, NULL, NULL },
-/* icon */		"icons/scout",
-/* pickup */	"Scout",
-		30,
-		IT_PERSISTANT_POWERUP,
-		PW_SCOUT,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_guard (.3 .3 1) (-16 -16 -16) (16 16 16) suspended redTeam blueTeam
-*/
-	{
-		"item_guard",
-#ifdef TURTLEARENA // POWERS
-		"sound/items/powerup_pickup.ogg",
-#else
-		"sound/items/guard.wav",
-#endif
-        { "models/powerups/guard.md3", 
-		NULL, NULL, NULL },
-/* icon */		"icons/guard",
-/* pickup */	"Guard",
-		30,
-		IT_PERSISTANT_POWERUP,
-		PW_GUARD,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_doubler (.3 .3 1) (-16 -16 -16) (16 16 16) suspended redTeam blueTeam
-*/
-	{
-		"item_doubler",
-#ifdef TURTLEARENA // POWERS
-		"sound/items/powerup_pickup.ogg",
-#else
-		"sound/items/doubler.wav",
-#endif
-        { "models/powerups/doubler.md3", 
-		NULL, NULL, NULL },
-/* icon */		"icons/doubler",
-/* pickup */	"Doubler",
-		30,
-		IT_PERSISTANT_POWERUP,
-		PW_DOUBLER,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_doubler (.3 .3 1) (-16 -16 -16) (16 16 16) suspended redTeam blueTeam
-*/
-	{
-		"item_ammoregen",
-#ifdef TURTLEARENA // POWERS
-		"sound/items/powerup_pickup.ogg",
-#else
-		"sound/items/ammoregen.wav",
-#endif
-        { "models/powerups/ammo.md3",
-		NULL, NULL, NULL },
-/* icon */		"icons/ammo_regen",
-/* pickup */	"Ammo Regen",
-		30,
-		IT_PERSISTANT_POWERUP,
-		PW_AMMOREGEN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-	/*QUAKED team_CTF_neutralflag (0 0 1) (-16 -16 -16) (16 16 16)
-Only in One Flag CTF games
-*/
-	{
-		"team_CTF_neutralflag",
-		NULL,
-#ifdef TA_DATA // FLAG_MODEL
-        { "models/flag2/flagpole.md3",
-		"models/flag2/flagflap3.md3", NULL, NULL },
-#else
-        { "models/flags/n_flag.md3",
-		NULL, NULL, NULL },
-#endif
-/* icon */		"icons/iconf_neutral1",
-/* pickup */	"Neutral Flag",
-		0,
-		IT_TEAM,
-		PW_NEUTRALFLAG,
-#ifdef TA_DATA // FLAG_MODEL
-		"models/flag2/white.skin",
-#else
-/* precache */ "",
-#endif
-/* sounds */ ""
-	},
-
-#ifdef MISSIONPACK_HARVESTER
-	{
-		"item_redcube",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/orb/r_orb.md3",
-		NULL, NULL, NULL },
-/* icon */		"icons/iconh_rorb",
-/* pickup */	"Red Cube",
-		0,
-		IT_TEAM,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-	{
-		"item_bluecube",
-		"sound/misc/am_pkup.wav",
-        { "models/powerups/orb/b_orb.md3",
-		NULL, NULL, NULL },
-/* icon */		"icons/iconh_borb",
-/* pickup */	"Blue Cube",
-		0,
-		IT_TEAM,
-		0,
-/* precache */ "",
-/* sounds */ ""
-	},
-#else
-#ifndef TURTLEARENA
-	// Keep the model indexs correct for items after cubes.
-	{ EMPTY_GITEM },{ EMPTY_GITEM },
-#endif
-#endif
-
-#ifdef TA_WEAPSYS
-#ifndef TURTLEARENA
-	// Keep the model indexs correct for items after weapons.
-	{ EMPTY_GITEM },{ EMPTY_GITEM },{ EMPTY_GITEM },
-#endif
-#else
-/*QUAKED weapon_nailgun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_nailgun", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons/nailgun/nailgun.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_nailgun",
-/* pickup */	"Nailgun",
-		10,
-		IT_WEAPON,
-		WP_NAILGUN,
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED weapon_prox_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_prox_launcher", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons/proxmine/proxmine.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_proxlauncher",
-/* pickup */	"Prox Launcher",
-		5,
-		IT_WEAPON,
-		WP_PROX_LAUNCHER,
-/* precache */ "",
-/* sounds */ "sound/weapons/proxmine/wstbtick.wav "
-			"sound/weapons/proxmine/wstbactv.wav "
-			"sound/weapons/proxmine/wstbimpl.wav "
-			"sound/weapons/proxmine/wstbimpm.wav "
-			"sound/weapons/proxmine/wstbimpd.wav "
-			"sound/weapons/proxmine/wstbactv.wav"
-	},
-
-/*QUAKED weapon_chaingun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_chaingun", 
-		"sound/misc/w_pkup.wav",
-        { "models/weapons/vulcan/vulcan.md3", 
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_chaingun",
-/* pickup */	"Chaingun",
-		80,
-		IT_WEAPON,
-		WP_CHAINGUN,
-/* precache */ "",
-/* sounds */ "sound/weapons/vulcan/wvulwind.wav"
-	},
-#endif // TA_WEAPSYS
-#endif
-
-#ifdef TA_WEAPSYS
-/*QUAKED weapon_default (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"weapon_default",
-		"sound/misc/w_pkup.wav",
-        { "models/weapons2/default/default.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/iconw_default",
-/* pickup */	"Default Weapon",
-		0,
-		IT_WEAPON,
-		WP_DEFAULT,
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-#ifdef TURTLEARENA // NIGHTS_ITEMS
-/*QUAKED item_star (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_star",
-		"sound/misc/i_pkup.wav",
-        { "models/powerups/score/star.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/iconi_star",
-/* pickup */	"Star",
-		10,
-		IT_SCORE,
-		1, // star
-/* precache */ "",
-/* sounds */ ""
-	},
-
-/*QUAKED item_sphere (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-	{
-		"item_sphere",
-		"sound/misc/i_pkup.wav",
-        { "models/powerups/score/sphere.md3",
-		NULL, NULL, NULL},
-/* icon */		"icons/iconi_sphere",
-/* pickup */	"Sphere",
-		10,
-		IT_SCORE,
-		2, // sphere
-/* precache */ "",
-/* sounds */ ""
-	},
-#endif
-
-	// end of list marker
-	{NULL}
-};
-
-int		bg_numItems = ARRAY_LEN( bg_itemlist ) - 1;
-#endif
-
 // entityState_t fields
 #define	NETF(x) (size_t)&((entityState_t*)0)->x, 1
 #define	NETA(x) (size_t)&((entityState_t*)0)->x, ARRAY_LEN( ((entityState_t*)0)->x )
@@ -1749,28 +465,7 @@ materialInfo_t materialInfo[NUM_MATERIAL_TYPES] = {
 };
 #endif
 
-#ifdef TA_ITEMSYS
-static qboolean bg_itemsys_init = qfalse;
-
-bg_iteminfo_t bg_iteminfo[MAX_ITEMS];
-static int bg_numitems = 1;
-static int bg_numholdables = 0;
-
-#ifdef TA_WEAPSYS
-bg_projectileinfo_t bg_projectileinfo[MAX_BG_PROJ];
-bg_weaponinfo_t bg_weaponinfo[MAX_BG_WEAPONS];
-bg_weapongroupinfo_t bg_weapongroupinfo[MAX_BG_WEAPON_GROUPS];
-static int bg_numprojectiles = 0;
-static int bg_numweapons = 0;
-static int bg_numweapongroups = 0;
-#endif
-
-// These are in game, cgame, and ui, but not in bg - so its okay to use here...
-int		trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
-void	trap_FS_Read( void *buffer, int len, fileHandle_t f );
-void	trap_FS_Write( const void *buffer, int len, fileHandle_t f );
-void	trap_FS_FCloseFile( fileHandle_t f );
-int		trap_FS_GetFileList( const char *path, const char *extension, char *listbuf, int bufsize );
+bg_commonInfo_t *bg_common = NULL;
 
 int BG_ItemNumForItem( bg_iteminfo_t *item )
 {
@@ -3387,22 +2082,15 @@ void BG_InitItemInfo(void)
 	char*		dirptr;
 	int			i;
 	int			dirlen;
-#ifdef TA_ITEMSYS_USE_INTERNAL
-	int num;
-	int j;
-#endif
+
+	// ZTM: NOTE: game/cgame/ui DLLs share the same memory and only parse files once!
+	// QVMs do not support it as of writting (Feb 13 2013).
+	bg_common = trap_Alloc( sizeof ( bg_commonInfo_t ), "bg_common" );
 
 	if (bg_itemsys_init)
 		return;
 
-	// Clear Data
-	Com_Memset(bg_iteminfo, 0, sizeof (bg_iteminfo));
-
 #ifdef TA_WEAPSYS
-	Com_Memset(bg_projectileinfo, 0, sizeof (bg_projectileinfo));
-	Com_Memset(bg_weaponinfo, 0, sizeof (bg_weaponinfo));
-	Com_Memset(bg_weapongroupinfo, 0, sizeof (bg_weapongroupinfo));
-
 	// Setup dummys (0 means not valid or not found)
 	strcpy(bg_projectileinfo[0].name, "p_none");
 	bg_projectileinfo[0].numProjectiles = 1;
@@ -3423,47 +2111,7 @@ void BG_InitItemInfo(void)
 	strcpy(bg_iteminfo[0].pickup_name, "None");
 #endif
 
-#ifdef TA_ITEMSYS_USE_INTERNAL
-	// Load internal items
-	for (i = 1; bg_itemlist[i].classname; i++)
-	{
-		num = BG_ItemIndexForName(bg_itemlist[i].classname);
-		if (!num)
-		{
-			// Use free slot
-			num = BG_NumItems();
-		}
-
-		strcpy(bg_iteminfo[num].classname, bg_itemlist[i].classname);
-		if (bg_itemlist[i].pickup_sound != NULL) {
-			strcpy(bg_iteminfo[num].pickup_sound, bg_itemlist[i].pickup_sound);
-		}
-
-		for (j = 0; j < MAX_ITEM_MODELS; j++) {
-			if (bg_itemlist[i].world_model[j] != NULL) {
-				strcpy(bg_iteminfo[num].world_model[j], bg_itemlist[i].world_model[j]);
-			}
-		}
-
-		if (bg_itemlist[i].icon != NULL) {
-			strcpy(bg_iteminfo[num].icon, bg_itemlist[i].icon);
-		}
-		if (bg_itemlist[i].pickup_name != NULL) {
-			strcpy(bg_iteminfo[num].pickup_name, bg_itemlist[i].pickup_name);
-		}
-
-		bg_iteminfo[num].quantity = bg_itemlist[i].quantity;
-		bg_iteminfo[num].giType = bg_itemlist[i].giType;
-		bg_iteminfo[num].giTag = bg_itemlist[i].giTag;
-
-#ifdef IOQ3ZTM // FLAG_MODEL
-		strcpy(bg_iteminfo[num].skin, bg_itemlist[i].skin);
-#else
-		strcpy(bg_iteminfo[num].precaches, bg_itemlist[i].precaches);
-#endif
-		strcpy(bg_iteminfo[num].sounds, bg_itemlist[i].sounds);
-	}
-#endif
+	bg_common->numitems = 1;
 
 	// Load main data files
 	BG_ParseItemInfoFile("scripts/iteminfo.txt");
@@ -3545,7 +2193,6 @@ void BG_InitItemInfo(void)
 		}
 	}
 }
-#endif
 
 #ifdef TA_WEAPSYS
 /*
@@ -4327,14 +2974,13 @@ int BG_WeaponGroupTotalDamage(int weaponGroup)
 ==============
 BG_ItemNumForHoldableNum
 
-Returns the of the holdable item index in bg_itemlist
+Returns the item number of the holdable item
 Returns 0 if not found.
 ==============
 */
 int BG_ItemNumForHoldableNum(holdable_t holdablenum)
 {
-#ifdef TA_ITEMSYS
-	gitem_t	*it;
+	bg_iteminfo_t	*it;
 	int i;
 
 	for (i = BG_NumItems()-1; i > 0; i--)
@@ -4348,17 +2994,6 @@ int BG_ItemNumForHoldableNum(holdable_t holdablenum)
 			return i;
 		}
 	}
-#else
-	int i;
-	for (i = 1; i < bg_numItems; ++i)
-	{
-		if (bg_itemlist[i].giType == IT_HOLDABLE
-			&& bg_itemlist[i].giTag == holdablenum)
-		{
-			return i;
-		}
-	}
-#endif
 	return 0;
 }
 #endif
@@ -4368,9 +3003,8 @@ int BG_ItemNumForHoldableNum(holdable_t holdablenum)
 BG_FindItemForPowerup
 ==============
 */
-gitem_t	*BG_FindItemForPowerup( powerup_t pw ) {
-#ifdef TA_ITEMSYS
-	gitem_t	*it;
+bg_iteminfo_t	*BG_FindItemForPowerup( powerup_t pw ) {
+	bg_iteminfo_t	*it;
 	int i;
 
 	for (i = BG_NumItems()-1; i > 0; i--)
@@ -4386,18 +3020,6 @@ gitem_t	*BG_FindItemForPowerup( powerup_t pw ) {
 			return it;
 		}
 	}
-#else
-	int		i;
-
-	for ( i = 0 ; i < bg_numItems ; i++ ) {
-		if ( (bg_itemlist[i].giType == IT_POWERUP || 
-					bg_itemlist[i].giType == IT_TEAM ||
-					bg_itemlist[i].giType == IT_PERSISTANT_POWERUP) && 
-			bg_itemlist[i].giTag == pw ) {
-			return &bg_itemlist[i];
-		}
-	}
-#endif
 
 	return NULL;
 }
@@ -4408,9 +3030,8 @@ gitem_t	*BG_FindItemForPowerup( powerup_t pw ) {
 BG_FindItemForHoldable
 ==============
 */
-gitem_t	*BG_FindItemForHoldable( holdable_t pw ) {
-#ifdef TA_ITEMSYS
-	gitem_t	*it;
+bg_iteminfo_t	*BG_FindItemForHoldable( holdable_t pw ) {
+	bg_iteminfo_t	*it;
 	int i;
 
 	for (i = BG_NumItems()-1; i > 0; i--)
@@ -4422,19 +3043,6 @@ gitem_t	*BG_FindItemForHoldable( holdable_t pw ) {
 			return it;
 		}
 	}
-#else
-	int		i;
-
-	for ( i = 0 ; i < bg_numItems ; i++ ) {
-		if ( bg_itemlist[i].giType == IT_HOLDABLE && bg_itemlist[i].giTag == pw ) {
-			return &bg_itemlist[i];
-		}
-	}
-#endif
-
-#ifndef TA_ITEMSYS
-	Com_Error( ERR_DROP, "HoldableItem not found" );
-#endif
 
 	return NULL;
 }
@@ -4446,9 +3054,8 @@ BG_FindItemForWeapon
 
 ===============
 */
-gitem_t	*BG_FindItemForWeapon( weapon_t weapon ) {
-#ifdef TA_ITEMSYS
-	gitem_t	*it;
+bg_iteminfo_t	*BG_FindItemForWeapon( weapon_t weapon ) {
+	bg_iteminfo_t	*it;
 	int i;
 
 	for (i = BG_NumItems()-1; i > 0; i--)
@@ -4456,19 +3063,11 @@ gitem_t	*BG_FindItemForWeapon( weapon_t weapon ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
-#else
-	gitem_t	*it;
-	
-	for ( it = bg_itemlist + 1 ; it->classname ; it++) {
-#endif
 		if ( it->giType == IT_WEAPON && it->giTag == weapon ) {
 			return it;
 		}
 	}
 
-#ifndef TA_ITEMSYS
-	Com_Error( ERR_DROP, "Couldn't find item for weapon %i", weapon);
-#endif
 	return NULL;
 }
 
@@ -4478,9 +3077,8 @@ BG_FindItem
 
 ===============
 */
-gitem_t	*BG_FindItem( const char *pickupName ) {
-#ifdef TA_ITEMSYS
-	gitem_t	*it;
+bg_iteminfo_t	*BG_FindItem( const char *pickupName ) {
+	bg_iteminfo_t	*it;
 	int i;
 
 	for (i = BG_NumItems()-1; i > 0; i--)
@@ -4488,11 +3086,6 @@ gitem_t	*BG_FindItem( const char *pickupName ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
-#else
-	gitem_t	*it;
-	
-	for ( it = bg_itemlist + 1 ; it->classname ; it++ ) {
-#endif
 		if ( !Q_stricmp( it->pickup_name, pickupName ) )
 			return it;
 	}
@@ -4506,9 +3099,8 @@ gitem_t	*BG_FindItem( const char *pickupName ) {
 BG_FindItemForClassname
 ===============
 */
-gitem_t	*BG_FindItemForClassname( const char *classname ) {
-#ifdef TA_ITEMSYS
-	gitem_t	*it;
+bg_iteminfo_t	*BG_FindItemForClassname( const char *classname ) {
+	bg_iteminfo_t	*it;
 	int i;
 
 	for (i = BG_NumItems()-1; i > 0; i--)
@@ -4516,11 +3108,6 @@ gitem_t	*BG_FindItemForClassname( const char *classname ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
-#else
-	gitem_t	*it;
-	
-	for ( it = bg_itemlist + 1 ; it->classname ; it++ ) {
-#endif
 		if ( !Q_stricmp( it->classname, classname ) )
 			return it;
 	}
@@ -4566,25 +3153,16 @@ This needs to be the same for client side prediction and server use.
 ================
 */
 qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps ) {
-	gitem_t	*item;
+	bg_iteminfo_t	*item;
 #if defined MISSIONPACK || defined TA_HOLDSYS
 	int		upperBound;
 #endif
 
-#ifdef TA_ITEMSYS
-	if ( ent->modelindex < 0 || ent->modelindex >= BG_NumItems() )
-#else
-	if ( ent->modelindex < 1 || ent->modelindex >= bg_numItems )
-#endif
-	{
+	if ( ent->modelindex < 0 || ent->modelindex >= BG_NumItems() ) {
 		Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: index out of range" );
 	}
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(ent->modelindex);
-#else
-	item = &bg_itemlist[ent->modelindex];
-#endif
 
 #ifdef IOQ3ZTM // DROP_ITEM_FIX
 	// If it was dropped by this player and is still in their Bounding Box
@@ -4667,22 +3245,12 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 #ifndef TURTLEARENA // NOARMOR
 	case IT_ARMOR:
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT )
-#else
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT )
-#endif
-		{
+		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 			return qfalse;
 		}
 
 		// we also clamp armor to the maxhealth for handicapping
-#ifdef TA_ITEMSYS
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-		{
+		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 			upperBound = ps->stats[STAT_MAX_HEALTH];
 		}
 		else {
@@ -4704,12 +3272,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		// small and mega healths will go over the max, otherwise
 		// don't pick up if already at max
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-		{
+		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 			upperBound = ps->stats[STAT_MAX_HEALTH];
 		}
 		else
@@ -4731,14 +3294,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 
 	case IT_POWERUP:
 #if defined IOQ3ZTM && defined MISSIONPACK // Scout overrides haste, so don't pick it up.
-		if (item->giTag == PW_HASTE &&
-#ifdef TA_ITEMSYS
-			BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT
-#else
-			bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT
-#endif
-			)
-		{
+		if (item->giTag == PW_HASTE && BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 			return qfalse;
 		}
 #endif

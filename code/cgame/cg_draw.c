@@ -506,7 +506,7 @@ Used for both the status bar and the scoreboard
 */
 void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean force2D ) {
 #ifdef TA_DATA // FLAG_MODEL
-	gitem_t *item;
+	bg_iteminfo_t *item;
 	int itemIndex;
 
 	if( team == TEAM_RED ) {
@@ -521,7 +521,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 	if (!item) {
 		return;
 	}
-	itemIndex = ITEM_INDEX(item);
+	itemIndex = BG_ItemNumForItem(item);
 
 	if ( !force2D && cg_draw3dIcons.integer )
 	{
@@ -596,7 +596,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		}
 		CG_Draw3DModel( x, y, w, h, handle, 0, origin, angles );
 	} else if ( cg_drawIcons.integer ) {
-		gitem_t *item;
+		bg_iteminfo_t *item;
 
 		if( team == TEAM_RED ) {
 			item = BG_FindItemForPowerup( PW_REDFLAG );
@@ -608,7 +608,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 			return;
 		}
 		if (item) {
-		  CG_DrawPic( x, y, w, h, cg_items[ ITEM_INDEX(item) ].icon );
+		  CG_DrawPic( x, y, w, h, cg_items[ BG_ItemNumForItem(item) ].icon );
 		}
 	}
 #endif
@@ -1550,7 +1550,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	int plyrs;
 	char st[16];
 	clientInfo_t *ci;
-	gitem_t	*item;
+	bg_iteminfo_t	*item;
 	int ret_y, count;
 	int team;
 
@@ -1821,7 +1821,7 @@ static float CG_DrawScores( float y ) {
 	int			h;
 	vec4_t		color;
 	float		y1;
-	gitem_t		*item;
+	bg_iteminfo_t	*item;
 	const int	FLAG_SIZE = 64;
 
 	s1 = cgs.scores1;
@@ -2032,7 +2032,7 @@ static float CG_DrawPowerups( float y ) {
 	int		active;
 	playerState_t	*ps;
 	int		t;
-	gitem_t	*item;
+	bg_iteminfo_t	*item;
 	int		x;
 	int		color;
 	float	size;
@@ -2165,11 +2165,9 @@ CG_DrawPickupItem
 */
 #ifndef MISSIONPACK_HUD
 static int CG_DrawPickupItem( int y ) {
-	int		value;
-	float	*fadeColor;
-#ifdef TA_ITEMSYS
-	gitem_t *item;
-#endif
+	int				value;
+	float			*fadeColor;
+	bg_iteminfo_t	*item;
 
 	if ( cg.cur_ps->stats[STAT_HEALTH] <= 0 ) {
 		return y;
@@ -2178,15 +2176,14 @@ static int CG_DrawPickupItem( int y ) {
 	y -= ICON_SIZE;
 
 	value = cg.cur_lc->itemPickup;
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(value);
-#endif
+
 #ifdef TA_WEAPSYS
 	if (item && item->giType == IT_WEAPON
 		&& item->giTag == WP_DEFAULT)
 	{
 		item = BG_FindItemForWeapon(cgs.clientinfo[cg.cur_ps->clientNum].playercfg.default_weapon);
-		value = ITEM_INDEX(item);
+		value = BG_ItemNumForItem(item);
 	}
 #endif
 	if ( value ) {
@@ -2195,11 +2192,7 @@ static int CG_DrawPickupItem( int y ) {
 			CG_RegisterItemVisuals( value );
 			trap_R_SetColor( fadeColor );
 			CG_DrawPic( 8, y, ICON_SIZE, ICON_SIZE, cg_items[ value ].icon );
-#ifdef TA_ITEMSYS
 			CG_DrawBigString( ICON_SIZE + 16, y + (ICON_SIZE/2 - BIGCHAR_HEIGHT/2), item->pickup_name, fadeColor[0] );
-#else
-			CG_DrawBigString( ICON_SIZE + 16, y + (ICON_SIZE/2 - BIGCHAR_HEIGHT/2), bg_itemlist[ value ].pickup_name, fadeColor[0] );
-#endif
 			trap_R_SetColor( NULL );
 		}
 	}

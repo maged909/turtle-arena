@@ -1935,7 +1935,6 @@ void BotUpdateInventory(bot_state_t *bs) {
 #endif // TURTLEARENA // POWERS
 #endif
 #else
-#ifdef TA_ITEMSYS
 	bs->inventory[INVENTORY_TELEPORTER] = BG_ItemForItemNum(bs->cur_ps.stats[STAT_HOLDABLE_ITEM])->giTag == HI_TELEPORTER;
 	bs->inventory[INVENTORY_MEDKIT] = BG_ItemForItemNum(bs->cur_ps.stats[STAT_HOLDABLE_ITEM])->giTag == HI_MEDKIT;
 #ifdef MISSIONPACK
@@ -1946,20 +1945,7 @@ void BotUpdateInventory(bot_state_t *bs) {
 #ifndef TURTLEARENA // POWERS
 	bs->inventory[INVENTORY_INVULNERABILITY] = BG_ItemForItemNum(bs->cur_ps.stats[STAT_HOLDABLE_ITEM])->giTag == HI_INVULNERABILITY;
 #endif // TURTLEARENA // POWERS
-#endif
-#else
-	bs->inventory[INVENTORY_TELEPORTER] = bs->cur_ps.stats[STAT_HOLDABLE_ITEM] == MODELINDEX_TELEPORTER;
-	bs->inventory[INVENTORY_MEDKIT] = bs->cur_ps.stats[STAT_HOLDABLE_ITEM] == MODELINDEX_MEDKIT;
-#ifdef MISSIONPACK
-#ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
-	bs->inventory[INVENTORY_KAMIKAZE] = bs->cur_ps.stats[STAT_HOLDABLE_ITEM] == MODELINDEX_KAMIKAZE;
-#endif
-	bs->inventory[INVENTORY_PORTAL] = bs->cur_ps.stats[STAT_HOLDABLE_ITEM] == MODELINDEX_PORTAL;
-#ifndef TURTLEARENA // POWERS
-	bs->inventory[INVENTORY_INVULNERABILITY] = bs->cur_ps.stats[STAT_HOLDABLE_ITEM] == MODELINDEX_INVULNERABILITY;
-#endif
 #endif // MISSIONPACK
-#endif // !TA_ITEMSYS
 #endif // !TA_HOLDSYS
 	bs->inventory[INVENTORY_QUAD] = bs->cur_ps.powerups[PW_QUAD] != 0;
 	bs->inventory[INVENTORY_ENVIRONMENTSUIT] = bs->cur_ps.powerups[PW_BATTLESUIT] != 0;
@@ -1976,17 +1962,10 @@ void BotUpdateInventory(bot_state_t *bs) {
 #ifdef TURTLEARENA
 	bs->inventory[INVENTORY_PERSISTANT_POWER] = (bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] != 0);
 #endif
-#ifdef TA_ITEMSYS
 	bs->inventory[INVENTORY_SCOUT] = BG_ItemForItemNum(bs->cur_ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT;
 	bs->inventory[INVENTORY_GUARD] = BG_ItemForItemNum(bs->cur_ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD;
 	bs->inventory[INVENTORY_DOUBLER] = BG_ItemForItemNum(bs->cur_ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_DOUBLER;
 	bs->inventory[INVENTORY_AMMOREGEN] = BG_ItemForItemNum(bs->cur_ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_AMMOREGEN;
-#else
-	bs->inventory[INVENTORY_SCOUT] = bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] == MODELINDEX_SCOUT;
-	bs->inventory[INVENTORY_GUARD] = bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] == MODELINDEX_GUARD;
-	bs->inventory[INVENTORY_DOUBLER] = bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] == MODELINDEX_DOUBLER;
-	bs->inventory[INVENTORY_AMMOREGEN] = bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] == MODELINDEX_AMMOREGEN;
-#endif
 #endif
 	bs->inventory[INVENTORY_REDFLAG] = bs->cur_ps.powerups[PW_REDFLAG] != 0;
 	bs->inventory[INVENTORY_BLUEFLAG] = bs->cur_ps.powerups[PW_BLUEFLAG] != 0;

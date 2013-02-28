@@ -185,7 +185,7 @@ static void G_NPC_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 	if ((self->s.weapon > WP_NONE && self->s.weapon < BG_NumWeaponGroups())
 		&& !(self->bgNPC.info->flags & NPCF_NODROPWEAPON))
 	{
-		gitem_t *item = BG_FindItemForWeapon( self->s.weapon );
+		bg_iteminfo_t *item = BG_FindItemForWeapon( self->s.weapon );
 		if (item) {
 			Drop_Item(self, item, 0);
 		}

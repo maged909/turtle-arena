@@ -29,7 +29,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 #include "../qcommon/q_shared.h"
-#include "../renderer/tr_types.h"
+#include "../renderercommon/tr_types.h"
 #include "../game/bg_misc.h"
 #include "cg_public.h"
 
@@ -648,7 +648,7 @@ typedef struct weaponGroupInfo_s {
 // weapon and its effects
 typedef struct weaponInfo_s {
 	qboolean		registered;
-	gitem_t			*item;
+	bg_iteminfo_t	*item;
 
 	qhandle_t		handsModel;			// the hands don't actually draw, they just position the weapon
 	qhandle_t		weaponModel;

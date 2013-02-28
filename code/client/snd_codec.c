@@ -136,6 +136,10 @@ void S_CodecInit()
 {
 	codecs = NULL;
 
+#ifdef USE_CODEC_OPUS
+	S_CodecRegister(&opus_codec);
+#endif
+
 #ifdef USE_CODEC_VORBIS
 	S_CodecRegister(&ogg_codec);
 #endif

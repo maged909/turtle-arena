@@ -348,7 +348,7 @@ CG_TouchItem
 ===================
 */
 static void CG_TouchItem( centity_t *cent ) {
-	gitem_t		*item;
+	bg_iteminfo_t	*item;
 
 	if ( !cg_predictItems.integer ) {
 		return;
@@ -366,11 +366,7 @@ static void CG_TouchItem( centity_t *cent ) {
 		return;		// can't hold it
 	}
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(cent->currentState.modelindex);
-#else
-	item = &bg_itemlist[ cent->currentState.modelindex ];
-#endif
 
 	// Special case for flags.  
 	// We don't predict touching our own flag

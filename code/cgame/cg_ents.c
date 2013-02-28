@@ -605,7 +605,7 @@ CG_Item
 static void CG_Item( centity_t *cent ) {
 	refEntity_t		ent;
 	entityState_t	*es;
-	gitem_t			*item;
+	bg_iteminfo_t	*item;
 	int				msec;
 	float			frac;
 	float			scale;
@@ -619,17 +619,8 @@ static void CG_Item( centity_t *cent ) {
 #endif
 
 	es = &cent->currentState;
-#ifdef TA_ITEMSYS
-	if ( es->modelindex >= BG_NumItems() )
-#else
-	if ( es->modelindex >= bg_numItems )
-#endif
-	{
-#ifdef TA_ITEMSYS
+	if ( es->modelindex >= BG_NumItems() ) {
 		CG_Error( "Bad item index %i on entity (max is %i)", es->modelindex, BG_NumItems() );
-#else
-		CG_Error( "Bad item index %i on entity", es->modelindex );
-#endif
 	}
 
 	// if set to invisible, skip
@@ -637,11 +628,7 @@ static void CG_Item( centity_t *cent ) {
 		return;
 	}
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(es->modelindex);
-#else
-	item = &bg_itemlist[ es->modelindex ];
-#endif
 
 #ifdef IOQ3ZTM // move icons as well as models.
 #ifdef TURTLEARENA

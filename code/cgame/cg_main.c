@@ -909,24 +909,16 @@ The server says this item is used on this level
 =================
 */
 static void CG_RegisterItemSounds( int itemNum ) {
-	gitem_t			*item;
+	bg_iteminfo_t	*item;
 	char			data[MAX_QPATH];
 	char			*s, *start;
 	int				len;
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(itemNum);
 
 	if( item->pickup_sound[0] ) {
 		trap_S_RegisterSound( item->pickup_sound, qfalse );
 	}
-#else
-	item = &bg_itemlist[ itemNum ];
-
-	if( item->pickup_sound ) {
-		trap_S_RegisterSound( item->pickup_sound, qfalse );
-	}
-#endif
 
 	// parse the space seperated precache string for other media
 	s = item->sounds;
@@ -1204,12 +1196,7 @@ static void CG_RegisterSounds( void ) {
 	// only register the items that the server says we need
 	Q_strncpyz(items, CG_ConfigString(CS_ITEMS), sizeof(items));
 
-#ifdef TA_ITEMSYS
-	for ( i = 1 ; i < BG_NumItems() ; i++ )
-#else
-	for ( i = 1 ; i < bg_numItems ; i++ )
-#endif
-	{
+	for ( i = 1 ; i < BG_NumItems() ; i++ ) {
 //		if ( items[ i ] == '1' || cg_buildScript.integer ) {
 			CG_RegisterItemSounds( i );
 //		}
@@ -1713,12 +1700,7 @@ static void CG_RegisterGraphics( void ) {
 	// only register the items that the server says we need
 	Q_strncpyz(items, CG_ConfigString(CS_ITEMS), sizeof(items));
 
-#ifdef TA_ITEMSYS
-	for ( i = 1 ; i < BG_NumItems() ; i++ )
-#else
-	for ( i = 1 ; i < bg_numItems ; i++ )
-#endif
-	{
+	for ( i = 1 ; i < BG_NumItems() ; i++ ) {
 		if ( items[ i ] == '1' || cg_buildScript.integer ) {
 #ifndef TURTLEARENA // NO_LOADING_ICONS
 			CG_LoadingItem( i );
@@ -2384,7 +2366,7 @@ static clientInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex
 }
 
 static const char *CG_FeederItemText(float feederID, int index, int column, qhandle_t *handle) {
-	gitem_t *item;
+	bg_iteminfo_t *item;
 	int scoreIndex = 0;
 	clientInfo_t *info = NULL;
 	int team = -1;
@@ -2406,13 +2388,13 @@ static const char *CG_FeederItemText(float feederID, int index, int column, qhan
 			case 0:
 				if ( info->powerups & ( 1 << PW_NEUTRALFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
-					*handle = cg_items[ ITEM_INDEX(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem(item) ].icon;
 				} else if ( info->powerups & ( 1 << PW_REDFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_REDFLAG );
-					*handle = cg_items[ ITEM_INDEX(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem(item) ].icon;
 				} else if ( info->powerups & ( 1 << PW_BLUEFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_BLUEFLAG );
-					*handle = cg_items[ ITEM_INDEX(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem(item) ].icon;
 				} else {
 					if ( info->botSkill > 0 && info->botSkill <= 5 ) {
 						*handle = cgs.media.botSkillShaders[ info->botSkill - 1 ];
@@ -2807,11 +2789,9 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 
 	cg.loading = qtrue;		// force players to load instead of defer
 
-#ifdef TA_ITEMSYS
 	CG_LoadingString( "items" );
 
 	BG_InitItemInfo();
-#endif
 
 #ifdef TA_ENTSYS // MISC_OBJECT
 	CG_LoadingString( "objects" );

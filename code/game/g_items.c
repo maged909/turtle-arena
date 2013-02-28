@@ -126,11 +126,7 @@ int Pickup_PersistantPowerup( gentity_t *ent, gentity_t *other ) {
 	float	handicap;
 	int		max;
 
-#ifdef IOQ3ZTM
-	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = ITEM_INDEX(ent->item);
-#else
-	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = ent->item - bg_itemlist;
-#endif
+	other->client->ps.stats[STAT_PERSISTANT_POWERUP] = BG_ItemNumForItem(ent->item);
 	other->client->persistantPowerup = ent;
 
 	handicap = ClientHandicap( other->client );
@@ -195,11 +191,7 @@ int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 		other->client->ps.holdable[other->client->ps.holdableIndex] = MAX_SHURIKENS;
 	}
 #else
-#ifdef IOQ3ZTM
-	other->client->ps.stats[STAT_HOLDABLE_ITEM] = ITEM_INDEX(ent->item);
-#else
-	other->client->ps.stats[STAT_HOLDABLE_ITEM] = ent->item - bg_itemlist;
-#endif
+	other->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemNumForItem(ent->item);
 #endif
 
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
@@ -397,12 +389,7 @@ int Pickup_Health (gentity_t *ent, gentity_t *other) {
 
 	// small and mega healths will go over the max
 #ifdef MISSIONPACK
-#ifdef TA_ITEMSYS
-	if( BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-	if( bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-	{
+	if( BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 		max = other->client->ps.stats[STAT_MAX_HEALTH];
 	}
 	else
@@ -425,22 +412,12 @@ int Pickup_Health (gentity_t *ent, gentity_t *other) {
 
 #ifdef TURTLEARENA // Guards having health regen makes them pretty much unkillable.
 			// So get 2x health from pickups!
-#ifdef TA_ITEMSYS
-	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-	if( other->client && bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-	{
+	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 		other->health += quantity*2;
 	}
 	else
 	// And cut health that scout gets?
-#ifdef TA_ITEMSYS
-	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT )
-#else
-	if( other->client && bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT )
-#endif
-	{
+	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 		other->health += quantity*0.5f;
 	}
 	else
@@ -468,12 +445,7 @@ int Pickup_Armor( gentity_t *ent, gentity_t *other ) {
 
 	other->client->ps.stats[STAT_ARMOR] += ent->item->quantity;
 
-#ifdef TA_ITEMSYS
-	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD )
-#else
-	if( other->client && bg_itemlist[other->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD )
-#endif
-	{
+	if( other->client && BG_ItemForItemNum(other->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
 		upperBound = other->client->ps.stats[STAT_MAX_HEALTH];
 	}
 	else {
@@ -568,12 +540,12 @@ void RespawnItem( gentity_t *ent ) {
 	// weapon_random: Change item!
 	if (ent->item->giType == IT_WEAPON && ent->s.eFlags & EF_VOTED)
 	{
-		gitem_t *item;
+		bg_iteminfo_t *item;
 
 		item = G_RandomWeaponItem(ent, ent->spawnflags>>1);
 		if (item) {
 			ent->item = item;
-			ent->s.modelindex = ITEM_INDEX(item);
+			ent->s.modelindex = BG_ItemNumForItem(item);
 		}
 	}
 #endif
@@ -790,17 +762,13 @@ LaunchItem
 Spawns an item and tosses it forward
 ================
 */
-gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
+gentity_t *LaunchItem( bg_iteminfo_t *item, vec3_t origin, vec3_t velocity ) {
 	gentity_t	*dropped;
 
 	dropped = G_Spawn();
 
 	dropped->s.eType = ET_ITEM;
-#ifdef IOQ3ZTM
-	dropped->s.modelindex = ITEM_INDEX(item);	// store item number in modelindex
-#else
-	dropped->s.modelindex = item - bg_itemlist;	// store item number in modelindex
-#endif
+	dropped->s.modelindex = BG_ItemNumForItem(item);	// store item number in modelindex
 	dropped->s.modelindex2 = 1; // This is non-zero is it's a dropped item
 
 	dropped->classname = item->classname;
@@ -853,7 +821,7 @@ Drop_Item
 Spawns an item and tosses it forward
 ================
 */
-gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle ) {
+gentity_t *Drop_Item( gentity_t *ent, bg_iteminfo_t *item, float angle ) {
 	vec3_t	velocity;
 	vec3_t	angles;
 	gentity_t *drop;
@@ -940,11 +908,7 @@ void FinishSpawningItem( gentity_t *ent ) {
 	VectorSet( ent->s.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
 
 	ent->s.eType = ET_ITEM;
-#ifdef IOQ3ZTM
-	ent->s.modelindex = ITEM_INDEX(ent->item);		// store item number in modelindex
-#else
-	ent->s.modelindex = ent->item - bg_itemlist;		// store item number in modelindex
-#endif
+	ent->s.modelindex = BG_ItemNumForItem(ent->item);		// store item number in modelindex
 	ent->s.modelindex2 = 0; // zero indicates this isn't a dropped item
 
 	ent->s.contents = CONTENTS_TRIGGER;
@@ -1012,58 +976,33 @@ void G_CheckTeamItems( void ) {
 	Team_InitGame();
 
 	if( g_gametype.integer == GT_CTF ) {
-		gitem_t	*item;
+		bg_iteminfo_t	*item;
 
 		// check for the two flags
 		item = BG_FindItem( "Red Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_redflag in map\n" );
 		}
 		item = BG_FindItem( "Blue Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_blueflag in map\n" );
 		}
 	}
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_1FCTF ) {
-		gitem_t	*item;
+		bg_iteminfo_t	*item;
 
 		// check for all three flags
 		item = BG_FindItem( "Red Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_redflag in map\n" );
 		}
 		item = BG_FindItem( "Blue Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_blueflag in map\n" );
 		}
 		item = BG_FindItem( "Neutral Flag" );
-#ifdef IOQ3ZTM
-		if ( !item || !itemRegistered[ ITEM_INDEX(item) ] )
-#else
-		if ( !item || !itemRegistered[ item - bg_itemlist ] )
-#endif
-		{
+		if ( !item || !itemRegistered[ BG_ItemNumForItem(item) ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_neutralflag in map\n" );
 		}
 	}
@@ -1156,19 +1095,15 @@ RegisterItem
 The item will be added to the precache list
 ===============
 */
-void RegisterItem( gitem_t *item ) {
+void RegisterItem( bg_iteminfo_t *item ) {
 #ifdef TA_WEAPSYS
 	int itemNum;
 #endif
 	if ( !item ) {
-#ifdef TA_ITEMSYS
 		return;
-#else
-		G_Error( "RegisterItem: NULL" );
-#endif
 	}
 #ifdef TA_WEAPSYS
-	itemNum = ITEM_INDEX(item);
+	itemNum = BG_ItemNumForItem(item);
 	if (itemNum < 0 || itemNum >= MAX_ITEMS)
 	{
 		G_Error( "RegisterItem: itemNum %d out of range [0-%d]\n", itemNum, MAX_ITEMS-1);
@@ -1195,12 +1130,7 @@ void SaveRegisteredItems( void ) {
 	int		count;
 
 	count = 0;
-#ifdef TA_ITEMSYS
-	for ( i = 0 ; i < BG_NumItems() ; i++ )
-#else
-	for ( i = 0 ; i < bg_numItems ; i++ )
-#endif
-	{
+	for ( i = 0 ; i < BG_NumItems() ; i++ ) {
 		if ( itemRegistered[i] ) {
 			count++;
 			string[i] = '1';
@@ -1208,11 +1138,7 @@ void SaveRegisteredItems( void ) {
 			string[i] = '0';
 		}
 	}
-#ifdef TA_ITEMSYS
 	string[ BG_NumItems() ] = 0;
-#else
-	string[ bg_numItems ] = 0;
-#endif
 
 	G_DPrintf( "%i items registered\n", count );
 	trap_SetConfigstring(CS_ITEMS, string);
@@ -1223,7 +1149,7 @@ void SaveRegisteredItems( void ) {
 G_ItemDisabled
 ============
 */
-int G_ItemDisabled( gitem_t *item ) {
+int G_ItemDisabled( bg_iteminfo_t *item ) {
 
 	char name[128];
 
@@ -1241,7 +1167,7 @@ Items can't be immediately dropped to floor, because they might
 be on an entity that hasn't spawned yet.
 ============
 */
-void G_SpawnItem (gentity_t *ent, gitem_t *item) {
+void G_SpawnItem (gentity_t *ent, bg_iteminfo_t *item) {
 #ifdef IOQ3ZTM // RENDERFLAGS
 	int mirrorType;
 #endif
@@ -1295,7 +1221,7 @@ void G_SpawnItem (gentity_t *ent, gitem_t *item) {
 G_RandomWeaponItem
 ============
 */
-gitem_t *G_RandomWeaponItem( gentity_t *ent, int flags ) {
+bg_iteminfo_t *G_RandomWeaponItem( gentity_t *ent, int flags ) {
 	int validWeapons[MAX_BG_WEAPON_GROUPS];
 	int numweapons;
 	int i;
@@ -1347,9 +1273,9 @@ Spawns a random weapon.
 "random" Respawn Delay Variance
 */
 void SP_weapon_random( gentity_t *ent ) {
-	gitem_t *item;
+	bg_iteminfo_t	*item;
 #ifdef IOQ3ZTM // RENDERFLAGS
-	int mirrorType;
+	int				mirrorType;
 #endif
 
 	// Default to melee and guns

@@ -88,13 +88,9 @@ CG_LoadingItem
 ===================
 */
 void CG_LoadingItem( int itemNum ) {
-	gitem_t		*item;
+	bg_iteminfo_t	*item;
 
-#ifdef TA_ITEMSYS
 	item = BG_ItemForItemNum(itemNum);
-#else
-	item = &bg_itemlist[itemNum];
-#endif
 	
 	if ( item->icon && loadingItemIconCount < MAX_LOADING_ITEM_ICONS ) {
 		loadingItemIcons[loadingItemIconCount++] = trap_R_RegisterShaderNoMip( item->icon );

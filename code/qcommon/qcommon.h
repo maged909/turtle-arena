@@ -369,7 +369,7 @@ void	VM_Forced_Unload_Done(void);
 vm_t	*VM_Restart(vm_t *vm, qboolean unpure);
 
 intptr_t		QDECL VM_Call( vm_t *vm, int callNum, ... );
-int				VM_SafeCall( vm_t *vm, int callnum );
+intptr_t		QDECL VM_SafeCall( vm_t *vm, int callnum );
 
 void	VM_Debug( int level );
 
@@ -385,6 +385,9 @@ static ID_INLINE float _vmf(intptr_t x)
 }
 #define	VMF(x)	_vmf(args[x])
 
+void VM_ClearMemoryTags( void );
+intptr_t VM_ExplicitAlloc( vm_t *vm, int size, const char *tag );
+intptr_t VM_Alloc( int size, const char *tag );
 
 /*
 ==============================================================
@@ -1126,8 +1129,6 @@ void	Sys_Print( const char *msg );
 // any game related timing information should come from event timestamps
 int		Sys_Milliseconds (void);
 
-void	Sys_SnapVector( float *v );
-
 qboolean Sys_RandomBytes( byte *string, int len );
 
 // the system console is shown when a dedicated server is running
@@ -1145,6 +1146,7 @@ qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 qboolean	Sys_IsLANAddress (netadr_t adr);
 void		Sys_ShowIP(void);
 
+FILE	*Sys_FOpen( const char *ospath, const char *mode );
 qboolean Sys_Mkdir( const char *path );
 qboolean Sys_Rmdir( const char *path );
 FILE	*Sys_Mkfifo( const char *ospath );

@@ -36,7 +36,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifdef TA_GAME_MODELS
 #ifdef IOQ3ZTM // BONES
-#include "../renderer/tr_types.h"
+#include "../renderercommon/tr_types.h"
 #endif
 #endif
 
@@ -222,10 +222,10 @@ struct gentity_s {
 	float		wait;
 	float		random;
 
-	gitem_t		*item;			// for bonus items
+	bg_iteminfo_t	*item;			// for bonus items
 
 #ifdef TA_ENTSYS // MISC_OBJECT
-	bg_objectcfg_t *objectcfg;
+	bg_objectcfg_t	*objectcfg;
 #endif
 #ifdef TA_NPCSYS
 	bg_npc_t	bgNPC;
@@ -594,11 +594,11 @@ void G_RunItem( gentity_t *ent );
 void RespawnItem( gentity_t *ent );
 
 void UseHoldableItem( gentity_t *ent );
-void PrecacheItem (gitem_t *it);
-gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle );
-gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity );
+void PrecacheItem (bg_iteminfo_t *it);
+gentity_t *Drop_Item( gentity_t *ent, bg_iteminfo_t *item, float angle );
+gentity_t *LaunchItem( bg_iteminfo_t *item, vec3_t origin, vec3_t velocity );
 void SetRespawn (gentity_t *ent, float delay);
-void G_SpawnItem (gentity_t *ent, gitem_t *item);
+void G_SpawnItem (gentity_t *ent, bg_iteminfo_t *item);
 void FinishSpawningItem( gentity_t *ent );
 void Think_Weapon (gentity_t *ent);
 int ArmorIndex (gentity_t *ent);
@@ -606,11 +606,11 @@ void	Add_Ammo (gentity_t *ent, int weapon, int count);
 void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace);
 
 void ClearRegisteredItems( void );
-void RegisterItem( gitem_t *item );
+void RegisterItem( bg_iteminfo_t *item );
 void SaveRegisteredItems( void );
 
 #ifdef TA_WEAPSYS // weapon_random
-gitem_t *G_RandomWeaponItem( gentity_t *ent, int flags );
+bg_iteminfo_t *G_RandomWeaponItem( gentity_t *ent, int flags );
 #endif
 
 //
@@ -903,13 +903,6 @@ void ObeliskPain( gentity_t *self, gentity_t *attacker, int damage );
 #endif
 
 //
-// g_mem.c
-//
-void *G_Alloc( int size );
-void G_InitMemory( void );
-void Svcmd_GameMem_f( void );
-
-//
 // g_session.c
 //
 void G_ReadSessionData( gclient_t *client );
@@ -1035,7 +1028,6 @@ extern	vmCvar_t	g_quadfactor;
 extern	vmCvar_t	g_forcerespawn;
 extern	vmCvar_t	g_inactivity;
 extern	vmCvar_t	g_debugMove;
-extern	vmCvar_t	g_debugAlloc;
 extern	vmCvar_t	g_debugDamage;
 extern	vmCvar_t	g_weaponRespawn;
 extern	vmCvar_t	g_weaponTeamRespawn;

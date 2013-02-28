@@ -35,7 +35,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifdef TA_GAME_MODELS
 #ifdef IOQ3ZTM // BONES
-#include "../renderer/tr_types.h"
+#include "../renderercommon/tr_types.h"
 #endif
 #endif
 
@@ -560,6 +560,9 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_DEBUG_POLYGON_DELETE:
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
+
+	case G_ALLOC:
+		return VM_Alloc( args[1], VMA(2) );
 
 #ifdef TA_GAME_MODELS
 	case G_REGISTERMODEL:

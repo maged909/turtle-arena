@@ -763,7 +763,7 @@ typedef enum {
 } weapon_t;
 #endif
 
-// gitem_t->type
+// bg_iteminfo_t->type
 typedef enum {
 	IT_BAD,
 	IT_WEAPON,				// EFX: rotate + upscale + minlight
@@ -785,7 +785,6 @@ typedef enum {
 
 #define MAX_ITEM_MODELS 4
 
-#ifdef TA_ITEMSYS
 typedef struct bg_iteminfo_s {
 	char		classname[MAX_QPATH];	// spawning name
 	char		pickup_sound[MAX_QPATH];
@@ -818,31 +817,6 @@ int BG_NumItems(void);
 int BG_NumHoldableItems(void);
 
 void BG_InitItemInfo(void);
-
-#define gitem_s bg_iteminfo_s
-#define gitem_t bg_iteminfo_t
-#else
-typedef struct gitem_s {
-	char		*classname;	// spawning name
-	char		*pickup_sound;
-	char		*world_model[MAX_ITEM_MODELS];
-
-	char		*icon;
-	char		*pickup_name;	// for printing on pickup
-
-	int			quantity;		// for ammo how much, or duration of powerup
-	itemType_t  giType;			// IT_* flags
-
-	int			giTag;
-
-#ifdef IOQ3ZTM // FLAG_MODEL
-	char		*skin;			// So flags don't need multiple models.
-#else
-	char		*precaches;		// string of all models and images this item will use
-#endif
-	char		*sounds;		// string of all sounds this item will use
-} gitem_t;
-#endif
 
 #ifdef TA_WEAPSYS
 // Currently only support two hands
@@ -1134,9 +1108,7 @@ typedef struct
 #define MAX_BG_WEAPONS 32
 #define MAX_BG_WEAPON_GROUPS 16 // ZTM: WONTFIX: Player's are limited to 16 weapons.
 #endif
-extern bg_projectileinfo_t bg_projectileinfo[MAX_BG_PROJ];
-extern bg_weaponinfo_t bg_weaponinfo[MAX_BG_WEAPONS];
-extern bg_weapongroupinfo_t bg_weapongroupinfo[MAX_BG_WEAPON_GROUPS];
+
 #ifdef TURTLEARENA // HOLD_SHURIKEN
 int BG_ProjectileIndexForHoldable(int holdable);
 #endif
@@ -1161,6 +1133,50 @@ int BG_WeaponGroupTotalDamage(int weaponGroup);
 #endif
 #ifdef TA_HOLDSYS
 int BG_ItemNumForHoldableNum(holdable_t holdablenum);
+#endif
+
+// Shared by game, cgame, and ui (DLLs reference the same memory!)
+typedef struct
+{
+	qboolean				initialized;
+
+	bg_iteminfo_t			iteminfo[MAX_ITEMS];
+
+#ifdef TA_WEAPSYS
+	bg_projectileinfo_t		projectileinfo[MAX_BG_PROJ];
+	bg_weaponinfo_t			weaponinfo[MAX_BG_WEAPONS];
+	bg_weapongroupinfo_t	weapongroupinfo[MAX_BG_WEAPON_GROUPS];
+#endif
+
+
+	// Be careful when reading these, only ment to be accessed by helper functions.
+	int						numitems;
+	int						numholdables;
+#ifdef TA_WEAPSYS
+	int						numprojectiles;
+	int						numweapons;
+	int						numweapongroups;
+#endif
+} bg_commonInfo_t;
+
+extern bg_commonInfo_t *bg_common;
+
+// ZTM: FIXME: temporary hacks to allow compiling
+#define bg_itemsys_init bg_common->initialized
+
+#define bg_iteminfo bg_common->iteminfo
+
+#define bg_numitems bg_common->numitems
+#define bg_numholdables bg_common->numholdables
+
+#ifdef TA_WEAPSYS
+#define bg_projectileinfo bg_common->projectileinfo
+#define bg_weaponinfo bg_common->weaponinfo
+#define bg_weapongroupinfo bg_common->weapongroupinfo
+
+#define bg_numprojectiles bg_common->numprojectiles
+#define bg_numweapons bg_common->numweapons
+#define	bg_numweapongroups bg_common->numweapongroups
 #endif
 
 // reward sounds (stored in ps->persistant[PERS_PLAYEREVENTS])
@@ -2193,23 +2209,12 @@ extern int modNamesSize;
 
 //---------------------------------------------------------
 
-#ifndef TA_ITEMSYS
-// included in both the game dll and the client
-extern	gitem_t	bg_itemlist[];
-extern	int		bg_numItems;
-#endif
-
-gitem_t	*BG_FindItem( const char *pickupName );
-gitem_t	*BG_FindItemForWeapon( weapon_t weapon );
-gitem_t	*BG_FindItemForPowerup( powerup_t pw );
-gitem_t	*BG_FindItemForHoldable( holdable_t pw );
+bg_iteminfo_t	*BG_FindItem( const char *pickupName );
+bg_iteminfo_t	*BG_FindItemForWeapon( weapon_t weapon );
+bg_iteminfo_t	*BG_FindItemForPowerup( powerup_t pw );
+bg_iteminfo_t	*BG_FindItemForHoldable( holdable_t pw );
 #ifdef IOQ3ZTM
-gitem_t	*BG_FindItemForClassname( const char *classname );
-#endif
-#ifdef TA_ITEMSYS
-#define	ITEM_INDEX(x) (BG_ItemNumForItem(x))
-#else
-#define	ITEM_INDEX(x) ((x)-bg_itemlist)
+bg_iteminfo_t	*BG_FindItemForClassname( const char *classname );
 #endif
 
 qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps );
@@ -2419,3 +2424,5 @@ int		trap_PC_FreeSource( int handle );
 int		trap_PC_ReadToken( int handle, pc_token_t *pc_token );
 void	trap_PC_UnreadToken( int handle );
 int		trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
+
+void	*trap_Alloc( int size, const char *tag );

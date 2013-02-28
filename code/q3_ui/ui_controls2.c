@@ -1929,18 +1929,12 @@ Controls_InitWeapons
 */
 static void Controls_InitWeapons( void ) {
 #ifndef TA_WEAPSYS_EX // Don't pre-load weapons in controls menu, there could be a lot that are not seen in menu...
-	gitem_t *	item;
-#ifdef TA_ITEMSYS
+	bg_iteminfo_t *item;
 	int i;
 
-	for (i = BG_NumItems()-1; i > 0; i--)
-#else
-	for ( item = bg_itemlist + 1 ; item->classname ; item++ )
-#endif
-	{
-#ifdef TA_ITEMSYS
+	for (i = BG_NumItems()-1; i > 0; i--) {
 		item = BG_ItemForItemNum(i);
-#endif
+
 		if ( item->giType != IT_WEAPON ) {
 			continue;
 		}
