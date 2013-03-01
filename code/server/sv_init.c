@@ -30,6 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "server.h"
 
+
 /*
 ===============
 SV_SendConfigstring

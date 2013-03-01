@@ -1376,6 +1376,7 @@ void SV_UserinfoChanged( player_t *player ) {
 
 }
 
+
 /*
 ==================
 SV_UpdateUserinfo_f
