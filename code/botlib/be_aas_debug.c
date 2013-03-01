@@ -569,9 +569,7 @@ void AAS_PrintTravelType(int traveltype)
 		case TRAVEL_TELEPORT: str = "TRAVEL_TELEPORT"; break;
 		case TRAVEL_ELEVATOR: str = "TRAVEL_ELEVATOR"; break;
 		case TRAVEL_ROCKETJUMP: str = "TRAVEL_ROCKETJUMP"; break;
-#ifndef TA_WEAPSYS
 		case TRAVEL_BFGJUMP: str = "TRAVEL_BFGJUMP"; break;
-#endif
 		case TRAVEL_GRAPPLEHOOK: str = "TRAVEL_GRAPPLEHOOK"; break;
 		case TRAVEL_JUMPPAD: str = "TRAVEL_JUMPPAD"; break;
 		case TRAVEL_FUNCBOB: str = "TRAVEL_FUNCBOB"; break;

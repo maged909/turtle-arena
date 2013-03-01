@@ -4000,11 +4000,7 @@ void AAS_SetWeaponJumpAreaFlags(void)
 //===========================================================================
 int AAS_Reachability_WeaponJump(int area1num, int area2num)
 {
-#ifdef TA_WEAPSYS
-	int face2num, i, ret, visualize;
-#else
 	int face2num, i, n, ret, visualize;
-#endif
 	float speed, zvel;
 	//float hordist;
 	aas_face_t *face2;
@@ -4052,18 +4048,12 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num)
 		AAS_FaceCenter(face2num, facecenter);
 		//only go higher up with weapon jumps
 		if (facecenter[2] < areastart[2] + 64) continue;
-#ifndef TA_WEAPSYS
 		//NOTE: set to 2 to allow bfg jump reachabilities
 		for (n = 0; n < 1/*2*/; n++)
-#endif
 		{
 			//get the rocket jump z velocity
-#ifdef TA_WEAPSYS
-			zvel = AAS_RocketJumpZVelocity(areastart);
-#else
 			if (n) zvel = AAS_BFGJumpZVelocity(areastart);
 			else zvel = AAS_RocketJumpZVelocity(areastart);
-#endif
 			//get the horizontal speed for the jump, if it isn't possible to calculate this
 			//speed (the jump is not possible) then there's no jump reachability created
 			ret = AAS_HorizontalVelocityForJump(zvel, areastart, facecenter, &speed);
@@ -4104,14 +4094,12 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num)
 						lreach->edgenum = 0;
 						VectorCopy(areastart, lreach->start);
 						VectorCopy(facecenter, lreach->end);
-#ifndef TA_WEAPSYS
 						if (n)
 						{
 							lreach->traveltype = TRAVEL_BFGJUMP;
 							lreach->traveltime = aassettings.rs_bfgjump;
 						} //end if
 						else
-#endif
 						{
 							lreach->traveltype = TRAVEL_ROCKETJUMP;
 							lreach->traveltime = aassettings.rs_rocketjump;
@@ -4366,9 +4354,7 @@ void AAS_StoreReachability(void)
 // TRAVEL_RAMPJUMP				  0%
 // TRAVEL_STRAFEJUMP			  0%
 // TRAVEL_ROCKETJUMP			100%	(currently limited towards areas with items)
-#ifndef TA_WEAPSYS
 // TRAVEL_BFGJUMP				  0%	(currently disabled)
-#endif
 // TRAVEL_JUMPPAD				100%
 // TRAVEL_FUNCBOB				100%
 //
