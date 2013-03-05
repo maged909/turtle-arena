@@ -175,11 +175,6 @@ static void SV_Map_f( void ) {
 	Com_sprintf (expanded, sizeof(expanded), "maps/%s.bsp", map);
 	if ( FS_ReadFile (expanded, NULL) == -1 ) {
 		Com_Printf ("Can't find map %s\n", expanded);
-#ifdef TA_SP
-		Cvar_Set("ui_singlePlayerActive", "0");
-		Cvar_Set("savegame_loading", "0");
-		Cvar_Set("savegame_filename", "");
-#endif
 		return;
 	}
 
