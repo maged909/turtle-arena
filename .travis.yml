@@ -10,4 +10,4 @@ before_install:
   - sudo apt-get install -qq libgl1-mesa-dev libsdl1.2-dev mingw32
   
 notifications:
-  irc: "irc.freenode.org#ebx"
+  irc: "irc.freenode.org#turtlearena"
