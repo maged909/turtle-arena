@@ -561,7 +561,6 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
 
 
 #ifdef RAVENMD4
-
 /*
 =================
 R_LoadMDR
@@ -1717,7 +1716,13 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 }
 
 #ifdef RAVENMD4
-//
+/*
+=============================================================
+
+UNCOMPRESSING BONES
+
+=============================================================
+*/
 #define MC_BITS_X (16)
 #define MC_BITS_Y (16)
 #define MC_BITS_Z (16)
@@ -1727,7 +1732,7 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 #define MC_SCALE_Y (1.0f/64)
 #define MC_SCALE_Z (1.0f/64)
 
-//
+
 #define MC_MASK_X ((1<<(MC_BITS_X))-1)
 #define MC_MASK_Y ((1<<(MC_BITS_Y))-1)
 #define MC_MASK_Z ((1<<(MC_BITS_Z))-1)
@@ -1771,6 +1776,11 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 #define MC_POS_V33 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*8))/8))
 #define MC_SHIFT_V33 ((((MC_BITS_X+MC_BITS_Y+MC_BITS_Z+MC_BITS_VECT*8)%8)))
 
+/*
+=================
+MC_UnCompress
+=================
+*/
 void MC_UnCompress(float mat[3][4],const unsigned char * comp)
 {
 	int val;

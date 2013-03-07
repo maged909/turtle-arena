@@ -54,12 +54,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define TFL_WATERJUMP			0x00000200	//jumping out of the water
 #define TFL_TELEPORT			0x00000400	//teleporting
 #define TFL_ELEVATOR			0x00000800	//elevator
-#ifndef TURTLEARENA // NO_ROCKET_JUMPING
 #define TFL_ROCKETJUMP			0x00001000	//rocket jumping
-#endif
-#ifndef TA_WEAPSYS
 #define TFL_BFGJUMP				0x00002000	//bfg jumping
-#endif
 #define TFL_GRAPPLEHOOK			0x00004000	//grappling hook
 #define TFL_DOUBLEJUMP			0x00008000	//double jump
 #define TFL_RAMPJUMP			0x00010000	//ramp jump

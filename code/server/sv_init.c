@@ -30,6 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "server.h"
 
+
 /*
 ===============
 SV_SendConfigstring
@@ -706,22 +707,11 @@ void SV_Init (void)
 	SV_AddOperatorCommands ();
 
 	// serverinfo vars
-	Cvar_Get ("dmflags", "0", CVAR_SERVERINFO);
-#ifdef NOTRATEDM // frag to score
-	Cvar_Get ("scorelimit", "1000", CVAR_SERVERINFO);
-#else
-	Cvar_Get ("fraglimit", "20", CVAR_SERVERINFO);
-#endif
-	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
 	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
 	sv_privateClients = Cvar_Get ("sv_privateClients", "0", CVAR_SERVERINFO);
-#ifdef IOQ3ZTM // ZTM: Nicer looking than 'noname'
-	sv_hostname = Cvar_Get ("sv_hostname", PRODUCT_NAME " server", CVAR_SERVERINFO | CVAR_ARCHIVE );
-#else
 	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
-#endif
 	sv_maxclients = Cvar_Get ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
 
 	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );

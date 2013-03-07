@@ -120,9 +120,7 @@ typedef struct aas_settings_s
 	float rs_startwalkoffledge;
 	float rs_startjump;
 	float rs_rocketjump;
-#ifndef TA_WEAPSYS
 	float rs_bfgjump;
-#endif
 	float rs_jumppad;
 	float rs_aircontrolledjumppad;
 	float rs_funcbob;
