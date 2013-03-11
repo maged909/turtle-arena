@@ -4082,6 +4082,35 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 }
 
 /*
+=================
+CG_DrawDemoRecording
+=================
+*/
+void CG_DrawDemoRecording( void ) {
+	char	string[1024];
+	char	demoName[MAX_QPATH];
+	int		pos;
+
+	if ( trap_GetDemoState() != DS_RECORDING ) {
+		return;
+	}
+#ifdef MISSIONPACK
+	if ( cg_recordSPDemo.integer ) {
+		return;
+	}
+#endif
+
+	trap_GetDemoName( demoName, sizeof( demoName ) );
+	pos = trap_GetDemoPos();
+	Com_sprintf( string, sizeof (string), "RECORDING %s: %ik", demoName, pos / 1024 );
+
+	CG_SetScreenPlacement( PLACE_CENTER, PLACE_TOP );
+
+	CG_DrawStringExt( ( SCREEN_WIDTH - strlen( string ) * TINYCHAR_WIDTH ) / 2, 20, string, g_color_table[ColorIndex(COLOR_WHITE)],
+			qfalse, qtrue, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+}
+
+/*
 =====================
 CG_DrawScreen2D
 
@@ -4114,6 +4143,8 @@ void CG_DrawScreen2D( stereoFrame_t stereoView ) {
 	} else {
 		CG_DrawGlobalCenterString();
 	}
+
+	CG_DrawDemoRecording();
 }
 
 #ifdef IOQ3ZTM // LETTERBOX
