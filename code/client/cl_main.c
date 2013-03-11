@@ -751,7 +751,6 @@ void CL_StopRecord_f( void ) {
 	FS_FCloseFile (clc.demofile);
 	clc.demofile = 0;
 	clc.demorecording = qfalse;
-	clc.spDemoRecording = qfalse;
 	Com_Printf ("Stopped demo.\n");
 }
 
@@ -803,9 +802,7 @@ void CL_Record_f( void ) {
 	}
 
 	if ( clc.demorecording ) {
-		if (!clc.spDemoRecording) {
-			Com_Printf ("Already recording.\n");
-		}
+		Com_Printf ("Already recording.\n");
 		return;
 	}
 
@@ -855,11 +852,6 @@ void CL_Record_f( void ) {
 		return;
 	}
 	clc.demorecording = qtrue;
-	if (Cvar_VariableValue("ui_recordSPDemo")) {
-	  clc.spDemoRecording = qtrue;
-	} else {
-	  clc.spDemoRecording = qfalse;
-	}
 
 	Q_strncpyz( clc.demoName, demoName, sizeof( clc.demoName ) );
 
@@ -1083,19 +1075,21 @@ void CL_ReadDemoMessage( void ) {
 CL_WalkDemoExt
 ====================
 */
-static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
+static int CL_WalkDemoExt(char *arg, char *name, int *demofile, int *demoLength)
 {
 	int i = 0;
+	int length;
 	*demofile = 0;
 
 #ifdef LEGACY_PROTOCOL
 	if(com_legacyprotocol->integer > 0)
 	{
 		Com_sprintf(name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, com_legacyprotocol->integer);
-		FS_FOpenFileRead(name, demofile, qtrue);
+		length = FS_FOpenFileRead(name, demofile, qtrue);
 		
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 			return com_legacyprotocol->integer;
 		}
@@ -1105,10 +1099,11 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 #endif
 	{
 		Com_sprintf(name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, com_protocol->integer);
-		FS_FOpenFileRead(name, demofile, qtrue);
+		length = FS_FOpenFileRead(name, demofile, qtrue);
 
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 			return com_protocol->integer;
 		}
@@ -1129,6 +1124,7 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 		FS_FOpenFileRead( name, demofile, qtrue );
 		if (*demofile)
 		{
+			*demoLength = length;
 			Com_Printf("Demo file: %s\n", name);
 
 			return demo_protocols[i];
@@ -1138,6 +1134,7 @@ static int CL_WalkDemoExt(char *arg, char *name, int *demofile)
 		i++;
 	}
 	
+	*demoLength = 0;
 	return -1;
 }
 
@@ -1205,7 +1202,7 @@ void CL_PlayDemo_f( void ) {
 		  )
 		{
 			Com_sprintf(name, sizeof(name), "demos/%s", arg);
-			FS_FOpenFileRead(name, &clc.demofile, qtrue);
+			clc.demoLength = FS_FOpenFileRead(name, &clc.demofile, qtrue);
 		}
 		else
 		{
@@ -1219,23 +1216,23 @@ void CL_PlayDemo_f( void ) {
 
 			Q_strncpyz(retry, arg, len + 1);
 			retry[len] = '\0';
-			protocol = CL_WalkDemoExt(retry, name, &clc.demofile);
+			protocol = CL_WalkDemoExt(retry, name, &clc.demofile, &clc.demoLength);
 		}
 	}
 	else
-		protocol = CL_WalkDemoExt(arg, name, &clc.demofile);
+		protocol = CL_WalkDemoExt(arg, name, &clc.demofile, &clc.demoLength);
 	
 	if (!clc.demofile) {
 		Com_Error( ERR_DROP, "couldn't open %s", name);
 		return;
 	}
-	Q_strncpyz( clc.demoName, Cmd_Argv(1), sizeof( clc.demoName ) );
+	Q_strncpyz( clc.demoName, arg, sizeof( clc.demoName ) );
 
 	Con_Close();
 
 	clc.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
-	Q_strncpyz( clc.servername, Cmd_Argv(1), sizeof( clc.servername ) );
+	Q_strncpyz( clc.servername, arg, sizeof( clc.servername ) );
 
 #ifdef LEGACY_PROTOCOL
 	if(protocol <= com_legacyprotocol->integer)
@@ -1289,6 +1286,68 @@ void CL_NextDemo( void ) {
 	Cbuf_AddText (v);
 	Cbuf_AddText ("\n");
 	Cbuf_Execute();
+}
+
+/*
+==================
+CL_DemoState
+
+Returns the current state of the demo system
+==================
+*/
+demoState_t CL_DemoState( void ) {
+	if( clc.demoplaying ) {
+		return DS_PLAYBACK;
+	} else if( clc.demorecording ) {
+		return DS_RECORDING;
+	} else {
+		return DS_NONE;
+	}
+}
+
+/*
+==================
+CL_DemoPos
+
+Returns the current position of the demo
+==================
+*/
+int CL_DemoPos( void ) {
+	if( clc.demoplaying || clc.demorecording ) {
+		return FS_FTell( clc.demofile );
+	} else {
+		return 0;
+	}
+}
+
+/*
+==================
+CL_DemoLength
+
+Returns the length of the playing demo
+==================
+*/
+int CL_DemoLength( void ) {
+	if( clc.demoplaying ) {
+		return clc.demoLength;
+	} else {
+		return 0;
+	}
+}
+
+/*
+==================
+CL_DemoName
+
+Returns the name of the demo
+==================
+*/
+void CL_DemoName( char *buffer, int size ) {
+	if( clc.demoplaying || clc.demorecording ) {
+		Q_strncpyz( buffer, clc.demoName, size );
+	} else if( size >= 1 ) {
+		buffer[ 0 ] = '\0';
+	}
 }
 
 

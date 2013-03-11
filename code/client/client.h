@@ -245,12 +245,12 @@ typedef struct {
 
 	// demo information
 	char		demoName[MAX_QPATH];
-	qboolean	spDemoRecording;
 	qboolean	demorecording;
 	qboolean	demoplaying;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
 	qboolean	firstDemoFrameSkipped;
 	fileHandle_t	demofile;
+	int			demoLength;		// size of playback demo
 
 	int			timeDemoFrames;		// counter of rendered frames
 	int			timeDemoStart;		// cls.realtime before first frame
@@ -506,6 +506,10 @@ void CL_Vid_Restart_f( void );
 void CL_Snd_Restart_f (void);
 void CL_StartDemoLoop( void );
 void CL_NextDemo( void );
+demoState_t CL_DemoState( void );
+int CL_DemoPos( void );
+void CL_DemoName( char *buffer, int size );
+int CL_DemoLength( void );
 void CL_ReadDemoMessage( void );
 void CL_StopRecord_f(void);
 
