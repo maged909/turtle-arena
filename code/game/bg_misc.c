@@ -2969,6 +2969,131 @@ int BG_WeaponGroupTotalDamage(int weaponGroup)
 }
 #endif // TA_WEAPSYS
 
+/*
+==============
+BG_CheckSpawnEntity
+==============
+*/
+qboolean BG_CheckSpawnEntity( const bgEntitySpawnInfo_t *info ) {
+	int			i, gametype;
+	char		*s, *value, *gametypeName;
+	static char *gametypeNames[GT_MAX_GAME_TYPE] = {
+		"ffa",
+#ifdef TA_MISC // tornament to duel
+		"duel",
+#else
+		"tournament",
+#endif
+#ifdef TA_SP
+		"coop",
+#else
+		"single",
+#endif
+		"team",
+		"ctf",
+#ifdef MISSIONPACK
+		"oneflag",
+#ifdef TA_MISC // tornament to duel, obelisk to overload
+		"overload",
+#else
+		"obelisk",
+#endif
+#ifdef MISSIONPACK_HARVESTER
+		"harvester"
+#endif
+#endif
+	};
+
+	gametype = info->gametype;
+
+	// check for "notsingle" flag
+#ifdef TA_SP
+	if ( info->singlePlayerActive && gametype == GT_SINGLE_PLAYER )
+#else
+	if ( gametype == GT_SINGLE_PLAYER )
+#endif
+	{
+		info->spawnInt( "notsingle", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	}
+
+	// check for "notteam" flag (GT_FFA, GT_TOURNAMENT, GT_SINGLE_PLAYER)
+	if ( gametype >= GT_TEAM ) {
+		info->spawnInt( "notteam", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	} else {
+		info->spawnInt( "notfree", "0", &i );
+		if ( i ) {
+			return qfalse;
+		}
+	}
+
+#ifdef TURTLEARENA
+	info->spawnInt( "notturtlearena", "0", &i );
+	if ( i ) {
+			return qfalse;
+	}
+#else
+#ifdef MISSIONPACK
+	info->spawnInt( "notta", "0", &i );
+	if ( i ) {
+			return qfalse;
+	}
+#else
+	info->spawnInt( "notq3a", "0", &i );
+	if ( i ) {
+			return qfalse;
+	}
+#endif
+#endif
+
+#ifdef TA_SP // ZTM: Support single player and coop separately.
+	if ( info->singlePlayerActive && gametype == GT_SINGLE_PLAYER )
+		gametypeName = "single";
+	else if ( gametype >= 0 && gametype < GT_MAX_GAME_TYPE ) {
+		gametypeName = gametypeNames[gametype];
+	} else {
+		gametypeName = NULL;
+	}
+#endif
+
+	if( info->spawnString( "!gametype", NULL, &value ) ) {
+#ifndef TA_SP
+		if( gametype >= 0 && gametype < GT_MAX_GAME_TYPE ) {
+			gametypeName = gametypeNames[gametype];
+#endif
+
+			s = strstr( value, gametypeName );
+			if( s ) {
+				return qfalse;
+			}
+#ifndef TA_SP
+		}
+#endif
+	}
+
+	if( info->spawnString( "gametype", NULL, &value ) ) {
+#ifndef TA_SP
+		if( gametype >= 0 && gametype < GT_MAX_GAME_TYPE ) {
+			gametypeName = gametypeNames[gametype];
+#endif
+
+			s = strstr( value, gametypeName );
+			if( !s ) {
+				return qfalse;
+			}
+#ifndef TA_SP
+		}
+#endif
+	}
+
+	return qtrue;
+}
+
 #ifdef TA_HOLDSYS
 /*
 ==============
