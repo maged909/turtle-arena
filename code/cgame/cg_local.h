@@ -749,7 +749,6 @@ typedef struct
 
 #define MAX_PREDICTED_EVENTS	16
  
-// ZTM: data that use to be in cg_t but is needed for each local client
 typedef struct {
 
 	int			clientNum;
@@ -1997,6 +1996,7 @@ void	CG_ColorForChain(int val, vec3_t color);
 #endif
 float *CG_TeamColor( int team );
 void CG_TileClear( void );
+void CG_KeysStringForBinding(const char *binding, char *string, int stringSize );
 void CG_ColorForHealth( vec4_t hcolor );
 #ifdef TURTLEARENA // NOARMOR
 void CG_GetColorForHealth( int health, vec4_t hcolor );
