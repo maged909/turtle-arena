@@ -180,6 +180,7 @@ void SP_target_level_end (gentity_t *ent);
 #endif
 
 void SP_light (gentity_t *self);
+void SP_lightJunior (gentity_t *self);
 void SP_info_null (gentity_t *self);
 void SP_info_notnull (gentity_t *self);
 void SP_info_camp (gentity_t *self);
@@ -190,6 +191,7 @@ void SP_misc_model(gentity_t *ent);
 #ifdef TA_ENTSYS // MISC_OBJECT
 void SP_misc_object(gentity_t *ent);
 #endif
+void SP_misc_gamemodel (gentity_t *ent);
 void SP_misc_portal_camera(gentity_t *ent);
 void SP_misc_portal_surface(gentity_t *ent);
 
@@ -290,6 +292,8 @@ spawn_t	spawns[] = {
 #endif
 
 	{"light", SP_light},
+	{"lightJunior", SP_lightJunior},
+
 	{"path_corner", SP_path_corner},
 #ifdef TA_PATHSYS
 	{"path_start", SP_path_start},
@@ -301,9 +305,10 @@ spawn_t	spawns[] = {
 	{"misc_teleporter_dest", SP_misc_teleporter_dest},
 	{"misc_model", SP_misc_model},
 #ifdef TA_ENTSYS // MISC_OBJECT
-	{"misc_gamemodel", SP_misc_object}, // Shows model in NetRadiant
+	//{"misc_gamemodel", SP_misc_object}, // Shows model in NetRadiant
 	{"misc_object", SP_misc_object},
 #endif
+	{"misc_gamemodel", SP_misc_gamemodel},
 	{"misc_portal_surface", SP_misc_portal_surface},
 	{"misc_portal_camera", SP_misc_portal_camera},
 
@@ -520,33 +525,7 @@ level.spawnVars[], then call the class specfic spawn function
 void G_SpawnGEntityFromSpawnVars( void ) {
 	int			i;
 	gentity_t	*ent;
-	char		*s, *value, *gametypeName;
-	static char *gametypeNames[GT_MAX_GAME_TYPE] = {
-		"ffa",
-#ifdef TA_MISC // tornament to duel
-		"duel",
-#else
-		"tournament",
-#endif
-#ifdef TA_SP
-		"coop",
-#else
-		"single",
-#endif
-		"team",
-		"ctf",
-#ifdef MISSIONPACK
-		"oneflag",
-#ifdef TA_MISC // tornament to duel, obelisk to overload
-		"overload",
-#else
-		"obelisk",
-#endif
-#ifdef MISSIONPACK_HARVESTER
-		"harvester"
-#endif
-#endif
-	};
+	bgEntitySpawnInfo_t spawnInfo;
 
 	// get the next free entity
 	ent = G_Spawn();
@@ -555,106 +534,18 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		G_ParseField( level.spawnVars[i][0], level.spawnVars[i][1], ent );
 	}
 
-	// check for "notsingle" flag
+	spawnInfo.gametype = g_gametype.integer;
 #ifdef TA_SP
-	if ( g_singlePlayer.integer && g_gametype.integer == GT_SINGLE_PLAYER )
-#else
-	if ( g_gametype.integer == GT_SINGLE_PLAYER )
+	spawnInfo.singlePlayerActive = g_singlePlayer.integer;
 #endif
-	{
-		G_SpawnInt( "notsingle", "0", &i );
-		if ( i ) {
-			ADJUST_AREAPORTAL();
-			G_FreeEntity( ent );
-			return;
-		}
-	}
-	// check for "notteam" flag (GT_FFA, GT_TOURNAMENT, GT_SINGLE_PLAYER)
-	if ( g_gametype.integer >= GT_TEAM ) {
-		G_SpawnInt( "notteam", "0", &i );
-		if ( i ) {
-			ADJUST_AREAPORTAL();
-			G_FreeEntity( ent );
-			return;
-		}
-	} else {
-		G_SpawnInt( "notfree", "0", &i );
-		if ( i ) {
-			ADJUST_AREAPORTAL();
-			G_FreeEntity( ent );
-			return;
-		}
-	}
+	spawnInfo.spawnInt = G_SpawnInt;
+	spawnInfo.spawnString = G_SpawnString;
 
-#ifdef TURTLEARENA
-	G_SpawnInt( "notturtlearena", "0", &i );
-	if ( i ) {
+	// check "notsingle", "notfree", "notteam", etc
+	if ( !BG_CheckSpawnEntity( &spawnInfo ) ) {
 		ADJUST_AREAPORTAL();
 		G_FreeEntity( ent );
 		return;
-	}
-#else
-#ifdef MISSIONPACK
-	G_SpawnInt( "notta", "0", &i );
-	if ( i ) {
-		ADJUST_AREAPORTAL();
-		G_FreeEntity( ent );
-		return;
-	}
-#else
-	G_SpawnInt( "notq3a", "0", &i );
-	if ( i ) {
-		ADJUST_AREAPORTAL();
-		G_FreeEntity( ent );
-		return;
-	}
-#endif
-#endif
-
-#ifdef TA_SP // ZTM: Support single player and coop separately.
-	if ( g_singlePlayer.integer && g_gametype.integer == GT_SINGLE_PLAYER )
-		gametypeName = "single";
-	else if ( g_gametype.integer >= 0 && g_gametype.integer < GT_MAX_GAME_TYPE ) {
-		gametypeName = gametypeNames[g_gametype.integer];
-	} else {
-		gametypeName = NULL;
-	}
-#endif
-
-#ifdef IOQ3ZTM // ZTM: Allow not spawning in only some gametypes. Copied from OpenArena (oax)
-	if( G_SpawnString( "!gametype", NULL, &value ) ) {
-#ifndef TA_SP
-		if( g_gametype.integer >= 0 && g_gametype.integer < GT_MAX_GAME_TYPE ) {
-			gametypeName = gametypeNames[g_gametype.integer];
-#endif
-
-			s = strstr( value, gametypeName );
-			if( s ) {
-				ADJUST_AREAPORTAL();
-				G_FreeEntity( ent );
-				return;
-			}
-#ifndef TA_SP
-		}
-#endif
-	}
-#endif
-
-	if( G_SpawnString( "gametype", NULL, &value ) ) {
-#ifndef TA_SP
-		if( g_gametype.integer >= 0 && g_gametype.integer < GT_MAX_GAME_TYPE ) {
-			gametypeName = gametypeNames[g_gametype.integer];
-#endif
-
-			s = strstr( value, gametypeName );
-			if( !s ) {
-				ADJUST_AREAPORTAL();
-				G_FreeEntity( ent );
-				return;
-			}
-#ifndef TA_SP
-		}
-#endif
 	}
 
 	// move editor origin to pos

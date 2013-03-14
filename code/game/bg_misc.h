@@ -2337,6 +2337,24 @@ int cmdcmp( const void *a, const void *b );
 void BG_RegisterClientCvars(int maxSplitview);
 #endif
 
+//
+typedef struct
+{
+	int gametype;
+#ifdef TA_SP
+	int singlePlayerActive;
+#endif
+
+	// callbacks to test the entity
+	// these will be different functions during game and cgame
+	qboolean	(*spawnInt)( const char *key, const char *defaultString, int *out );
+	qboolean	(*spawnString)( const char *key, const char *defaultString, char **out );
+
+} bgEntitySpawnInfo_t;
+
+qboolean BG_CheckSpawnEntity( const bgEntitySpawnInfo_t *info );
+
+
 #define MAX_MAP_SIZE 65536
 
 //
