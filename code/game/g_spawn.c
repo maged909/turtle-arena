@@ -194,6 +194,8 @@ void SP_misc_object(gentity_t *ent);
 void SP_misc_gamemodel (gentity_t *ent);
 void SP_misc_portal_camera(gentity_t *ent);
 void SP_misc_portal_surface(gentity_t *ent);
+void SP_misc_vis_dummy( gentity_t *ent );
+void SP_misc_vis_dummy_multiple( gentity_t *ent );
 
 #ifdef TA_WEAPSYS
 void SP_misc_shooter( gentity_t *ent );
@@ -311,6 +313,8 @@ spawn_t	spawns[] = {
 	{"misc_gamemodel", SP_misc_gamemodel},
 	{"misc_portal_surface", SP_misc_portal_surface},
 	{"misc_portal_camera", SP_misc_portal_camera},
+	{"misc_vis_dummy", SP_misc_vis_dummy},
+	{"misc_vis_dummy_multiple", SP_misc_vis_dummy_multiple},
 
 #ifdef TA_WEAPSYS
 	{"misc_shooter", SP_misc_shooter},
