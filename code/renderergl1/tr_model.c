@@ -1201,7 +1201,6 @@ int RE_JointIndexForName(qhandle_t handle, const char *jointName)
 				break;
 			}
 
-#ifdef RAVENMD4
 		case MOD_MDR:
 			// MDR doesn't save joint names, but has 'tags' that are simply joint name and index.
 			// Can only find joint if it has a tag.
@@ -1222,7 +1221,6 @@ int RE_JointIndexForName(qhandle_t handle, const char *jointName)
 				}
 				break;
 			}
-#endif
 
 		default:
 			break;
@@ -1270,7 +1268,6 @@ static const char *RE_JointName(qhandle_t handle, int jointIndex)
 				break;
 			}
 
-#ifdef RAVENMD4
 		case MOD_MDR:
 			{
 				mdrHeader_t		*mod;
@@ -1293,7 +1290,6 @@ static const char *RE_JointName(qhandle_t handle, int jointIndex)
 					jointName = NULL;
 				break;
 			}
-#endif
 
 		default:
 			jointName = NULL;
@@ -1349,7 +1345,7 @@ qboolean RE_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, i
 			break;
 		}
 
-#if 0 //#ifdef RAVENMD4
+#if 0
 		// ZTM: TODO: Finish setting up MDR joints and support using custom skeleton.
 		case MOD_MDR:
 		{

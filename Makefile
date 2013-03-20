@@ -61,7 +61,6 @@ endif
 # Please note: TA_*SYS defines are general system changes, not 'totally' specifiy for Turtle Arena
 
 ##### ioquake3 defines
-# RAVENMD4				Enable support for loading MDR models.
 # MISSIONPACK			Code for the official Quake III Arena expansion pack, Quake III: Team Arena.
 ##### Split from MISSIONPACK define
 # MISSIONPACK_HUD		Use MISSIONPACK UI scripting in cgame for hud and menus.
