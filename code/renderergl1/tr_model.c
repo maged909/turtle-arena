@@ -35,10 +35,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, const char *name );
 static qboolean R_LoadMD4(model_t *mod, void *buffer, const char *name );
-#ifdef RAVENMD4
 static qboolean R_LoadMDR(model_t *mod, void *buffer, int filesize, const char *name );
-void MC_UnCompress(float mat[3][4],const unsigned char * comp);
-#endif
 
 /*
 ====================
@@ -125,7 +122,6 @@ qhandle_t R_RegisterMD3(const char *name, model_t *mod)
 	return 0;
 }
 
-#ifdef RAVENMD4
 /*
 ====================
 R_RegisterMDR
@@ -163,7 +159,6 @@ qhandle_t R_RegisterMDR(const char *name, model_t *mod)
 	
 	return mod->index;
 }
-#endif
 
 /*
 ====================
@@ -212,9 +207,7 @@ typedef struct
 static modelExtToLoaderMap_t modelLoaders[ ] =
 {
 	{ "iqm", R_RegisterIQM },
-#ifdef RAVENMD4
 	{ "mdr", R_RegisterMDR },
-#endif
 	{ "md4", R_RegisterMD3 },
 	{ "md3", R_RegisterMD3 }
 };
@@ -560,7 +553,6 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
 }
 
 
-#ifdef RAVENMD4
 /*
 =================
 R_LoadMDR
@@ -915,7 +907,6 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 	
 	return qtrue;
 }
-#endif
 
 /*
 =================
@@ -1210,7 +1201,6 @@ int RE_JointIndexForName(qhandle_t handle, const char *jointName)
 				break;
 			}
 
-#ifdef RAVENMD4
 		case MOD_MDR:
 			// MDR doesn't save joint names, but has 'tags' that are simply joint name and index.
 			// Can only find joint if it has a tag.
@@ -1231,7 +1221,6 @@ int RE_JointIndexForName(qhandle_t handle, const char *jointName)
 				}
 				break;
 			}
-#endif
 
 		default:
 			break;
@@ -1279,7 +1268,6 @@ static const char *RE_JointName(qhandle_t handle, int jointIndex)
 				break;
 			}
 
-#ifdef RAVENMD4
 		case MOD_MDR:
 			{
 				mdrHeader_t		*mod;
@@ -1302,7 +1290,6 @@ static const char *RE_JointName(qhandle_t handle, int jointIndex)
 					jointName = NULL;
 				break;
 			}
-#endif
 
 		default:
 			jointName = NULL;
@@ -1358,7 +1345,7 @@ qboolean RE_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, i
 			break;
 		}
 
-#if 0 //#ifdef RAVENMD4
+#if 0
 		// ZTM: TODO: Finish setting up MDR joints and support using custom skeleton.
 		case MOD_MDR:
 		{
@@ -1535,7 +1522,6 @@ static md3Tag_t *R_GetTag( md3Header_t *mod, int frame, const char *tagName ) {
 	return NULL;
 }
 
-#ifdef RAVENMD4
 void R_GetAnimTag( mdrHeader_t *mod, int framenum, const char *tagName, md3Tag_t * dest) 
 {
 	int				i, j, k;
@@ -1579,7 +1565,6 @@ void R_GetAnimTag( mdrHeader_t *mod, int framenum, const char *tagName, md3Tag_t
 	VectorClear( dest->origin );
 	strcpy(dest->name,"");
 }
-#endif
 
 /*
 ================
@@ -1589,9 +1574,7 @@ R_LerpTag
 int R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, 
 					 float frac, const char *tagName ) {
 	md3Tag_t	*start, *end;
-#ifdef RAVENMD4
 	md3Tag_t	start_space, end_space;
-#endif
 	int		i;
 	float		frontLerp, backLerp;
 	model_t		*model;
@@ -1599,7 +1582,6 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFram
 	model = R_GetModelByHandle( handle );
 	if ( !model->md3[0] )
 	{
-#ifdef RAVENMD4
 		if(model->type == MOD_MDR)
 		{
 			start = &start_space;
@@ -1607,9 +1589,7 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFram
 			R_GetAnimTag((mdrHeader_t *) model->modelData, startFrame, tagName, start);
 			R_GetAnimTag((mdrHeader_t *) model->modelData, endFrame, tagName, end);
 		}
-		else
-#endif
-		if( model->type == MOD_IQM ) {
+		else if( model->type == MOD_IQM ) {
 			return R_IQMLerpTag( tag, model->modelData,
 					startFrame, endFrame,
 					frac, tagName );
@@ -1685,7 +1665,6 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 		VectorCopy( frame->bounds[1], maxs );
 		
 		return;
-#ifdef RAVENMD4
 	} else if (model->type == MOD_MDR) {
 		mdrHeader_t	*header;
 		mdrFrame_t	*frame;
@@ -1697,7 +1676,6 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 		VectorCopy( frame->bounds[1], maxs );
 		
 		return;
-#endif
 	} else if(model->type == MOD_IQM) {
 		iqmData_t *iqmData;
 		
@@ -1715,7 +1693,6 @@ void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
 	VectorClear( maxs );
 }
 
-#ifdef RAVENMD4
 /*
 =============================================================
 
@@ -1835,4 +1812,4 @@ void MC_UnCompress(float mat[3][4],const unsigned char * comp)
 	val-=1<<(MC_BITS_VECT-1);
 	mat[2][2]=((float)(val))*MC_SCALE_VECT;
 }
-#endif
+
