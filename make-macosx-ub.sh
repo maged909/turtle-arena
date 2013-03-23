@@ -10,23 +10,23 @@ BASEDIR=base
 
 BIN_OBJ="
 	build/release-darwin-x86_64/turtlearena.x86_64
-	build/release-darwin-i386/turtlearena.i386
+	build/release-darwin-x86/turtlearena.x86
 	build/release-darwin-ppc/turtlearena.ppc
 "
 BIN_DEDOBJ="
 	build/release-darwin-x86_64/turtlearena-server.x86_64
-	build/release-darwin-i386/turtlearena-server.i386
+	build/release-darwin-x86/turtlearena-server.x86
 	build/release-darwin-ppc/turtlearena-server.ppc
 "
 BASE_OBJ="
 	build/release-darwin-x86_64/$BASEDIR/cgamex86_64.dylib
-	build/release-darwin-i386/$BASEDIR/cgamei386.dylib
+	build/release-darwin-x86/$BASEDIR/cgamex86.dylib
 	build/release-darwin-ppc/$BASEDIR/cgameppc.dylib
 	build/release-darwin-x86_64/$BASEDIR/uix86_64.dylib
-	build/release-darwin-i386/$BASEDIR/uii386.dylib
+	build/release-darwin-x86/$BASEDIR/uix86.dylib
 	build/release-darwin-ppc/$BASEDIR/uippc.dylib
 	build/release-darwin-x86_64/$BASEDIR/gamex86_64.dylib
-	build/release-darwin-i386/$BASEDIR/gamei386.dylib
+	build/release-darwin-x86/$BASEDIR/gamex86.dylib
 	build/release-darwin-ppc/$BASEDIR/gameppc.dylib
 "
 
@@ -113,11 +113,11 @@ fi
 
 echo;echo
 
-# i386 client and server
-if [ -d build/release-darwin-i386 ]; then
-	rm -r build/release-darwin-i386
+# x86 client and server
+if [ -d build/release-darwin-x86 ]; then
+	rm -r build/release-darwin-x86
 fi
-(ARCH=i386 CC=gcc-4.0 CFLAGS=$X86_CFLAGS LDFLAGS=$X86_LDFLAGS make -j$NCPU) || exit 1;
+(ARCH=x86 CC=gcc-4.0 CFLAGS=$X86_CFLAGS LDFLAGS=$X86_LDFLAGS make -j$NCPU) || exit 1;
 
 echo;echo
 
@@ -178,7 +178,7 @@ echo "
 	</plist>
 	" > $DESTDIR/$APPBUNDLE/Contents/Info.plist
 
-# Make UB's from previous builds of i386, x86_64 and ppc binaries
+# Make UB's from previous builds of x86, x86_64 and ppc binaries
 lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$BINARY $BIN_OBJ
 lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$DEDBIN $BIN_DEDOBJ
 
