@@ -45,6 +45,7 @@
 					<Add library="SDLmain" />
 					<Add library="SDL" />
 					<Add library="OpenGL32" />
+					<Add library="psapi" />
 					<Add directory="../../code/libs/win32" />
 				</Linker>
 			</Target>
@@ -88,6 +89,7 @@
 					<Add library="SDLmain" />
 					<Add library="SDL" />
 					<Add library="OpenGL32" />
+					<Add library="psapi" />
 					<Add directory="../../code/libs/win32" />
 				</Linker>
 			</Target>
@@ -1354,6 +1356,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

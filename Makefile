@@ -538,6 +538,13 @@ ifeq ($(PLATFORM),darwin)
     OPTIMIZEVM += -arch x86_64 -mfpmath=sse
   endif
 
+  # When compiling on OSX for OSX, we're not cross compiling as far as the
+  # Makefile is concerned, as target architecture is specified as a compiler
+  # argument
+  ifeq ($(COMPILE_PLATFORM),darwin)
+    CROSS_COMPILING=0
+  endif
+
   ifeq ($(CROSS_COMPILING),1)
     ifeq ($(ARCH),ppc)
       CC=powerpc-apple-darwin10-gcc
@@ -986,7 +993,7 @@ ifndef CC
 endif
 
 ifndef RANLIB
-  RANLIB=gcc
+  RANLIB=ranlib
 endif
 
 ifneq ($(HAVE_VM_COMPILED),true)
@@ -1046,8 +1053,8 @@ ifneq ($(BUILD_GAME_QVM),0)
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
-      $(B)/$(MISSIONPACK)/vm/game.qvm \
       $(B)/$(MISSIONPACK)/vm/cgame.qvm \
+      $(B)/$(MISSIONPACK)/vm/game.qvm \
       $(B)/$(MISSIONPACK)/vm/ui.qvm
   endif
 endif
