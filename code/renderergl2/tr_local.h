@@ -371,12 +371,12 @@ enum
 	TB_DIFFUSEMAP  = 0,
 	TB_LIGHTMAP    = 1,
 	TB_LEVELSMAP   = 1,
-	TB_SHADOWMAP   = 1,
+	TB_SHADOWMAP3  = 1,
 	TB_NORMALMAP   = 2,
 	TB_DELUXEMAP   = 3,
 	TB_SHADOWMAP2  = 3,
 	TB_SPECULARMAP = 4,
-	TB_SHADOWMAP3  = 5,
+	TB_SHADOWMAP   = 5,
 	NUM_TEXTURE_BUNDLES = 6
 };
 
@@ -469,7 +469,7 @@ typedef struct shader_s {
 	qboolean	isSky;
 	skyParms_t	sky;
 	fogParms_t	fogParms;
-	fogParms_t	waterFogParms;
+	fogParms_t	viewFogParms;
 
 	float		portalRange;			// distance to fog out at
 	qboolean	isPortal;
@@ -806,6 +806,11 @@ typedef enum
 	UNIFORM_INVTEXRES,
 	UNIFORM_AUTOEXPOSUREMINMAX,
 	UNIFORM_TONEMINAVGMAXLINEAR,
+
+	UNIFORM_PRIMARYLIGHTORIGIN,
+	UNIFORM_PRIMARYLIGHTCOLOR,
+	UNIFORM_PRIMARYLIGHTAMBIENT,
+	UNIFORM_PRIMARYLIGHTRADIUS,
 
 	UNIFORM_COUNT
 } uniform_t;
@@ -2042,6 +2047,7 @@ extern  cvar_t  *r_forceSun;
 extern  cvar_t  *r_forceSunMapLightScale;
 extern  cvar_t  *r_forceSunLightScale;
 extern  cvar_t  *r_forceSunAmbientScale;
+extern  cvar_t  *r_sunlightMode;
 extern  cvar_t  *r_drawSunRays;
 extern  cvar_t  *r_sunShadows;
 extern  cvar_t  *r_shadowFilter;
@@ -2756,7 +2762,7 @@ size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 
 // fog stuff
 int R_DefaultFogNum( void );
