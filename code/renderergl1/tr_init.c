@@ -1633,7 +1633,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp, qboolean headless ) 
 	re.TakeVideoFrame = RE_TakeVideoFrame;
 
 	re.GetGlobalFog = RE_GetGlobalFog;
-	re.GetWaterFog = RE_GetWaterFog;
+	re.GetViewFog = RE_GetViewFog;
 
 	return &re;
 }

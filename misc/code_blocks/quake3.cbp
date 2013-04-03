@@ -29,7 +29,6 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -73,7 +72,6 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -112,7 +110,6 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -141,7 +138,6 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -169,7 +165,6 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
@@ -198,7 +193,6 @@
 					<Add option="-DUSE_LOCAL_HEADERS" />
 					<Add option="-DUSE_VOIP" />
 					<Add option="-DUSE_CODEC_VORBIS" />
-					<Add option="-DUSE_CIN_THEORA" />
 					<Add option="-DFLOATING_POINT" />
 					<Add option="-DUSE_ALLOCA" />
 					<Add option="-DFT2_BUILD_LIBRARY" />
