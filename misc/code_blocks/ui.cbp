@@ -17,7 +17,7 @@
 					<Add option="-m32" />
 					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-Dbaseebxmp" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 				<Linker>
 					<Add option="-m32" />
@@ -34,7 +34,7 @@
 					<Add option="-m32" />
 					<Add option="-O0" />
 					<Add option="-DUI" />
-					<Add option="-Dbaseebxmp" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 				<Linker>
 					<Add option="-m32" />
@@ -51,7 +51,7 @@
 					<Add option="-fPIC" />
 					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-Dbaseebxmp" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Team Arena Linux x86">
@@ -65,7 +65,7 @@
 					<Add option="-fPIC" />
 					<Add option="-O0" />
 					<Add option="-DUI" />
-					<Add option="-Dbaseebxmp" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 			<Target title="Release Team Arena Linux x86_64">
@@ -79,7 +79,7 @@
 					<Add option="-fPIC" />
 					<Add option="-DUI" />
 					<Add option="-DNDEBUG" />
-					<Add option="-Dbaseebxmp" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Team Arena Linux x86_64">
@@ -93,7 +93,7 @@
 					<Add option="-fPIC" />
 					<Add option="-O0" />
 					<Add option="-DUI" />
-					<Add option="-Dbaseebxmp" />
+					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
 		</Build>
