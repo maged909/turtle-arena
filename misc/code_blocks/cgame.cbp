@@ -8,8 +8,8 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/release-codeblocks-x86/baseebx/cgamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86/baseebx/cgame" />
+				<Option output="../../build/release-codeblocks-x86/baseturtle/cgamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseturtle/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -27,8 +27,8 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/debug-codeblocks-x86/baseebx/cgamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86/baseebx/cgame" />
+				<Option output="../../build/debug-codeblocks-x86/baseturtle/cgamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseturtle/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -45,8 +45,8 @@
 			</Target>
 			<Target title="Release Team Arena Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/release-codeblocks-x86/baseebxmp/cgamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86/baseebxmp/cgame" />
+				<Option output="../../build/release-codeblocks-x86/baseturtlemp/cgamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseturtlemp/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -64,8 +64,8 @@
 			</Target>
 			<Target title="Debug Team Arena Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/debug-codeblocks-x86/baseebxmp/cgamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86/baseebxmp/cgame" />
+				<Option output="../../build/debug-codeblocks-x86/baseturtlemp/cgamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseturtlemp/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -82,8 +82,8 @@
 			</Target>
 			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86/baseebx/cgamex86.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86/baseebx/cgame" />
+				<Option output="../../build/release-codeblocks-x86/baseturtle/cgamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseturtle/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -98,8 +98,8 @@
 			</Target>
 			<Target title="Debug Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86/baseebx/cgamex86.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86/baseebx/cgame" />
+				<Option output="../../build/debug-codeblocks-x86/baseturtle/cgamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseturtle/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -113,8 +113,8 @@
 			</Target>
 			<Target title="Release Team Arena Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86/baseebxmp/cgamex86.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86/baseebxmp/cgame" />
+				<Option output="../../build/release-codeblocks-x86/baseturtlemp/cgamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseturtlemp/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -129,8 +129,8 @@
 			</Target>
 			<Target title="Debug Team Arena Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86/baseebxmp/cgamex86.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86/baseebxmp/cgame" />
+				<Option output="../../build/debug-codeblocks-x86/baseturtlemp/cgamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseturtlemp/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -144,8 +144,8 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86_64/baseebx/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86_64/baseebx/cgame" />
+				<Option output="../../build/release-codeblocks-x86_64/baseturtle/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/baseturtle/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -160,8 +160,8 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86_64/baseebx/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86_64/baseebx/cgame" />
+				<Option output="../../build/debug-codeblocks-x86_64/baseturtle/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/baseturtle/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -175,8 +175,8 @@
 			</Target>
 			<Target title="Release Team Arena Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86_64/baseebxmp/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86_64/baseebxmp/cgame" />
+				<Option output="../../build/release-codeblocks-x86_64/baseturtlemp/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/baseturtlemp/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -191,8 +191,8 @@
 			</Target>
 			<Target title="Debug Team Arena Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86_64/baseebxmp/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86_64/baseebxmp/cgame" />
+				<Option output="../../build/debug-codeblocks-x86_64/baseturtlemp/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/baseturtlemp/cgame" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>

@@ -8,8 +8,8 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/release-codeblocks-x86/baseebx/gamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86/baseebx/game" />
+				<Option output="../../build/release-codeblocks-x86/baseturtle/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseturtle/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -26,8 +26,8 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/debug-codeblocks-x86/baseebx/gamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86/baseebx/game" />
+				<Option output="../../build/debug-codeblocks-x86/baseturtle/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseturtle/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -44,8 +44,8 @@
 			</Target>
 			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86/baseebx/gamex86.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86/baseebx/game" />
+				<Option output="../../build/release-codeblocks-x86/baseturtle/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseturtle/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -59,8 +59,8 @@
 			</Target>
 			<Target title="Debug Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86/baseebx/gamex86.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86/baseebx/game" />
+				<Option output="../../build/debug-codeblocks-x86/baseturtle/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseturtle/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -73,8 +73,8 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/release-codeblocks-x86_64/baseebx/gamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/release-codeblocks-x86_64/baseebx/game" />
+				<Option output="../../build/release-codeblocks-x86_64/baseturtle/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/baseturtle/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -87,8 +87,8 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/debug-codeblocks-x86_64/baseebx/gamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/debug-codeblocks-x86_64/baseebx/game" />
+				<Option output="../../build/debug-codeblocks-x86_64/baseturtle/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/baseturtle/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
