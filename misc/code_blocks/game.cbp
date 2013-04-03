@@ -8,44 +8,46 @@
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/game_release/gamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86/baseebx/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseebx/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
+					<Add option="-m32" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/game_debug/gamex86.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86/gamex86.dll" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseebx/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
+					<Add option="-m32" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+				</Linker>
 			</Target>
-			<Target title="Release Linux i386">
+			<Target title="Release Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_release/gamei386.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86/baseebx/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86/baseebx/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
@@ -55,18 +57,15 @@
 					<Add option="-DMISSIONPACK" />
 				</Compiler>
 			</Target>
-			<Target title="Debug Linux i386">
+			<Target title="Debug Linux x86">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_debug/gamei386.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86/baseebx/gamex86.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86/baseebx/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 					<Add option="-DMISSIONPACK" />
@@ -74,15 +73,12 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_release/gamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_release" />
+				<Option output="../../build/release-codeblocks-x86_64/baseebx/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/release-codeblocks-x86_64/baseebx/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-Wall" />
 					<Add option="-fPIC" />
 					<Add option="-DGAME" />
 					<Add option="-DNDEBUG" />
@@ -91,16 +87,13 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/game_debug/gamex86_64.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/game_debug" />
+				<Option output="../../build/debug-codeblocks-x86_64/baseebx/gamex86_64.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/debug-codeblocks-x86_64/baseebx/game" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fPIC" />
-					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-DGAME" />
 					<Add option="-DMISSIONPACK" />
@@ -108,6 +101,16 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-Wformat=2" />
+			<Add option="-Wno-format-zero-length" />
+			<Add option="-Wformat-security" />
+			<Add option="-Wno-format-nonliteral" />
+			<Add option="-Wstrict-aliasing=2" />
+			<Add option="-Wmissing-format-attribute" />
+			<Add option="-Wdisabled-optimization" />
+			<Add option="-Werror-implicit-function-declaration" />
+			<Add option="-fno-strict-aliasing" />
 			<Add option="-DNOTRATEDM" />
 			<Add option="-DNOBLOOD" />
 			<Add option="-DIOQ3ZTM" />
@@ -266,6 +269,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
