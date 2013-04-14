@@ -439,9 +439,9 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
 #ifdef TURTLEARENA // ZTM: Draw team overlay info at the top right of the screen.
-	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "1", CVAR_ARCHIVE, RANGE_INT(0, 3) },
 #else
-	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE, RANGE_INT(0, 3) },
 #endif
 	{ &cg_teamOverlayUserinfo, "teamoverlay", "0", CVAR_ROM | CVAR_USERINFO_ALL, RANGE_ALL },
 	{ &cg_stats, "cg_stats", "0", 0, RANGE_ALL },
