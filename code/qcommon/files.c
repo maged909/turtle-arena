@@ -3485,36 +3485,24 @@ qboolean FS_BaseFileExists( const char *file )
 	return qfalse;
 }
 
-#ifdef IOQ3ZTM // PORTABLE_APP
 /*
 ================
-FS_PortableMode
+FS_PortableHomePath
 
-Save data in "setting", if there is a settings/portable file that contains "yes".
+If a settings directory exists in same directory as binary, return path to it.
 ================
 */
-qboolean FS_PortableMode(void)
-{
-	FILE *f;
-	char *testpath;
-	char buf[4];
+const char *FS_PortableHomePath(void) {
+	static char settings[ MAX_OSPATH ];
 
-	testpath = FS_BuildOSPath( fs_basepath->string, "settings", "portable" );
+	Com_sprintf( settings, sizeof( settings ), "%s%csettings", Sys_DefaultInstallPath(), PATH_SEP );
 
-	f = fopen( testpath, "rb" );
-	if (f) {
-		if (fread(buf, sizeof(buf), 1, f) != 1) {
-			// Read error
-			buf[0] = '\0';
-		}
-		fclose( f );
-	} else {
-		return qfalse;
+	if ( Sys_StatFile( settings ) != 1 ) {
+		return NULL;
 	}
 
-	return (buf[0] && Q_stricmpn(buf, "yes", 3) == 0);
+	return settings;
 }
-#endif
 
 // XXX
 static void FS_CheckPaks( qboolean quiet );
@@ -3538,19 +3526,10 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
 	fs_basegame = Cvar_Get ("fs_basegame", "", CVAR_INIT );
-#ifdef IOQ3ZTM // PORTABLE_APP
-	if (FS_PortableMode())
-	{
-		static char settings[ MAX_OSPATH ] = { 0 };
-
-		strcpy(settings, fs_basepath->string);
-		strcat(settings, "/settings");
-
-		homePath = settings;
+	homePath = FS_PortableHomePath();
+	if (!homePath || !homePath[0]) {
+		homePath = Sys_DefaultHomePath();
 	}
-	else
-#endif
-	homePath = Sys_DefaultHomePath();
 	if (!homePath || !homePath[0]) {
 		homePath = fs_basepath->string;
 	}
