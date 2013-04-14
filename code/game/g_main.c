@@ -260,7 +260,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_laserTag, "g_laserTag", "0", CVAR_SERVERINFO, 0, qfalse, RANGE_ALL },
 #endif
 #ifdef TA_PATHSYS // 2DMODE
-	{ &g_2dmode, "g_2dmode", "0", CVAR_SERVERINFO, 0, qfalse, RANGE_BOOL },
+	{ &g_2dmode, "g_2dmode", "0", CVAR_SERVERINFO, 0, qfalse, RANGE_ALL },
 #endif
 
 	{ &g_smoothClients, "g_smoothClients", "1", 0, 0, qfalse, RANGE_BOOL },
