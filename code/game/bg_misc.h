@@ -2423,6 +2423,7 @@ float	trap_Cvar_VariableValue( const char *var_name );
 void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize );
+void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean integral );
 
 // filesystem access
 // returns length of file

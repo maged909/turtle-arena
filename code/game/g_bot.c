@@ -984,12 +984,12 @@ static void G_SpawnBots( char *botList, int baseDelay )
 
 	skill = trap_Cvar_VariableValue( "g_spSkill" );
 	if( skill < 1 ) {
-		trap_Cvar_Set( "g_spSkill", "1" );
 		skill = 1;
+		trap_Cvar_SetValue( "g_spSkill", skill );
 	}
 	else if ( skill > 5 ) {
-		trap_Cvar_Set( "g_spSkill", "5" );
 		skill = 5;
+		trap_Cvar_SetValue( "g_spSkill", skill );
 	}
 
 	Q_strncpyz( bots, botList, sizeof(bots) );
@@ -1163,50 +1163,15 @@ void G_InitBots( qboolean restart ) {
 		}
 
 #ifndef TA_SP
-#ifdef NOTRATEDM // frag to score
-		strValue = Info_ValueForKey( arenainfo, "scorelimit" );
-		fragLimit = atoi( strValue );
-#if !defined TURTLEARENA || defined TA_SUPPORTQ3
-		// Support Q3 "fraglimit" in arenas.txt
-		if ( !fragLimit )
-		{
-			strValue = Info_ValueForKey( arenainfo, "fraglimit" );
-			fragLimit = atoi( strValue )*50;
-		}
-#endif
-		if ( fragLimit ) {
-			trap_Cvar_Set( "scorelimit", strValue );
-		}
-		else {
-			trap_Cvar_Set( "scorelimit", "0" );
-		}
-#else
-		strValue = Info_ValueForKey( arenainfo, "fraglimit" );
-		fragLimit = atoi( strValue );
-		if ( fragLimit ) {
-			trap_Cvar_Set( "fraglimit", strValue );
-		}
-		else {
-			trap_Cvar_Set( "fraglimit", "0" );
-		}
-#endif
-
-		strValue = Info_ValueForKey( arenainfo, "timelimit" );
-		timeLimit = atoi( strValue );
-		if ( timeLimit ) {
-			trap_Cvar_Set( "timelimit", strValue );
-		}
-		else {
-			trap_Cvar_Set( "timelimit", "0" );
-		}
+		fragLimit = atoi( Info_ValueForKey( arenainfo, "fraglimit" ) );
+		timeLimit = atoi( Info_ValueForKey( arenainfo, "timelimit" ) );
 
 		if ( !fragLimit && !timeLimit ) {
-#ifdef NOTRATEDM // frag to score
-			trap_Cvar_Set( "scorelimit", "1000" );
-#else
-			trap_Cvar_Set( "fraglimit", "10" );
-#endif
-			trap_Cvar_Set( "timelimit", "0" );
+			trap_Cvar_SetValue( "fraglimit", 10 );
+			trap_Cvar_SetValue( "timelimit", 0 );
+		} else {
+			trap_Cvar_SetValue( "fraglimit", fragLimit );
+			trap_Cvar_SetValue( "timelimit", timeLimit );
 		}
 #endif
 

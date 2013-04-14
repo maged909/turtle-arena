@@ -1146,6 +1146,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_CVAR_INFO_STRING_BUFFER:
 		Cvar_InfoStringBuffer( args[1], VMA(2), args[3] );
 		return 0;
+	case CG_CVAR_CHECK_RANGE:
+		Cvar_CheckRangeSafe( VMA(1), VMF(2), VMF(3), args[4] );
+		return 0;
 	case CG_ARGC:
 		return Cmd_Argc();
 	case CG_ARGV:
@@ -1341,7 +1344,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.GetGlobalFog( VMA(1), VMA(2), VMA(3), VMA(4) );
 		return 0;
 	case CG_R_GET_VIEW_FOG:
-		re.GetViewFog( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5) );
+		re.GetViewFog( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6] );
 		return 0;
 	case CG_GETCLIPBOARDDATA:
 		CL_GetClipboardData( VMA(1), args[2] );
@@ -1612,6 +1615,7 @@ void CL_InitCGame( void ) {
 	const char			*info;
 	const char			*mapname;
 	int					t1, t2;
+	int					index;
 	unsigned int		version, major, minor;
 
 	t1 = Sys_Milliseconds();
@@ -1655,7 +1659,7 @@ void CL_InitCGame( void ) {
 	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, CL_MAX_SPLITVIEW,
 			clc.clientNums[0], clc.clientNums[1], clc.clientNums[2], clc.clientNums[3] );
 
-	// entityBaselines and parseEntities are saved across vid_restart
+	// entityBaselines, parseEntities, and snapshot player states are saved across vid_restart
 	if ( !cl.entityBaselines.pointer && !cl.parseEntities.pointer ) {
 		DA_Init( &cl.entityBaselines, MAX_GENTITIES, cl.cgameEntityStateSize, qtrue );
 
@@ -1664,6 +1668,12 @@ void CL_InitCGame( void ) {
 		} else {
 			DA_Init( &cl.parseEntities, CL_MAX_SPLITVIEW * 4 * MAX_SNAPSHOT_ENTITIES, cl.cgameEntityStateSize, qtrue );
 		}
+
+		for (index = 0; index < PACKET_BACKUP; index++) {
+			DA_Init( &cl.snapshots[index].playerStates, MAX_SPLITVIEW, cl.cgamePlayerStateSize, qtrue );
+		}
+
+		DA_Init( &cl.tempSnapshotPS, MAX_SPLITVIEW, cl.cgamePlayerStateSize, qtrue );
 	}
 
 	// reset any CVAR_CHEAT cvars registered by cgame

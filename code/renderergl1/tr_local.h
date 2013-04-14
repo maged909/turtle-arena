@@ -1105,6 +1105,8 @@ typedef struct {
 	float		skyFogDepthForOpaque;
 	float		skyFogDensity;
 
+	fogParms_t	waterFogParms;
+
 	//
 	// put large tables at the end, so most elements will be
 	// within the +/32K indexed range on risc processors
@@ -1368,6 +1370,9 @@ void	R_ScreenShot_f( void );
 
 #define DEFAULT_FOG_EXP_DENSITY			0.5f
 #define DEFAULT_FOG_LINEAR_DENSITY		1.1f
+
+// ZTM: FIXME: I pulled this number out of nowhere, RTCW used 5 which didn't work with software fog
+#define DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE 2048
 
 void	R_InitFogTable( void );
 float	R_FogFactor( float s, float t );
@@ -1848,7 +1853,7 @@ size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
-void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 // fog stuff
 int R_DefaultFogNum( void );
