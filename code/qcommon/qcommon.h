@@ -582,6 +582,9 @@ char	*Cvar_InfoString_Big( int bit );
 void	Cvar_InfoStringBuffer( int bit, char *buff, int buffsize );
 void Cvar_CheckRange( cvar_t *cv, float minVal, float maxVal, qboolean shouldBeIntegral );
 
+void Cvar_CheckRangeSafe( const char *varName, float min, float max, qboolean integral );
+// basically a slightly modified Cvar_CheckRange for the interpreted modules
+
 void	Cvar_Restart(qboolean unsetVM);
 void	Cvar_Restart_f( void );
 
@@ -627,7 +630,7 @@ void	FS_InitFilesystem ( void );
 void	FS_Shutdown( qboolean closemfp );
 
 qboolean FS_ConditionalRestart(qboolean disconnect);
-void	FS_Restart( void );
+void	FS_Restart( qboolean gameDirChanged );
 // shutdown and restart the filesystem so changes to fs_gamedir can take effect
 
 void FS_AddGameDirectory( const char *path, const char *dir );
@@ -950,15 +953,17 @@ temp file loading
 #define Z_TagMalloc(size, tag)			Z_TagMallocDebug(size, tag, #size, __FILE__, __LINE__)
 #define Z_Malloc(size)					Z_MallocDebug(size, #size, __FILE__, __LINE__)
 #define S_Malloc(size)					S_MallocDebug(size, #size, __FILE__, __LINE__)
+#define Z_Free(ptr)						Z_FreeDebug(ptr, #ptr, __FILE__, __LINE__)
 void *Z_TagMallocDebug( int size, int tag, char *label, char *file, int line );	// NOT 0 filled memory
 void *Z_MallocDebug( int size, char *label, char *file, int line );			// returns 0 filled memory
 void *S_MallocDebug( int size, char *label, char *file, int line );			// returns 0 filled memory
+void Z_FreeDebug( void *ptr, char *label, char *file, int line  );
 #else
 void *Z_TagMalloc( int size, int tag );	// NOT 0 filled memory
 void *Z_Malloc( int size );			// returns 0 filled memory
 void *S_Malloc( int size );			// NOT 0 filled memory only for small allocations
-#endif
 void Z_Free( void *ptr );
+#endif
 void Z_FreeTags( int tag );
 int Z_AvailableMemory( void );
 void Z_LogHeap( void );
@@ -982,12 +987,15 @@ typedef struct {
 
 #ifdef ZONE_DEBUG
 #define DA_Init(_darray,_maxElements,_elementLength,_freeable) DA_InitDebug(_darray,_maxElements,_elementLength,_freeable,__FILE__,__LINE__)
+#define DA_Free( darray ) DA_FreeDebug( darray, __FILE__, __LINE__ )
 void DA_InitDebug( darray_t *darray, int maxElements, int elementLength, qboolean freeable, char *file, int line );
+void DA_FreeDebug( darray_t *darray, char *file, int line );
 #else
 void DA_Init( darray_t *darray, int maxElements, int elementLength, qboolean freeable );
-#endif
 void DA_Free( darray_t *darray );
+#endif
 void DA_Clear( darray_t *darray );
+void DA_Copy( const darray_t in, darray_t *out );
 
 void DA_ClearElement( darray_t *darray, int num );
 void DA_SetElement( darray_t *darray, int num, const void *data );

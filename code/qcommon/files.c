@@ -1494,6 +1494,7 @@ int FS_DeleteDir( char *dirname, qboolean nonEmpty, qboolean recursive ) {
 	char    *ospath;
 	char    **pFiles = NULL;
 	int     i, nFiles = 0;
+	char	fileName[MAX_QPATH];
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
@@ -1530,7 +1531,8 @@ int FS_DeleteDir( char *dirname, qboolean nonEmpty, qboolean recursive ) {
 		ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, dirname );
 		pFiles = Sys_ListFiles( ospath, NULL, NULL, &nFiles, qfalse );
 		for ( i = 0; i < nFiles; i++ ) {
-			ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, va( "%s/%s", dirname, pFiles[i] ) );
+			Com_sprintf( fileName, sizeof (fileName), "%s/%s", dirname, pFiles[i] );
+			ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, fileName );
 
 			if ( !FS_Remove( ospath ) ) {  // failure
 				return 0;
@@ -3514,6 +3516,9 @@ qboolean FS_PortableMode(void)
 }
 #endif
 
+// XXX
+static void FS_CheckPaks( qboolean quiet );
+
 /*
 ================
 FS_Startup
@@ -3601,6 +3606,8 @@ static void FS_Startup( const char *gameName, qboolean quiet )
 	Cmd_AddCommand ("fdir", FS_NewDir_f );
 	Cmd_AddCommand ("touchFile", FS_TouchFile_f );
 	Cmd_AddCommand ("which", FS_Which_f );
+
+	FS_CheckPaks( quiet );
 
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=506
 	// reorder the pure pk3 files according to server order
@@ -3744,13 +3751,74 @@ static qboolean FS_LoadPakChecksums( const char *gamedir ) {
 }
 
 /*
+================
+FS_PaksumsSortValue
+================
+*/
+int FS_PaksumsSortValue( const searchpath_t *s ) {
+	int pak;
+
+	if ( s->pack ) {
+		for ( pak = 0 ; pak < fs_numPaksums ; pak++ ) {
+			if ( s->pack && com_purePaks[pak].checksum == s->pack->checksum ) {
+				return pak;
+			}
+		}
+	}
+
+	return fs_numPaksums;
+}
+
+/*
+================
+FS_ReorderPaksumsPaks
+================
+*/
+static void FS_ReorderPaksumsPaks( void )
+{
+	searchpath_t	*s, *tmp, *previous_s;
+	qboolean		swapped;
+	int				pak;
+
+	// only relevant when have paksums and
+	// not relevant if connecting to pure server
+	if ( !fs_numPaksums || fs_numServerPaks )
+		return;
+
+	for ( pak = 0 ; pak < fs_numPaksums ; pak++ ) {
+		previous_s = NULL;
+		swapped = qfalse;
+		for ( s = fs_searchpaths; s && s->next; s = s->next ) {
+			// check if s should be after s->next
+			if ( s->pack && s->next->pack && ( FS_PaksumsSortValue(s) < FS_PaksumsSortValue(s->next) ) ) {
+				// swap order of s and s->next
+				tmp = s->next->next;
+				s->next->next = s;
+
+				if ( previous_s ) {
+					previous_s->next = s->next;
+				}
+
+				s->next = tmp;
+
+				swapped = qtrue;
+			}
+			previous_s = s;
+		}
+		if (!swapped) {
+			break;
+		}
+	}
+}
+
+/*
 ===================
 FS_CheckPaks
 
 Checks that default pk3s are present and their checksums are correct
 ===================
 */
-static void FS_CheckPaks( void )
+static void FS_CheckPaks( qboolean quiet )
 {
 	searchpath_t	*path;
 	qboolean		basePaksums;
@@ -3764,6 +3832,8 @@ static void FS_CheckPaks( void )
 	basePaksums = FS_LoadPakChecksums( com_basegame->string );
 	FS_LoadPakChecksums( fs_basegame->string );
 	FS_LoadPakChecksums( fs_gamedirvar->string );
+
+	FS_ReorderPaksumsPaks();
 
 	if ( !basePaksums ) {
 		for( path = fs_searchpaths; path; path = path->next ) {
@@ -3787,19 +3857,23 @@ static void FS_CheckPaks( void )
 		}
 
 		if ( !path ) {
-			Com_Printf("\n\n"
-					"**********************************************************************\n"
-					"WARNING: %s/%s.pk3 is missing.\n"
-					"**********************************************************************\n\n\n",
-					com_purePaks[pak].gamename, com_purePaks[pak].pakname );
+			if ( !quiet ) {
+				Com_Printf("\n\n"
+						"**********************************************************************\n"
+						"WARNING: %s/%s.pk3 is missing.\n"
+						"**********************************************************************\n\n\n",
+						com_purePaks[pak].gamename, com_purePaks[pak].pakname );
+			}
 
 			missingPak = qtrue;
 		} else if( path->pack->checksum != com_purePaks[pak].checksum ) {
-			Com_Printf("\n\n"
-					"**********************************************************************\n"
-					"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
-					"**********************************************************************\n\n\n",
-					com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
+			if ( !quiet ) {
+				Com_Printf("\n\n"
+						"**********************************************************************\n"
+						"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
+						"**********************************************************************\n\n\n",
+						com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
+			}
 
 			invalidPak = qtrue;
 		} else {
@@ -3821,6 +3895,10 @@ static void FS_CheckPaks( void )
 
 		// missing basegame pure list or pure pk3s
 		Cvar_Set("fs_pure", "0");
+
+		if ( quiet ) {
+			return;
+		}
 
 		if ( !strlen ( badGames ) ) {
 			FS_GetModDescription( com_basegame->string, badGames, sizeof ( badGames ) );
@@ -4033,7 +4111,7 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames ) {
 			// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=540
 			// force a restart to make sure the search order will be correct
 			Com_DPrintf( "FS search reorder is required\n" );
-			FS_Restart();
+			FS_Restart( qfalse );
 			return;
 		}
 	}
@@ -4132,8 +4210,6 @@ void FS_InitFilesystem( void ) {
 	// try to start up normally
 	FS_Startup(com_basegame->string, qfalse);
 
-	FS_CheckPaks();
-
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
 	// graphics screen when the font fails to load
@@ -4151,7 +4227,7 @@ void FS_InitFilesystem( void ) {
 FS_Restart
 ================
 */
-void FS_Restart( void ) {
+void FS_Restart( qboolean gameDirChanged ) {
 
 	// free anything we currently have loaded
 	FS_Shutdown(qfalse);
@@ -4160,9 +4236,7 @@ void FS_Restart( void ) {
 	FS_ClearPakReferences(0);
 
 	// try to start up normally
-	FS_Startup(com_basegame->string, qtrue);
-
-	FS_CheckPaks();
+	FS_Startup(com_basegame->string, !gameDirChanged);
 
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
@@ -4176,7 +4250,7 @@ void FS_Restart( void ) {
 			Cvar_Set("fs_game", lastValidGame);
 			lastValidBase[0] = '\0';
 			lastValidGame[0] = '\0';
-			FS_Restart();
+			FS_Restart( qtrue );
 			Com_Error( ERR_DROP, "Invalid game folder" );
 			return;
 		}

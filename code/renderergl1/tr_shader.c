@@ -1839,8 +1839,6 @@ static qboolean ParseShader( char **text )
 		// fogParms ( <red> <green> <blue> ) <depthForOpaque>
 		else if ( !Q_stricmp( token, "fogParms" ) )
 		{
-			shader.fogParms.fogType = FT_EXP;
-
 			if ( !ParseVector( text, 3, shader.fogParms.color ) ) {
 				return qfalse;
 			}
@@ -1850,9 +1848,10 @@ static qboolean ParseShader( char **text )
 				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'fogParms' keyword in shader '%s'\n", shader.name );
 				continue;
 			}
-			shader.fogParms.depthForOpaque = atof( token );
 
+			shader.fogParms.fogType = FT_EXP;
 			shader.fogParms.density = DEFAULT_FOG_EXP_DENSITY;
+			shader.fogParms.depthForOpaque = atof( token );
 
 			// skip any old gradient directions
 			SkipRestOfLine( text );
@@ -1861,8 +1860,6 @@ static qboolean ParseShader( char **text )
 		// linearFogParms ( <red> <green> <blue> ) <depthForOpaque>
 		else if ( !Q_stricmp( token, "linearFogParms" ) )
 		{
-			shader.fogParms.fogType = FT_LINEAR;
-
 			if ( !ParseVector( text, 3, shader.fogParms.color ) ) {
 				return qfalse;
 			}
@@ -1872,9 +1869,10 @@ static qboolean ParseShader( char **text )
 				ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'linearFogParms' keyword in shader '%s'\n", shader.name );
 				continue;
 			}
-			shader.fogParms.depthForOpaque = atof( token );
 
+			shader.fogParms.fogType = FT_LINEAR;
 			shader.fogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
+			shader.fogParms.depthForOpaque = atof( token );
 
 			// skip any old gradient directions
 			SkipRestOfLine( text );
@@ -1916,22 +1914,53 @@ static qboolean ParseShader( char **text )
 
 			tr.skyFogType = FT_EXP;
 
-			//tr.skyFogDepthForOpaque = 5; // ZTM: FIXME: Um, what? this doesn't seems like it would work using Q3 fogging.
-			tr.skyFogDepthForOpaque = 2048;
+			tr.skyFogDepthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 
 			tr.skyFogDensity = fogDensity;
 			VectorCopy( fogColor, tr.skyFogColor);
 			continue;
 		}
+		// waterfogvars ( <red> <green> <blue> ) [density <= 1 or depthForOpaque > 1]
+		else if ( !Q_stricmp( token, "waterfogvars" ) ) {
+			vec3_t waterColor;
+			float fogvar;
+
+			if ( !ParseVector( text, 3, waterColor ) ) {
+				return qfalse;
+			}
+			token = COM_ParseExt( text, qfalse );
+
+			if ( !token[0] ) {
+				ri.Printf( PRINT_WARNING, "WARNING: missing density/distance value for waterfogvars\n" );
+				continue;
+			}
+
+			fogvar = atof( token );
+
+			if ( fogvar == 0 ) {
+				// Specifies "use the map values for everything except the fog color"
+				tr.waterFogParms.fogType = FT_NONE;
+
+				if ( waterColor[0] == 0 && waterColor[1] == 0 && waterColor[2] == 0 ) {
+					// Color must be non-zero.
+					waterColor[0] = waterColor[1] = waterColor[2] = 0.00001;
+				}
+			} else if ( fogvar > 1 ) {
+				tr.waterFogParms.fogType = FT_LINEAR;
+				tr.waterFogParms.depthForOpaque = fogvar;
+				tr.waterFogParms.density = DEFAULT_FOG_LINEAR_DENSITY;
+			} else {
+				tr.waterFogParms.fogType = FT_EXP;
+				tr.waterFogParms.density = fogvar;
+				tr.waterFogParms.depthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
+			}
+
+			VectorCopy( waterColor, tr.waterFogParms.color );
+		}
 		// viewfogvars ( <red> <green> <blue> ) [density <= 1 or depthForOpaque > 1]
-		// NOTE: this is called waterfogvars in RTCW/ET, but viewfogvars makes more sense with
-		// the way water fog is handled in Spearmint
-		else if ( !Q_stricmp( token, "viewfogvars" ) || !Q_stricmp( token, "waterfogvars" ) ) {
+		else if ( !Q_stricmp( token, "viewfogvars" ) ) {
 			vec3_t viewColor;
 			float fogvar;
-			char parmName[32];
-			
-			Q_strncpyz( parmName, token, sizeof (parmName) );
 
 			if ( !ParseVector( text, 3, viewColor ) ) {
 				return qfalse;
@@ -1939,7 +1968,7 @@ static qboolean ParseShader( char **text )
 			token = COM_ParseExt( text, qfalse );
 
 			if ( !token[0] ) {
-				ri.Printf( PRINT_WARNING, "WARNING: missing density/distance value for %s\n", parmName );
+				ri.Printf( PRINT_WARNING, "WARNING: missing density/distance value for viewfogvars\n" );
 				continue;
 			}
 
@@ -1960,8 +1989,7 @@ static qboolean ParseShader( char **text )
 			} else {
 				shader.viewFogParms.fogType = FT_EXP;
 				shader.viewFogParms.density = fogvar;
-				//shader.viewFogParms.depthForOpaque = 5; // ZTM: FIXME: Um, what? this doesn't seems like it would work using Q3 fogging.
-				shader.viewFogParms.depthForOpaque = 2048;
+				shader.viewFogParms.depthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 			}
 
 			VectorCopy( viewColor, shader.viewFogParms.color );
@@ -1993,8 +2021,7 @@ static qboolean ParseShader( char **text )
 			} else {
 				tr.globalFogType = FT_EXP;
 				tr.globalFogDensity = fogvar;
-				tr.globalFogDepthForOpaque = 5; // ZTM: FIXME: Um, what? this doesn't seems like it would work using Q3 fogging.
-				//tr.globalFogDepthForOpaque = 2048;
+				tr.globalFogDepthForOpaque = DEFAULT_FOG_EXP_DEPTH_FOR_OPAQUE;
 			}
 
 			VectorCopy( fogColor, tr.globalFogColor );

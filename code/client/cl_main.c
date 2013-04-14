@@ -1360,8 +1360,6 @@ CL_ShutdownAll
 */
 void CL_ShutdownAll(qboolean shutdownRef)
 {
-	int index;
-
 	if(CL_VideoRecording())
 		CL_CloseAVI();
 
@@ -1377,15 +1375,6 @@ void CL_ShutdownAll(qboolean shutdownRef)
 	CL_ShutdownCGame();
 	// shutdown UI
 	CL_ShutdownUI();
-
-	// free client structure
-	for (index = 0; index < ARRAY_LEN(cl.snapshots); index++) {
-		DA_Free( &cl.snapshots[index].playerStates );
-		cl.snapshots[index].valid = qfalse;
-	}
-
-	DA_Free( &cl.entityBaselines );
-	DA_Free( &cl.parseEntities );
 
 	// shutdown the renderer
 	if(shutdownRef)
@@ -1494,8 +1483,20 @@ Called before parsing a gamestate
 =====================
 */
 void CL_ClearState (void) {
+	int index;
 
 //	S_StopAllSounds();
+
+	// free client structure
+	for (index = 0; index < PACKET_BACKUP; index++) {
+		DA_Free( &cl.snapshots[index].playerStates );
+		cl.snapshots[index].valid = qfalse;
+	}
+
+	DA_Free( &cl.tempSnapshotPS );
+
+	DA_Free( &cl.entityBaselines );
+	DA_Free( &cl.parseEntities );
 
 	Com_Memset( &cl, 0, sizeof( cl ) );
 }
@@ -2210,7 +2211,7 @@ void CL_DownloadsComplete( void ) {
 		CL_cURL_Shutdown();
 		if( clc.cURLDisconnected ) {
 			if(clc.downloadRestart) {
-				FS_Restart();
+				FS_Restart( qfalse );
 				clc.downloadRestart = qfalse;
 			}
 			clc.cURLDisconnected = qfalse;
@@ -2224,7 +2225,7 @@ void CL_DownloadsComplete( void ) {
 	if (clc.downloadRestart) {
 		clc.downloadRestart = qfalse;
 
-		FS_Restart(); // We possibly downloaded a pak, restart the file system to load it
+		FS_Restart( qfalse ); // We possibly downloaded a pak, restart the file system to load it
 
 		// inform the server so we get new gamestate info
 		CL_AddReliableCommand("donedl", qfalse);

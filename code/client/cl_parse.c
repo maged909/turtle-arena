@@ -247,7 +247,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	int			i, packetNum;
 
 	if ( !cgvm ) {
-		Com_Error( ERR_DROP, "Got snapshot before loading cgame" );
+		Com_Error( ERR_DROP, "Received unexpected snapshot" );
 	}
 
 	if ( !cl.cgamePlayerStateSize || !cl.cgamePlayerStateSize ) {
@@ -317,7 +317,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	
 	MSG_ReadData( msg, &newSnap.areamask, len);
 
-	DA_Init( &newSnap.playerStates, MAX_SPLITVIEW, cl.cgamePlayerStateSize, qtrue );
+	DA_Clear( &cl.tempSnapshotPS );
 
 	// read playerinfo
 	SHOWNET( msg, "playerstate" );
@@ -342,7 +342,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		// Read player states
 		if (newSnap.lcIndex[i] != -1) {
-			newPS = (sharedPlayerState_t *) DA_ElementPointer( newSnap.playerStates, newSnap.lcIndex[i] );
+			newPS = (sharedPlayerState_t *) DA_ElementPointer( cl.tempSnapshotPS, newSnap.lcIndex[i] );
 
 			if ( old && old->valid && old->lcIndex[i] != -1 ) {
 				oldPS = (sharedPlayerState_t *) DA_ElementPointer( old->playerStates, old->lcIndex[i] );
@@ -370,7 +370,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	// if not valid, dump the entire thing now that it has
 	// been properly read
 	if ( !newSnap.valid ) {
-		DA_Free( &newSnap.playerStates );
 		return;
 	}
 
@@ -384,9 +383,12 @@ void CL_ParseSnapshot( msg_t *msg ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
-		DA_Free( &cl.snapshots[oldMessageNum & PACKET_MASK].playerStates );
 		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
+
+	// copy player states from temp to snapshot
+	DA_Copy( cl.tempSnapshotPS, &cl.snapshots[newSnap.messageNum & PACKET_MASK].playerStates );
+	newSnap.playerStates = cl.snapshots[newSnap.messageNum & PACKET_MASK].playerStates;
 
 	// copy to the current good spot
 	cl.snap = newSnap;
@@ -400,8 +402,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 			break;
 		}
 	}
-	// free player states
-	DA_Free( &cl.snapshots[cl.snap.messageNum & PACKET_MASK].playerStates );
 	// save the frame off in the backup array for later delta comparisons
 	cl.snapshots[cl.snap.messageNum & PACKET_MASK] = cl.snap;
 
@@ -632,6 +632,14 @@ CL_ParseBaseline
 void CL_ParseBaseline( msg_t *msg ) {
 	sharedEntityState_t	*es;
 	int					newnum;
+
+	if ( !cgvm ) {
+		Com_Error( ERR_DROP, "Received unexpected baseline" );
+	}
+
+	if ( !cl.entityBaselines.pointer ) {
+		Com_Error( ERR_DROP, "cgame needs to call trap_SetNetFields" );
+	}
 
 	newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
 	if ( newnum < 0 || newnum >= MAX_GENTITIES ) {

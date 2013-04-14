@@ -110,6 +110,11 @@ void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize ) {
 	syscall( CG_CVAR_INFO_STRING_BUFFER, bit, buffer, bufsize );
 }
 
+void	trap_Cvar_CheckRange( const char *var_name, float min, float max, qboolean integral ) {
+	syscall( CG_CVAR_CHECK_RANGE, var_name, PASSFLOAT(min), PASSFLOAT(max), integral );
+}
+
+
 int		trap_Argc( void ) {
 	return syscall( CG_ARGC );
 }
@@ -413,8 +418,8 @@ void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, 
 	syscall( CG_R_GET_GLOBAL_FOG, type, color, depthForOpaque, density );
 }
 
-void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
-	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density );
+void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater ) {
+	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, inwater );
 }
 
 void		trap_GetClipboardData( char *buf, int bufsize ) {
