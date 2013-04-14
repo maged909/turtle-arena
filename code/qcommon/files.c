@@ -1285,9 +1285,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 			   !FS_IsExt(filename, ".game", len) &&		// menu files
 			   !FS_IsExt(filename, ".dat", len) &&		// for journal files
 			   !strstr(filename, "fonts") &&
-#ifdef IOQ3ZTM // Allow custom music on pure servers
 			   !strstr(filename, "music") &&
-#endif
 			   !FS_IsDemoExt(filename, len))			// demos
 			{
 				*file = 0;
@@ -3463,26 +3461,6 @@ static void FS_ReorderPurePaks( void )
 			p_previous = &s->next;
 		}
 	}
-}
-
-/*
-================
-FS_BaseFileExists
-================
-*/
-qboolean FS_BaseFileExists( const char *file )
-{
-	FILE *f;
-	char *testpath;
-
-	testpath = FS_BuildOSPath( fs_basepath->string, com_basegame->string, file );
-
-	f = fopen( testpath, "rb" );
-	if (f) {
-		fclose( f );
-		return qtrue;
-	}
-	return qfalse;
 }
 
 /*
