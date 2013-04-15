@@ -164,6 +164,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/ai_vcmd.h" />
+		<Unit filename="../../code/game/bg_config.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />

@@ -139,6 +139,9 @@
 		</Unit>
 		<Unit filename="../../code/cgame/cg_syscalls.h" />
 		<Unit filename="../../code/client/keycodes.h" />
+		<Unit filename="../../code/game/bg_config.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
 		</Unit>

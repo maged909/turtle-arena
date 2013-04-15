@@ -316,6 +316,9 @@
 		<Unit filename="../../code/cgame/cg_weapons.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/game/bg_config.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />
