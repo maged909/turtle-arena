@@ -79,7 +79,6 @@ endif
 #							loads the weapons from a text file, allowing for easy modifing,
 #							and new custom default weapons for players.
 # TA_WEAPSYS_EX			Changes from holding multiple weapons to only one default and one pickup.
-# TA_WEAPSYS_EX_COMPAT	Keeps compatibility with mods not using TA_WEAPSYS_EX
 # TA_GAME_MODELS		Allow "game" to use model tags. Player tags are used for melee weapon attacking.
 # TA_HOLDSYS			Allow players to hold multiple holdable items and change to any holdable.
 #							(Based on Q3's weapon changing)
@@ -108,8 +107,7 @@ BUILD_DEFINES = -DNOTRATEDM -DNOBLOOD \
 					-DIOQ3ZTM -DIOQ3ZTM_NO_COMPAT -DIOQ3ZTM_NO_TEAM_MODEL \
 					-DTA_HOLDSYS \
 					-DTA_WEAPSYS -DTA_PLAYERSYS \
-					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_NPCSYS -DTA_PATHSYS \
-					-DTA_WEAPSYS_EX_COMPAT \
+					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_NPCSYS -DTA_PATHSYS\
 					-DTA_BLOOM -DTA_SPLITVIEW
 
 BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \
@@ -1659,11 +1657,6 @@ Q3OBJ = \
   $(B)/client/be_ai_char.o \
   $(B)/client/be_ai_chat.o \
   $(B)/client/be_ai_gen.o \
-  $(B)/client/be_ai_goal.o \
-  $(B)/client/be_ai_move.o \
-  $(B)/client/be_ai_weap.o \
-  $(B)/client/be_ai_weight.o \
-  $(B)/client/be_ea.o \
   $(B)/client/be_interface.o \
   $(B)/client/l_crc.o \
   $(B)/client/l_libvar.o \
@@ -2259,11 +2252,6 @@ Q3DOBJ = \
   $(B)/ded/be_ai_char.o \
   $(B)/ded/be_ai_chat.o \
   $(B)/ded/be_ai_gen.o \
-  $(B)/ded/be_ai_goal.o \
-  $(B)/ded/be_ai_move.o \
-  $(B)/ded/be_ai_weap.o \
-  $(B)/ded/be_ai_weight.o \
-  $(B)/ded/be_ea.o \
   $(B)/ded/be_interface.o \
   $(B)/ded/l_crc.o \
   $(B)/ded/l_libvar.o \
@@ -2350,6 +2338,7 @@ $(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
 
 Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_main.o \
+  $(B)/$(BASEGAME)/cgame/bg_config.o \
   $(B)/$(BASEGAME)/cgame/bg_misc.o \
   $(B)/$(BASEGAME)/cgame/bg_pmove.o \
   $(B)/$(BASEGAME)/cgame/bg_slidemove.o \
@@ -2398,6 +2387,7 @@ $(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 
 MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/cg_main.o \
+  $(B)/$(MISSIONPACK)/cgame/bg_config.o \
   $(B)/$(MISSIONPACK)/cgame/bg_misc.o \
   $(B)/$(MISSIONPACK)/cgame/bg_pmove.o \
   $(B)/$(MISSIONPACK)/cgame/bg_slidemove.o \
@@ -2453,9 +2443,15 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/ai_cmd.o \
   $(B)/$(BASEGAME)/game/ai_dmnet.o \
   $(B)/$(BASEGAME)/game/ai_dmq3.o \
+  $(B)/$(BASEGAME)/game/ai_ea.o \
+  $(B)/$(BASEGAME)/game/ai_goal.o \
   $(B)/$(BASEGAME)/game/ai_main.o \
+  $(B)/$(BASEGAME)/game/ai_move.o \
   $(B)/$(BASEGAME)/game/ai_team.o \
+  $(B)/$(BASEGAME)/game/ai_weap.o \
+  $(B)/$(BASEGAME)/game/ai_weight.o \
   $(B)/$(BASEGAME)/game/ai_vcmd.o \
+  $(B)/$(BASEGAME)/game/bg_config.o \
   $(B)/$(BASEGAME)/game/bg_misc.o \
   $(B)/$(BASEGAME)/game/bg_pmove.o \
   $(B)/$(BASEGAME)/game/bg_slidemove.o \
@@ -2510,9 +2506,15 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/ai_cmd.o \
   $(B)/$(MISSIONPACK)/game/ai_dmnet.o \
   $(B)/$(MISSIONPACK)/game/ai_dmq3.o \
+  $(B)/$(MISSIONPACK)/game/ai_ea.o \
+  $(B)/$(MISSIONPACK)/game/ai_goal.o \
   $(B)/$(MISSIONPACK)/game/ai_main.o \
+  $(B)/$(MISSIONPACK)/game/ai_move.o \
   $(B)/$(MISSIONPACK)/game/ai_team.o \
+  $(B)/$(MISSIONPACK)/game/ai_weap.o \
+  $(B)/$(MISSIONPACK)/game/ai_weight.o \
   $(B)/$(MISSIONPACK)/game/ai_vcmd.o \
+  $(B)/$(MISSIONPACK)/game/bg_config.o \
   $(B)/$(MISSIONPACK)/game/bg_misc.o \
   $(B)/$(MISSIONPACK)/game/bg_pmove.o \
   $(B)/$(MISSIONPACK)/game/bg_slidemove.o \
@@ -2565,6 +2567,7 @@ $(B)/$(MISSIONPACK)/vm/game.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 
 Q3UIOBJ_ = \
   $(B)/$(BASEGAME)/ui/ui_main.o \
+  $(B)/$(BASEGAME)/ui/bg_config.o \
   $(B)/$(BASEGAME)/ui/bg_misc.o \
   $(B)/$(BASEGAME)/ui/bg_lib.o \
   $(B)/$(BASEGAME)/ui/ui_addbots.o \
@@ -2637,6 +2640,7 @@ MPUIOBJ_ = \
   $(B)/$(MISSIONPACK)/ui/ui_players.o \
   $(B)/$(MISSIONPACK)/ui/ui_shared.o \
   \
+  $(B)/$(MISSIONPACK)/ui/bg_config.o \
   $(B)/$(MISSIONPACK)/ui/bg_misc.o \
   $(B)/$(MISSIONPACK)/ui/bg_lib.o \
   \

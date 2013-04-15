@@ -121,7 +121,6 @@
 			<Add option="-DTA_ENTSYS" />
 			<Add option="-DTA_NPCSYS" />
 			<Add option="-DTA_PATHSYS" />
-			<Add option="-DTA_WEAPSYS_EX_COMPAT" />
 			<Add option="-DTA_BLOOM" />
 			<Add option="-DTA_SPLITVIEW" />
 			<Add option="-DTURTLEARENA" />
@@ -138,6 +137,9 @@
 		</Unit>
 		<Unit filename="../../code/cgame/cg_syscalls.h" />
 		<Unit filename="../../code/client/keycodes.h" />
+		<Unit filename="../../code/game/bg_config.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/game/bg_lib.c">
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />

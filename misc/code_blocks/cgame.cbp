@@ -229,7 +229,6 @@
 			<Add option="-DTA_ENTSYS" />
 			<Add option="-DTA_NPCSYS" />
 			<Add option="-DTA_PATHSYS" />
-			<Add option="-DTA_WEAPSYS_EX_COMPAT" />
 			<Add option="-DTA_BLOOM" />
 			<Add option="-DTA_SPLITVIEW" />
 			<Add option="-DTURTLEARENA" />
@@ -314,6 +313,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/cgame/cg_weapons.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/game/bg_config.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/game/bg_lib.c">
