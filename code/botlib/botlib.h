@@ -37,12 +37,13 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
-#define	BOTLIB_API_VERSION		2
+#define	BOTLIB_API_VERSION		3
 
 struct aas_clientmove_s;
-struct aas_entityinfo_s;
 struct aas_areainfo_s;
+struct aas_trace_s;
 struct aas_altroutegoal_s;
+struct aas_reachability_s;
 struct aas_predictroute_s;
 struct bot_consolemessage_s;
 struct bot_match_s;
@@ -87,49 +88,6 @@ struct weaponinfo_s;
 #define BLERR_CANNOTLOADWEAPONWEIGHTS	11	//cannot load weapon weights
 #define BLERR_CANNOTLOADWEAPONCONFIG	12	//cannot load weapon config
 
-//action flags
-#define ACTION_ATTACK			0x00000001
-#define ACTION_USE			0x00000002
-#define ACTION_RESPAWN			0x00000008
-#define ACTION_JUMP			0x00000010
-#define ACTION_MOVEUP			0x00000020
-#define ACTION_CROUCH			0x00000080
-#define ACTION_MOVEDOWN			0x00000100
-#define ACTION_MOVEFORWARD		0x00000200
-#define ACTION_MOVEBACK			0x00000800
-#define ACTION_MOVELEFT			0x00001000
-#define ACTION_MOVERIGHT		0x00002000
-#define ACTION_DELAYEDJUMP		0x00008000
-#define ACTION_TALK			0x00010000
-#define ACTION_GESTURE			0x00020000
-#define ACTION_WALK			0x00080000
-#define ACTION_AFFIRMATIVE		0x00100000
-#define ACTION_NEGATIVE			0x00200000
-#define ACTION_GETFLAG			0x00800000
-#define ACTION_GUARDBASE		0x01000000
-#define ACTION_PATROL			0x02000000
-#define ACTION_FOLLOWME			0x08000000
-#define ACTION_JUMPEDLASTFRAME		0x10000000
-#ifdef TA_WEAPSYS_EX // BOTLIB
-#define ACTION_DROP_WEAPON		0x20000000
-#endif
-
-//the bot input, will be converted to a usercmd_t
-typedef struct bot_input_s
-{
-	float thinktime;		//time since last output (in seconds)
-	vec3_t dir;				//movement direction
-	float speed;			//speed in the range [0, 400]
-	vec3_t viewangles;		//the view angles
-	int actionflags;		//one of the ACTION_? flags
-#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT // BOTLIB
-	int weapon;				//weapon to use
-#endif
-#ifdef TA_HOLDSYS
-	int holdable;			//holdable to use
-#endif
-} bot_input_t;
-
 #ifndef BSPTRACE
 
 #define BSPTRACE
@@ -163,40 +121,15 @@ typedef struct bsp_trace_s
 //entity state
 typedef struct bot_entitystate_s
 {
-	int		type;			// entity type
-	int		flags;			// entity flags
-	vec3_t	origin;			// origin of the entity
-	vec3_t	angles;			// angles of the model
-	vec3_t	old_origin;		// for lerping
-	vec3_t	mins;			// bounding box minimums
-	vec3_t	maxs;			// bounding box maximums
-	int		groundent;		// ground entity
-	int		solid;			// solid type
-	int		modelindex;		// model used
-	int		modelindex2;	// weapons, CTF flags, etc
-	int		frame;			// model frame number
-	int		event;			// impulse events -- muzzle flashes, footsteps, etc
-	int		eventParm;		// even parameter
-	int		powerups;		// bit flags
-	int		weapon;			// determines weapon and flash model, etc
-	int		legsAnim;		// mask off ANIM_TOGGLEBIT
-	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
+	int			type;		// entity type
+	int			flags;		// entity flags
+	vec3_t		origin;		// origin of the entity
+	vec3_t		angles;		// angles of the model
+	vec3_t		absmins;	// absolute bounding box minimums
+	vec3_t		absmaxs;	// absolute bounding box maximums
+	int			solid;		// solid type
+	qboolean	relink;		// relink entity
 } bot_entitystate_t;
-
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-//game can send extra items not in "botfiles/items.c"
-//note: the items can be any type, not just weapons.
-typedef struct
-{
-	char classname[32];
-	char name[MAX_QPATH];
-	char model[MAX_QPATH];
-	int modelindex;
-	int respawntime;
-	int defaultWeight; // If item isn't in character item weight file use this weight.
-	int inventory;
-} bot_shareditem_t;
-#endif
 
 //bot AI library exported functions
 typedef struct botlib_import_s
@@ -216,7 +149,7 @@ typedef struct botlib_import_s
 	//
 	void		(*BSPModelMinsMaxsOrigin)(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin);
 	//send a bot client command
-	void		(*BotClientCommand)(int client, char *command);
+	void		(*BotClientCommand)(int client, const char *command);
 	//memory allocation
 	void		*(*GetMemory)(int size);		// allocate from Zone
 	void		(*FreeMemory)(void *ptr);		// free memory from Zone
@@ -240,12 +173,9 @@ typedef struct botlib_import_s
 typedef struct aas_export_s
 {
 	//-----------------------------------
-	// be_aas_entity.h
+	// be_aas_main.c
 	//-----------------------------------
-	void		(*AAS_EntityInfo)(int entnum, struct aas_entityinfo_s *info);
-	//-----------------------------------
-	// be_aas_main.h
-	//-----------------------------------
+	int			(*AAS_Loaded)(void);
 	int			(*AAS_Initialized)(void);
 	void		(*AAS_PresenceTypeBoundingBox)(int presencetype, vec3_t mins, vec3_t maxs);
 	float		(*AAS_Time)(void);
@@ -254,6 +184,7 @@ typedef struct aas_export_s
 	//--------------------------------------------
 	int			(*AAS_PointAreaNum)(vec3_t point);
 	int			(*AAS_PointReachabilityAreaIndex)( vec3_t point );
+	void		(*AAS_TraceClientBBox)(struct aas_trace_s *trace, vec3_t start, vec3_t end, int presencetype, int passent);
 	int			(*AAS_TraceAreas)(vec3_t start, vec3_t end, int *areas, vec3_t *points, int maxareas);
 	int			(*AAS_BBoxAreas)(vec3_t absmins, vec3_t absmaxs, int *areas, int maxareas);
 	int			(*AAS_AreaInfo)( int areanum, struct aas_areainfo_s *info );
@@ -271,11 +202,29 @@ typedef struct aas_export_s
 	//--------------------------------------------
 	int			(*AAS_AreaReachability)(int areanum);
 	int			(*AAS_BestReachableArea)(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t goalorigin);
+	int			(*AAS_BestReachableFromJumpPadArea)(vec3_t origin, vec3_t mins, vec3_t maxs);
+	int			(*AAS_NextModelReachability)(int num, int modelnum);
+	float		(*AAS_AreaGroundFaceArea)(int areanum);
+	int			(*AAS_AreaCrouch)(int areanum);
+	int			(*AAS_AreaSwim)(int areanum);
+	int			(*AAS_AreaLiquid)(int areanum);
+	int			(*AAS_AreaLava)(int areanum);
+	int			(*AAS_AreaSlime)(int areanum);
+	int			(*AAS_AreaGrounded)(int areanum);
+	int			(*AAS_AreaLadder)(int areanum);
+	int			(*AAS_AreaJumpPad)(int areanum);
+	int			(*AAS_AreaDoNotEnter)(int areanum);
 	//--------------------------------------------
 	// be_aas_route.c
 	//--------------------------------------------
-	int			(*AAS_AreaTravelTimeToGoalArea)(int areanum, vec3_t origin, int goalareanum, int travelflags);
+	int			(*AAS_TravelFlagForType)(int traveltype);
+	int			(*AAS_AreaContentsTravelFlags)(int areanum);
+	int			(*AAS_NextAreaReachability)(int areanum, int reachnum);
+	void		(*AAS_ReachabilityFromNum)(int num, struct aas_reachability_s *reach);
+	int			(*AAS_RandomGoalArea)(int areanum, int travelflags, int *goalareanum, vec3_t goalorigin);
 	int			(*AAS_EnableRoutingArea)(int areanum, int enable);
+	unsigned short int (*AAS_AreaTravelTime)(int areanum, vec3_t start, vec3_t end);
+	int			(*AAS_AreaTravelTimeToGoalArea)(int areanum, vec3_t origin, int goalareanum, int travelflags);
 	int			(*AAS_PredictRoute)(struct aas_predictroute_s *route, int areanum, vec3_t origin,
 							int goalareanum, int travelflags, int maxareas, int maxtime,
 							int stopevent, int stopcontents, int stoptfl, int stopareanum);
@@ -288,7 +237,6 @@ typedef struct aas_export_s
 	//--------------------------------------------
 	// be_aas_move.c
 	//--------------------------------------------
-	int			(*AAS_Swimming)(vec3_t origin);
 	int			(*AAS_PredictClientMovement)(struct aas_clientmove_s *move,
 											int entnum, vec3_t origin,
 											int presencetype, int onground,
@@ -296,47 +244,13 @@ typedef struct aas_export_s
 											int cmdframes,
 											int maxframes, float frametime,
 											int stopevent, int stopareanum, int visualize);
+	int			(*AAS_OnGround)(vec3_t origin, int presencetype, int passent);
+	int			(*AAS_Swimming)(vec3_t origin);
+	void		(*AAS_JumpReachRunStart)(struct aas_reachability_s *reach, vec3_t runstart);
+	int			(*AAS_AgainstLadder)(vec3_t origin);
+	int			(*AAS_HorizontalVelocityForJump)(float zvel, vec3_t start, vec3_t end, float *velocity);
+	int			(*AAS_DropToFloor)(vec3_t origin, vec3_t mins, vec3_t maxs);
 } aas_export_t;
-
-typedef struct ea_export_s
-{
-	//ClientCommand elementary actions
-	void	(*EA_Command)(int client, char *command );
-	void	(*EA_Say)(int client, char *str);
-	void	(*EA_SayTeam)(int client, char *str);
-	//
-	void	(*EA_Action)(int client, int action);
-	void	(*EA_Gesture)(int client);
-	void	(*EA_Talk)(int client);
-	void	(*EA_Attack)(int client);
-#ifdef TA_HOLDSYS
-	void	(*EA_Use)(int client, int holdable);
-#else
-	void	(*EA_Use)(int client);
-#endif
-	void	(*EA_Respawn)(int client);
-	void	(*EA_MoveUp)(int client);
-	void	(*EA_MoveDown)(int client);
-	void	(*EA_MoveForward)(int client);
-	void	(*EA_MoveBack)(int client);
-	void	(*EA_MoveLeft)(int client);
-	void	(*EA_MoveRight)(int client);
-	void	(*EA_Crouch)(int client);
-
-#if defined TA_WEAPSYS_EX && !defined TA_WEAPSYS_EX_COMPAT // BOTLIB
-	void	(*EA_DropWeapon)(int client);
-#else
-	void	(*EA_SelectWeapon)(int client, int weapon);
-#endif
-	void	(*EA_Jump)(int client);
-	void	(*EA_DelayedJump)(int client);
-	void	(*EA_Move)(int client, vec3_t dir, float speed);
-	void	(*EA_View)(int client, vec3_t viewangles);
-	//send regular input to the server
-	void	(*EA_EndRegular)(int client, float thinktime);
-	void	(*EA_GetInput)(int client, float thinktime, bot_input_t *input);
-	void	(*EA_ResetInput)(int client);
-} ea_export_t;
 
 typedef struct ai_export_s
 {
@@ -374,69 +288,6 @@ typedef struct ai_export_s
 	void	(*BotSetChatGender)(int chatstate, int gender);
 	void	(*BotSetChatName)(int chatstate, char *name, int client);
 	//-----------------------------------
-	// be_ai_goal.h
-	//-----------------------------------
-	void	(*BotResetGoalState)(int goalstate);
-	void	(*BotResetAvoidGoals)(int goalstate);
-	void	(*BotRemoveFromAvoidGoals)(int goalstate, int number);
-	void	(*BotPushGoal)(int goalstate, struct bot_goal_s *goal);
-	void	(*BotPopGoal)(int goalstate);
-	void	(*BotEmptyGoalStack)(int goalstate);
-	void	(*BotDumpAvoidGoals)(int goalstate);
-	void	(*BotDumpGoalStack)(int goalstate);
-	void	(*BotGoalName)(int number, char *name, int size);
-	int		(*BotGetTopGoal)(int goalstate, struct bot_goal_s *goal);
-	int		(*BotGetSecondGoal)(int goalstate, struct bot_goal_s *goal);
-	int		(*BotChooseLTGItem)(int goalstate, vec3_t origin, int *inventory, int travelflags);
-	int		(*BotChooseNBGItem)(int goalstate, vec3_t origin, int *inventory, int travelflags,
-								struct bot_goal_s *ltg, float maxtime);
-	int		(*BotTouchingGoal)(vec3_t origin, struct bot_goal_s *goal);
-	int		(*BotItemGoalInVisButNotVisible)(int viewer, vec3_t eye, vec3_t viewangles, struct bot_goal_s *goal);
-	int		(*BotGetLevelItemGoal)(int index, char *classname, struct bot_goal_s *goal);
-	int		(*BotGetNextCampSpotGoal)(int num, struct bot_goal_s *goal);
-	int		(*BotGetMapLocationGoal)(char *name, struct bot_goal_s *goal);
-	float	(*BotAvoidGoalTime)(int goalstate, int number);
-	void	(*BotSetAvoidGoalTime)(int goalstate, int number, float avoidtime);
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-	void	(*BotInitLevelItems)(bot_shareditem_t *itemInfos);
-#else
-	void	(*BotInitLevelItems)(void);
-#endif
-	void	(*BotUpdateEntityItems)(void);
-	int		(*BotLoadItemWeights)(int goalstate, char *filename);
-	void	(*BotFreeItemWeights)(int goalstate);
-	void	(*BotInterbreedGoalFuzzyLogic)(int parent1, int parent2, int child);
-	void	(*BotSaveGoalFuzzyLogic)(int goalstate, char *filename);
-	void	(*BotMutateGoalFuzzyLogic)(int goalstate, float range);
-	int		(*BotAllocGoalState)(int client);
-	void	(*BotFreeGoalState)(int handle);
-	//-----------------------------------
-	// be_ai_move.h
-	//-----------------------------------
-	void	(*BotResetMoveState)(int movestate);
-	void	(*BotMoveToGoal)(struct bot_moveresult_s *result, int movestate, struct bot_goal_s *goal, int travelflags);
-	int		(*BotMoveInDirection)(int movestate, vec3_t dir, float speed, int type);
-	void	(*BotResetAvoidReach)(int movestate);
-	void	(*BotResetLastAvoidReach)(int movestate);
-	int		(*BotReachabilityArea)(vec3_t origin, int testground);
-	int		(*BotMovementViewTarget)(int movestate, struct bot_goal_s *goal, int travelflags, float lookahead, vec3_t target);
-	int		(*BotPredictVisiblePosition)(vec3_t origin, int areanum, struct bot_goal_s *goal, int travelflags, vec3_t target);
-	int		(*BotAllocMoveState)(void);
-	void	(*BotFreeMoveState)(int handle);
-	void	(*BotInitMoveState)(int handle, struct bot_initmove_s *initmove);
-	void	(*BotAddAvoidSpot)(int movestate, vec3_t origin, float radius, int type);
-#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
-	//-----------------------------------
-	// be_ai_weap.h
-	//-----------------------------------
-	int		(*BotChooseBestFightWeapon)(int weaponstate, int *inventory);
-	void	(*BotGetWeaponInfo)(int weaponstate, int weapon, struct weaponinfo_s *weaponinfo);
-	int		(*BotLoadWeaponWeights)(int weaponstate, char *filename);
-	int		(*BotAllocWeaponState)(void);
-	void	(*BotFreeWeaponState)(int weaponstate);
-	void	(*BotResetWeaponState)(int weaponstate);
-#endif
-	//-----------------------------------
 	// be_ai_gen.h
 	//-----------------------------------
 	int		(*GeneticParentsAndChildSelection)(int numranks, float *ranks, int *parent1, int *parent2, int *child);
@@ -447,8 +298,6 @@ typedef struct botlib_export_s
 {
 	//Area Awareness System functions
 	aas_export_t aas;
-	//Elementary Action functions
-	ea_export_t ea;
 	//AI functions
 	ai_export_t ai;
 	//setup the bot library, returns BLERR_
@@ -463,7 +312,7 @@ typedef struct botlib_export_s
 	//sets a C-like define returns BLERR_
 	int (*PC_AddGlobalDefine)(char *string);
 	void (*PC_RemoveAllGlobalDefines)(void);
-	int (*PC_LoadSourceHandle)(const char *filename);
+	int (*PC_LoadSourceHandle)(const char *filename, const char *basepath);
 	int (*PC_FreeSourceHandle)(int handle);
 	int (*PC_ReadTokenHandle)(int handle, pc_token_t *pc_token);
 	void (*PC_UnreadLastTokenHandle)(int handle);
@@ -472,11 +321,7 @@ typedef struct botlib_export_s
 	//start a frame in the bot library
 	int (*BotLibStartFrame)(float time);
 	//load a new map in the bot library
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-	int (*BotLibLoadMap)(const char *mapname, bot_shareditem_t *itemInfos);
-#else
 	int (*BotLibLoadMap)(const char *mapname);
-#endif
 	//entity updates
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
 	//just for testing
@@ -545,32 +390,11 @@ name:						default:			module(s):			description:
 "bot_visualizejumppads"		"0"					be_aas_reach.c		visualize jump pads
 
 "bot_reloadcharacters"		"0"					-					reload bot character files
-"ai_gametype"				"0"					be_ai_goal.c		game type
-"droppedweight"				"1000"				be_ai_goal.c		additional dropped item weight
-"weapindex_rocketlauncher"	"5"					be_ai_move.c		rl weapon index for rocket jumping
-#ifndef TA_WEAPSYS
-"weapindex_bfg10k"			"9"					be_ai_move.c		bfg weapon index for bfg jumping
-#endif
-"weapindex_grapple"			"10"				be_ai_move.c		grapple weapon index for grappling
-"entitytypemissile"			"3"					be_ai_move.c		ET_MISSILE
-"offhandgrapple"			"0"					be_ai_move.c		enable off hand grapple hook
-"cmd_grappleon"				"grappleon"			be_ai_move.c		command to activate off hand grapple
-"cmd_grappleoff"			"grappleoff"		be_ai_move.c		command to deactivate off hand grapple
-"itemconfig"				"items.c"			be_ai_goal.c		item configuration file
-#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
-"weaponconfig"				"weapons.c"			be_ai_weap.c		weapon configuration file
-#endif
 "synfile"					"syn.c"				be_ai_chat.c		file with synonyms
 "rndfile"					"rnd.c"				be_ai_chat.c		file with random strings
 "matchfile"					"match.c"			be_ai_chat.c		file with match strings
 "nochat"					"0"					be_ai_chat.c		disable chats
 "max_messages"				"1024"				be_ai_chat.c		console message heap size
-#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
-"max_weaponinfo"			"32"				be_ai_weap.c		maximum number of weapon info
-"max_projectileinfo"		"32"				be_ai_weap.c		maximum number of projectile info
-#endif
-"max_iteminfo"				"256"				be_ai_goal.c		maximum number of item info
-"max_levelitems"			"256"				be_ai_goal.c		maximum number of level items
 
 */
 

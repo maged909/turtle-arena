@@ -29,11 +29,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 */
 //
 /*****************************************************************************
- * name:		be_ai_goal.h
+ * name:		ai_goal.h
  *
  * desc:		goal AI
  *
- * $Archive: /source/code/botlib/be_ai_goal.h $
+ * $Archive: /source/code/game/ai_goal.h $
  *
  *****************************************************************************/
 
@@ -56,6 +56,37 @@ typedef struct bot_goal_s
 	int flags;					//goal flags
 	int iteminfo;				//item information
 } bot_goal_t;
+
+//goal state
+typedef struct bot_goalstate_s
+{
+	struct weightconfig_s *itemweightconfig;	//weight config
+	int itemweightindex[MAX_ITEMS];				//index from item to weight
+	//
+	int client;									//client using this goal state
+	int lastreachabilityarea;					//last area with reachabilities the bot was in
+	//
+	bot_goal_t goalstack[MAX_GOALSTACK];		//goal stack
+	int goalstacktop;							//the top of the goal stack
+	//
+	int avoidgoals[MAX_AVOIDGOALS];				//goals to avoid
+	float avoidgoaltimes[MAX_AVOIDGOALS];		//times to avoid the goals
+} bot_goalstate_t;
+
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+//game can send extra items not in "botfiles/items.c"
+//note: the items can be any type, not just weapons.
+typedef struct
+{
+	char classname[32];
+	char name[MAX_QPATH];
+	char model[MAX_QPATH];
+	int modelindex;
+	int respawntime;
+	int defaultWeight; // If item isn't in character item weight file use this weight.
+	int inventory;
+} bot_shareditem_t;
+#endif
 
 //reset the whole goal state, but keep the item weights
 void BotResetGoalState(int goalstate);

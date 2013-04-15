@@ -30,11 +30,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 
 /*****************************************************************************
- * name:		be_ai_weap.h
+ * name:		ai_weap.h
  *
  * desc:		weapon AI
  *
- * $Archive: /source/code/botlib/be_ai_weap.h $
+ * $Archive: /source/code/game/ai_weap.h $
  *
  *****************************************************************************/
 
@@ -95,6 +95,23 @@ typedef struct weaponinfo_s
 	projectileinfo_t proj;						//pointer to the used projectile
 } weaponinfo_t;
 
+//weapon configuration: set of weapons with projectiles
+typedef struct weaponconfig_s
+{
+	qboolean valid;
+	int numweapons;
+	int numprojectiles;
+	projectileinfo_t projectileinfo[MAX_WEAPONS];
+	weaponinfo_t weaponinfo[MAX_WEAPONS];
+} weaponconfig_t;
+
+//the bot weapon state
+typedef struct bot_weaponstate_s
+{
+	struct weightconfig_s *weaponweightconfig;		//weapon weight configuration
+	int weaponweightindex[MAX_WEAPONS];				//weapon weight index
+} bot_weaponstate_t;
+
 //setup the weapon AI
 int BotSetupWeaponAI(void);
 //shut down the weapon AI
@@ -105,10 +122,10 @@ int BotChooseBestFightWeapon(int weaponstate, int *inventory);
 void BotGetWeaponInfo(int weaponstate, int weapon, weaponinfo_t *weaponinfo);
 //loads the weapon weights
 int BotLoadWeaponWeights(int weaponstate, char *filename);
-//returns a handle to a newly allocated weapon state
-int BotAllocWeaponState(void);
 //frees the weapon state
 void BotFreeWeaponState(int weaponstate);
 //resets the whole weapon state
 void BotResetWeaponState(int weaponstate);
+//returns handle to weapon state for clientNum
+#define BotAllocWeaponState(clientNum)		(clientNum+1)
 #endif
