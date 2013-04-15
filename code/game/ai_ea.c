@@ -162,7 +162,7 @@ void EA_Command(int client, char *command)
 {
 	trap_ClientCommand(client, command);
 } //end of the function EA_Command
-#if defined TA_WEAPSYS_EX //&& !defined TA_WEAPSYS_EX_COMPAT // BOTLIB
+#ifdef TA_WEAPSYS_EX
 //===========================================================================
 //
 // Parameter:			-
@@ -191,11 +191,6 @@ void EA_SelectWeapon(int client, int weapon)
 
 	bi = &botinputs[client];
 
-#ifdef TA_WEAPSYS_EX // TA_WEAPSYS_EX_COMPAT
-	if (!weapon)
-		bi->actionflags |= ACTION_DROP_WEAPON;
-	else
-#endif
 	bi->weapon = weapon;
 } //end of the function EA_SelectWeapon
 #endif

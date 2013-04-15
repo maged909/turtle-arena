@@ -2900,7 +2900,7 @@ bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *r
 	//view is important for the movment
 	result.flags |= MOVERESULT_MOVEMENTVIEWSET;
 #ifdef TA_WEAPSYS
-#if !defined TA_WEAPSYS_EX// || defined TA_WEAPSYS_EX_COMPAT // BOTLIB
+#ifndef TA_WEAPSYS_EX
 	//select the rocket launcher
 	EA_SelectWeapon(ms->client, weapindex_rocketlauncher);
 #endif

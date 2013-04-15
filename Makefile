@@ -79,7 +79,6 @@ endif
 #							loads the weapons from a text file, allowing for easy modifing,
 #							and new custom default weapons for players.
 # TA_WEAPSYS_EX			Changes from holding multiple weapons to only one default and one pickup.
-# TA_WEAPSYS_EX_COMPAT	Keeps compatibility with mods not using TA_WEAPSYS_EX
 # TA_GAME_MODELS		Allow "game" to use model tags. Player tags are used for melee weapon attacking.
 # TA_HOLDSYS			Allow players to hold multiple holdable items and change to any holdable.
 #							(Based on Q3's weapon changing)
@@ -108,8 +107,7 @@ BUILD_DEFINES = -DNOTRATEDM -DNOBLOOD \
 					-DIOQ3ZTM -DIOQ3ZTM_NO_COMPAT -DIOQ3ZTM_NO_TEAM_MODEL \
 					-DTA_HOLDSYS \
 					-DTA_WEAPSYS -DTA_PLAYERSYS \
-					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_NPCSYS -DTA_PATHSYS \
-					-DTA_WEAPSYS_EX_COMPAT \
+					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_NPCSYS -DTA_PATHSYS\
 					-DTA_BLOOM -DTA_SPLITVIEW
 
 BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \

@@ -76,7 +76,7 @@ typedef struct bot_input_s
 	float speed;			//speed in the range [0, 400]
 	vec3_t viewangles;		//the view angles
 	int actionflags;		//one of the ACTION_? flags
-#if !defined TA_WEAPSYS_EX || defined TA_WEAPSYS_EX_COMPAT // BOTLIB
+#ifndef TA_WEAPSYS_EX
 	int weapon;				//weapon to use
 #endif
 #ifdef TA_HOLDSYS
@@ -109,7 +109,7 @@ void EA_Use(int client);
 #endif
 
 //regular elementary actions
-#if defined TA_WEAPSYS_EX // && !defined TA_WEAPSYS_EX_COMPAT
+#ifdef TA_WEAPSYS_EX
 void EA_DropWeapon(int client);
 #else
 void EA_SelectWeapon(int client, int weapon);

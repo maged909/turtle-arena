@@ -38,7 +38,7 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
-#if !(defined TA_WEAPSYS && defined IOQ3ZTM_NO_COMPAT) // BOT_WEAP_WEIGHTS
+#ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 //projectile flags
 #define PFL_WINDOWDAMAGE			1		//projectile damages through window
 #define PFL_RETURN					2		//set when projectile returns to owner
@@ -128,4 +128,4 @@ void BotFreeWeaponState(int weaponstate);
 void BotResetWeaponState(int weaponstate);
 //returns handle to weapon state for clientNum
 #define BotAllocWeaponState(clientNum)		(clientNum+1)
-#endif
+#endif // !TA_WEAPSYS
