@@ -311,8 +311,12 @@ FILE*		missingFiles = NULL;
 #endif
 
 /* C99 defines __func__ */
-#ifndef __func__
-#define __func__ "(unknown)"
+#if __STDC_VERSION__ < 199901L
+#  if __GNUC__ >= 2 || _MSC_VER >= 1300
+#    define __func__ __FUNCTION__
+#  else
+#    define __func__ "(unknown)"
+#  endif
 #endif
 
 /*
@@ -813,6 +817,10 @@ qboolean FS_Rename( const char *from, const char *to ) {
 	}
 
 	FS_CheckFilenameIsNotExecutable( to_ospath, __func__ );
+
+	if( FS_CreatePath( to_ospath ) ) {
+		return qfalse;
+	}
 
 	return rename(from_ospath, to_ospath) == 0;
 }
