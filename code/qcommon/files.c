@@ -1221,13 +1221,6 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						   !FS_IsExt(filename, ".bot", len) &&
 						   !FS_IsExt(filename, ".arena", len) &&
 						   !FS_IsExt(filename, ".menu", len) &&
-#ifdef IOQ3ZTM // USE_FREETYPE
-						   !FS_IsExt(filename, ".ttf", len) &&
-						   !FS_IsExt(filename, ".otf", len) &&
-#endif
-#ifdef TA_NPCSYS
-						   !FS_IsExt(filename, ".npc", len) &&
-#endif
 						   Q_stricmp(filename, "game.qvm") != 0 &&
 						   !strstr(filename, "levelshots"))
 						{
