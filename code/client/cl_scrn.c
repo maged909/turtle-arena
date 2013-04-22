@@ -321,32 +321,6 @@ void SCR_DrawFontStringExt( font_t *font, float x, float y, const char *string, 
 	re.SetColor( NULL );
 }
 
-#if 0 // ZTM: Old wrapers
-void SCR_DrawStringExt( int x, int y, float size, const char *string, float *setColor, qboolean forceColor,
-		qboolean noColorEscape )
-{
-	font_t *font;
-
-	/*if (size >= GIANTCHAR_WIDTH)
-		font = &cls.fontGiant;
-	else */if (size >= BIGCHAR_WIDTH)
-		font = &cls.fontBig;
-	else if (size >= SMALLCHAR_WIDTH)
-		font = &cls.fontSmall;
-	else
-		font = &cls.fontTiny;
-
-	SCR_DrawFontStringExt( font, x, y, string, setColor, forceColor,
-		qfalse, qtrue, qtrue, 0 );
-}
-
-void SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor,
-		qboolean noColorEscape )
-{
-	SCR_DrawFontStringExt( &cls.fontSmall, x, y, string, setColor, forceColor, noColorEscape, qfalse, qfalse, 0);
-}
-#endif
-
 void SCR_DrawFontString( font_t *font, int x, int y, const char *s, float alpha ) {
 	float	color[4];
 

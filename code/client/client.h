@@ -378,10 +378,8 @@ typedef struct {
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
 #ifdef IOQ3ZTM // FONT_REWRITE
-	font_t		fontTiny; // Used for demo recording and voip meter
 	font_t  	fontSmall; // Used by console
 	font_t		fontBig; // Used by "say" and "say_team" overlays
-	//font_t		fontGiant;
 #endif
 } clientStatic_t;
 
