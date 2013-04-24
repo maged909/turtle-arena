@@ -387,13 +387,8 @@ BSPC_OBJS = \
 	$(B)/qcommon/cm_test.o\
 	$(B)/qcommon/cm_trace.o\
 	$(B)/bspc/csg.o\
-	$(B)/bspc/glfile.o\
 	$(B)/bspc/l_bsp_ent.o\
-	$(B)/bspc/l_bsp_hl.o\
-	$(B)/bspc/l_bsp_q1.o\
-	$(B)/bspc/l_bsp_q2.o\
 	$(B)/bspc/l_bsp_q3.o\
-	$(B)/bspc/l_bsp_sin.o\
 	$(B)/bspc/l_cmd.o\
 	$(B)/botlib/l_libvar.o\
 	$(B)/bspc/l_log.o\
@@ -408,20 +403,12 @@ BSPC_OBJS = \
 	$(B)/bspc/l_utils.o\
 	$(B)/bspc/leakfile.o\
 	$(B)/bspc/map.o\
-	$(B)/bspc/map_hl.o\
-	$(B)/bspc/map_q1.o\
-	$(B)/bspc/map_q2.o\
 	$(B)/bspc/map_q3.o\
-	$(B)/bspc/map_sin.o\
 	$(B)/qcommon/md4.o\
-	$(B)/bspc/nodraw.o\
 	$(B)/bspc/portals.o\
-	$(B)/bspc/textures.o\
 	$(B)/bspc/tree.o\
 	$(B)/qcommon/ioapi.o\
 	$(B)/qcommon/unzip.o
-
-        #tetrahedron.o
 
 ifeq ($(USE_INTERNAL_ZLIB),1)
 BSPC_OBJS += \
