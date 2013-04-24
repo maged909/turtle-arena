@@ -3315,11 +3315,9 @@ void CL_InitRenderer( void ) {
 
 	// load character sets
 #ifdef IOQ3ZTM // FONT_REWRITE
-	SCR_LoadFont(&cls.fontTiny, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 8, 8, 0);
 	SCR_LoadFont(&cls.fontSmall, cl_consoleFont->string, "gfx/2d/bigchars", cl_consoleFontSize->integer,
 			cl_consoleFontSize->integer*0.66f, cl_consoleFontKerning->value);
 	SCR_LoadFont(&cls.fontBig, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 16, 0);
-	//SCR_LoadFont(&cls.fontGiant, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 48, 32, 0);
 #else
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
 #endif

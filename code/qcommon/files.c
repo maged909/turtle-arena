@@ -311,8 +311,12 @@ FILE*		missingFiles = NULL;
 #endif
 
 /* C99 defines __func__ */
-#ifndef __func__
-#define __func__ "(unknown)"
+#if __STDC_VERSION__ < 199901L
+#  if __GNUC__ >= 2 || _MSC_VER >= 1300
+#    define __func__ __FUNCTION__
+#  else
+#    define __func__ "(unknown)"
+#  endif
 #endif
 
 /*
@@ -814,6 +818,10 @@ qboolean FS_Rename( const char *from, const char *to ) {
 
 	FS_CheckFilenameIsNotExecutable( to_ospath, __func__ );
 
+	if( FS_CreatePath( to_ospath ) ) {
+		return qfalse;
+	}
+
 	return rename(from_ospath, to_ospath) == 0;
 }
 
@@ -1213,14 +1221,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						   !FS_IsExt(filename, ".bot", len) &&
 						   !FS_IsExt(filename, ".arena", len) &&
 						   !FS_IsExt(filename, ".menu", len) &&
-#ifdef IOQ3ZTM // USE_FREETYPE
-						   !FS_IsExt(filename, ".ttf", len) &&
-						   !FS_IsExt(filename, ".otf", len) &&
-#endif
-#ifdef TA_NPCSYS
-						   !FS_IsExt(filename, ".npc", len) &&
-#endif
-						   Q_stricmp(filename, "game.qvm") != 0 &&
+						   Q_stricmp(filename, "vm/game.qvm") != 0 &&
 						   !strstr(filename, "levelshots"))
 						{
 							pak->referenced |= FS_GENERAL_REF;
@@ -2477,6 +2478,9 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 		const char *extensions[] = { "wav"
 #ifdef USE_CODEC_VORBIS
 			, "ogg"
+#endif
+#ifdef USE_CODEC_OPUS
+			, "opus"
 #endif
 			};
 		int extNamesSize = ARRAY_LEN(extensions);

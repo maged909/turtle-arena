@@ -335,9 +335,10 @@ botlib_export_t *GetBotLibAPI( int apiVersion, botlib_import_t *import );
 
 name:						default:			module(s):			description:
 
-"basedir"					""					l_utils.c			base directory
-"gamedir"					""					l_utils.c			game directory
-"cddir"						""					l_utils.c			CD directory
+"basedir"					""					-					base directory
+"homedir"					""					be_interface.c		home directory
+"gamedir"					""					be_interface.c		mod game directory
+"basegame"					""					be_interface.c		base game directory
 
 "log"						"0"					l_log.c				enable/disable creating a log file
 "maxclients"				"4"					be_interface.c		maximum number of clients
@@ -390,6 +391,8 @@ name:						default:			module(s):			description:
 "bot_visualizejumppads"		"0"					be_aas_reach.c		visualize jump pads
 
 "bot_reloadcharacters"		"0"					-					reload bot character files
+"bot_testichat"				"0"					-					test ichat
+"bot_testrchat"				"0"					-					test rchat
 "synfile"					"syn.c"				be_ai_chat.c		file with synonyms
 "rndfile"					"rnd.c"				be_ai_chat.c		file with random strings
 "matchfile"					"match.c"			be_ai_chat.c		file with match strings

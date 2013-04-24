@@ -70,7 +70,7 @@ typedef struct
 	kbutton_t	in_lockon;
 #endif
 
-	kbutton_t	in_buttons[16];
+	kbutton_t	in_buttons[15];
 
 	qboolean	in_mlooking;
 
@@ -293,8 +293,6 @@ void IN_Button13Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_b
 void IN_Button13Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[13]);}
 void IN_Button14Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[14]);}
 void IN_Button14Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[14]);}
-void IN_Button15Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[15]);}
-void IN_Button15Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[15]);}
 
 void IN_CenterView( int localClientNum ) {
 	sharedPlayerState_t *ps;
