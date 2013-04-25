@@ -3830,18 +3830,8 @@ void CG_PlayerHitEffect( vec3_t origin, int entityNum, qboolean meleeDamage ) {
 
 	ex->refEntity.customShader = hShader;
 
-#if 0 // ZTM: FIXME: store info in local entity and set flag as needed when adding local ents.
 	// don't show player's own blood in view
-	if ( CG_LocalClientPlayerStateForClientNum(entityNum) && (!cg.snap || cg.snap->numPSs <= 1)
-#ifdef IOQ3ZTM // Show player their own blood in third person
-		// ZTM: Ack, cg.cur_lc is NULL here.
-		&& !cg.cur_lc->renderingThirdPerson
-#endif
-		)
-	{
-		ex->refEntity.renderfx |= RF_ONLY_MIRROR;
-	}
-#endif
+	ex->firstPersonEntity = entityNum;
 }
 #endif
 

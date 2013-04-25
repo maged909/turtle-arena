@@ -933,6 +933,8 @@ typedef struct
 	int version;
 	arcadeScore_t scores[NUM_ARCADE_SCORES];
 } arcadeGameData_t;
+
+qhandle_t UI_GetScoreIcon( arcadeScore_t score );
 #endif
 
 #endif

@@ -183,6 +183,8 @@ void BotInitMoveState(int handle, bot_initmove_t *initmove)
 	if (initmove->or_moveflags & MFL_WALK) ms->moveflags |= MFL_WALK;
 	ms->moveflags &= ~MFL_GRAPPLEPULL;
 	if (initmove->or_moveflags & MFL_GRAPPLEPULL) ms->moveflags |= MFL_GRAPPLEPULL;
+	ms->moveflags &= ~MFL_GRAPPLEEXISTS;
+	if (initmove->or_moveflags & MFL_GRAPPLEEXISTS) ms->moveflags |= MFL_GRAPPLEEXISTS;
 } //end of the function BotInitMoveState
 //========================================================================
 //
@@ -1403,11 +1405,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 		maxs[2] -= 10; //a little lower to avoid low ceiling
 	} //end if
 	VectorMA(ms->origin, 3, dir, end);
-#ifdef TURTLEARENA // NO_BODY_TRACE // ZTM: FIXME: Make this game independent, botlib needs entity's clipmask (game only?).
-	trap_Trace(&trace, ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
-#else
-	trap_Trace(&trace, ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BODY);
-#endif
+	trap_Trace(&trace, ms->origin, mins, maxs, end, ms->entitynum, MASK_PLAYERSOLID);
 	//if not started in solid and not hitting the world entity
 	if (!trace.startsolid && (trace.entityNum != ENTITYNUM_WORLD && trace.entityNum != ENTITYNUM_NONE) )
 	{
@@ -2613,29 +2611,12 @@ bot_moveresult_t BotFinishTravel_FuncBobbing(bot_movestate_t *ms, aas_reachabili
 //===========================================================================
 int GrappleState(bot_movestate_t *ms, aas_reachability_t *reach)
 {
-#ifndef TA_WEAPSYS
-	int i;
-	aas_entityinfo_t entinfo;
-#endif
-
 	//if the grapple hook is pulling
 	if (ms->moveflags & MFL_GRAPPLEPULL)
 		return 2;
-#ifndef TA_WEAPSYS // ZTM: FIXME: make this work, though this doesn't make sense as it doesn't check owner...
-	//check for a visible grapple missile entity
-	//or visible grapple entity
-	for (i = BotNextEntity(0); i; i = BotNextEntity(i))
-	{
-		if (g_entities[i].s.eType == ET_MISSILE)
-		{
-			BotEntityInfo(i, &entinfo);
-			if (entinfo.weapon == WP_GRAPPLING_HOOK)
-			{
-				return 1;
-			} //end if
-		} //end if
-	} //end for
-#endif
+	//if the grapple hook entity exists
+	if (ms->moveflags & MFL_GRAPPLEEXISTS)
+		return 1;
 	//no valid grapple at all
 	return 0;
 } //end of the function GrappleState

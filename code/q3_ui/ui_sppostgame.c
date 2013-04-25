@@ -91,6 +91,7 @@ typedef struct {
 
 	arcadeGameData_t gamedata;
 	arcadeScore_t	newScore;
+	qhandle_t		characterIcon[NUM_ARCADE_SCORES+1];
 	int				scoreIndex;
 #else
 	int				clientNums[MAX_SCOREBOARD_CLIENTS];
@@ -348,7 +349,35 @@ static void UI_SPPostgameMenu_DrawAwardsPresentation( int timer ) {
 #endif
 
 
-#ifdef IOQ3ZTM
+#ifdef TA_SP
+/*
+=================
+UI_GetScoreIcon
+=================
+*/
+qhandle_t UI_GetScoreIcon( arcadeScore_t score ) {
+	qhandle_t shader;
+	char iconName[MAX_QPATH];
+
+	shader = 0;
+
+	if ( score.character[0] ) {
+		Com_sprintf( iconName, sizeof (iconName), "models/players/heads/%s/icon_default", score.character );
+		shader = trap_R_RegisterShaderNoMip( iconName );
+
+		if (!shader) {
+			Com_sprintf( iconName, sizeof (iconName), "models/players/%s/icon_default", score.character );
+			shader = trap_R_RegisterShaderNoMip( iconName );
+		}
+	}
+
+	if (!shader) {
+		shader = trap_R_RegisterShaderNoMip( "menu/art/randombot_icon" );
+	}
+
+	return shader;
+}
+
 /*
 =================
 UI_SPPostgameMenu_MenuDrawScoreLine
@@ -356,7 +385,7 @@ UI_SPPostgameMenu_MenuDrawScoreLine
 #1  1500 [pic]  1:25 Name
 =================
 */
-static void UI_SPPostgameMenu_MenuDrawScoreLine( int startx, int y, vec4_t color, int rank, arcadeScore_t *score ) {
+static void UI_SPPostgameMenu_MenuDrawScoreLine( int startx, int y, vec4_t color, int rank, qhandle_t characterIcon, arcadeScore_t *score ) {
 	int x = startx;
 	int minutes;
 	int seconds;
@@ -372,12 +401,8 @@ static void UI_SPPostgameMenu_MenuDrawScoreLine( int startx, int y, vec4_t color
 	UI_DrawString( x, y, va( "%i", score->score ), UI_RIGHT|UI_SMALLFONT, color );
 
 	// Draw player model icon
-	// ZTM: FIXME: Don't call trap_R_RegisterShaderNoMip each time!
 	x += 13;
-	if (score->character[0])
-		UI_DrawHandlePic( x, y - 4, 26, 26, trap_R_RegisterShaderNoMip(va("models/players/%s/icon_default", score->character)) );
-	else
-		UI_DrawHandlePic( x, y - 4, 26, 26, trap_R_RegisterShaderNoMip("menu/art/randombot_icon") );
+	UI_DrawHandlePic( x, y - 4, 26, 26, characterIcon );
 	x += 26;
 
 	// Draw time (right justified)
@@ -423,14 +448,17 @@ static void UI_SPPostgameMenu_MenuDrawHighScores( int startx, int y ) {
 
 	for (n = 0; n < NUM_ARCADE_SCORES; ++n) {
 		if (n == postgameMenuInfo.scoreIndex)
-			UI_SPPostgameMenu_MenuDrawScoreLine(x, 325+n*(SMALLCHAR_HEIGHT+10), color_yellow, n+1, &postgameMenuInfo.gamedata.scores[n]);
+			UI_SPPostgameMenu_MenuDrawScoreLine(x, 325+n*(SMALLCHAR_HEIGHT+10), color_yellow, n+1,
+												postgameMenuInfo.characterIcon[n], &postgameMenuInfo.gamedata.scores[n]);
 		else
-			UI_SPPostgameMenu_MenuDrawScoreLine(x, 325+n*(SMALLCHAR_HEIGHT+10), color_white, n+1, &postgameMenuInfo.gamedata.scores[n]);
+			UI_SPPostgameMenu_MenuDrawScoreLine(x, 325+n*(SMALLCHAR_HEIGHT+10), color_white, n+1,
+												postgameMenuInfo.characterIcon[n], &postgameMenuInfo.gamedata.scores[n]);
 	}
 
 	if (postgameMenuInfo.scoreIndex == -1) {
 		// Show new socre (which wasn't a high score)
-		UI_SPPostgameMenu_MenuDrawScoreLine(x, 325+NUM_ARCADE_SCORES*(SMALLCHAR_HEIGHT+10), color_yellow, -1, &postgameMenuInfo.newScore);
+		UI_SPPostgameMenu_MenuDrawScoreLine(x, 325+NUM_ARCADE_SCORES*(SMALLCHAR_HEIGHT+10), color_yellow, -1,
+											postgameMenuInfo.characterIcon[NUM_ARCADE_SCORES], &postgameMenuInfo.newScore);
 	}
 }
 #else
@@ -796,7 +824,7 @@ Setup new score data.
 =================
 */
 static void UI_CalcPostGameStats(void) {
-	int					time, redScore, blueScore;
+	int					n, time, redScore, blueScore;
 	char				fileName[MAX_QPATH];
 	fileHandle_t		f;
 	qboolean			validData;
@@ -847,6 +875,13 @@ static void UI_CalcPostGameStats(void) {
 	// Add the score
 	postgameMenuInfo.scoreIndex = UI_AddArcadeScore(gamedata, newScore);
 	//trap_Cvar_Set("ui_scoreIndex", va("%d", postgameMenuInfo.scoreIndex));
+
+	// Load icons
+	for ( n = 0; n < NUM_ARCADE_SCORES; n++ ) {
+		postgameMenuInfo.characterIcon[n] = UI_GetScoreIcon( gamedata->scores[n] );
+	}
+
+	postgameMenuInfo.characterIcon[NUM_ARCADE_SCORES] = UI_GetScoreIcon( *newScore );
 
 	// If user didn't place high enough, don't need to ask for their name.
 	if (postgameMenuInfo.scoreIndex == -1) {
