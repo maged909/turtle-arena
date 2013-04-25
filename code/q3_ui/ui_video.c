@@ -101,15 +101,9 @@ static void DriverInfo_MenuDraw( void )
 
 	Menu_Draw( &s_driverinfo.menu );
 
-#ifdef TURTLEARENA
-	UI_DrawString( 320, 80, "VENDOR", UI_CENTER|UI_SMALLFONT, text_color_highlight );
-	UI_DrawString( 320, 152, "PIXELFORMAT", UI_CENTER|UI_SMALLFONT, text_color_highlight );
-	UI_DrawString( 320, 192, "EXTENSIONS", UI_CENTER|UI_SMALLFONT, text_color_highlight );
-#else
-	UI_DrawString( 320, 80, "VENDOR", UI_CENTER|UI_SMALLFONT, color_red );
-	UI_DrawString( 320, 152, "PIXELFORMAT", UI_CENTER|UI_SMALLFONT, color_red );
-	UI_DrawString( 320, 192, "EXTENSIONS", UI_CENTER|UI_SMALLFONT, color_red );
-#endif
+	UI_DrawString( 320, 80, "VENDOR", UI_CENTER|UI_SMALLFONT, text_small_title_color );
+	UI_DrawString( 320, 152, "PIXELFORMAT", UI_CENTER|UI_SMALLFONT, text_small_title_color );
+	UI_DrawString( 320, 192, "EXTENSIONS", UI_CENTER|UI_SMALLFONT, text_small_title_color );
 
 	UI_DrawString( 320, 80+16, uis.glconfig.vendor_string, UI_CENTER|UI_SMALLFONT, text_color_normal );
 	UI_DrawString( 320, 96+16, uis.glconfig.version_string, UI_CENTER|UI_SMALLFONT, text_color_normal );

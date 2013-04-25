@@ -43,10 +43,8 @@ DISPLAY OPTIONS MENU
 #define ART_FRAMER			"menu/art/frame1_r"
 #define ART_BACK0			"menu/art/back_0"
 #define ART_BACK1			"menu/art/back_1"
-#ifdef IOQ3ZTM
 #define ART_ACCEPT0			"menu/art/accept_0"
 #define ART_ACCEPT1			"menu/art/accept_1"
-#endif
 
 #define ID_GRAPHICS			10
 #define ID_DISPLAY			11
@@ -55,11 +53,9 @@ DISPLAY OPTIONS MENU
 #define ID_BRIGHTNESS		14
 #define ID_SCREENSIZE		15
 #define ID_BACK				16
-#ifdef IOQ3ZTM
 #define ID_APPLY			17
 #define ID_ANAGLYPH			18
 #define ID_GREYSCALE		19
-#endif
 
 
 typedef struct {
@@ -76,17 +72,13 @@ typedef struct {
 
 	menuslider_s	brightness;
 	menuslider_s	screensize;
-#ifdef IOQ3ZTM
 	menulist_s		anaglyph;
 	menulist_s		greyscale;
-#endif
 
 	menubitmap_s	back;
-#ifdef IOQ3ZTM
 	menubitmap_s	apply;
 
 	int				greyscale_default;
-#endif
 } displayOptionsInfo_t;
 
 static displayOptionsInfo_t	displayOptionsInfo;
@@ -129,7 +121,6 @@ static void UI_DisplayOptionsMenu_Event( void* ptr, int event ) {
 		trap_Cvar_SetValue( "cg_viewsize", displayOptionsInfo.screensize.curvalue * 10 );
 		break;
 
-#ifdef IOQ3ZTM
 	case ID_ANAGLYPH:
 		trap_Cvar_SetValue( "r_anaglyphMode", displayOptionsInfo.anaglyph.curvalue );
 		break;
@@ -143,7 +134,6 @@ static void UI_DisplayOptionsMenu_Event( void* ptr, int event ) {
 		UI_ForceMenuOff();
 		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 		break;
-#endif
 
 	case ID_BACK:
 		UI_PopMenu();
@@ -151,7 +141,6 @@ static void UI_DisplayOptionsMenu_Event( void* ptr, int event ) {
 	}
 }
 
-#ifdef IOQ3ZTM
 /*
 =================
 DisplayOptions_UpdateMenuItems
@@ -179,7 +168,6 @@ void DisplayOptions_MenuDraw (void)
 
 	Menu_Draw( &displayOptionsInfo.menu );
 }
-#endif
 
 /*
 ===============
@@ -189,7 +177,6 @@ UI_DisplayOptionsMenu_Init
 static void UI_DisplayOptionsMenu_Init( void ) {
 	int		y;
 
-#ifdef IOQ3ZTM
 	static const char *anaglyph_names[] =
 	{
 		"Off",
@@ -212,16 +199,13 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 		"On",
 		NULL
 	};
-#endif
 
 	memset( &displayOptionsInfo, 0, sizeof(displayOptionsInfo) );
 
 	UI_DisplayOptionsMenu_Cache();
 	displayOptionsInfo.menu.wrapAround = qtrue;
 	displayOptionsInfo.menu.fullscreen = qtrue;
-#ifdef IOQ3ZTM
 	displayOptionsInfo.menu.draw		= DisplayOptions_MenuDraw;
-#endif
 
 	displayOptionsInfo.banner.generic.type		= MTYPE_BTEXT;
 	displayOptionsInfo.banner.generic.flags		= QMF_CENTER_JUSTIFY;
@@ -287,11 +271,7 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.network.style				= UI_RIGHT;
 	displayOptionsInfo.network.color				= text_big_color;
 
-#ifdef IOQ3ZTM
 	y = 240 - 2 * (BIGCHAR_HEIGHT+2);
-#else
-	y = 240 - 1 * (BIGCHAR_HEIGHT+2);
-#endif
 	displayOptionsInfo.brightness.generic.type		= MTYPE_SLIDER;
 	displayOptionsInfo.brightness.generic.name		= "Brightness:";
 	displayOptionsInfo.brightness.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -316,7 +296,6 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.screensize.minvalue			= 3;
     displayOptionsInfo.screensize.maxvalue			= 10;
 
-#ifdef IOQ3ZTM
 	y += BIGCHAR_HEIGHT+2;
 	// references/modifies "r_anaglyphMode"
 	displayOptionsInfo.anaglyph.generic.type		= MTYPE_SPINCONTROL;
@@ -338,7 +317,6 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.greyscale.generic.x			= 400;
 	displayOptionsInfo.greyscale.generic.y			= y;
 	displayOptionsInfo.greyscale.itemnames     		= offOn_names;
-#endif
 
 	displayOptionsInfo.back.generic.type		= MTYPE_BITMAP;
 	displayOptionsInfo.back.generic.name		= ART_BACK0;
@@ -351,7 +329,6 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.back.height				= 64;
 	displayOptionsInfo.back.focuspic			= ART_BACK1;
 
-#ifdef IOQ3ZTM
 	displayOptionsInfo.apply.generic.type		= MTYPE_BITMAP;
 	displayOptionsInfo.apply.generic.name		= ART_ACCEPT0;
 	displayOptionsInfo.apply.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_HIDDEN|QMF_INACTIVE;
@@ -362,7 +339,6 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.apply.width				= 128;
 	displayOptionsInfo.apply.height				= 64;
 	displayOptionsInfo.apply.focuspic			= ART_ACCEPT1;
-#endif
 
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.banner );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.framel );
@@ -373,18 +349,13 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.network );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.brightness );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.screensize );
-#ifdef IOQ3ZTM
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.anaglyph );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.greyscale );
-#endif
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.back );
-#ifdef IOQ3ZTM
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.apply );
-#endif
 
 	displayOptionsInfo.brightness.curvalue  = trap_Cvar_VariableValue("r_gamma") * 10;
 	displayOptionsInfo.screensize.curvalue  = trap_Cvar_VariableValue( "cg_viewsize")/10;
-#ifdef IOQ3ZTM
 	displayOptionsInfo.anaglyph.curvalue    = trap_Cvar_VariableValue("r_anaglyphMode");
 	if (displayOptionsInfo.anaglyph.curvalue < 0)
 		displayOptionsInfo.anaglyph.curvalue = 0;
@@ -393,7 +364,6 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 
 	displayOptionsInfo.greyscale.curvalue = displayOptionsInfo.greyscale_default
 			= (trap_Cvar_VariableValue( "r_greyscale") != 0);
-#endif
 }
 
 

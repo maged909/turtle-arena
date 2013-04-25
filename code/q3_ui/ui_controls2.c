@@ -353,10 +353,6 @@ static controls_t s_controls;
 
 static qboolean waitingforkey = qfalse;
 
-#ifndef IOQ3ZTM
-static vec4_t controls_binding_color  = {1.00f, 0.43f, 0.00f, 1.00f};
-#endif
-
 static bind_t g_bindings[] = 
 {
 	{"+scores",			"show scores",		ID_SHOWSCORES,	ANIM_IDLE,		K_TAB,			-1,		-1, -1},
@@ -1344,13 +1340,8 @@ static void Controls_DrawKeyBinding( void *self )
 		}
 		else
 		{
-#ifdef IOQ3ZTM // ZTM: Use correct text_color_normal, in Q3 is was the same color.
 			UI_DrawString( x - SMALLCHAR_WIDTH, y, g_bindings[a->generic.id].label, UI_RIGHT|UI_SMALLFONT, text_color_normal );
 			UI_DrawString( x + SMALLCHAR_WIDTH, y, name, UI_LEFT|UI_SMALLFONT, text_color_normal );
-#else
-			UI_DrawString( x - SMALLCHAR_WIDTH, y, g_bindings[a->generic.id].label, UI_RIGHT|UI_SMALLFONT, controls_binding_color );
-			UI_DrawString( x + SMALLCHAR_WIDTH, y, name, UI_LEFT|UI_SMALLFONT, controls_binding_color );
-#endif
 		}
 	}
 }

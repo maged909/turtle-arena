@@ -94,6 +94,8 @@ SINGLE PLAYER LEVEL SELECT MENU
 #endif
 #endif
 
+#define MAX_UI_AWARDS		6
+
 
 typedef struct {
 	menuframework_s	menu;
@@ -103,8 +105,8 @@ typedef struct {
 	menubitmap_s	item_rightarrow;
 #ifndef TA_SP // SPMODEL
 	menubitmap_s	item_player;
+	menubitmap_s	item_awards[MAX_UI_AWARDS];
 #endif
-	menubitmap_s	item_awards[6];
 	menubitmap_s	item_back;
 #ifndef TA_SP
 	menubitmap_s	item_reset;
@@ -132,13 +134,8 @@ typedef struct {
 	char			playerModel[MAX_QPATH];
 	char			playerPicName[MAX_QPATH];
 #ifndef TA_SP
-#ifdef IOQ3ZTM
 	int				awardLevels[MAX_UI_AWARDS];
 	sfxHandle_t		awardSounds[MAX_UI_AWARDS];
-#else
-	int				awardLevels[6];
-	sfxHandle_t		awardSounds[6];
-#endif
 #endif
 
 	int				numBots;
@@ -866,12 +863,7 @@ static void UI_SPLevelMenu_Init( void ) {
 	levelMenuInfo.item_banner.string				= "CHOOSE AREA";
 #else
 	levelMenuInfo.item_banner.string				= "CHOOSE LEVEL";
-#endif
-#ifdef IOQ3ZTM
 	levelMenuInfo.item_banner.color					= text_banner_color;
-#else
-	levelMenuInfo.item_banner.color					= color_red;
-#endif
 	levelMenuInfo.item_banner.style					= UI_CENTER;
 
 	levelMenuInfo.item_leftarrow.generic.type		= MTYPE_BITMAP;

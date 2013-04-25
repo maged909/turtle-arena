@@ -76,8 +76,10 @@ vec4_t listbar_color        = {1.00f, 0.43f, 0.00f, 0.30f};	// transluscent oran
 vec4_t text_banner_color	= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
 #ifdef TURTLEARENA
 vec4_t text_big_color		= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
+vec4_t text_small_title_color={1.00f, 0.43f, 0.00f, 1.00f};	// light orange
 #else
 vec4_t text_big_color		= {1.00f, 0.00f, 0.00f, 1.00f};	// bright red
+vec4_t text_small_title_color={1.00f, 0.00f, 0.00f, 1.00f};	// bright red
 #endif
 
 // action widget
