@@ -1440,9 +1440,7 @@ static void StartServer_Update( void ) {
 		Q_strncpyz( s_startserver.mapname.string, Info_ValueForKey( info, "map" ), MAX_NAMELENGTH);
 	}
 	
-//#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
 	Q_strupr( s_startserver.mapname.string );
-//#endif
 }
 
 
@@ -2729,9 +2727,7 @@ static void ServerOptions_SetMenuItems( void ) {
 
 	// set the map name
 	strcpy( s_serveroptions.mapnamebuffer, s_startserver.mapname.string );
-//#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
 	Q_strupr( s_serveroptions.mapnamebuffer );
-//#endif
 
 	// get the player selections initialized
 	ServerOptions_InitPlayerItems();
