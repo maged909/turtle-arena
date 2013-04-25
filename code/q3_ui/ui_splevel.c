@@ -94,8 +94,6 @@ SINGLE PLAYER LEVEL SELECT MENU
 #endif
 #endif
 
-#define MAX_UI_AWARDS		6
-
 
 typedef struct {
 	menuframework_s	menu;
@@ -863,6 +861,7 @@ static void UI_SPLevelMenu_Init( void ) {
 	levelMenuInfo.item_banner.string				= "CHOOSE AREA";
 #else
 	levelMenuInfo.item_banner.string				= "CHOOSE LEVEL";
+#endif
 	levelMenuInfo.item_banner.color					= text_banner_color;
 	levelMenuInfo.item_banner.style					= UI_CENTER;
 
