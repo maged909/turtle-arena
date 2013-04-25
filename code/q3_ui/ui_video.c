@@ -337,11 +337,7 @@ static InitialVideoOptions_s s_ivo_templates[] =
 	}
 #else
 	{
-#ifdef IOQ3ZTM
 		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
-#else
-		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue
-#endif
 	},
 	{
 		4, qtrue, 2, 0, 2, 1, 1, 0, qtrue	// JDC: this was tq 3
@@ -395,11 +391,7 @@ static const char *knownRatios[ ][2] =
 #define MAX_RESOLUTIONS	32
 
 static const char* ratios[ MAX_RESOLUTIONS ];
-#ifdef IOQ3ZTM
 static char ratioBuf[ MAX_RESOLUTIONS ][ 14 ];
-#else
-static char ratioBuf[ MAX_RESOLUTIONS ][ 8 ];
-#endif
 static int ratioToRes[ MAX_RESOLUTIONS ];
 static int resToRatio[ MAX_RESOLUTIONS ];
 
@@ -421,11 +413,9 @@ static int GraphicsOptions_FindBuiltinResolution( int mode )
 	if( !resolutionsDetected )
 		return mode;
 
-#ifdef IOQ3ZTM
 	// Display resolution
 	if( mode == 0 )
 		return -2;
-#endif
 
 	if( mode < 0 )
 		return -1;
@@ -451,11 +441,9 @@ static int GraphicsOptions_FindDetectedResolution( int mode )
 	if( !resolutionsDetected )
 		return mode;
 
-#ifdef IOQ3ZTM
 	// Display resolution
 	if( mode == -2 )
 		return 0;
-#endif
 
 	if( mode < 0 )
 		return -1;
@@ -486,7 +474,6 @@ static void GraphicsOptions_GetAspectRatios( void )
 		char str[ sizeof(ratioBuf[0]) ];
 
 		// calculate resolution's aspect ratio
-#ifdef IOQ3ZTM
 		if (strchr(resolutions[r], '(')) {
 			w = uis.glconfig.displayWidth;
 			h = uis.glconfig.displayHeight;
@@ -498,13 +485,6 @@ static void GraphicsOptions_GetAspectRatios( void )
 			h = atoi( x );
 			Com_sprintf( str, sizeof(str), "%.2f:1", (float)w / (float)h );
 		}
-#else
-		x = strchr( resolutions[r], 'x' ) + 1;
-		Q_strncpyz( str, resolutions[r], x-resolutions[r] );
-		w = atoi( str );
-		h = atoi( x );
-		Com_sprintf( str, sizeof(str), "%.2f:1", (float)w / (float)h );
-#endif
 
 		// rename common ratios ("1.33:1" -> "4:3")
 		for( i = 0; knownRatios[i][0]; i++ ) {
@@ -567,7 +547,6 @@ static void GraphicsOptions_GetResolutions( void )
 	{
 		char* s = resbuf;
 		unsigned int i = 0;
-#ifdef IOQ3ZTM
 		static char displayRes[64];
 
 		// Add display resolution video mode
@@ -576,7 +555,6 @@ static void GraphicsOptions_GetResolutions( void )
 
 		// Use display resolution in "Very High Quality" template
 		s_ivo_templates[0].mode = -2;
-#endif
 
 		while( s && i < ARRAY_LEN(detectedResolutions)-1 )
 		{
@@ -1029,13 +1007,8 @@ void GraphicsOptions_MenuInit( void )
 
 	static const char *lighting_names[] =
 	{
-#ifdef IOQ3ZTM
 		"Lightmap (High)",
 		"Vertex (Low)",
-#else
-		"Lightmap",
-		"Vertex",
-#endif
 		NULL
 	};
 

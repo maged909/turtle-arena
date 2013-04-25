@@ -1198,14 +1198,12 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 #else
 		memset( &gun, 0, sizeof(gun) );
 		gun.hModel = pi->weaponModel;
-#ifdef IOQ3ZTM
 		if( pi->currentWeapon == WP_RAILGUN ) {
 			Byte4Copy( pi->c1RGBA, gun.shaderRGBA );
 		}
 		else {
 			Byte4Copy( colorWhite, gun.shaderRGBA );
 		}
-#endif
 		VectorCopy( origin, gun.lightingOrigin );
 #ifdef IOQ3ZTM // BONES
 		if (pi->playerModel)
@@ -1303,14 +1301,12 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		if ( pi->flashModel ) {
 			memset( &flash, 0, sizeof(flash) );
 			flash.hModel = pi->flashModel;
-#ifdef IOQ3ZTM
 			if( pi->currentWeapon == WP_RAILGUN ) {
 				Byte4Copy( pi->c1RGBA, flash.shaderRGBA );
 			}
 			else {
 				Byte4Copy( colorWhite, flash.shaderRGBA );
 			}
-#endif
 			VectorCopy( origin, flash.lightingOrigin );
 			UI_PositionEntityOnTag( &flash, &gun, pi->weaponModel, NULL, "tag_flash");
 			flash.renderfx = renderfx;
@@ -1741,13 +1737,10 @@ UI_PlayerInfo_SetInfo
 void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNumber, qboolean chat ) {
 	int			currentAnim;
 	weapon_t	weaponNum;
-#ifdef IOQ3ZTM
 	int			c;
-#endif
 
 	pi->chat = chat;
 
-#ifdef IOQ3ZTM
 	c = (int)trap_Cvar_VariableValue( "color1" );
  
 	VectorClear( pi->color1 );
@@ -1773,7 +1766,6 @@ void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_
 	pi->c1RGBA[1] = 255 * pi->color1[1];
 	pi->c1RGBA[2] = 255 * pi->color1[2];
 	pi->c1RGBA[3] = 255;
-#endif
 
 	// view angles
 	VectorCopy( viewAngles, pi->viewAngles );

@@ -583,10 +583,8 @@ typedef struct {
 #endif
 	int				muzzleFlashTime;
 
-#ifdef IOQ3ZTM
 	vec3_t			color1;
 	byte			c1RGBA[4];
-#endif
 
 	// currently in use drawing parms
 	vec3_t			viewAngles;
