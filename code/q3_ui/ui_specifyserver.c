@@ -91,7 +91,7 @@ typedef struct
 } specifyserver_t;
 
 static specifyserver_t	s_specifyserver;
-#ifdef IOQ3ZTM
+#ifdef IOQ3ZTM // SPECIFY_FAV
 static qboolean s_specifyserverFav;
 #endif
 
