@@ -240,10 +240,6 @@ static void LoadConfig_MenuInit( void ) {
 		if (!Q_stricmp(configname +  len - 4,".cfg"))
 			configname[len-4] = '\0';
 
-#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
-		Q_strupr(configname);
-#endif
-
 		configname += len + 1;
 	}
 

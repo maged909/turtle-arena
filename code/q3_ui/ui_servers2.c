@@ -865,9 +865,6 @@ static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 
 	Q_strncpyz( servernodeptr->mapname, Info_ValueForKey( info, "mapname"), MAX_MAPNAMELENGTH );
 	Q_CleanStr( servernodeptr->mapname );
-#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
-	Q_strupr( servernodeptr->mapname );
-#endif
 
 	servernodeptr->numclients = atoi( Info_ValueForKey( info, "clients") );
 #ifdef IOQ3ZTM // G_HUMANPLAYERS

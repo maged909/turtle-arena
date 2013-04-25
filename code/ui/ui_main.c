@@ -2918,9 +2918,6 @@ static void UI_LoadMovies( void ) {
 		for ( i = 0; i < uiInfo.movieCount; i++ ) {
 			len = strlen( moviename );
 			COM_StripExtension( moviename, moviename, len );
-#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
-			Q_strupr(moviename);
-#endif
 			uiInfo.movieList[i] = String_Alloc(moviename);
 			moviename += len + 1;
 		}
