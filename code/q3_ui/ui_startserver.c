@@ -1388,9 +1388,6 @@ static void StartServer_Update( void ) {
 
 		info = UI_GetArenaInfoByNumber( s_startserver.maplist[ top + i ]);
 		Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
-#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
-		Q_strupr( mapname );
-#endif
 
 #ifdef TA_DATA // TEAMARENA_LEVELSHOTS
 		Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%s_small", mapname );
@@ -1443,9 +1440,7 @@ static void StartServer_Update( void ) {
 		Q_strncpyz( s_startserver.mapname.string, Info_ValueForKey( info, "map" ), MAX_NAMELENGTH);
 	}
 	
-//#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
 	Q_strupr( s_startserver.mapname.string );
-//#endif
 }
 
 
@@ -1894,9 +1889,6 @@ void StartServer_Cache( void )
 		for( i = 0; i < UI_GetNumArenas(); i++ ) {
 			info = UI_GetArenaInfoByNumber( i );
 			Q_strncpyz( mapname, Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
-#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
-			Q_strupr( mapname );
-#endif
 	
 #ifdef TA_DATA // TEAMARENA_LEVELSHOTS
 			Com_sprintf( picname, sizeof(picname), "levelshots/%s_small", mapname );
@@ -2735,9 +2727,7 @@ static void ServerOptions_SetMenuItems( void ) {
 
 	// set the map name
 	strcpy( s_serveroptions.mapnamebuffer, s_startserver.mapname.string );
-//#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
 	Q_strupr( s_serveroptions.mapnamebuffer );
-//#endif
 
 	// get the player selections initialized
 	ServerOptions_InitPlayerItems();

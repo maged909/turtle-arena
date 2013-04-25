@@ -2404,12 +2404,7 @@ static qboolean UI_GameType_HandleKey(int flags, float *special, int key, qboole
 #endif
 		}
     
-#ifdef IOQ3ZTM
-		if (uiInfo.gameTypes[ui_gameType.integer].gtEnum < GT_TEAM)
-#else
-		if (uiInfo.gameTypes[ui_gameType.integer].gtEnum == GT_TOURNAMENT)
-#endif
-		{
+		if (uiInfo.gameTypes[ui_gameType.integer].gtEnum < GT_TEAM) {
 			trap_Cvar_SetValue( "ui_Q3Model", 1 );
 		} else {
 			trap_Cvar_SetValue( "ui_Q3Model", 0 );
@@ -2923,9 +2918,6 @@ static void UI_LoadMovies( void ) {
 		for ( i = 0; i < uiInfo.movieCount; i++ ) {
 			len = strlen( moviename );
 			COM_StripExtension( moviename, moviename, len );
-#ifndef IOQ3ZTM // SUPPORT_LINUX_NO_PAK
-			Q_strupr(moviename);
-#endif
 			uiInfo.movieList[i] = String_Alloc(moviename);
 			moviename += len + 1;
 		}

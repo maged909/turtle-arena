@@ -116,11 +116,16 @@ static postgameMenuInfo_t	postgameMenuInfo;
 #ifndef TA_SP
 static char					arenainfo[MAX_INFO_VALUE];
 
-char	*ui_medalNames[] = {"Accuracy",
+char	*ui_medalNames[] = {
+	"Accuracy",
 #ifndef TURTLEARENA // AWARDS
-"Impressive", "Excellent", "Gauntlet",
+	"Impressive",
+	"Excellent",
+	"Gauntlet",
 #endif
-"Frags", "Perfect"};
+	"Frags",
+	"Perfect"
+};
 char	*ui_medalPicNames[] = {
 	"menu/medals/medal_accuracy",
 #ifndef TURTLEARENA // AWARDS
@@ -635,8 +640,7 @@ void UI_SPPostgameMenu_Cache( void ) {
 #ifndef TA_SP
 	trap_R_RegisterShaderNoMip( ART_NEXT0 );
 	trap_R_RegisterShaderNoMip( ART_NEXT1 );
-	for( n = 0; n < MAX_UI_AWARDS; n++ )
-	{
+	for( n = 0; n < MAX_UI_AWARDS; n++ ) {
 		trap_R_RegisterShaderNoMip( ui_medalPicNames[n] );
 		trap_S_RegisterSound( ui_medalSounds[n], qfalse );
 	}

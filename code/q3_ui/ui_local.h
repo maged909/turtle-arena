@@ -341,6 +341,7 @@ extern vec4_t		text_color_normal;
 extern vec4_t		text_color_highlight;
 extern vec4_t		text_banner_color;
 extern vec4_t		text_big_color;
+extern vec4_t		text_small_title_color;
 
 extern char	*ui_medalNames[];
 extern char	*ui_medalPicNames[];

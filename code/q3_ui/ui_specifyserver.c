@@ -91,7 +91,7 @@ typedef struct
 } specifyserver_t;
 
 static specifyserver_t	s_specifyserver;
-#ifdef IOQ3ZTM
+#ifdef IOQ3ZTM // SPECIFY_FAV
 static qboolean s_specifyserverFav;
 #endif
 
@@ -209,11 +209,7 @@ void SpecifyServer_MenuInit( void )
 	else
 #endif
 	s_specifyserver.banner.string		 = "SPECIFY SERVER";
-#ifdef IOQ3ZTM
 	s_specifyserver.banner.color  		 = text_banner_color;
-#else
-	s_specifyserver.banner.color  		 = color_white;
-#endif
 	s_specifyserver.banner.style  		 = UI_CENTER;
 
 	s_specifyserver.framel.generic.type  = MTYPE_BITMAP;
