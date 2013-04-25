@@ -915,14 +915,10 @@ static void GraphicsOptions_SetMenuItems( void )
 		{
 			int i;
 			char buf[MAX_STRING_CHARS];
-#ifdef IOQ3ZTM
-			Com_sprintf(buf, sizeof(buf), "%dx%d", uis.glconfig.vidWidth, uis.glconfig.vidHeight);
-#else
 			trap_Cvar_VariableStringBuffer("r_customwidth", buf, sizeof(buf)-2);
 			buf[strlen(buf)+1] = 0;
 			buf[strlen(buf)] = 'x';
 			trap_Cvar_VariableStringBuffer("r_customheight", buf+strlen(buf), sizeof(buf)-strlen(buf));
-#endif
 
 			for(i = 0; detectedResolutions[i]; ++i)
 			{
