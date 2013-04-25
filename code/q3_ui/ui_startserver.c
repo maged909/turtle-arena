@@ -55,7 +55,6 @@ START SERVER MENU *****
 #define GAMESERVER_PLAY1		"menu/art/fight_1"
 #endif
 #define GAMESERVER_UNKNOWNMAP	"menu/art/unknownmap"
-#define GAMESERVER_UNKNOWNCHARACTER "menu/art/randombot_icon"
 
 #define ID_MAXCLIENTS			20
 #define ID_DEDICATED			21
@@ -221,12 +220,7 @@ void UI_LoadBestScores(const char *map, int game)
 				s_arcade.gamedata.scores[i].time / 60, s_arcade.gamedata.scores[i].time % 60);
 		Q_strncpyz(scoreNames[i], s_arcade.gamedata.scores[i].name, sizeof (scoreNames[i]) );
 
-		if (s_arcade.gamedata.scores[i].character[0] != '\0') {
-			s_arcade.gamedata.scores[i].character[16] = '\0';
-			s_arcade.scoreCharacter[i].shader = trap_R_RegisterShaderNoMip(va("models/players/%s/icon_default", s_arcade.gamedata.scores[i].character));
-		} else {
-			s_arcade.scoreCharacter[i].shader = trap_R_RegisterShaderNoMip(s_arcade.scoreCharacter[i].errorpic);
-		}
+		s_arcade.scoreCharacter[i].shader = UI_GetScoreIcon( s_arcade.gamedata.scores[i] );
 
 		// Set name for empty scores
 		if (scoreNames[i][0] == '\0') {
@@ -1009,7 +1003,6 @@ static void StartArcade_MenuInit( qboolean multiplayer ) {
 			s_arcade.scoreCharacter[i].generic.y		= y - 12;
 			s_arcade.scoreCharacter[i].width			= 32;
 			s_arcade.scoreCharacter[i].height			= 32;
-			s_arcade.scoreCharacter[i].errorpic			= GAMESERVER_UNKNOWNCHARACTER;
 
 			s_arcade.scoreTime[i].generic.type		= MTYPE_TEXT;
 			s_arcade.scoreTime[i].generic.flags		= QMF_SMALLFONT|QMF_RIGHT_JUSTIFY;
