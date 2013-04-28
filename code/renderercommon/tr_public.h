@@ -33,7 +33,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "tr_types.h"
 
 #ifdef IOQ3ZTM // PNG_SCREENSHOTS
-#include "../zlib/zlib.h"
+#ifdef USE_LOCAL_HEADERS
+  #include "../zlib/zlib.h"
+#else
+  #include <zlib.h>
+#endif
 #endif
 
 #define	REF_API_VERSION		8
