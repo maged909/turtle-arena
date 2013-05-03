@@ -466,31 +466,18 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
         LL(surf->ofsXyzNormals);
         LL(surf->ofsEnd);
 		
-#ifdef IOQ3ZTM // ZTM: Show the name of the surface, it is helpful.
 		if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
-			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i verts on %s (%i)",
-				mod_name, SHADER_MAX_VERTEXES, surf->name[0] == '\0' ? "a surface" : surf->name,
+			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i verts on %s (%i).\n",
+				mod_name, SHADER_MAX_VERTEXES, surf->name[0] ? surf->name : "a surface",
 				surf->numVerts );
 			return qfalse;
 		}
 		if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) {
-			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i triangles on %s (%i)",
-				mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] == '\0' ? "a surface" : surf->name,
+			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i triangles on %s (%i).\n",
+				mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] ? surf->name : "a surface",
 				surf->numTriangles );
 			return qfalse;
 		}
-#else
-		if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
-			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i verts on a surface (%i).\n",
-				mod_name, SHADER_MAX_VERTEXES, surf->numVerts );
-			return qfalse;
-		}
-		if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) {
-			ri.Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i triangles on a surface (%i).\n",
-				mod_name, SHADER_MAX_INDEXES / 3, surf->numTriangles );
-			return qfalse;
-		}
-#endif
 	
 		// change to surface identifier
 		surf->ident = SF_MD3;
@@ -756,35 +743,20 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// numBoneReferences and BoneReferences generally seem to be unused
 			
 			// now do the checks that may fail.
-#ifdef IOQ3ZTM // ZTM: Show the name of the surface, it is helpful.
-			if ( surf->numVerts > SHADER_MAX_VERTEXES )
-			{
-				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i verts on %s (%i)\n",
-					  mod_name, SHADER_MAX_VERTEXES, surf->name[0] == '\0' ? "a surface" : surf->name,
-					  surf->numVerts );
-				return qfalse;
-			}
-			if ( surf->numTriangles*3 > SHADER_MAX_INDEXES )
-			{
-				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i triangles on %s (%i)\n",
-					  mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] == '\0' ? "a surface" : surf->name,
-					  surf->numTriangles );
-				return qfalse;
-			}
-#else
 			if ( surf->numVerts > SHADER_MAX_VERTEXES ) 
 			{
-				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i verts on a surface (%i).\n",
-					  mod_name, SHADER_MAX_VERTEXES, surf->numVerts );
+				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i verts on %s (%i).\n",
+					  mod_name, SHADER_MAX_VERTEXES, surf->name[0] ? surf->name : "a surface",
+					  surf->numVerts );
 				return qfalse;
 			}
 			if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) 
 			{
-				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i triangles on a surface (%i).\n",
-					  mod_name, SHADER_MAX_INDEXES / 3, surf->numTriangles );
+				ri.Printf(PRINT_WARNING, "R_LoadMDR: %s has more than %i triangles on %s (%i).\n",
+					  mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] ? surf->name : "a surface",
+					  surf->numTriangles );
 				return qfalse;
 			}
-#endif
 			// lowercase the surface name so skin compares are faster
 			Q_strlwr( surf->name );
 
@@ -988,31 +960,18 @@ static qboolean R_LoadMD4( model_t *mod, void *buffer, const char *mod_name ) {
 			LL(surf->ofsVerts);
 			LL(surf->ofsEnd);
 			
-#ifdef IOQ3ZTM // ZTM: Show the name of the surface, it is helpful.
 			if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
-				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i verts on %s (%i)",
-					mod_name, SHADER_MAX_VERTEXES, surf->name[0] == '\0' ? "a surface" : surf->name,
+				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i verts on %s (%i).\n",
+					mod_name, SHADER_MAX_VERTEXES, surf->name[0] ? surf->name : "a surface",
 					surf->numVerts );
 				return qfalse;
 			}
 			if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) {
-				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i triangles on %s (%i)",
-					mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] == '\0' ? "a surface" : surf->name,
+				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i triangles on %s (%i).\n",
+					mod_name, SHADER_MAX_INDEXES / 3, surf->name[0] ? surf->name : "a surface",
 					surf->numTriangles );
 				return qfalse;
 			}
-#else
-			if ( surf->numVerts > SHADER_MAX_VERTEXES ) {
-				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i verts on a surface (%i).\n",
-					mod_name, SHADER_MAX_VERTEXES, surf->numVerts );
-				return qfalse;
-			}
-			if ( surf->numTriangles*3 > SHADER_MAX_INDEXES ) {
-				ri.Printf(PRINT_WARNING, "R_LoadMD4: %s has more than %i triangles on a surface (%i).\n",
-					mod_name, SHADER_MAX_INDEXES / 3, surf->numTriangles );
-				return qfalse;
-			}
-#endif
 
 			// change to surface identifier
 			surf->ident = SF_MD4;
