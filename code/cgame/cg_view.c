@@ -1681,12 +1681,8 @@ Generates and draws a game scene and status information at the given time.
 */
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback ) {
 	int		inwater;
-	float	mouseSensitivity;
-	int		weaponSelect;
-	int		holdableSelect;
 	qboolean renderClientViewport[MAX_SPLITVIEW];
 	int		i;
-	int		stateValue;
 #ifdef TURTLEARENA
 	qboolean	twodMode;
 #endif
@@ -1767,25 +1763,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			cg.numViewports++;
 			renderClientViewport[i] = qtrue;
 		}
-
-		// let the client system know what our weapon and zoom settings are
-#ifdef TURTLEARENA // NOZOOM
-		mouseSensitivity = 1;
-#else
-		mouseSensitivity = cg.cur_lc->zoomSensitivity;
-#endif
-#ifdef TA_WEAPSYS_EX
-		weaponSelect = 0;
-#else
-		weaponSelect = cg.cur_lc->weaponSelect;
-#endif
-#ifdef TA_HOLDSYS/*2*/
-		holdableSelect = cg.cur_lc->holdableSelect;
-#else
-		holdableSelect = 0;
-#endif
-		stateValue = BG_ComposeUserCmdValue( weaponSelect, holdableSelect );
-		trap_SetUserCmdValue( stateValue, mouseSensitivity, cg.cur_localClientNum );
 
 		// update cg.predictedPlayerState
 		CG_PredictPlayerState();

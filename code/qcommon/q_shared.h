@@ -654,6 +654,18 @@ static ID_INLINE void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cro
 	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
+static ID_INLINE int FloatAsInt( float f ) {
+	floatint_t fi;
+	fi.f = f;
+	return fi.i;
+}
+
+static ID_INLINE float IntAsFloat( int i ) {
+	floatint_t fi;
+	fi.i = i;
+	return fi.f;
+}
+
 #else
 int VectorCompare( const vec3_t v1, const vec3_t v2 );
 
@@ -673,6 +685,9 @@ void VectorInverse( vec3_t v );
 
 void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cross );
 
+int FloatAsInt( float f );
+
+float IntAsFloat( int i );
 #endif
 
 vec_t VectorNormalize (vec3_t v);		// returns vector length
@@ -1264,9 +1279,6 @@ typedef struct sharedPlayerState_s {
 
 	vec3_t		origin;
 
-	int			delta_angles[3];	// add to command angles to get view direction
-									// changed by spawns, rotating objects, and teleporters
-
 	qboolean	linked;			// set by server
 
 	int			clientNum;		// ranges from 0 to MAX_CLIENTS-1
@@ -1499,6 +1511,10 @@ typedef enum {
 
 	DS_NUM_DEMO_STATES
 } demoState_t;
+
+
+
+#define MAX_JOYSTICK_AXIS 16
 
 
 

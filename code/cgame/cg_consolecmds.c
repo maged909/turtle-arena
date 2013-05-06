@@ -98,59 +98,6 @@ static void CG_Viewpos_f( int localPlayerNum ) {
 
 /*
 =============
-CG_ButtonEvent
-=============
-*/
-static void CG_ButtonEvent( int localPlayerNum, int buttonNum, qboolean down ) {
-	char args[128];
-	char cmd[128];
-
-	trap_Args( args, sizeof ( args ) );
-	Com_sprintf( cmd, sizeof (cmd), "%cbutton%d %s", down ? '+' : '-', buttonNum, args );
-
-	trap_Cmd_ExecuteText( EXEC_NOW, Com_LocalClientCvarName( localPlayerNum, cmd ) );
-}
-
-/*
-=============
-CG_AttackDown_f
-=============
-*/
-static void CG_AttackDown_f( int localPlayerNum ) {
-	CG_ButtonEvent( localPlayerNum, 0, qtrue );
-}
-
-/*
-=============
-CG_AttackUp_f
-=============
-*/
-static void CG_AttackUp_f( int localPlayerNum ) {
-	CG_ButtonEvent( localPlayerNum, 0, qfalse );
-}
-
-#ifdef TA_WEAPSYS_EX
-/*
-=============
-CG_DropWeaponDown_f
-=============
-*/
-static void CG_DropWeaponDown_f( int localPlayerNum ) {
-	CG_ButtonEvent( localPlayerNum, 1, qtrue );
-}
-
-/*
-=============
-CG_DropWeaponUp_f
-=============
-*/
-static void CG_DropWeaponUp_f( int localPlayerNum ) {
-	CG_ButtonEvent( localPlayerNum, 1, qfalse );
-}
-#endif
-
-/*
-=============
 CG_ScoresDown
 =============
 */
@@ -717,12 +664,40 @@ typedef struct {
 } playerConsoleCommand_t;
 
 static playerConsoleCommand_t	playerCommands[] = {
-	{ "+attack", CG_AttackDown_f },
-	{ "-attack", CG_AttackUp_f },
-#ifdef TA_WEAPSYS_EX
-	{ "+dropweapon", CG_DropWeaponDown_f },
-	{ "-dropweapon", CG_DropWeaponUp_f },
-#endif
+	{ "+attack", IN_Button0Down },
+	{ "-attack", IN_Button0Up },
+	{ "+back",IN_BackDown },
+	{ "-back",IN_BackUp },
+	{ "+button0", IN_Button0Down },
+	{ "-button0", IN_Button0Up },
+	{ "+button10", IN_Button10Down },
+	{ "-button10", IN_Button10Up },
+	{ "+button11", IN_Button11Down },
+	{ "-button11", IN_Button11Up },
+	{ "+button12", IN_Button12Down },
+	{ "-button12", IN_Button12Up },
+	{ "+button13", IN_Button13Down },
+	{ "-button13", IN_Button13Up },
+	{ "+button14", IN_Button14Down },
+	{ "-button14", IN_Button14Up },
+	{ "+button1", IN_Button1Down },
+	{ "-button1", IN_Button1Up },
+	{ "+button2", IN_Button2Down },
+	{ "-button2", IN_Button2Up },
+	{ "+button3", IN_Button3Down },
+	{ "-button3", IN_Button3Up },
+	{ "+button4", IN_Button4Down },
+	{ "-button4", IN_Button4Up },
+	{ "+button5", IN_Button5Down },
+	{ "-button5", IN_Button5Up },
+	{ "+button6", IN_Button6Down },
+	{ "-button6", IN_Button6Up },
+	{ "+button7", IN_Button7Down },
+	{ "-button7", IN_Button7Up },
+	{ "+button8", IN_Button8Down },
+	{ "-button8", IN_Button8Up },
+	{ "+button9", IN_Button9Down },
+	{ "-button9", IN_Button9Up },
 #ifdef IOQ3ZTM // NEW_CAM
 	{ "camreset", CG_CamReset_f },
 	{ "+camleft", CG_CamLeftDown_f },
@@ -734,12 +709,47 @@ static playerConsoleCommand_t	playerCommands[] = {
 	{ "+camzoomout", CG_CamZoomOutDown_f },
 	{ "-camzoomout", CG_CamZoomOutUp_f },
 #endif
+#ifdef TA_WEAPSYS_EX
+	{ "+dropweapon", IN_Button1Down },
+	{ "-dropweapon", IN_Button1Up },
+#endif
+	{ "+forward",IN_ForwardDown },
+	{ "-forward",IN_ForwardUp },
+	{ "+left",IN_LeftDown },
+	{ "-left",IN_LeftUp },
+#ifdef TURTLEARENA // LOCKON
+	{ "+lockon", IN_LockonDown },
+	{ "-lockon", IN_LockonUp },
+#endif
+	{ "+lookdown", IN_LookdownDown },
+	{ "-lookdown", IN_LookdownUp },
+	{ "+lookup", IN_LookupDown },
+	{ "-lookup", IN_LookupUp },
+	{ "+mlook", IN_MLookDown },
+	{ "-mlook", IN_MLookUp },
+	{ "+movedown",IN_DownDown },
+	{ "-movedown",IN_DownUp },
+	{ "+moveleft", IN_MoveleftDown },
+	{ "-moveleft", IN_MoveleftUp },
+	{ "+moveright", IN_MoverightDown },
+	{ "-moveright", IN_MoverightUp },
+	{ "+moveup",IN_UpDown },
+	{ "-moveup",IN_UpUp },
+	{ "+right",IN_RightDown },
+	{ "-right",IN_RightUp },
 	{ "+scores", CG_ScoresDown_f },
 	{ "-scores", CG_ScoresUp_f },
+#ifndef TURTLEARENA // NO_SPEED_KEY
+	{ "+speed", IN_SpeedDown },
+	{ "-speed", IN_SpeedUp },
+#endif
+	{ "+strafe", IN_StrafeDown },
+	{ "-strafe", IN_StrafeUp },
 #ifndef TURTLEARENA // NOZOOM
 	{ "+zoom", CG_ZoomDown_f },
 	{ "-zoom", CG_ZoomUp_f },
 #endif
+	{ "centerview", IN_CenterView },
 #ifdef TA_HOLDSYS/*2*/
 	{ "holdnext", CG_NextHoldable_f },
 	{ "holdprev", CG_PrevHoldable_f },

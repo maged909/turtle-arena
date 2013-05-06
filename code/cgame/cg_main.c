@@ -86,6 +86,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_MOUSE_EVENT:
 		CG_MouseEvent(arg0, arg1, arg2);
 		return 0;
+	case CG_JOYSTICK_EVENT:
+		CG_JoystickEvent(arg0, arg1, arg2);
+		return 0;
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
 		return 0;
@@ -98,6 +101,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 #else
 		return qfalse;
 #endif
+	case CG_CREATE_USER_CMD:
+		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4));
 	default:
 		CG_Error( "vmMain: unknown command %i", command );
 		break;
@@ -191,6 +196,9 @@ vmCvar_t	cg_zoomFov;
 vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
+#ifdef IOQ3ZTM // ANALOG
+vmCvar_t	cg_thirdPersonAnalog[MAX_SPLITVIEW];
+#endif
 vmCvar_t	cg_splitviewVertical;
 vmCvar_t	cg_lagometer;
 vmCvar_t	cg_drawAttacker;
@@ -391,6 +399,12 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_tracerChance, "cg_tracerchance", "0.4", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_tracerWidth, "cg_tracerwidth", "1", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT, RANGE_ALL },
+#ifdef IOQ3ZTM // ANALOG
+	{ &cg_thirdPersonAnalog[0], "cg_thirdPersonAnalog", "0", 0, RANGE_BOOL },
+	{ &cg_thirdPersonAnalog[1], "2cg_thirdPersonAnalog", "0", 0, RANGE_BOOL },
+	{ &cg_thirdPersonAnalog[2], "3cg_thirdPersonAnalog", "0", 0, RANGE_BOOL },
+	{ &cg_thirdPersonAnalog[3], "4cg_thirdPersonAnalog", "0", 0, RANGE_BOOL },
+#endif
 #ifdef TURTLEARENA // FOV // THIRD_PERSON
 	{ &cg_thirdPersonRange[0], "cg_thirdPersonRange", "120", 0, RANGE_ALL },
 	{ &cg_thirdPersonAngle[0], "cg_thirdPersonAngle", "0", 0, RANGE_ALL },
@@ -560,6 +574,8 @@ void CG_RegisterCvars( void ) {
 		}
 	}
 
+	CG_RegisterInputCvars();
+
 	BG_RegisterClientCvars(CG_MaxSplitView());
 
 	// see if we are also running the server on this machine
@@ -612,6 +628,8 @@ void CG_UpdateCvars( void ) {
 
 		trap_Cvar_Update( cv->vmCvar );
 	}
+
+	CG_UpdateInputCvars();
 
 	// check for modications here
 
@@ -2896,6 +2914,24 @@ void CG_KeyEvent(int key, qboolean down) {
 void CG_MouseEvent(int localClientNum, int x, int y) {
 }
 #endif
+
+/*
+=================
+CG_JoystickEvent
+
+Joystick values stay set until changed
+=================
+*/
+void CG_JoystickEvent( int localClientNum, int axis, int value ) {
+	if ( localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+		return;
+	}
+	if ( axis < 0 || axis >= MAX_JOYSTICK_AXIS ) {
+		CG_Error( "CG_JoystickEvent: bad axis %i", axis );
+	}
+
+	cg.localClients[localClientNum].joystickAxis[axis] = value;
+}
 
 /*
 ================

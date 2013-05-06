@@ -776,13 +776,21 @@ typedef struct {
 	float		landChange;				// for landing hard
 	int			landTime;
 
-	// input state sent to server
+	// used for input state sent to server
+	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 #ifndef TA_WEAPSYS_EX
 	int			weaponSelect;
 #endif
 #ifdef TA_HOLDSYS/*2*/
 	int			holdableSelect;
 #endif
+
+	// the client maintains its own idea of view angles, which are
+	// sent to the server each frame.  It is cleared to 0 upon entering each level.
+	// the server sends a delta each frame which is added to the locally
+	// tracked view angles to account for standing on rotating objects,
+	// and teleport direction changes
+	vec3_t		viewangles;
 
 
 	// centerprinting
@@ -1755,6 +1763,9 @@ extern	vmCvar_t		cg_zoomFov;
 #endif
 extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonAngle[MAX_SPLITVIEW];
+#ifdef IOQ3ZTM // ANALOG
+extern	vmCvar_t		cg_thirdPersonAnalog[MAX_SPLITVIEW];
+#endif
 extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_lagometer;
@@ -1865,6 +1876,7 @@ int CG_LastAttacker( int localClientNum );
 void CG_LoadMenus(const char *menuFile);
 void CG_KeyEvent(int key, qboolean down);
 void CG_MouseEvent(int localClientNum, int x, int y);
+void CG_JoystickEvent( int localClientNum, int axis, int value );
 void CG_EventHandling(int type);
 void CG_RankRunFrame( void );
 void CG_SetScoreSelection(void *menu);
@@ -2382,4 +2394,79 @@ void	CG_ParticleMisc (qhandle_t pshader, vec3_t origin, int size, int duration, 
 void	CG_ParticleExplosion (char *animStr, vec3_t origin, vec3_t vel, int duration, int sizeStart, int sizeEnd);
 extern qboolean		initparticles;
 int CG_NewParticleArea ( int num );
+
+//
+// cg_input.c
+//
+void CG_RegisterInputCvars( void );
+void CG_UpdateInputCvars( void );
+usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my );
+
+void IN_CenterView( int localPlayerNum );
+
+void IN_MLookDown( int localPlayerNum );
+void IN_MLookUp( int localPlayerNum );
+
+void IN_UpDown( int localPlayerNum );
+void IN_UpUp( int localPlayerNum );
+void IN_DownDown( int localPlayerNum );
+void IN_DownUp( int localPlayerNum );
+void IN_LeftDown( int localPlayerNum );
+void IN_LeftUp( int localPlayerNum );
+void IN_RightDown( int localPlayerNum );
+void IN_RightUp( int localPlayerNum );
+void IN_ForwardDown( int localPlayerNum );
+void IN_ForwardUp( int localPlayerNum );
+void IN_BackDown( int localPlayerNum );
+void IN_BackUp( int localPlayerNum );
+void IN_LookupDown( int localPlayerNum );
+void IN_LookupUp( int localPlayerNum );
+void IN_LookdownDown( int localPlayerNum );
+void IN_LookdownUp( int localPlayerNum );
+void IN_MoveleftDown( int localPlayerNum );
+void IN_MoveleftUp( int localPlayerNum );
+void IN_MoverightDown( int localPlayerNum );
+void IN_MoverightUp( int localPlayerNum );
+
+#ifndef TURTLEARENA // NO_SPEED_KEY
+void IN_SpeedDown( int localPlayerNum );
+void IN_SpeedUp( int localPlayerNum );
+#endif
+void IN_StrafeDown( int localPlayerNum );
+void IN_StrafeUp( int localPlayerNum );
+#ifdef TURTLEARENA // LOCKON
+void IN_LockonDown( int localPlayerNum );
+void IN_LockonUp( int localPlayerNum );
+#endif
+
+void IN_Button0Down( int localPlayerNum );
+void IN_Button0Up( int localPlayerNum );
+void IN_Button1Down( int localPlayerNum );
+void IN_Button1Up( int localPlayerNum );
+void IN_Button2Down( int localPlayerNum );
+void IN_Button2Up( int localPlayerNum );
+void IN_Button3Down( int localPlayerNum );
+void IN_Button3Up( int localPlayerNum );
+void IN_Button4Down( int localPlayerNum );
+void IN_Button4Up( int localPlayerNum );
+void IN_Button5Down( int localPlayerNum );
+void IN_Button5Up( int localPlayerNum );
+void IN_Button6Down( int localPlayerNum );
+void IN_Button6Up( int localPlayerNum );
+void IN_Button7Down( int localPlayerNum );
+void IN_Button7Up( int localPlayerNum );
+void IN_Button8Down( int localPlayerNum );
+void IN_Button8Up( int localPlayerNum );
+void IN_Button9Down( int localPlayerNum );
+void IN_Button9Up( int localPlayerNum );
+void IN_Button10Down( int localPlayerNum );
+void IN_Button10Up( int localPlayerNum );
+void IN_Button11Down( int localPlayerNum );
+void IN_Button11Up( int localPlayerNum );
+void IN_Button12Down( int localPlayerNum );
+void IN_Button12Up( int localPlayerNum );
+void IN_Button13Down( int localPlayerNum );
+void IN_Button13Up( int localPlayerNum );
+void IN_Button14Down( int localPlayerNum );
+void IN_Button14Up( int localPlayerNum );
 
