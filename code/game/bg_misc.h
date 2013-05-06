@@ -298,9 +298,6 @@ typedef struct playerState_s {
 
 	vec3_t		origin;
 
-	int			delta_angles[3];	// add to command angles to get view direction
-									// changed by spawns, rotating objects, and teleporters
-
 	qboolean	linked;			// set by server
 
 	int			clientNum;		// ranges from 0 to MAX_CLIENTS-1
@@ -329,7 +326,7 @@ typedef struct playerState_s {
 	int			weaponTime;
 	int			gravity;
 	int			speed;
-	//int			delta_angles[3];	// add to command angles to get view direction
+	int			delta_angles[3];	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
 
 	vec3_t		mins, maxs;		// bounding box size
@@ -2249,15 +2246,11 @@ qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 // entityState_t->eType
 //
 typedef enum {
-	/* bg_public.h
-		ZTM: NOTE: Botlib expects these five in this order.
-	*/
 	ET_GENERAL,
 	ET_PLAYER,
 	ET_ITEM,
 	ET_MISSILE,
 	ET_MOVER,
-
 	ET_BEAM,
 	ET_PORTAL,
 	ET_SPEAKER,
