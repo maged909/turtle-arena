@@ -603,8 +603,11 @@ usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMs
 	ci = &cis[localClientNum];
 
 #ifdef TA_PATHSYS // 2DMODE
-#warning "ZTM: Need to Fix this"
-	//ci->pathMode = DA_ElementPointer(cl.snap.playerStates, cl.snap.lcIndex[localClientNum])->pathMode;
+	if ( cg.snap && cg.snap->lcIndex[ localClientNum ] != -1 ) {
+		ci->pathMode = cg.snap->pss[ cg.snap->lcIndex[ localClientNum ] ].pathMode;
+	} else {
+		ci->pathMode = PATHMODE_NONE;
+	}
 #endif
 
 	VectorCopy( lc->viewangles, oldAngles );
