@@ -1729,6 +1729,12 @@ typedef struct {
 	int		numDrawSurfs;
 } drawSurfsCommand_t;
 
+typedef enum {
+	ST_TGA,
+	ST_JPEG,
+	ST_PNG
+} screenshotType_e;
+
 typedef struct {
 	int commandId;
 	int x;
@@ -1736,7 +1742,7 @@ typedef struct {
 	int width;
 	int height;
 	char *fileName;
-	qboolean jpeg;
+	screenshotType_e type;
 } screenshotCommand_t;
 
 typedef struct {
@@ -1843,9 +1849,7 @@ void RB_SetGL2D (void);
 #endif
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
-#ifdef IOQ3ZTM // PNG_SCREENSHOTS
 void RE_SavePNG(const char *filename, int width, int height, byte *data, int padding);
-#endif
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
                 unsigned char *image_buffer, int padding);
 size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
