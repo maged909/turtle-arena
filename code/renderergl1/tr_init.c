@@ -406,58 +406,19 @@ RB_TakeScreenshotTGA
 */  
 void RB_TakeScreenshotTGA(int x, int y, int width, int height, char *fileName)
 {
-	byte *allbuf, *buffer;
-	byte *srcptr, *destptr;
-	byte *endline, *endmem;
-	byte temp;
-	
-	int linelen, padlen;
-	size_t offset = 18, memcount;
-		
-	allbuf = RB_ReadPixels(x, y, width, height, &offset, &padlen);
-	buffer = allbuf + offset - 18;
-	
-	Com_Memset (buffer, 0, 18);
-	buffer[2] = 2;		// uncompressed type
-	buffer[12] = width & 255;
-	buffer[13] = width >> 8;
-	buffer[14] = height & 255;
-	buffer[15] = height >> 8;
-	buffer[16] = 24;	// pixel size
+	byte *buffer;
+	size_t offset = 0, memcount;
+	int padlen;
 
-	// swap rgb to bgr and remove padding from line endings
-	linelen = width * 3;
-	
-	srcptr = destptr = allbuf + offset;
-	endmem = srcptr + (linelen + padlen) * height;
-	
-	while(srcptr < endmem)
-	{
-		endline = srcptr + linelen;
-
-		while(srcptr < endline)
-		{
-			temp = srcptr[0];
-			*destptr++ = srcptr[2];
-			*destptr++ = srcptr[1];
-			*destptr++ = temp;
-			
-			srcptr += 3;
-		}
-		
-		// Skip the pad
-		srcptr += padlen;
-	}
-
-	memcount = linelen * height;
+	buffer = RB_ReadPixels(x, y, width, height, &offset, &padlen);
+	memcount = (width * 3 + padlen) * height;
 
 	// gamma correct
 	if(glConfig.deviceSupportsGamma)
-		R_GammaCorrect(allbuf + offset, memcount);
+		R_GammaCorrect(buffer + offset, memcount);
 
-	ri.FS_WriteFile(fileName, buffer, memcount + 18);
-
-	ri.Hunk_FreeTempMemory(allbuf);
+	RE_SaveTGA(fileName, width, height, buffer + offset, padlen);
+	ri.Hunk_FreeTempMemory(buffer);
 }
 
 /* 
@@ -582,8 +543,7 @@ levelshots are specialized 128*128 thumbnails for
 the menu system, sampled down from full screen distorted images
 ====================
 */
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS PNG_SCREENSHOTS
-void R_LevelShot( qboolean jpg ) {
+void R_LevelShot( screenshotType_e type, const char *ext ) {
 	char		fileName[MAX_OSPATH];
 	byte		*source;
 	byte		*resample, *resamplestart;
@@ -596,24 +556,15 @@ void R_LevelShot( qboolean jpg ) {
 	int			r, g, b;
 	float		xScale, yScale;
 	int			xx, yy;
+	int			width, height;
 	int			arg;
-	// ZTM: NOTE: Q3 used 128x128, Team Arena used 192x192
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	int width = 192;
-	int height = 192;
-#else
-	int width = 128;
-	int height = 128;
-#endif
 
 	// Allow custom resample width/height
 	arg = atoi(ri.Cmd_Argv(2));
 	if (arg > 0)
 		width = height = arg;
-
-	arg = atoi(ri.Cmd_Argv(3));
-	if (arg > 0)
-		height = arg;
+	else
+		width = height = 128;
 
 	if (width > glConfig.vidWidth)
 		width = glConfig.vidWidth;
@@ -621,9 +572,9 @@ void R_LevelShot( qboolean jpg ) {
 		height = glConfig.vidHeight;
 
 #ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s_small.%s", tr.world->baseName, jpg ? "jpg" : "png");
+	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s_small%s", tr.world->baseName, ext);
 #else
-	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s.%s", tr.world->baseName, jpg ? "jpg" : "png");
+	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s%s", tr.world->baseName, ext);
 #endif
 
 	source = RB_ReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, &offset, &spadlen);
@@ -672,9 +623,11 @@ void R_LevelShot( qboolean jpg ) {
 	if(glConfig.deviceSupportsGamma)
 		R_GammaCorrect(resample + offset, memcount);
 
-	if (jpg)
+	if ( type == ST_TGA )
+		RE_SaveTGA(fileName, width, height, resample + offset, rpadlen);
+	else if ( type == ST_JPEG )
 		RE_SaveJPG(fileName, r_screenshotJpegQuality->integer, width, height, resample + offset, rpadlen);
-	else
+	else if ( type == ST_PNG )
 		RE_SavePNG(fileName, width, height, resample + offset, rpadlen);
 
 	ri.Hunk_FreeTempMemory(resample);
@@ -682,66 +635,6 @@ void R_LevelShot( qboolean jpg ) {
 
 	ri.Printf( PRINT_ALL, "Wrote %s\n", fileName );
 }
-#else
-void R_LevelShot( void ) {
-	char		checkname[MAX_OSPATH];
-	byte		*buffer;
-	byte		*source, *allsource;
-	byte		*src, *dst;
-	size_t			offset = 0;
-	int			padlen;
-	int			x, y;
-	int			r, g, b;
-	float		xScale, yScale;
-	int			xx, yy;
-
-	Com_sprintf(checkname, sizeof(checkname), "levelshots/%s.tga", tr.world->baseName);
-
-	allsource = RB_ReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, &offset, &padlen);
-	source = allsource + offset;
-
-	buffer = ri.Hunk_AllocateTempMemory(128 * 128*3 + 18);
-	Com_Memset (buffer, 0, 18);
-	buffer[2] = 2;		// uncompressed type
-	buffer[12] = 128;
-	buffer[14] = 128;
-	buffer[16] = 24;	// pixel size
-
-	// resample from source
-	xScale = glConfig.vidWidth / 512.0f;
-	yScale = glConfig.vidHeight / 384.0f;
-	for ( y = 0 ; y < 128 ; y++ ) {
-		for ( x = 0 ; x < 128 ; x++ ) {
-			r = g = b = 0;
-			for ( yy = 0 ; yy < 3 ; yy++ ) {
-				for ( xx = 0 ; xx < 4 ; xx++ ) {
-					src = source + (3 * glConfig.vidWidth + padlen) * (int)((y*3 + yy) * yScale) +
-						3 * (int) ((x*4 + xx) * xScale);
-					r += src[0];
-					g += src[1];
-					b += src[2];
-				}
-			}
-			dst = buffer + 18 + 3 * ( y * 128 + x );
-			dst[0] = b / 12;
-			dst[1] = g / 12;
-			dst[2] = r / 12;
-		}
-	}
-
-	// gamma correct
-	if ( glConfig.deviceSupportsGamma ) {
-		R_GammaCorrect( buffer + 18, 128 * 128 * 3 );
-	}
-
-	ri.FS_WriteFile( checkname, buffer, 128 * 128*3 + 18 );
-
-	ri.Hunk_FreeTempMemory(buffer);
-	ri.Hunk_FreeTempMemory(allsource);
-
-	ri.Printf( PRINT_ALL, "Wrote %s\n", checkname );
-}
-#endif
 
 /* 
 ================== 
@@ -764,11 +657,10 @@ void R_ScreenShotTGA_f (void) {
 #endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
+		R_LevelShot( ST_TGA, ".tga" );
 #ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-		R_LevelShot(qfalse);
 		levelshot = qtrue;
 #else
-		R_LevelShot();
 		return;
 #endif
 	}
@@ -837,11 +729,10 @@ void R_ScreenShotJPEG_f (void) {
 #endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
+		R_LevelShot( ST_JPEG, ".jpg" );
 #ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-		R_LevelShot(qtrue);
 		levelshot = qtrue;
 #else
-		R_LevelShot();
 		return;
 #endif
 	}
@@ -910,11 +801,10 @@ void R_ScreenShotPNG_f (void) {
 #endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
+		R_LevelShot( ST_PNG, ".png" );
 #ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-		R_LevelShot(qfalse);
 		levelshot = qtrue;
 #else
-		R_LevelShot();
 		return;
 #endif
 	}
