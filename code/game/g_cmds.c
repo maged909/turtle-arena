@@ -498,6 +498,8 @@ hide the scoreboard, and take a special screenshot
 */
 void Cmd_LevelShot_f(gentity_t *ent)
 {
+	char		arg[MAX_TOKEN_CHARS];
+
 	if(!ent->client->pers.localClient)
 	{
 		trap_SendServerCommand(ent-g_entities,
@@ -517,7 +519,8 @@ void Cmd_LevelShot_f(gentity_t *ent)
 	}
 
 	BeginIntermission();
-	trap_SendServerCommand(ent-g_entities, "clientLevelShot");
+	trap_Argv( 1, arg, sizeof( arg ) );
+	trap_SendServerCommandEx( ent->client->pers.connectionNum, -1, va( "clientLevelShot %s", arg ) );
 }
 
 

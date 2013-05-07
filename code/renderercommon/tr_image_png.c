@@ -34,14 +34,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "../qcommon/puff.h"
 
-#ifdef IOQ3ZTM // PNG_SCREENSHOTS
-#ifdef USE_LOCAL_HEADERS
-#include "../zlib/zlib.h"
-#else
-#include <zlib.h>
-#endif
-#endif
-
 // we could limit the png size to a lower value here
 #ifndef INT_MAX
 #define INT_MAX 0x1fffffff
@@ -97,9 +89,7 @@ typedef uint32_t PNG_ChunkCRC;
 #define MAKE_CHUNKTYPE(a,b,c,d) (((a) << 24) | ((b) << 16) | ((c) << 8) | ((d)))
 
 #define PNG_ChunkType_IHDR MAKE_CHUNKTYPE('I', 'H', 'D', 'R')
-#ifdef IOQ3ZTM // PNG_SCREENSHOTS
 #define PNG_ChunkType_tEXt MAKE_CHUNKTYPE('t', 'E', 'X', 't')
-#endif
 #define PNG_ChunkType_PLTE MAKE_CHUNKTYPE('P', 'L', 'T', 'E')
 #define PNG_ChunkType_IDAT MAKE_CHUNKTYPE('I', 'D', 'A', 'T')
 #define PNG_ChunkType_IEND MAKE_CHUNKTYPE('I', 'E', 'N', 'D')
@@ -2506,7 +2496,6 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 	CloseBufferedFile(ThePNG);
 }
 
-#ifdef IOQ3ZTM // PNG_SCREENSHOTS
 /*
  * Encode a non-interlaced 8-bit true color image
  */
@@ -2648,11 +2637,7 @@ void RE_SavePNG(const char *filename, int width, int height, byte *data, int pad
 	PNG_ChunkCRC			CRC;
 	void					*crcPtr;
 	int						numtEXt = 0;
-#ifdef TA_SPLITVIEW
-	#define					NUMTEXT 6+MAX_SPLITVIEW
-#else
-	#define					NUMTEXT 7
-#endif
+	#define					NUMTEXT 5+MAX_SPLITVIEW*2
 	struct
 	{
 		char key[80]; // PNG limits to 79+'\0'.
@@ -2698,32 +2683,24 @@ void RE_SavePNG(const char *filename, int width, int height, byte *data, int pad
 	ri.Cvar_VariableStringBuffer("username", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 	numtEXt++;
 	Q_strncpyz(tEXt[numtEXt].key, "Description", sizeof (tEXt[numtEXt].key));
-	Q_strncpyz(tEXt[numtEXt].text, PRODUCT_NAME " Screenshot", sizeof (tEXt[numtEXt].text));
-	numtEXt++;
-	Q_strncpyz(tEXt[numtEXt].key, "Playername", sizeof (tEXt[numtEXt].key));
-	ri.Cvar_VariableStringBuffer("name", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
-	numtEXt++;
-	Q_strncpyz(tEXt[numtEXt].key, "Map", sizeof (tEXt[numtEXt].key));
-	ri.Cvar_VariableStringBuffer("mapname", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
+	ri.Cvar_VariableStringBuffer("com_productName", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 	numtEXt++;
 	Q_strncpyz(tEXt[numtEXt].key, "Mapname", sizeof (tEXt[numtEXt].key));
+	ri.Cvar_VariableStringBuffer("mapname", tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
+	numtEXt++;
+	Q_strncpyz(tEXt[numtEXt].key, "Mapmessage", sizeof (tEXt[numtEXt].key));
 	ri.CL_GetMapMessage(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
 	numtEXt++;
-#ifdef TA_SPLITVIEW
-	Q_strncpyz(tEXt[numtEXt].key, "Location", sizeof (tEXt[numtEXt].key));
-	ri.CL_GetClientLocation(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text), 0);
-	numtEXt++;
-	for (i = 1; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < ri.CL_MaxSplitView(); i++) {
+		snprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Playername%d", i+1);
+		ri.Cvar_VariableStringBuffer(Com_LocalClientCvarName(i, "name"), tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
+		numtEXt++;
+
 		if (ri.CL_GetClientLocation(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text), i)) {
-			snprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Location %d", i+1);
+			snprintf(tEXt[numtEXt].key, sizeof (tEXt[numtEXt].key), "Location%d", i+1);
 			numtEXt++;
 		}
 	}
-#else
-	Q_strncpyz(tEXt[numtEXt].key, "Location", sizeof (tEXt[numtEXt].key));
-	ri.CL_GetClientLocation(tEXt[numtEXt].text, sizeof (tEXt[numtEXt].text));
-	numtEXt++;
-#endif
 
 
 	/*
@@ -2813,4 +2790,3 @@ void RE_SavePNG(const char *filename, int width, int height, byte *data, int pad
 	ri.Free(compressedData);
 	ri.Free(imageData);
 }
-#endif
