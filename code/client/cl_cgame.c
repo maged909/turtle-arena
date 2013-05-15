@@ -1100,11 +1100,11 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	switch( args[0] ) {
 	case TRAP_MEMSET:
 		Com_Memset( VMA(1), args[2], args[3] );
-		return 0;
+		return args[1];
 
 	case TRAP_MEMCPY:
 		Com_Memcpy( VMA(1), VMA(2), args[3] );
-		return 0;
+		return args[1];
 
 	case TRAP_STRNCPY:
 		strncpy( VMA(1), VMA(2), args[3] );
@@ -1187,11 +1187,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_FS_FOPENFILE:
 		return FS_FOpenFileByMode( VMA(1), VMA(2), args[3] );
 	case CG_FS_READ:
-		FS_Read2( VMA(1), args[2], args[3] );
-		return 0;
+		return FS_Read2( VMA(1), args[2], args[3] );
 	case CG_FS_WRITE:
-		FS_Write( VMA(1), args[2], args[3] );
-		return 0;
+		return FS_Write( VMA(1), args[2], args[3] );
 	case CG_FS_SEEK:
 		return FS_Seek( args[1], args[2], args[3] );
 	case CG_FS_FCLOSEFILE:
@@ -1619,6 +1617,17 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return re.GetEntityToken( VMA(1), args[2] );
 	case CG_R_INPVS:
 		return re.inPVS( VMA(1), VMA(2) );
+
+	case CG_R_SET_SURFACE_SHADER:
+		re.SetSurfaceShader( args[1], VMA(2) );
+		return 0;
+	case CG_R_GET_SURFACE_SHADER:
+		return re.GetSurfaceShader( args[1], args[2] );
+	case CG_R_GET_SHADER_FROM_MODEL:
+		return re.GetShaderFromModel( args[1], args[2], args[3] );
+	case CG_R_GET_SHADER_NAME:
+		re.GetShaderName( args[1], VMA(2), args[3] );
+		return 0;
 
 	default:
 	        assert(0);
