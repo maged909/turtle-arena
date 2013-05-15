@@ -537,7 +537,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
 #ifdef TA_MISC // MATERIALS
-	{ &cg_impactDebris, "cg_impactDebris", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_impactDebris, "cg_impactDebris", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0, 10 ) },
 #endif
 #ifdef IOQ3ZTM // LASERTAG
 	{ &cg_laserTag, "g_laserTag", "0", CVAR_SERVERINFO, RANGE_BOOL },
