@@ -135,12 +135,12 @@ int		trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	return syscall( CG_FS_FOPENFILE, qpath, f, mode );
 }
 
-void	trap_FS_Read( void *buffer, int len, fileHandle_t f ) {
-	syscall( CG_FS_READ, buffer, len, f );
+int		trap_FS_Read( void *buffer, int len, fileHandle_t f ) {
+	return syscall( CG_FS_READ, buffer, len, f );
 }
 
-void	trap_FS_Write( const void *buffer, int len, fileHandle_t f ) {
-	syscall( CG_FS_WRITE, buffer, len, f );
+int		trap_FS_Write( const void *buffer, int len, fileHandle_t f ) {
+	return syscall( CG_FS_WRITE, buffer, len, f );
 }
 
 int		trap_FS_Seek( fileHandle_t f, long offset, int origin ) {
@@ -420,6 +420,22 @@ void trap_R_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, 
 
 void trap_R_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater ) {
 	syscall( CG_R_GET_VIEW_FOG, origin, type, color, depthForOpaque, density, inwater );
+}
+
+void		trap_R_SetSurfaceShader( int surfaceNum, const char *name ) {
+	syscall( CG_R_SET_SURFACE_SHADER, surfaceNum, name );
+}
+
+qhandle_t	trap_R_GetSurfaceShader( int surfaceNum, int withlightmap ) {
+	return syscall( CG_R_GET_SURFACE_SHADER, surfaceNum, withlightmap );
+}
+
+qhandle_t	trap_R_GetShaderFromModel( qhandle_t hModel, int surfnum, int withlightmap ) {
+	return syscall( CG_R_GET_SHADER_FROM_MODEL, hModel, surfnum, withlightmap );
+}
+
+void		trap_R_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize ) {
+	syscall( CG_R_GET_SHADER_NAME, hShader, buffer, bufferSize );
 }
 
 void		trap_GetClipboardData( char *buf, int bufsize ) {

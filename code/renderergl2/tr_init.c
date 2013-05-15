@@ -1666,5 +1666,10 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp, qboolean headless ) 
 	re.GetGlobalFog = RE_GetGlobalFog;
 	re.GetViewFog = RE_GetViewFog;
 
+	re.SetSurfaceShader = RE_SetSurfaceShader;
+	re.GetSurfaceShader = RE_GetSurfaceShader;
+	re.GetShaderFromModel = RE_GetShaderFromModel;
+	re.GetShaderName = RE_GetShaderName;
+
 	return &re;
 }

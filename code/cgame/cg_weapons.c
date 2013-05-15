@@ -3841,7 +3841,7 @@ void CG_PlayerHitEffect( vec3_t origin, int entityNum, qboolean meleeDamage ) {
 CG_LaunchModel
 ==================
 */
-localEntity_t *CG_LaunchModel( vec3_t origin, vec3_t velocity, qhandle_t hModel, float maxSize ) {
+localEntity_t *CG_LaunchModel( vec3_t origin, vec3_t velocity, qhandle_t hModel, qhandle_t hShader, float maxSize ) {
 	localEntity_t	*le;
 	refEntity_t		*re;
 	vec3_t angles;
@@ -3876,6 +3876,7 @@ localEntity_t *CG_LaunchModel( vec3_t origin, vec3_t velocity, qhandle_t hModel,
 	re->nonNormalizedAxes = qtrue;
 
 	re->hModel = hModel;
+	re->customShader = hShader;
 
 	le->pos.trType = TR_GRAVITY;
 	VectorCopy( origin, le->pos.trBase );
@@ -3908,6 +3909,7 @@ void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFla
 	vec3_t velocity;
 	vec3_t newOrigin;
 	trace_t trace;
+	qhandle_t hSurfShader;
 
 	if (cg_impactDebris.integer <= 0) {
 		return;
@@ -3924,13 +3926,14 @@ void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFla
 		// Move away from surface
 		VectorMA( origin, 10, dir, origin );
 
-		// Do a trace to get the flags.
-		if (surfaceFlags == -1)
-		{
-			// Move into surface (- 10 [return to origin] - 20 [into surface])
-			VectorMA( origin, -30, dir, newOrigin );
+		// Move into surface (- 10 [return to origin] - 20 [into surface])
+		VectorMA( origin, -30, dir, newOrigin );
 
-			CG_Trace( &trace, origin, NULL, NULL, newOrigin, skipNum, MASK_PLAYERSOLID );
+		CG_Trace( &trace, origin, NULL, NULL, newOrigin, skipNum, MASK_PLAYERSOLID );
+
+		hSurfShader = trap_R_GetSurfaceShader( trace.surfaceNum, 0 );
+
+		if (surfaceFlags == -1) {
 			surfaceFlags = trace.surfaceFlags;
 		}
 	}
@@ -3939,6 +3942,8 @@ void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFla
 		CG_Trace( &trace, origin, NULL, NULL, origin, skipNum, MASK_PLAYERSOLID );
 
 		VectorMA( origin, 10, trace.plane.normal, origin );
+
+		hSurfShader = trap_R_GetSurfaceShader( trace.surfaceNum, 0 );
 
 		if (surfaceFlags == -1) {
 			surfaceFlags = trace.surfaceFlags;
@@ -3999,7 +4004,7 @@ void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFla
 				//}
 
 				model = cgs.media.matModels[i][rand()%cgs.media.matNumModels[i]];
-				CG_LaunchModel(newOrigin, velocity, model, radius/4);
+				CG_LaunchModel(newOrigin, velocity, model, materialInfo[i].surfaceShader ? hSurfShader : 0, radius/4);
 			}
 		}
 	}
