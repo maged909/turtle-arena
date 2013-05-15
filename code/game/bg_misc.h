@@ -1566,8 +1566,9 @@ typedef enum
 
 typedef struct
 {
-	char	*name;
-	int		surfaceFlag;
+	char		*name;
+	int			surfaceFlag;
+	qboolean	surfaceShader; // use shader from surface
 } materialInfo_t;
 
 extern materialInfo_t materialInfo[NUM_MATERIAL_TYPES];

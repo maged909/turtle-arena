@@ -276,13 +276,13 @@ int modNamesSize = ARRAY_LEN( modNames );
 #ifdef TA_MISC // MATERIALS
 materialInfo_t materialInfo[NUM_MATERIAL_TYPES] = {
 	{"none",	0 },
-	{"dirt",	SURF_DIRT },
-	{"grass",	SURF_GRASS },
-	{"wood",	SURF_WOOD },
-	{"stone",	SURF_STONE },
-	{"sparks",	SURF_SPARKS },
-	{"glass",	SURF_GLASS },
-	{"metal",	SURF_METAL }
+	{"dirt",	SURF_DIRT, qtrue },
+	{"grass",	SURF_GRASS, qtrue },
+	{"wood",	SURF_WOOD, qtrue },
+	{"stone",	SURF_STONE, qtrue },
+	{"sparks",	SURF_SPARKS, qfalse },
+	{"glass",	SURF_GLASS, qfalse },
+	{"metal",	SURF_METAL, qtrue }
 };
 #endif
 
