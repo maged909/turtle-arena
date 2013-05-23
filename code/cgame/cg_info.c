@@ -248,49 +248,7 @@ void CG_DrawInformation( void ) {
 	}
 
 	// game type
-	switch ( cgs.gametype ) {
-	case GT_FFA:
-		s = "Free For All";
-		break;
-	case GT_SINGLE_PLAYER:
-#ifdef TA_SP
-		if (!cg_singlePlayerActive.integer)
-			s = "Cooperative";
-		else
-#endif
-		s = "Single Player";
-		break;
-	case GT_TOURNAMENT:
-#ifdef TA_MISC // tournament to duel
-		s = "Duel";
-#else
-		s = "Tournament";
-#endif
-		break;
-	case GT_TEAM:
-		s = "Team Deathmatch";
-		break;
-	case GT_CTF:
-		s = "Capture The Flag";
-		break;
-#ifdef MISSIONPACK
-	case GT_1FCTF:
-		s = "One Flag CTF";
-		break;
-	case GT_OBELISK:
-		s = "Overload";
-		break;
-#ifdef MISSIONPACK_HARVESTER
-	case GT_HARVESTER:
-		s = "Harvester";
-		break;
-#endif
-#endif
-	default:
-		s = "Unknown Gametype";
-		break;
-	}
-	UI_DrawProportionalString( 320, y, s,
+	UI_DrawProportionalString( 320, y, cgs.gametypeName,
 		UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, colorWhite );
 	y += PROP_HEIGHT;
 
