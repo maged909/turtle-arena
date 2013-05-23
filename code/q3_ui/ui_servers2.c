@@ -205,44 +205,6 @@ static const char *sortkey_items[] = {
 	NULL
 };
 
-static char* gamenames[] = {
-#ifdef IOQ3ZTM // ZTM: Lets be consistent.
-	"FFA ",	// free for all
-#else
-	"DM ",	// deathmatch
-#endif
-#ifdef TA_MISC // tournament to duel
-	"Duel", // duel
-#else
-	"1v1",	// tournament
-#endif
-#ifdef TA_SP
-	"Coop",	// single player
-#else
-	"SP ",	// single player
-#endif
-	"Team DM",	// team deathmatch
-	"CTF",	// capture the flag
-	"One Flag CTF",		// one flag ctf
-#ifdef IOQ3ZTM // Look better.
-	"Overload",				// Overload
-#else
-	"OverLoad",				// Overload
-#endif
-	"Harvester",			// Harvester
-#ifndef TURTLEARENA
-	"Rocket Arena 3",	// Rocket Arena 3
-	"Q3F",						// Q3F
-	"Urban Terror",		// Urban Terror
-	"OSP",						// Orange Smoothie Productions
-#endif
-	"???",			// unknown
-	NULL
-};
-#ifdef IOQ3ZTM // Net gametype browse
-int numNetGametypes = ARRAY_LEN(gamenames) - 2;
-#endif
-
 static char* netnames[] = {
 	"??? ",
 	"UDP ",
@@ -271,8 +233,7 @@ typedef struct servernode_s {
 #endif
 	int		maxclients;
 	int		pingtime;
-	int		gametype;
-	char	gamename[12];
+	char	gametypeName[12];
 	int		nettype;
 	int		minPing;
 	int		maxPing;
@@ -414,13 +375,7 @@ static int QDECL ArenaServers_Compare( const void *arg1, const void *arg2 ) {
 		return -1;
 
 	case SORT_GAME:
-		if( t1->gametype < t2->gametype ) {
-			return -1;
-		}
-		if( t1->gametype == t2->gametype ) {
-			return 0;
-		}
-		return 1;
+		return Q_stricmp( t1->gametypeName, t2->gametypeName );
 
 	case SORT_PING:
 		if( t1->pingtime < t2->pingtime ) {
@@ -726,7 +681,8 @@ static void ArenaServers_UpdateMenu( void ) {
 #endif
 
 		gametype = ArenaServers_GametypeForGames(g_gametype);
-		if( gametype != -1 && servernodeptr->gametype != gametype ) {
+		if( gametype >= 0 && gametype < GT_MAX_GAME_TYPE
+			&& Q_stricmp(servernodeptr->gametypeName, bg_netGametypeNames[gametype]) != 0 ) {
 			continue;
 		}
 
@@ -753,7 +709,7 @@ static void ArenaServers_UpdateMenu( void ) {
 #else
 			servernodeptr->numclients,
 #endif
- 			servernodeptr->maxclients, servernodeptr->gamename,
+ 			servernodeptr->maxclients, servernodeptr->gametypeName,
 			netnames[servernodeptr->nettype], pingColor, servernodeptr->pingtime);
 		j++;
 	}
@@ -836,9 +792,6 @@ ArenaServers_Insert
 static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 {
 	servernode_t*	servernodeptr;
-	char*			s;
-	int				i;
-
 
 	if ((pingtime >= ArenaServers_MaxPing()) && (g_servertype != UIAS_FAVORITES))
 	{
@@ -896,28 +849,8 @@ static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 		servernodeptr->nettype = 0;
 	}
 
-	s = Info_ValueForKey( info, "game");
-	i = atoi( Info_ValueForKey( info, "gametype") );
-	if( i < 0 ) {
-		i = 0;
-	}
-#ifdef IOQ3ZTM // Net gametype browse
-	else if (i > numNetGametypes) {
-		i = numNetGametypes;
-	}
-#else
-	else if( i > 11 ) {
-		i = 12;
-	}
-#endif
-	if( *s ) {
-		servernodeptr->gametype = i;//-1;
-		Q_strncpyz( servernodeptr->gamename, s, sizeof(servernodeptr->gamename) );
-	}
-	else {
-		servernodeptr->gametype = i;
-		Q_strncpyz( servernodeptr->gamename, gamenames[i], sizeof(servernodeptr->gamename) );
-	}
+	Q_strncpyz( servernodeptr->gametypeName, Info_ValueForKey( info, "gametype"), sizeof(servernodeptr->gametypeName) );
+	Q_CleanStr( servernodeptr->gametypeName );
 }
 
 
@@ -1219,7 +1152,7 @@ void ArenaServers_StartRefresh( void )
 {
 	int		i;
 	int		gametype;
-	char	myargs[32], protocol[32];
+	char	myargs[64], protocol[32];
 
 	memset( g_arenaservers.serverlist, 0, g_arenaservers.maxservers*sizeof(table_t) );
 
@@ -1251,7 +1184,7 @@ void ArenaServers_StartRefresh( void )
 
 		// add requested gametype to args for dpmaster protocol
 		if (gametype != -1) {
-			Com_sprintf( myargs, sizeof (myargs), " gametype=%i", gametype );
+			Com_sprintf( myargs, sizeof (myargs), " gametype=%s", bg_netGametypeNames[gametype] );
 		} else {
 			myargs[0] = '\0';
 		}

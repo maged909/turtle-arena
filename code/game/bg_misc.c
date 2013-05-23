@@ -286,6 +286,54 @@ materialInfo_t materialInfo[NUM_MATERIAL_TYPES] = {
 };
 #endif
 
+
+// may not contain spaces, dpmaster will reject the server
+const char *bg_netGametypeNames[GT_MAX_GAME_TYPE] = {
+	"FFA",
+#ifdef TA_MISC // tournament to duel
+	"Duel",
+#else
+	"Tournament",
+#endif
+#ifdef TA_SP
+	"Co-op",
+#else
+	"SP",
+#endif
+	"TeamDM",
+	"CTF",
+#ifdef MISSIONPACK
+	"1FCTF",
+	"Overload",
+#ifdef MISSIONPACK_HARVESTER
+	"Harvester"
+#endif
+#endif
+};
+
+const char *bg_displayGametypeNames[GT_MAX_GAME_TYPE] = {
+	"Free For All",
+#ifdef TA_MISC // tournament to duel
+	"Duel",
+#else
+	"Tournament",
+#endif
+#ifdef TA_SP
+	"Cooperative",
+#else
+	"Single Player",
+#endif
+	"Team Deathmatch",
+	"Capture the Flag",
+#ifdef MISSIONPACK
+	"One Flag CTF",
+	"Overload",
+#ifdef MISSIONPACK_HARVESTER
+	"Harvester"
+#endif
+#endif
+};
+
 /*
 ==============
 BG_CheckSpawnEntity
