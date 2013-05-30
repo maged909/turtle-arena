@@ -777,7 +777,6 @@ void BotGoalName(int number, char *name, int size)
 		} //end for
 	} //end for
 	strcpy(name, "");
-	return;
 } //end of the function BotGoalName
 //===========================================================================
 //
