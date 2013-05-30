@@ -1937,7 +1937,6 @@ static qboolean ParseShader( char **text )
 			shader.entityMergable = qtrue;
 			continue;
 		}
-		// ZTM: TODO: Use shader name set here instead of always "sun"
 		else if ( !Q_stricmp( token, "sunshader" ) ) {
 			token = COM_ParseExt( text, qfalse );
 			if ( !token[0] ) {
@@ -1945,8 +1944,7 @@ static qboolean ParseShader( char **text )
 				continue;
 			}
 
-			ri.Printf( PRINT_WARNING, "Sunshader = %s\n", token );
-			//tr.sunShaderName = CopyString( token );
+			Q_strncpyz( tr.sunShaderName, token, sizeof ( tr.sunShaderName ) );
 			continue;
 		}
 		// fogParms ( <red> <green> <blue> ) <depthForOpaque>
@@ -2433,7 +2431,7 @@ static void ComputeStageIteratorFunc( void )
 	if ( shader.isSky )
 	{
 		shader.optimalStageIteratorFunc = RB_StageIteratorSky;
-		goto done;
+		return;
 	}
 
 	if ( r_ignoreFastPath->integer )
@@ -2459,7 +2457,7 @@ static void ComputeStageIteratorFunc( void )
 							if ( !shader.numDeforms )
 							{
 								shader.optimalStageIteratorFunc = RB_StageIteratorVertexLitTexture;
-								goto done;
+								return;
 							}
 						}
 					}
@@ -2485,16 +2483,12 @@ static void ComputeStageIteratorFunc( void )
 						if ( shader.multitextureEnv )
 						{
 							shader.optimalStageIteratorFunc = RB_StageIteratorLightmappedMultitexture;
-							goto done;
 						}
 					}
 				}
 			}
 		}
 	}
-
-done:
-	return;
 }
 
 typedef struct {
@@ -2793,7 +2787,7 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	*newShader = shader;
 
-	if ( shader.sort <= SS_OPAQUE ) {
+	if ( shader.sort <= SS_SEE_THROUGH ) {
 		newShader->fogPass = FP_EQUAL;
 	} else if ( shader.contentFlags & CONTENTS_FOG ) {
 		newShader->fogPass = FP_LE;
@@ -3535,7 +3529,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			flags |= IMGFLAG_CLAMPTOEDGE;
 		}
 
-		image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
+		image = R_FindImageFile( fileName, IMGTYPE_COLORALPHA, flags );
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
 			shader.defaultShader = qtrue;
@@ -3991,7 +3985,11 @@ static void CreateExternalShaders( void ) {
 		}
 	}
 
-	tr.sunShader = R_FindShader( "sun", LIGHTMAP_NONE, qtrue );
+	if ( !tr.sunShaderName[0] ) {
+		Q_strncpyz( tr.sunShaderName, "sun", sizeof ( tr.sunShaderName ) );
+	}
+
+	tr.sunShader = R_FindShader( tr.sunShaderName, LIGHTMAP_NONE, qtrue );
 }
 
 /*
@@ -4007,6 +4005,13 @@ void R_InitShaders( void ) {
 	CreateInternalShaders();
 
 	ScanAndLoadShaderFiles();
+}
 
+/*
+==================
+R_InitExternalShaders
+==================
+*/
+void R_InitExternalShaders( void ) {
 	CreateExternalShaders();
 }

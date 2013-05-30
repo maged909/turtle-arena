@@ -165,7 +165,6 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 	
 	if ( surf->cullinfo.type & CULLINFO_PLANE )
 	{
-		int i;
 		for ( i = 0 ; i < tr.refdef.num_dlights ; i++ ) {
 			if ( ! ( dlightBits & ( 1 << i ) ) ) {
 				continue;
@@ -246,7 +245,6 @@ static int R_PshadowSurface( msurface_t *surf, int pshadowBits ) {
 	
 	if ( surf->cullinfo.type & CULLINFO_PLANE )
 	{
-		int i;
 		for ( i = 0 ; i < tr.refdef.num_pshadows ; i++ ) {
 			if ( ! ( pshadowBits & ( 1 << i ) ) ) {
 				continue;
@@ -361,27 +359,15 @@ Return positive with /any part/ of the brush falling within a fog volume
 =================
 */
 int R_BmodelFogNum( trRefEntity_t *re, bmodel_t *bmodel ) {
-	int i, j;
-	fog_t *fog;
+	int i;
+	vec3_t mins, maxs;
 
-	for ( i = 1; i < tr.world->numfogs; i++ )
-	{
-		fog = &tr.world->fogs[ i ];
-		for ( j = 0; j < 3; j++ )
-		{
-			if ( re->e.origin[ j ] + bmodel->bounds[ 0 ][ j ] >= fog->bounds[ 1 ][ j ] ) {
-				break;
-			}
-			if ( re->e.origin[ j ] + bmodel->bounds[ 1 ][ j ] <= fog->bounds[ 0 ][ j ] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
+	for ( i = 0; i < 3; i++ ) {
+		mins[ i ] = re->e.origin[ i ] + bmodel->bounds[ 0 ][ i ];
+		maxs[ i ] = re->e.origin[ i ] + bmodel->bounds[ 0 ][ i ];
 	}
 
-	return R_DefaultFogNum();
+	return R_BoundsFogNum( &tr.refdef, mins, maxs );
 }
 
 /*
@@ -464,27 +450,7 @@ Return positive with /any part/ of the leaf falling within a fog volume
 =================
 */
 int R_LeafFogNum( mnode_t *node ) {
-	int i, j;
-	fog_t *fog;
-
-	for ( i = 1; i < tr.world->numfogs; i++ )
-	{
-		fog = &tr.world->fogs[ i ];
-		for ( j = 0; j < 3; j++ )
-		{
-			if ( node->mins[ j ] >= fog->bounds[ 1 ][ j ] ) {
-				break;
-			}
-			if ( node->maxs[ j ] <= fog->bounds[ 0 ][ j ] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
-
-	return R_DefaultFogNum();
+	return R_BoundsFogNum( &tr.refdef, node->mins, node->maxs );
 }
 
 #if 0

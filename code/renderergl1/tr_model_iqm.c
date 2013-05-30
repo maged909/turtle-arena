@@ -214,7 +214,7 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 	}
 	vertexarray = (iqmVertexArray_t *)((byte *)header + header->ofs_vertexarrays);
 	for( i = 0; i < header->num_vertexarrays; i++, vertexarray++ ) {
-		int	j, n, *intPtr;
+		int n, *intPtr;
 
 		if( vertexarray->size <= 0 || vertexarray->size > 4 ) {
 			return qfalse;
@@ -739,8 +739,6 @@ R_ComputeIQMFogNum
 =================
 */
 int R_ComputeIQMFogNum( iqmData_t *data, trRefEntity_t *ent ) {
-	int			i, j;
-	fog_t			*fog;
 	const vec_t		*bounds;
 	const vec_t		defaultBounds[6] = { -8, -8, -8, 8, 8, 8 };
 	vec3_t			diag, center;
@@ -762,22 +760,7 @@ int R_ComputeIQMFogNum( iqmData_t *data, trRefEntity_t *ent ) {
 	VectorAdd( ent->e.origin, center, localOrigin );
 	radius = 0.5f * VectorLength( diag );
 
-	for ( i = 1 ; i < tr.world->numfogs ; i++ ) {
-		fog = &tr.world->fogs[i];
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( localOrigin[j] - radius >= fog->bounds[1][j] ) {
-				break;
-			}
-			if ( localOrigin[j] + radius <= fog->bounds[0][j] ) {
-				break;
-			}
-		}
-		if ( j == 3 ) {
-			return i;
-		}
-	}
-
-	return R_DefaultFogNum();
+	return R_PointFogNum( &tr.refdef, localOrigin, radius );
 }
 
 /*

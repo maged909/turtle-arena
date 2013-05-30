@@ -1002,14 +1002,12 @@ typedef struct drawSurf_s {
 typedef struct srfPoly_s {
 	surfaceType_t	surfaceType;
 	qhandle_t		hShader;
-	int				fogIndex;
 	int				numVerts;
 	polyVert_t		*verts;
 } srfPoly_t;
 
 typedef struct srfPolyBuffer_s {
 	surfaceType_t surfaceType;
-	int fogIndex;
 	polyBuffer_t *pPolyBuffer;
 } srfPolyBuffer_t;
 
@@ -1796,6 +1794,7 @@ typedef struct {
 
 	shader_t				*flareShader;
 	shader_t				*sunShader;
+	char					sunShaderName[MAX_QPATH];
 	shader_t				*sunFlareShader;
 
 	int						numLightmaps;
@@ -2234,6 +2233,7 @@ shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
+void		R_InitExternalShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
 void		RE_SetSurfaceShader( int surfaceNum, const char *name );
@@ -2783,7 +2783,8 @@ void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, floa
 void RE_GetViewFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density, qboolean inwater );
 
 // fog stuff
-int R_DefaultFogNum( void );
+int R_BoundsFogNum( const trRefdef_t *refdef, vec3_t mins, vec3_t maxs );
+int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius );
 void R_FogOff( void );
 void RB_FogOn( void );
 void RB_Fog( int fogNum );
