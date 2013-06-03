@@ -1234,33 +1234,6 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 
 			continue;
 		}
-		// implicit default mapping to eliminate redundant/incorrect explicit shader stages
-		else if ( !Q_stricmpn( token, "implicit", 8 ) ) {
-			// set implicit mapping state
-			if ( !Q_stricmp( token, "implicitBlend" ) ) {
-				implicitStateBits = GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-				implicitCullType = CT_TWO_SIDED;
-			} else if ( !Q_stricmp( token, "implicitMask" ) )     {
-				implicitStateBits = GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_80;
-				implicitCullType = CT_TWO_SIDED;
-			} else    // "implicitMap"
-			{
-				implicitStateBits = GLS_DEPTHMASK_TRUE;
-				implicitCullType = CT_FRONT_SIDED;
-			}
-
-			// get image
-			token = COM_ParseExt( text, qfalse );
-			if ( token[ 0 ] != '\0' ) {
-				Q_strncpyz( implicitMap, token, sizeof( implicitMap ) );
-			} else {
-				implicitMap[ 0 ] = '-';
-				implicitMap[ 1 ] = '\0';
-			}
-
-			continue;
-		}
-		// unknown directive
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown parameter '%s' in shader '%s'\n", token, shader.name );
@@ -2227,6 +2200,32 @@ static qboolean ParseShader( char **text )
 			ParseSort( text );
 			continue;
 		}
+		// implicit default mapping to eliminate redundant/incorrect explicit shader stages
+		else if ( !Q_stricmpn( token, "implicit", 8 ) ) {
+			// set implicit mapping state
+			if ( !Q_stricmp( token, "implicitBlend" ) ) {
+				implicitStateBits = GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+				implicitCullType = CT_TWO_SIDED;
+			} else if ( !Q_stricmp( token, "implicitMask" ) )     {
+				implicitStateBits = GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_80;
+				implicitCullType = CT_TWO_SIDED;
+			} else    // "implicitMap"
+			{
+				implicitStateBits = GLS_DEPTHMASK_TRUE;
+				implicitCullType = CT_FRONT_SIDED;
+			}
+
+			// get image
+			token = COM_ParseExt( text, qfalse );
+			if ( token[ 0 ] != '\0' ) {
+				Q_strncpyz( implicitMap, token, sizeof( implicitMap ) );
+			} else {
+				implicitMap[ 0 ] = '-';
+				implicitMap[ 1 ] = '\0';
+			}
+
+			continue;
+		}
 #ifdef IOQ3ZTM // CELSHADING
 		// celoutline
 		else if ( !Q_stricmp( token, "celoutline" ) )
@@ -2400,6 +2399,7 @@ static qboolean ParseShader( char **text )
 			}
 		}
 #endif
+		// unknown directive
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
