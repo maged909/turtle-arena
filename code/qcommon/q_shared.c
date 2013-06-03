@@ -311,7 +311,7 @@ static	int		com_lines;
 
 void COM_BeginParseSession( const char *name )
 {
-	com_lines = 0;
+	com_lines = 1;
 	Com_sprintf(com_parsename, sizeof(com_parsename), "%s", name);
 }
 
@@ -500,6 +500,10 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 			data += 2;
 			while ( *data && ( *data != '*' || data[1] != '/' ) ) 
 			{
+				if ( *data == '\n' )
+				{
+					com_lines++;
+				}
 				data++;
 			}
 			if ( *data ) 
@@ -526,6 +530,10 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 				*data_p = ( char * ) data;
 				return com_token;
 			}
+			if ( c == '\n' )
+			{
+				com_lines++;
+			}
 			if (len < MAX_TOKEN_CHARS - 1)
 			{
 				com_token[len] = c;
@@ -544,8 +552,6 @@ char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 		}
 		data++;
 		c = *data;
-		if ( c == '\n' )
-			com_lines++;
 	} while (c>32 && c != delimiter);
 
 	com_token[len] = 0;
@@ -573,16 +579,14 @@ void COM_MatchToken( char **buf_p, char *match ) {
 =================
 SkipBracedSection
 
-The next token should be an open brace.
+The next token should be an open brace or set depth to 1 if already parsed it.
 Skips until a matching close brace is found.
 Internal brace depths are properly skipped.
 =================
 */
-void SkipBracedSection (char **program) {
+qboolean SkipBracedSection (char **program, int depth) {
 	char			*token;
-	int				depth;
 
-	depth = 0;
 	do {
 		token = COM_ParseExt( program, qtrue );
 		if( token[1] == 0 ) {
@@ -594,6 +598,8 @@ void SkipBracedSection (char **program) {
 			}
 		}
 	} while( depth && *program );
+
+	return ( depth == 0 );
 }
 
 /*

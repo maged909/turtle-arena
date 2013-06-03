@@ -1061,6 +1061,7 @@ typedef struct {
 	shader_t				*flareShader;
 	shader_t				*sunShader;
 	char					sunShaderName[MAX_QPATH];
+	float					sunShaderScale;
 
 	int						numLightmaps;
 	int						maxLightmaps;
@@ -1176,6 +1177,7 @@ extern cvar_t	*r_primitives;			// "0" = based on compiled vertex array existance
 extern cvar_t	*r_inGameVideo;				// controls whether in game video should be draw
 extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
 extern cvar_t	*r_drawSun;				// controls drawing of sun quad
+extern cvar_t	*r_forceSunScale;		// controls scale of sun quad
 extern cvar_t	*r_dynamiclight;		// dynamic lights enabled/disabled
 extern cvar_t	*r_dlightBacks;			// dlight non-facing surfaces for continuity
 
