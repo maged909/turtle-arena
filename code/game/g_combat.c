@@ -654,8 +654,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	int			i;
 	char		*killerName, *obit;
 #ifdef TA_WEAPSYS
-	int			weaponGroup;
-	int			projectile;
+	int			weaponGroup = 0;
+	int			projectile = 0;
 #endif
 
 	if ( self->client->ps.pm_type == PM_DEAD ) {
@@ -724,9 +724,6 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		{
 			projectile = bg_weapongroupinfo[attacker->s.weapon].weapon[0]->projnum;
 		}
-		else {
-			projectile = 0;
-		}
 
 		if (projectile > 0 && projectile < BG_NumProjectiles()) {
 			obit = va("%s [%s]", modNames[meansOfDeath], bg_projectileinfo[projectile].name);
@@ -742,8 +739,6 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 			))
 		{
 			weaponGroup = attacker->s.weapon;
-		} else {
-			weaponGroup = 0;
 		}
 
 		if (weaponGroup > 0 && weaponGroup < BG_NumWeaponGroups()) {
