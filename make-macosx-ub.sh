@@ -1,17 +1,17 @@
 #!/bin/sh
 CC=gcc-4.0
-GAMENAME="Extraorinary Beat X"
-IDENT="org.extraordinarybeatx.ebx"
-APPBUNDLE=ebx.app
-CLIENT=ebx
-SERVER=ebx-server
+GAMENAME="Turtle Arena"
+IDENT="org.turtlearena.turtlearena"
+APPBUNDLE=turtlearena.app
+CLIENT=turtlearena
+SERVER=turtlearena-server
 BINARY=$CLIENT.ub
 DEDBIN=$SERVER.ub
-PKGINFO=APPLEBXX
+PKGINFO=APPLTURL
 ICNS=misc/quake3.icns
-ICNSPKG=ebx.icns
+ICNSPKG=turtlearena.icns
 DESTDIR=build/release-darwin-ub
-BASEDIR=baseebx
+BASEDIR=baseturtle
 
 BIN_OBJ="
 	build/release-darwin-x86_64/$CLIENT.x86_64

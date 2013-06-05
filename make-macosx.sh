@@ -30,16 +30,16 @@ if [ -z "$DARWIN_GCC_ARCH" ]; then
 fi
 
 CC=gcc-4.0
-GAMENAME="Extraorinary Beat X"
-IDENT="org.extraordinarybeatx.ebx"
-APPBUNDLE=ebx.app
-BINARY=ebx.${BUILDARCH}
-DEDBIN=ebx-server.${BUILDARCH}
-PKGINFO=APPLEBXX
+GAMENAME="Turtle Arena"
+IDENT="org.turtlearena.turtlearena"
+APPBUNDLE=turtlearena.app
+BINARY=turtlearena.${BUILDARCH}
+DEDBIN=turtlearena-server.${BUILDARCH}
+PKGINFO=APPLTURL
 ICNS=misc/quake3.icns
-ICNSPKG=ebx.icns
+ICNSPKG=turtlearena.icns
 DESTDIR=build/release-darwin-${BUILDARCH}
-BASEDIR=baseebx
+BASEDIR=baseturtle
 
 BIN_OBJ="
 	build/release-darwin-${BUILDARCH}/${BINARY}
