@@ -1,22 +1,27 @@
 #!/bin/sh
 CC=gcc-4.0
-APPBUNDLE=turtlearena.app
-BINARY=turtlearena.ub
-DEDBIN=turtlearena-server.ub
-PKGINFO=APPLTUAR
+GAMENAME="Extraorinary Beat X"
+IDENT="org.extraordinarybeatx.ebx"
+APPBUNDLE=ebx.app
+CLIENT=ebx
+SERVER=ebx-server
+BINARY=$CLIENT.ub
+DEDBIN=$SERVER.ub
+PKGINFO=APPLEBXX
 ICNS=misc/quake3.icns
+ICNSPKG=ebx.icns
 DESTDIR=build/release-darwin-ub
-BASEDIR=base
+BASEDIR=baseebx
 
 BIN_OBJ="
-	build/release-darwin-x86_64/turtlearena.x86_64
-	build/release-darwin-x86/turtlearena.x86
-	build/release-darwin-ppc/turtlearena.ppc
+	build/release-darwin-x86_64/$CLIENT.x86_64
+	build/release-darwin-x86/$CLIENT.x86
+	build/release-darwin-ppc/$CLIENT.ppc
 "
 BIN_DEDOBJ="
-	build/release-darwin-x86_64/turtlearena-server.x86_64
-	build/release-darwin-x86/turtlearena-server.x86
-	build/release-darwin-ppc/turtlearena-server.ppc
+	build/release-darwin-x86_64/$SERVER.x86_64
+	build/release-darwin-x86/$SERVER.x86
+	build/release-darwin-ppc/$SERVER.ppc
 "
 BASE_OBJ="
 	build/release-darwin-x86_64/$BASEDIR/cgamex86_64.dylib
@@ -29,10 +34,19 @@ BASE_OBJ="
 	build/release-darwin-x86/$BASEDIR/gamex86.dylib
 	build/release-darwin-ppc/$BASEDIR/gameppc.dylib
 "
+RENDER_OBJ="
+	build/release-darwin-x86_64/renderer_opengl1_x86_64.dylib
+	build/release-darwin-x86/renderer_opengl1_x86.dylib
+	build/release-darwin-ppc/renderer_opengl1_ppc.dylib
+"
+# opengl2 not supported yet
+#	build/release-darwin-x86_64/renderer_opengl2_x86_64.dylib
+#	build/release-darwin-x86/renderer_opengl2_x86.dylib
+#	build/release-darwin-ppc/renderer_opengl2_ppc.dylib
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
-	echo "This script must be run from the Turtle Arena build directory"
+	echo "This script must be run from the $GAMENAME build directory"
 	exit 1
 fi
 
@@ -139,7 +153,7 @@ fi
 if [ ! -d $DESTDIR/$APPBUNDLE/Contents/Resources ]; then
 	mkdir -p $DESTDIR/$APPBUNDLE/Contents/Resources
 fi
-cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/turtlearena.icns || exit 1;
+cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/$ICNSPKG || exit 1;
 echo $PKGINFO > $DESTDIR/$APPBUNDLE/Contents/PkgInfo
 echo "
 	<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -153,15 +167,15 @@ echo "
 		<key>CFBundleExecutable</key>
 		<string>$BINARY</string>
 		<key>CFBundleGetInfoString</key>
-		<string>Turtle Arena $Q3_VERSION</string>
+		<string>$GAMENAME $Q3_VERSION</string>
 		<key>CFBundleIconFile</key>
-		<string>turtlearena.icns</string>
+		<string>$ICNSPKG</string>
 		<key>CFBundleIdentifier</key>
-		<string>org.turtlearena.turtlearena</string>
+		<string>$IDENT</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>Turtle Arena</string>
+		<string>$GAMENAME</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -182,6 +196,7 @@ echo "
 lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$BINARY $BIN_OBJ
 lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$DEDBIN $BIN_DEDOBJ
 
+cp $RENDER_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/
 cp $BASE_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR/
 cp code/libs/macosx/*.dylib $DESTDIR/$APPBUNDLE/Contents/MacOS/
 
