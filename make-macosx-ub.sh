@@ -1,6 +1,6 @@
 #!/bin/sh
 CC=gcc-4.0
-GAMENAME="Extraorinary Beat X"
+GAMENAME="Extraordinary Beat X"
 IDENT="org.extraordinarybeatx.ebx"
 APPBUNDLE=ebx.app
 CLIENT=ebx

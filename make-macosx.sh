@@ -30,7 +30,7 @@ if [ -z "$DARWIN_GCC_ARCH" ]; then
 fi
 
 CC=gcc-4.0
-GAMENAME="Extraorinary Beat X"
+GAMENAME="Extraordinary Beat X"
 IDENT="org.extraordinarybeatx.ebx"
 APPBUNDLE=ebx.app
 BINARY=ebx.${BUILDARCH}
