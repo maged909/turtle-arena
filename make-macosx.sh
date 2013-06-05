@@ -30,14 +30,16 @@ if [ -z "$DARWIN_GCC_ARCH" ]; then
 fi
 
 CC=gcc-4.0
-APPBUNDLE=turtlearena.app
-BINARY=turtlearena.${BUILDARCH}
-DEDBIN=turtlearena-server.${BUILDARCH}
-PKGINFO=APPLTUAR
+GAMENAME="Extraorinary Beat X"
+IDENT="org.extraordinarybeatx.ebx"
+APPBUNDLE=ebx.app
+BINARY=ebx.${BUILDARCH}
+DEDBIN=ebx-server.${BUILDARCH}
+PKGINFO=APPLEBXX
 ICNS=misc/quake3.icns
+ICNSPKG=ebx.icns
 DESTDIR=build/release-darwin-${BUILDARCH}
-BASEDIR=baseq3
-MPACKDIR=missionpack
+BASEDIR=baseebx
 
 BIN_OBJ="
 	build/release-darwin-${BUILDARCH}/${BINARY}
@@ -50,10 +52,15 @@ BASE_OBJ="
 	build/release-darwin-${BUILDARCH}/$BASEDIR/ui${BUILDARCH}.dylib
 	build/release-darwin-${BUILDARCH}/$BASEDIR/game${BUILDARCH}.dylib
 "
+RENDER_OBJ="
+	build/release-darwin-${BUILDARCH}/renderer_opengl1_${BUILDARCH}.dylib
+"
+# opengl2 not supported yet
+#	build/release-darwin-${BUILDARCH}/renderer_opengl2_${BUILDARCH}.dylib
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
-	echo "This script must be run from the Turtle Arena build directory"
+	echo "This script must be run from the $GAMENAME build directory"
 	exit 1
 fi
 
@@ -105,7 +112,7 @@ fi
 if [ ! -d $DESTDIR/$APPBUNDLE/Contents/Resources ]; then
 	mkdir -p $DESTDIR/$APPBUNDLE/Contents/Resources
 fi
-cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/turtlearena.icns || exit 1;
+cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/$ICNSPKG || exit 1;
 echo $PKGINFO > $DESTDIR/$APPBUNDLE/Contents/PkgInfo
 echo "
 	<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -119,15 +126,15 @@ echo "
 		<key>CFBundleExecutable</key>
 		<string>$BINARY</string>
 		<key>CFBundleGetInfoString</key>
-		<string>Turtle Arena $Q3_VERSION</string>
+		<string>$GAMENAME $Q3_VERSION</string>
 		<key>CFBundleIconFile</key>
-		<string>turtlearena.icns</string>
+		<string>$ICNSPKG</string>
 		<key>CFBundleIdentifier</key>
-		<string>org.turtlearena.turtlearena</string>
+		<string>$IDENT</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>Turtle Arena</string>
+		<string>$GAMENAME</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -144,8 +151,10 @@ echo "
 	</plist>
 	" > $DESTDIR/$APPBUNDLE/Contents/Info.plist
 
-lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$BINARY $BIN_OBJ
-lipo -create -o $DESTDIR/$APPBUNDLE/Contents/MacOS/$DEDBIN $BIN_DEDOBJ
+cp $BIN_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$BINARY
+cp $BIN_DEDOBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$DEDBIN
+cp $RENDER_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/
 cp $BASE_OBJ $DESTDIR/$APPBUNDLE/Contents/MacOS/$BASEDIR/
 cp code/libs/macosx/*.dylib $DESTDIR/$APPBUNDLE/Contents/MacOS/
+cp code/libs/macosx/*.dylib $DESTDIR
 
