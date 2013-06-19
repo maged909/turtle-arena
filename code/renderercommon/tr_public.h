@@ -110,7 +110,7 @@ typedef struct {
 
 	int		(*LerpTag)( orientation_t *tag,  qhandle_t model, int startFrame, int endFrame, 
 					 float frac, const char *tagName );
-	void	(*ModelBounds)( qhandle_t model, vec3_t mins, vec3_t maxs );
+	int		(*ModelBounds)( qhandle_t model, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
 
 #ifdef IOQ3ZTM // BONES
 	int		(*JointIndexForName)(qhandle_t handle, const char *jointName);

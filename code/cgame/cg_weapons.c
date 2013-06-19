@@ -1350,7 +1350,7 @@ void CG_RegisterWeapon( int weaponNum )
 		weaponInfo->weaponModel = trap_R_RegisterModel( item->world_model[0] );
 
 		// calc midpoint for rotation
-		trap_R_ModelBounds( weaponInfo->weaponModel, mins, maxs );
+		trap_R_ModelBounds( weaponInfo->weaponModel, mins, maxs, 0, 0, 0 );
 
 		// Move low weapons like the Bo Staff out of the ground.
 		if (mins[2] < -4) {
@@ -1367,7 +1367,7 @@ void CG_RegisterWeapon( int weaponNum )
 		}
 #else
 		// calc midpoint for rotation
-		trap_R_ModelBounds( trap_R_RegisterModel( item->world_model[0] ), mins, maxs );
+		trap_R_ModelBounds( trap_R_RegisterModel( item->world_model[0] ), mins, maxs, 0, 0, 0 );
 		for ( i = 0 ; i < 3 ; i++ ) {
 			weaponInfo->weaponMidpoint[i] = mins[i] + 0.5 * ( maxs[i] - mins[i] );
 		}
@@ -1377,7 +1377,7 @@ void CG_RegisterWeapon( int weaponNum )
 	weaponInfo->weaponModel = trap_R_RegisterModel( item->world_model[0] );
 
 	// calc midpoint for rotation
-	trap_R_ModelBounds( weaponInfo->weaponModel, mins, maxs );
+	trap_R_ModelBounds( weaponInfo->weaponModel, mins, maxs, 0, 0, 0 );
 	for ( i = 0 ; i < 3 ; i++ ) {
 		weaponInfo->weaponMidpoint[i] = mins[i] + 0.5 * ( maxs[i] - mins[i] );
 	}
