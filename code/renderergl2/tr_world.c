@@ -44,6 +44,14 @@ static qboolean	R_CullSurface( msurface_t *surf ) {
 		return qfalse;
 	}
 
+	if ( *surf->data == SF_GRID && r_nocurves->integer ) {
+		return qtrue;
+	}
+
+	if ( *surf->data == SF_FOLIAGE && !r_drawfoliage->value ) {
+		return qtrue;
+	}
+
 	if (surf->cullinfo.type & CULLINFO_PLANE)
 	{
 		// Only true for SF_FACE, so treat like its own function
@@ -218,6 +226,8 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 		((srfGridMesh_t *)surf->data)->dlightBits    = dlightBits;
 	} else if ( *surf->data == SF_TRIANGLES ) {
 		((srfTriangles_t *)surf->data)->dlightBits   = dlightBits;
+	} else if ( *surf->data == SF_FOLIAGE ) {
+		((srfFoliage_t *)surf->data)->dlightBits     = dlightBits;
 	} else if ( *surf->data == SF_VBO_MESH ) {
 		((srfVBOMesh_t *)surf->data)->dlightBits     = dlightBits;
 	} else {
@@ -226,6 +236,8 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 
 	if ( dlightBits ) {
 		tr.pc.c_dlightSurfaces++;
+	} else {
+		tr.pc.c_dlightSurfacesCulled++;
 	}
 
 	return dlightBits;
@@ -300,6 +312,8 @@ static int R_PshadowSurface( msurface_t *surf, int pshadowBits ) {
 		((srfGridMesh_t *)surf->data)->pshadowBits    = pshadowBits;
 	} else if ( *surf->data == SF_TRIANGLES ) {
 		((srfTriangles_t *)surf->data)->pshadowBits   = pshadowBits;
+	} else if ( *surf->data == SF_FOLIAGE ) {
+		((srfFoliage_t *)surf->data)->pshadowBits     = pshadowBits;
 	} else if ( *surf->data == SF_VBO_MESH ) {
 		((srfVBOMesh_t *)surf->data)->pshadowBits     = pshadowBits;
 	} else {
@@ -674,7 +688,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		fogNum = R_LeafFogNum( node );
 
 		// add merged and unmerged surfaces
-		if (tr.world->viewSurfaces && node->numCustomShaders == 0)
+		if (tr.world->viewSurfaces && !r_nocurves->integer && node->numCustomShaders == 0)
 			view = tr.world->viewSurfaces + node->firstmarksurface;
 		else
 			view = tr.world->marksurfaces + node->firstmarksurface;

@@ -545,6 +545,17 @@ typedef enum {
 } persEnum_t;
 
 
+#ifdef TA_PATHSYS // 2DMODE
+// player_state->pathMode values
+typedef enum {
+	PATHMODE_NONE,
+	PATHMODE_SIDE,
+	PATHMODE_TOP,
+	PATHMODE_BACK
+} pathMode_t;
+#endif
+
+
 // entityState_t->eFlags
 #define	EF_DEAD				0x00000001		// don't draw a foe marker over players with EF_DEAD
 #ifdef NIGHTSMODE
