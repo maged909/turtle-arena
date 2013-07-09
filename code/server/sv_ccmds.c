@@ -1293,7 +1293,6 @@ static void SV_LoadGame_f(void) {
 	byte maxclients;
 	byte localClients;
 	fileHandle_t f;
-	char *curpos;
 
 	// Set savefile name.
 	if ( Cmd_Argc() < 2 ) {
@@ -1302,11 +1301,8 @@ static void SV_LoadGame_f(void) {
 		Cmd_ArgvBuffer( 1, savegame, sizeof( savegame ) );
 	}
 
-	if(!(curpos = Cvar_VariableString("fs_game")) || !*curpos)
-		curpos = com_basegame->string;
-
 	// path is "base/saves/name.sav"
-	Com_sprintf( filename, MAX_QPATH, "%s/saves/%s.sav", curpos, savegame );
+	Com_sprintf( filename, MAX_QPATH, "%s/saves/%s.sav", FS_GetCurrentGameDir(), savegame );
 
     // Must open file here, this function can't be used in game.
     if (FS_SV_FOpenFileRead(filename, &f) == -1)
