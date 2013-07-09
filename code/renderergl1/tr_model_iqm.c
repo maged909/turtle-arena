@@ -1039,6 +1039,11 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 
 	RB_CHECKOVERFLOW( surf->num_vertexes, surf->num_triangles * 3 );
 
+	outXYZ = &tess.xyz[tess.numVertexes];
+	outNormal = &tess.normal[tess.numVertexes];
+	outTexCoord = &tess.texCoords[tess.numVertexes];
+	outColor = &tess.vertexColors[tess.numVertexes];
+
 	if (backEnd.currentEntity->customSkeleton != -1) {
 		refSkeleton_t *refSkel = &backEnd.refdef.skeletons[backEnd.currentEntity->customSkeleton];
 
