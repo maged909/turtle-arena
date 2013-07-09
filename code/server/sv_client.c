@@ -703,6 +703,13 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 		return;		// already dropped
 	}
 
+	numLocalPlayers = SV_ClientNumLocalPlayers( client );
+
+	if ( NET_IsLocalAddress( client->netchan.remoteAddress ) && numLocalPlayers == 1 ) {
+		// allowing tthis would cause the server to keep running with disconnected local players that cannot rejoin
+		return;
+	}
+
 	if ( !isBot ) {
 		// see if we already have a challenge for this ip
 		challenge = &svs.challenges[0];
@@ -716,8 +723,6 @@ void SV_DropPlayer( player_t *drop, const char *reason ) {
 			}
 		}
 	}
-
-	numLocalPlayers = SV_ClientNumLocalPlayers( client );
 
 	// Free all allocated data on the client structure
 	SV_FreePlayer( drop );
@@ -1419,6 +1424,11 @@ SV_DropOut_f
 */
 void SV_DropOut_f( client_t *client, int localPlayerNum ) {
 	player_t *player;
+
+	// require disconnect command to leave server
+	if ( SV_ClientNumLocalPlayers( client ) == 1 ) {
+		return;
+	}
 
 	player = client->localPlayers[localPlayerNum];
 

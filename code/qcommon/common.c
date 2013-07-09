@@ -109,12 +109,12 @@ cvar_t	*com_protocol;
 #ifdef LEGACY_PROTOCOL
 cvar_t	*com_legacyprotocol;
 #endif
-cvar_t	*com_basegame;
 cvar_t  *com_homepath;
 cvar_t	*com_busyWait;
 
 #ifdef USE_RENDERER_DLOPEN
 cvar_t	*com_renderer;
+static void	*rendererLib = NULL;
 #endif
 
 #if idx64
@@ -2609,16 +2609,11 @@ Expose possibility to change current running mod to the user
 
 void Com_GameRestart_f(void)
 {
-	if(!FS_FilenameCompare(Cmd_Argv(1), com_basegame->string))
-	{
-		// This is the standard base game. Servers and clients should
-		// use "" and not the standard basegame name because this messes
-		// up pak file negotiation and lots of other stuff
-		
-		Cvar_Set("fs_game", "");
-	}
+	const char *gamedir = Cmd_Argv(1);
+	if (!*gamedir)
+		Cvar_ForceReset("fs_game");
 	else
-		Cvar_Set("fs_game", Cmd_Argv(1));
+		Cvar_Set("fs_game", gamedir);
 
 	Com_GameRestart(qtrue);
 }
@@ -2753,11 +2748,7 @@ void Com_Init( char *commandLine ) {
 
 	com_fs_pure = Cvar_Get ("fs_pure", "", CVAR_ROM);
 
-	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);
 	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT);
-	
-	if(!com_basegame->string[0])
-		Cvar_ForceReset("com_basegame");
 
 	FS_InitFilesystem ();
 
@@ -3037,11 +3028,18 @@ Com_ShutdownRef
 ============
 */
 void Com_ShutdownRef( void ) {
-	if ( !re.Shutdown ) {
-		return;
+	if ( re.Shutdown ) {
+		re.Shutdown( qtrue );
 	}
-	re.Shutdown( qtrue );
+
 	Com_Memset( &re, 0, sizeof( re ) );
+
+#ifdef USE_RENDERER_DLOPEN
+	if ( rendererLib ) {
+		Sys_UnloadLibrary( rendererLib );
+		rendererLib = NULL;
+	}
+#endif
 }
 
 /*
@@ -3054,7 +3052,6 @@ void Com_InitRef( refimport_t *ri ) {
 #ifdef USE_RENDERER_DLOPEN
 	GetRefAPI_t		GetRefAPI;
 	char			dllName[MAX_OSPATH];
-	static void			*rendererLib;
 #endif
 
 #ifndef DEDICATED

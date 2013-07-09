@@ -7,8 +7,6 @@
 !define MODDIR "q3ctc"
 !define PUBLISHER "The Turtle Arena Team"
 !define URL "http://turtlearena.googlecode.com/"
-; uncomment if the mod works without base
-;!define STANDALONE
 
 !define MUI_ICON "../quake3.ico"
 
@@ -115,11 +113,8 @@ Section "${NAME}" sec_base
 
   WriteUninstaller "uninstall-${FSNAME}.exe"
 
-!ifdef STANDALONE
-!define ARGS "+set com_basegame ${MODDIR}"
-!else
-!define ARGS "+set fs_game ${MODDIR}"
-!endif
+  !define ARGS "+set fs_game ${MODDIR}"
+
   CreateShortCut "$SMPROGRAMS\${GAMENAME}\${NAME}.lnk" "$INSTDIR\${CLIENT}" "${ARGS}" "$INSTDIR\${CLIENT}" 0 "" "" "${NAME}"
 
 SectionEnd
