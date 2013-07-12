@@ -1885,6 +1885,10 @@ int BotInitLibrary(void) {
 	trap_Cvar_VariableStringBuffer("bot_reloadcharacters", buf, sizeof(buf));
 	if (!strlen(buf)) strcpy(buf, "0");
 	trap_BotLibVarSet("bot_reloadcharacters", buf);
+#ifdef TURTLEARENA // Use proper acceleration
+	//use proper acceleration, avoiding strafe jump bug
+	trap_BotLibVarSet("phys_strafejumping", "1");
+#endif
 	//
 #ifdef TA_WEAPSYS // Use correct index
 	trap_BotLibVarSet("weapindex_rocketlauncher", va("%i", BG_WeaponGroupIndexForName("wp_rocket_launcher")));
