@@ -132,7 +132,6 @@ void COM_DefaultExtension( char *path, int maxSize, const char *extension )
 		Q_strcat(path, maxSize, extension);
 }
 
-#ifdef IOQ3ZTM
 /*
 ==================
 COM_SetExtension
@@ -144,7 +143,6 @@ void COM_SetExtension(char *path, int maxSize, const char *extension)
 
 	Q_strcat(path, maxSize, extension);
 }
-#endif
 
 /*
 ============================================================================
