@@ -238,6 +238,165 @@ void RE_GetShaderName( qhandle_t hShader, char *buffer, int bufferSize ) {
 
 /*
 ===============
+ParseIf
+
+textures/name/etc
+{
+  mipmaps // etc
+if novertexlight
+  ... shader stages
+endif
+if vertexlight
+  ... shader stage
+endif
+}
+
+FAKK2 keywords: 0, 1,  mtex, and no_mtex
+Alice keywords: shaderlod <float-value>
+EF2 keywords: [no]vertexlight, [no]detail
+(Alice and EF2 use some FAKK2 keywords as well.)
+
+New: Support "if cvar" and "if !cvar"
+
+===============
+*/
+static qboolean ParseIf( char **text, int *ifIndent, int braketLevel ) {
+	char	*token;
+	int		indent;
+	char	*var;
+	qboolean wantValue;
+	int		value;
+	int		initialIfIndent;
+
+	indent = braketLevel;
+
+	initialIfIndent = *ifIndent;
+	*ifIndent = *ifIndent + 1;
+
+	token = COM_ParseExt( text, qfalse );
+	if ( !token[0] ) {
+		ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'if' keyword in shader '%s'\n", shader.name );
+		return qfalse;
+	}
+
+	if ( !Q_stricmp( token, "1" ) ) {
+		return qtrue;
+	}
+	else if ( !Q_stricmp( token, "0" ) ) {
+		// always skip
+	}
+	// shaderlod <float-value>
+	else if ( !Q_stricmp( token, "shaderlod" ) ) {
+		token = COM_ParseExt( text, qfalse );
+		if ( !token[0] ) {
+			ri.Printf( PRINT_WARNING, "WARNING: missing lod value after 'if shaderlod' in shader '%s'\n", shader.name );
+			return qtrue;
+		}
+
+		if ( r_shaderlod->value > atof( token ) ) {
+			return qtrue;
+		}
+	} else {
+		// support no and ! prefix
+		if ( !Q_stricmpn( token, "no", 2 ) ) {
+			wantValue = qfalse;
+			var = token+2;
+		}
+		else if ( !Q_stricmpn( token, "!", 1 ) ) {
+			wantValue = qfalse;
+			var = token+1;
+		}
+		else {
+			wantValue = qtrue;
+			var = token;
+		}
+
+		if ( !Q_stricmp( var, "mtex" ) || !Q_stricmp( token, "no_mtex" ) ) {
+			value = ( qglActiveTextureARB != NULL );
+		}
+		else if ( !Q_stricmp( var, "vertexlight" ) ) {
+			value = r_vertexLight->integer;
+		}
+		else if ( !Q_stricmp( var, "detail" ) ) {
+			value = r_detailTextures->integer;
+		}
+		else {
+			// allow checking any cvar (defaults to 0 value if cvar does not exist)
+			value = ri.Cvar_VariableIntegerValue( var );
+		}
+
+		if ( !wantValue && !value ) {
+			return qtrue;
+		}
+		else if ( wantValue && value ) {
+			return qtrue;
+		}
+	}
+
+	// Skip tokens inside of if-block
+	while ( 1 ) {
+		token = COM_ParseExt( text, qtrue );
+		if ( !token[0] ) {
+			ri.Printf( PRINT_WARNING, "WARNING: no concluding '}' in shader %s\n", shader.name );
+			return qfalse;
+		}
+
+		if ( token[0] == '}' && indent == 1 ) {
+			ri.Printf( PRINT_WARNING, "WARNING: no concluding 'endif' in shader %s\n", shader.name );
+			return qfalse;
+		}
+
+		if ( token[0] == '}' ) {
+			indent--;
+		}
+		else if ( token[0] == '{' ) {
+			indent++;
+		}
+		else if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "#if" ) ) {
+			*ifIndent = *ifIndent + 1;
+		}
+		else if ( !Q_stricmp( token, "endif" ) || !Q_stricmp( token, "#endif" ) ) {
+			*ifIndent = *ifIndent - 1;
+
+			if ( *ifIndent == initialIfIndent ) {
+				break;
+			}
+		}
+	}
+
+	return qtrue;
+}
+
+/*
+===============
+ParseIfEndif
+===============
+*/
+static int ParseIfEndif( char **text, char *token, int *ifIndent, int braketLevel ) {
+
+	if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "#if" ) )
+	{
+		if ( !ParseIf( text, ifIndent, braketLevel ) ) {
+			return 0;
+		}
+		return 1;
+	}
+	else if ( !Q_stricmp( token, "endif" ) || !Q_stricmp( token, "#endif" ) )
+	{
+		*ifIndent = *ifIndent - 1;
+		if ( *ifIndent < 0 ) {
+			*ifIndent = 0;
+			ri.Printf( PRINT_WARNING, "WARNING: 'endif' with no 'if' in shader %s\n", shader.name );
+			return 0;
+		}
+		return 1;
+	}
+
+	return -1; // not our token
+}
+
+/*
+===============
 ParseVector
 ===============
 */
@@ -716,7 +875,7 @@ static void ParseTexMod( char *_text, shaderStage_t *stage )
 ParseStage
 ===================
 */
-static qboolean ParseStage( shaderStage_t *stage, char **text )
+static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 {
 	char *token;
 	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
@@ -731,6 +890,16 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: no matching '}' found\n" );
 			return qfalse;
+		}
+
+		switch ( ParseIfEndif( text, token, ifIndent, 2 ) )
+		{
+			case 0:
+				return qfalse;
+			case 1:
+				continue;
+			default:
+				break;
 		}
 
 		if ( token[0] == '}' )
@@ -1634,120 +1803,6 @@ static void ParseSurfaceParm( char **text ) {
 	}
 }
 
-#ifdef IOQ3ZTM // EF2_SHADERS
-/*
-===============
-ParseIf
-
-Based on Elite Force 2, support "if cvar" and "if !cvar"
-
-shader/name/etc
-{
-  mipmaps // etc
-if novertexlight
-  ... shader stages
-endif
-if vertexlight
-  ... shader stages
-endif
-}
-===============
-*/
-static qboolean ParseIf( char **text, int *ifIndent ) {
-	char	*token;
-	int		indent;
-	char	*var;
-	qboolean wantValue;
-	int value;
-
-	indent = 1;
-
-	*ifIndent = *ifIndent + 1;
-
-	token = COM_ParseExt( text, qfalse );
-	if ( !token[0] )
-	{
-		ri.Printf( PRINT_WARNING, "WARNING: missing parm for 'if' keyword in shader '%s'\n", shader.name );
-		return qtrue;
-	}
-
-	// support nozzz and !zzz
-	if ( !Q_stricmpn(token, "no", 2) )
-	{
-		wantValue = qfalse;
-		var = token+2;
-	}
-	else if (!Q_stricmpn(token, "!", 1) )
-	{
-		wantValue = qfalse;
-		var = token+1;
-	}
-	else
-	{
-		wantValue = qtrue;
-		var = token;
-	}
-
-	// Support EF2
-	if ( !Q_stricmp( var, "vertexlight" ) )
-	{
-		value = r_vertexLight->integer;
-	}
-	// Support NOBLOOD define
-	else if ( !Q_stricmp( var, "blood" ) )
-	{
-#ifdef NOBLOOD
-		value = 0;
-#else
-		value = com_blood->integer;
-#endif
-	}
-	else
-	{
-		value = ri.Cvar_VariableIntegerValue(var);
-	}
-
-	if (!wantValue && !value)
-	{
-		return qtrue;
-	}
-	else if (wantValue && value)
-	{
-		return qtrue;
-	}
-
-	// skip if-block
-
-	// Skip tokens inside of if-block
-	while ( 1 )
-	{
-		token = COM_ParseExt( text, qtrue );
-		if ( !token[0] )
-		{
-			ri.Printf( PRINT_WARNING, "WARNING: no concluding '}' in shader %s\n", shader.name );
-			return qfalse;
-		}
-
-		if ( token[0] == '}' && indent == 1)
-		{
-			ri.Printf( PRINT_WARNING, "WARNING: no concluding 'endif' in shader %s\n", shader.name );
-			break;
-		}
-
-		if ( token[0] == '}' )
-			indent--;
-		else if ( token[0] == '{' )
-			indent++;
-		else if ( !Q_stricmp( token, "endif" ) )
-		{
-			*ifIndent = *ifIndent - 1;
-			break;
-		}
-	}
-	return qtrue;
-}
-#endif
-
 /*
 =================
 ParseShader
@@ -1761,9 +1816,7 @@ static qboolean ParseShader( char **text )
 {
 	char *token;
 	int s;
-#ifdef IOQ3ZTM // EF2_SHADERS
 	int ifIndent = 0;
-#endif
 
 	s = 0;
 
@@ -1783,30 +1836,21 @@ static qboolean ParseShader( char **text )
 			return qfalse;
 		}
 
+		switch ( ParseIfEndif( text, token, &ifIndent, 1 ) )
+		{
+			case 0:
+				return qfalse;
+			case 1:
+				continue;
+			default:
+				break;
+		}
+
 		// end of shader definition
 		if ( token[0] == '}' )
 		{
 			break;
 		}
-#ifdef IOQ3ZTM // EF2_SHADERS
-		else if ( !Q_stricmp( token, "if" ) )
-		{
-			if ( !ParseIf( text, &ifIndent ) )
-			{
-				return qfalse;
-			}
-			continue;
-		}
-		else if ( !Q_stricmp( token, "endif" ) )
-		{
-			ifIndent--;
-			if ( ifIndent < 0 ) {
-				ifIndent = 0;
-				ri.Printf( PRINT_WARNING, "WARNING: 'endif' with no 'if' in shader %s\n", shader.name );
-			}
-			continue;
-		}
-#endif
 		// stage definition
 		else if ( token[0] == '{' )
 		{
@@ -1815,7 +1859,7 @@ static qboolean ParseShader( char **text )
 				return qfalse;
 			}
 
-			if ( !ParseStage( &stages[s], text ) )
+			if ( !ParseStage( &stages[s], text, &ifIndent ) )
 			{
 				return qfalse;
 			}
@@ -2405,6 +2449,11 @@ static qboolean ParseShader( char **text )
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
 			return qfalse;
 		}
+	}
+
+	if ( ifIndent > 0 ) {
+		ri.Printf( PRINT_WARNING, "WARNING: no concluding 'endif' in shader %s\n", shader.name );
+		return qfalse;
 	}
 
 	//
