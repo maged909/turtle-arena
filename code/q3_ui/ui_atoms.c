@@ -1629,6 +1629,90 @@ void UI_Cache_f( void ) {
 
 }
 
+#ifdef TA_SP // Save/load
+/*
+==================
+UI_GetSaveGameInfo
+
+See save_t in g_save.c for more info.
+==================
+*/
+qboolean UI_GetSaveGameInfo(fileHandle_t f, char *loadmap, byte *pMaxclients, byte *pLocalClients) {
+	char buffer[MAX_QPATH];
+	byte version;
+
+	trap_FS_Read( &version, 1, f );
+
+	trap_Cvar_VariableStringBuffer( "g_saveVersions", buffer, sizeof (buffer) );
+
+	if ( !strstr( va( "%d", version ), buffer ) ) {
+		// Version not supported
+		return qfalse;
+	}
+
+	trap_FS_Read( loadmap, MAX_QPATH, f );
+	trap_FS_Read( pMaxclients, 1, f );
+	trap_FS_Read( pLocalClients, 1, f );
+
+	return qtrue;
+}
+
+/*
+==================
+UI_LoadGame_f
+
+Load a saved game
+==================
+*/
+static void UI_LoadGame_f(void) {
+	char savegame[MAX_QPATH];
+	char filename[MAX_QPATH];
+	char loadmap[MAX_QPATH];
+	char currentMap[MAX_QPATH];
+	byte maxclients;
+	byte localClients;
+	fileHandle_t f;
+
+	// Set savefile name.
+	if ( trap_Argc() < 2 ) {
+		Com_Printf("Usage: loadgame <savename>\n");
+		return;
+	} else {
+		trap_Argv( 1, savegame, sizeof( savegame ) );
+	}
+
+	Com_sprintf( filename, sizeof (filename), "saves/%s.sav", savegame );
+
+    if ( trap_FS_FOpenFile( filename, &f, FS_READ) < 0 ) {
+		Com_Printf("Failed to open savefile (%s)!\n", filename);
+		trap_FS_FCloseFile( f );
+		return;
+	}
+
+	if ( !UI_GetSaveGameInfo(f, loadmap, &maxclients, &localClients) ) {
+		trap_FS_FCloseFile( f );
+		Com_Printf( "Warning: Unsupported savefile (%s)\n", savegame );
+		return;
+	}
+
+	trap_FS_FCloseFile( f );
+
+	trap_Cvar_SetValue( "sv_maxclients", maxclients );
+	trap_Cvar_SetValue( "cl_localClients", localClients );
+
+	// Set filename for game
+	trap_Cvar_SetValue( "savegame_loading", 1 );
+	trap_Cvar_Set( "savegame_filename", filename );
+
+	trap_Cvar_VariableStringBuffer( "mapname", currentMap, sizeof (currentMap) );
+
+	if ( trap_Cvar_VariableValue( "sv_running" ) && currentMap[0] && Q_stricmp( loadmap, currentMap ) == 0) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, "map_restart 0\n" );
+	} else {
+		trap_Cmd_ExecuteText( EXEC_APPEND, va( "map %s\n", loadmap ) );
+	}
+}
+#endif
 
 /*
 =================
@@ -1647,6 +1731,11 @@ qboolean UI_ConsoleCommand( int realTime ) {
 	Menu_Cache();
 
 #ifdef TA_SP
+	if ( Q_stricmp (cmd, "loadgame") == 0 ) {
+		UI_LoadGame_f();
+		return qtrue;
+	}
+
 	if ( Q_stricmp (cmd, "singleplayermenu") == 0 ) {
 		UI_SPMenu_f();
 		return qtrue;
@@ -1725,6 +1814,13 @@ void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uis.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	
 	UI_RegisterCvars();
+
+#ifdef TA_SP // Save/load
+	if ( !inGameLoad ) {
+		trap_Cvar_Set("savegame_loading", "0");
+		trap_Cvar_Set("savegame_filename", "");
+	}
+#endif
 
 	UI_InitGameinfo();
 

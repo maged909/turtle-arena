@@ -2767,15 +2767,6 @@ void Com_Init( char *commandLine ) {
 
 	Com_ExecuteCfg();
 
-#ifdef TURTLEARENA
-	if (!strlen(Cvar_VariableString("com_lastrunversion"))) {
-		// Pre-0.6 config, reset all cvars. Client control binds are left as-is.
-		Cvar_Restart(qtrue);
-	}
-
-	Cvar_Get ("com_lastrunversion", PRODUCT_VERSION, CVAR_ARCHIVE|CVAR_NORESTART);
-#endif
-
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
 
@@ -2894,10 +2885,6 @@ void Com_Init( char *commandLine ) {
 
 	// make sure single player is off by default
 	Cvar_Set("ui_singlePlayerActive", "0");
-#ifdef TA_SP
-	Cvar_Set("savegame_loading", "0");
-	Cvar_Set("savegame_filename", "");
-#endif
 
 	com_fullyInitialized = qtrue;
 

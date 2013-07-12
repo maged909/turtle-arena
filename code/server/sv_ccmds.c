@@ -1253,92 +1253,6 @@ static void SV_KillServer_f( void ) {
 	SV_Shutdown( "killserver" );
 }
 
-#ifdef TA_SP // Save/load
-/*
-==================
-SV_GetSaveGameInfo
-
-See save_t in g_save.c for more info.
-==================
-*/
-qboolean SV_GetSaveGameInfo(fileHandle_t f, char *loadmap, byte *pMaxclients, byte *pLocalClients) {
-	char buffer[MAX_QPATH];
-	byte version;
-
-	FS_Read2 (&version, 1, f); // version
-
-	Cvar_VariableStringBuffer( "g_saveVersions", buffer, sizeof(buffer) );
-
-	if (!strstr(va("%d", version), buffer)) {
-		// Version not supported
-		return qfalse;
-	}
-
-	FS_Read2 (loadmap, MAX_QPATH, f); // map name
-	FS_Read2 (pMaxclients, 1, f); // maxclients
-	FS_Read2 (pLocalClients, 1, f); // localClients
-
-	return qtrue;
-}
-
-/*
-==================
-SV_LoadGame_f
-==================
-*/
-static void SV_LoadGame_f(void) {
-	char savegame[MAX_QPATH];
-	char filename[MAX_QPATH];
-	char loadmap[MAX_QPATH];
-	byte maxclients;
-	byte localClients;
-	fileHandle_t f;
-
-	// Set savefile name.
-	if ( Cmd_Argc() < 2 ) {
-		Com_Printf("Usage: loadgame <savename>\n");
-	} else {
-		Cmd_ArgvBuffer( 1, savegame, sizeof( savegame ) );
-	}
-
-	// path is "base/saves/name.sav"
-	Com_sprintf( filename, MAX_QPATH, "%s/saves/%s.sav", FS_GetCurrentGameDir(), savegame );
-
-    // Must open file here, this function can't be used in game.
-    if (FS_SV_FOpenFileRead(filename, &f) == -1)
-    {
-        Com_Printf("Failed to open savefile (%s)!\n", filename);
-        FS_FCloseFile( f );
-        return;
-    }
-
-	if (!SV_GetSaveGameInfo(f, loadmap, &maxclients, &localClients))
-	{
-		FS_FCloseFile( f );
-		Com_Printf("Warning: Unsupported savefile (%s)\n", savegame);
-		return;
-	}
-
-	FS_FCloseFile( f );
-
-	Cvar_SetValue("sv_maxclients", maxclients);
-	Cvar_SetValue("cl_localClients", localClients);
-
-	// Set filename for game
-	Cvar_SetValue("savegame_loading", 1);
-	Com_sprintf( filename, MAX_QPATH, "saves/%s.sav", savegame );
-	Cvar_Set("savegame_filename", filename);
-
-	if (com_sv_running->integer && sv_mapname->string[0] && Q_stricmp(loadmap, sv_mapname->string) == 0)
-	{
-		Cbuf_ExecuteText(EXEC_APPEND, "map_restart 0\n");
-	}
-	else
-	{
-		Cbuf_ExecuteText(EXEC_APPEND, va("map %s\n", loadmap));
-	}
-}
-#endif
 //===========================================================
 
 /*
@@ -1395,9 +1309,6 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand("bandel", SV_BanDel_f);
 	Cmd_AddCommand("exceptdel", SV_ExceptDel_f);
 	Cmd_AddCommand("flushbans", SV_FlushBans_f);
-#ifdef TA_SP // Save/load
-	Cmd_AddCommand("loadgame", SV_LoadGame_f);
-#endif
 }
 
 /*

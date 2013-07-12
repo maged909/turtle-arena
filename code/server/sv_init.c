@@ -899,10 +899,6 @@ void SV_Shutdown( char *finalmsg ) {
 
 	Cvar_Set( "sv_running", "0" );
 	Cvar_Set("ui_singlePlayerActive", "0");
-#ifdef TA_SP
-	Cvar_Set("savegame_loading", "0");
-	Cvar_Set("savegame_filename", "");
-#endif
 	Cvar_Set("sv_public", "0");
 
 	Com_Printf( "---------------------------\n" );
