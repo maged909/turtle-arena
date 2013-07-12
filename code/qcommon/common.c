@@ -86,9 +86,6 @@ cvar_t	*com_logfile;		// 1 = buffer log, 2 = flush after each print
 cvar_t	*com_pipefile;
 cvar_t	*com_showtrace;
 cvar_t	*com_version;
-#ifndef NOBLOOD
-cvar_t	*com_blood;
-#endif
 cvar_t	*com_singlePlayerActive;
 cvar_t	*com_buildScript;	// for automated data building scripts
 cvar_t	*com_introPlayed;
@@ -2801,13 +2798,6 @@ void Com_Init( char *commandLine ) {
 	//
 	com_altivec = Cvar_Get ("com_altivec", "1", CVAR_ARCHIVE);
 	com_maxfps = Cvar_Get ("com_maxfps", "85", CVAR_ARCHIVE);
-#ifndef NOBLOOD
-#ifdef NOTRATEDM // ZTM: Default to no blood.
-	com_blood = Cvar_Get ("com_blood", "0", CVAR_ARCHIVE);
-#else
-	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE);
-#endif
-#endif
 	com_singlePlayerActive = Cvar_Get ("ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM);
 
 	com_logfile = Cvar_Get ("logfile", "0", CVAR_TEMP );

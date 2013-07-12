@@ -209,8 +209,10 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_debugDamage, "g_debugDamage", "0", 0, 0, RANGE_BOOL },
 	{ &g_debugAlloc, "g_debugAlloc", "0", 0, 0, RANGE_BOOL },
 	{ &g_motd, "g_motd", "", 0, 0, RANGE_ALL },
+#ifndef NOBLOOD
 #ifndef NOTRATEDM
-	{ &g_blood, "com_blood", "1", 0, 0, RANGE_ALL },
+	{ &g_blood, "com_blood", "1", CVAR_ARCHIVE, 0, RANGE_ALL },
+#endif
 #endif
 
 	{ &g_podiumDist, "g_podiumDist", "80", 0, 0, RANGE_ALL },

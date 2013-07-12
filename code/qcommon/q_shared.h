@@ -45,7 +45,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 #ifndef PRODUCT_VERSION
-	#define PRODUCT_VERSION "0.7"
+	#define PRODUCT_VERSION "Alpha"
 #endif
 
 // In the future if the client-server protocol is modified, this may allow old and new engines to play together
@@ -393,11 +393,7 @@ extern	vec4_t		colorMdGrey;
 extern	vec4_t		colorDkGrey;
 
 #define Q_COLOR_ESCAPE	'^'
-#ifdef IOQ3ZTM // ZTM: Only be true if it is a real color string.
 #define Q_IsColorString(p)	((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1) && (*((p)+1) >= '0' && *((p)+1) <= '7')) // ^[0-7]
-#else
-#define Q_IsColorString(p)	((p) && *(p) == Q_COLOR_ESCAPE && *((p)+1) && isalnum(*((p)+1))) // ^[0-9a-zA-Z]
-#endif
 
 #define COLOR_BLACK	'0'
 #define COLOR_RED	'1'
@@ -768,9 +764,7 @@ const char	*COM_GetExtension( const char *name );
 void	COM_StripExtension(const char *in, char *out, int destsize);
 qboolean COM_CompareExtension(const char *in, const char *ext);
 void	COM_DefaultExtension( char *path, int maxSize, const char *extension );
-#ifdef IOQ3ZTM
 void	COM_SetExtension(char *path, int maxSize, const char *extension);
-#endif
 
 void	COM_BeginParseSession( const char *name );
 int		COM_GetCurrentParseLine( void );
@@ -989,7 +983,7 @@ float	LittleFloat (const float *l);
 
 void	Swap_Init (void);
 */
-char	* QDECL va(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
+char	* QDECL va(char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
 #define TRUNCATE_LENGTH	64
 void Com_TruncateLongString( char *buffer, const char *s );
@@ -1234,10 +1228,6 @@ typedef enum {
 // per-level limits
 //
 #define	MAX_CLIENTS			64		// absolute limit
-#define MAX_LOCATIONS		64
-#ifdef IOQ3ZTM // Particles
-#define MAX_PARTICLES_AREAS 64
-#endif
 
 #define	GENTITYNUM_BITS		12		// don't need to send any more
 #define	MAX_GENTITIES		(1<<GENTITYNUM_BITS)
@@ -1248,11 +1238,6 @@ typedef enum {
 #define	ENTITYNUM_NONE		(MAX_GENTITIES-1)
 #define	ENTITYNUM_WORLD		(MAX_GENTITIES-2)
 #define	ENTITYNUM_MAX_NORMAL	(MAX_GENTITIES-2)
-
-
-#define	MAX_MODELS			256		// these are sent over the net as 8 bits
-#define	MAX_SOUNDS			256		// so they cannot be blindly increased
-
 
 #define	MAX_CONFIGSTRINGS	1024
 

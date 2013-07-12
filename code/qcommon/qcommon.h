@@ -263,17 +263,8 @@ PROTOCOL
 ==============================================================
 */
 
-#define	PROTOCOL_VERSION	9
+#define	PROTOCOL_VERSION	1
 #define PROTOCOL_LEGACY_VERSION	0
-// 9 TA 0.6
-// 8 TA 0.5.3
-// 7 TA 0.5.1 / TA 0.5.2
-// 6 TA 0.5.0
-// 5 TA 0.4.1 / 0.4.2 / 0.4.3
-// 4 TA 0.4
-// 3 TA 0.3 development (unreleased)
-// 2 TA 0.2
-// 1 Initial release
 
 // maintain a list of compatible protocols for demo playing
 // NOTE: that stuff only works with two digits protocols
@@ -864,9 +855,6 @@ extern	cvar_t	*com_timescale;
 extern	cvar_t	*com_sv_running;
 extern	cvar_t	*com_cl_running;
 extern	cvar_t	*com_version;
-#ifndef NOBLOOD
-extern	cvar_t	*com_blood;
-#endif
 extern	cvar_t	*com_singlePlayerActive;
 extern	cvar_t	*com_buildScript;		// for building release pak files
 extern	cvar_t	*com_journal;
