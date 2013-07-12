@@ -1812,10 +1812,6 @@ CL_Disconnect_f
 void CL_Disconnect_f( void ) {
 	SCR_StopCinematic();
 	Cvar_Set("ui_singlePlayerActive", "0");
-#ifdef TA_SP
-	Cvar_Set("savegame_loading", "0");
-	Cvar_Set("savegame_filename", "");
-#endif
 	if ( clc.state != CA_DISCONNECTED && clc.state != CA_CINEMATIC ) {
 		Com_Error (ERR_DISCONNECT, "Disconnected from server");
 	}
@@ -1832,10 +1828,6 @@ void CL_Reconnect_f( void ) {
 	if ( !strlen( cl_reconnectArgs ) )
 		return;
 	Cvar_Set("ui_singlePlayerActive", "0");
-#ifdef TA_SP
-	Cvar_Set("savegame_loading", "0");
-	Cvar_Set("savegame_filename", "");
-#endif
 	Cbuf_AddText( va("connect %s\n", cl_reconnectArgs ) );
 }
 
@@ -1874,10 +1866,6 @@ void CL_Connect_f( void ) {
 	Q_strncpyz( cl_reconnectArgs, Cmd_Args(), sizeof( cl_reconnectArgs ) );
 
 	Cvar_Set("ui_singlePlayerActive", "0");
-#ifdef TA_SP
-	Cvar_Set("savegame_loading", "0");
-	Cvar_Set("savegame_filename", "");
-#endif
 
 	// fire a message off to the motd server
 	CL_RequestMotd();

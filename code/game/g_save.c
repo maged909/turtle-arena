@@ -184,6 +184,9 @@ void G_LoadGame(void)
 
 	len = trap_FS_FOpenFile( g_savegameFilename.string, &f, FS_READ );
 
+	trap_Cvar_Set( "savegame_loading", "0" );
+	trap_Cvar_Set( "savegame_filename", "" );
+
 	if (len == -1) {
 		trap_FS_FCloseFile(f);
 		G_Error("Savegame file not found!");
@@ -194,10 +197,7 @@ void G_LoadGame(void)
 
 	trap_FS_FCloseFile(f);
 
-	trap_Cvar_Set( "savegame_loading", "0" );
-	trap_Cvar_Set( "savegame_filename", "" );
-
-	// The server should check but just in case...
+	// loadgame command should check but just in case...
 	if (loadData.version != SAVE_VERSION) {
 		savegameLoaded = qfalse;
 		G_Error( "Unsupported savegame version, %i\n", loadData.version);

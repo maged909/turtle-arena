@@ -2885,10 +2885,6 @@ void Com_Init( char *commandLine ) {
 
 	// make sure single player is off by default
 	Cvar_Set("ui_singlePlayerActive", "0");
-#ifdef TA_SP
-	Cvar_Set("savegame_loading", "0");
-	Cvar_Set("savegame_filename", "");
-#endif
 
 	com_fullyInitialized = qtrue;
 
