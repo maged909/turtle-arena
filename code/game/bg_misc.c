@@ -1549,6 +1549,14 @@ void BG_RegisterClientCvars(int maxSplitview) {
 
 	trap_Cvar_Register(NULL, "cg_predictItems", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
 
+#ifndef NOBLOOD
+#ifdef NOTRATEDM // ZTM: Default to no blood.
+	trap_Cvar_Register(NULL, "com_blood", "0", CVAR_ARCHIVE );
+#else
+	trap_Cvar_Register(NULL, "com_blood", "1", CVAR_ARCHIVE );
+#endif
+#endif
+
 	// cgame might not be initialized before menu is used
 	trap_Cvar_Register(NULL, "cg_viewsize", "100", CVAR_ARCHIVE );
 	trap_Cvar_CheckRange("cg_viewsize", 30, 100, qtrue );
