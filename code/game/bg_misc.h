@@ -48,6 +48,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 #define	MAX_LOCATIONS		64
+#ifdef IOQ3ZTM // Particles
+#define	MAX_PARTICLES_AREAS	64
+#endif
 #define	MAX_ITEMS			256
 #define	MAX_MODELS			256		// these are sent over the net as 8 bits
 #define	MAX_SOUNDS			256		// so they cannot be blindly increased

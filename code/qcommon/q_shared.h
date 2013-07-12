@@ -1228,9 +1228,6 @@ typedef enum {
 // per-level limits
 //
 #define	MAX_CLIENTS			64		// absolute limit
-#ifdef IOQ3ZTM // Particles
-#define MAX_PARTICLES_AREAS 64
-#endif
 
 #define	GENTITYNUM_BITS		12		// don't need to send any more
 #define	MAX_GENTITIES		(1<<GENTITYNUM_BITS)
