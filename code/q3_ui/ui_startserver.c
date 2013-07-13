@@ -468,6 +468,8 @@ static void StartArcade_Start( void ) {
 
 	StartArcade_SaveMenuItems(gametype);
 
+	trap_Cvar_SetValue( "g_gametype", gametype );
+
 	trap_Cvar_SetValue( "sv_maxclients", Com_Clamp( 0, 12, maxclients ) );
 	if (!s_arcade.multiplayer) {
 		trap_Cvar_SetValue( "ui_singlePlayerActive", 1 );
@@ -485,7 +487,7 @@ static void StartArcade_Start( void ) {
 	
 	// the wait commands will allow the dedicated to take effect
 	info = UI_GetArenaInfoByNumber( s_arcade.maplist[ s_arcade.map.curvalue ]);
-	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; g_gametype %d; map %s\n", gametype, Info_ValueForKey( info, "map" )));
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; map %s\n", Info_ValueForKey( info, "map" )));
 
 	trap_Cvar_SetValue( "ui_recordSPDemo", s_arcade.recordreplay.curvalue );
 	if (s_arcade.recordreplay.curvalue) {
