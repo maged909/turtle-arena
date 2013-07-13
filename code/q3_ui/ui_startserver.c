@@ -484,7 +484,16 @@ static void StartArcade_Start( void ) {
 	trap_Cvar_SetValue( "g_friendlyfire", friendlyfire );
 	trap_Cvar_SetValue( "sv_pure", pure );
 	trap_Cvar_Set("sv_hostname", s_arcade.hostname.field.buffer );
-	
+
+	// set player's team
+	if( !s_arcade.inGame && dedicated == 0 && gametype >= GT_TEAM ) {
+		for( n = 0; n < MAX_SPLITVIEW; ++n ) {
+			if (localClients & (1<<n)) {
+				trap_Cvar_Set( Com_LocalClientCvarName( n, "teampref" ), "blue" );
+			}
+		}
+	}
+
 	// the wait commands will allow the dedicated to take effect
 	info = UI_GetArenaInfoByNumber( s_arcade.maplist[ s_arcade.map.curvalue ]);
 	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; map %s\n", Info_ValueForKey( info, "map" )));
@@ -533,17 +542,6 @@ static void StartArcade_Start( void ) {
 				Com_sprintf( buf, sizeof(buf), "addbot %s %i\n", spCharacterNames[n%NUM_SP_CHARACTERS], skill );
 			}
 			trap_Cmd_ExecuteText( EXEC_APPEND, buf );
-		}
-	}
-
-	// set player's team
-	if( !s_arcade.inGame && dedicated == 0 && gametype >= GT_TEAM ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, "wait 3\n" );
-
-		for( n = 0; n < MAX_SPLITVIEW; ++n ) {
-			if (localClients & (1<<n)) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s blue\n", Com_LocalClientCvarName(n, "team")));
-			}
 		}
 	}
 }
