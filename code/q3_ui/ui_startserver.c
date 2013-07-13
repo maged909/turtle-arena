@@ -468,6 +468,8 @@ static void StartArcade_Start( void ) {
 
 	StartArcade_SaveMenuItems(gametype);
 
+	trap_Cvar_SetValue( "g_gametype", gametype );
+
 	trap_Cvar_SetValue( "sv_maxclients", Com_Clamp( 0, 12, maxclients ) );
 	if (!s_arcade.multiplayer) {
 		trap_Cvar_SetValue( "ui_singlePlayerActive", 1 );
@@ -482,10 +484,19 @@ static void StartArcade_Start( void ) {
 	trap_Cvar_SetValue( "g_friendlyfire", friendlyfire );
 	trap_Cvar_SetValue( "sv_pure", pure );
 	trap_Cvar_Set("sv_hostname", s_arcade.hostname.field.buffer );
-	
+
+	// set player's team
+	if( !s_arcade.inGame && dedicated == 0 && gametype >= GT_TEAM ) {
+		for( n = 0; n < MAX_SPLITVIEW; ++n ) {
+			if (localClients & (1<<n)) {
+				trap_Cvar_Set( Com_LocalClientCvarName( n, "teampref" ), "blue" );
+			}
+		}
+	}
+
 	// the wait commands will allow the dedicated to take effect
 	info = UI_GetArenaInfoByNumber( s_arcade.maplist[ s_arcade.map.curvalue ]);
-	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; g_gametype %d; map %s\n", gametype, Info_ValueForKey( info, "map" )));
+	trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait ; wait ; map %s\n", Info_ValueForKey( info, "map" )));
 
 	trap_Cvar_SetValue( "ui_recordSPDemo", s_arcade.recordreplay.curvalue );
 	if (s_arcade.recordreplay.curvalue) {
@@ -531,17 +542,6 @@ static void StartArcade_Start( void ) {
 				Com_sprintf( buf, sizeof(buf), "addbot %s %i\n", spCharacterNames[n%NUM_SP_CHARACTERS], skill );
 			}
 			trap_Cmd_ExecuteText( EXEC_APPEND, buf );
-		}
-	}
-
-	// set player's team
-	if( !s_arcade.inGame && dedicated == 0 && gametype >= GT_TEAM ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, "wait 3\n" );
-
-		for( n = 0; n < MAX_SPLITVIEW; ++n ) {
-			if (localClients & (1<<n)) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s blue\n", Com_LocalClientCvarName(n, "team")));
-			}
 		}
 	}
 }
@@ -2183,11 +2183,9 @@ static void ServerOptions_Start( void ) {
 
 	// set player's team
 	if( dedicated == 0 && s_serveroptions.gametype >= GT_TEAM ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, va( "teampref %s\n", playerTeam_list[s_serveroptions.playerTeam[0].curvalue] ) );
-
-		for (n = 1; n < UI_MaxSplitView(); ++n) {
-			if (s_serveroptions.playerType[n].curvalue == PT_HUMAN) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s %s\n", Com_LocalClientCvarName( n, "teampref" ), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] ) );
+		for ( n = 0; n < UI_MaxSplitView(); ++n ) {
+			if ( n == 0 || s_serveroptions.playerType[n].curvalue == PT_HUMAN ) {
+				trap_Cvar_Set( Com_LocalClientCvarName( n, "teampref" ), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] );
 			}
 		}
 	}
