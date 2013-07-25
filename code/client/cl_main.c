@@ -3748,7 +3748,9 @@ CL_Shutdown
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 {
 	static qboolean recursive = qfalse;
+#if CL_MAX_SPLITVIEW > 1
 	int i;
+#endif
 	
 	// check whether the client is running at all.
 	if(!(com_cl_running && com_cl_running->integer))
@@ -4688,7 +4690,7 @@ qboolean CL_GetClientLocation(char *buf, int bufLength, int localClientNum) {
 	}
 
 	ps = DA_ElementPointer( cl.snap.playerStates, cl.snap.lcIndex[localClientNum] );
-	snprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)ps->origin[0],
+	Com_sprintf(buf, bufLength, "X:%d Y:%d Z:%d A:%d", (int)ps->origin[0],
 			(int)ps->origin[1], (int)ps->origin[2],
 			(int)(ps->viewangles[YAW]+360)%360);
 	return qtrue;

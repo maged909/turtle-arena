@@ -1331,6 +1331,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	errnum = BotLoadItemWeights(bs->gs, filename);
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
+		BotAI_Print(PRT_FATAL, "BotLoadItemWeights failed\n");
 		return qfalse;
 	}
 #ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
@@ -1342,6 +1343,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	if (errnum != BLERR_NOERROR) {
 		BotFreeGoalState(bs->gs);
 		BotFreeWeaponState(bs->ws);
+		BotAI_Print(PRT_FATAL, "BotLoadWeaponWeights failed\n");
 		return qfalse;
 	}
 #endif
@@ -1357,6 +1359,7 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 #ifndef TA_WEAPSYS // BOT_WEAP_WEIGHTS
 		BotFreeWeaponState(bs->ws);
 #endif
+		BotAI_Print(PRT_FATAL, "trap_BotLoadChatFile failed\n");
 		return qfalse;
 	}
 	//get the gender characteristic
@@ -1512,10 +1515,12 @@ BotAILoadMap
 int BotAILoadMap( int restart ) {
 	int			i;
 	vmCvar_t	mapname;
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+	static bot_shareditem_t itemInfos[MAX_ITEMS];
+#endif
 
 	if (!restart) {
 #ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-		static bot_shareditem_t itemInfos[MAX_ITEMS];
 		int i;
 		int item;
 
@@ -1591,14 +1596,15 @@ int BotAILoadMap( int restart ) {
 #endif
 		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 		trap_BotLibLoadMap( mapname.string );
-		//initialize the items in the level
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-		BotInitLevelItems( itemInfos );		//ai_goal.h
-#else
-		BotInitLevelItems();		//ai_goal.h
-#endif
-		BotSetBrushModelTypes();	//ai_move.h
 	}
+
+	//initialize the items in the level
+#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
+	BotInitLevelItems( itemInfos );		//ai_goal.h
+#else
+	BotInitLevelItems();		//ai_goal.h
+#endif
+	BotSetBrushModelTypes();	//ai_move.h
 
 	for (i = 0; i < MAX_CLIENTS; i++) {
 		if (botstates[i] && botstates[i]->inuse) {
@@ -1928,16 +1934,15 @@ int BotAISetup( int restart ) {
 	trap_Cvar_Register(&bot_interbreedcycle, "bot_interbreedcycle", "20", 0);
 	trap_Cvar_Register(&bot_interbreedwrite, "bot_interbreedwrite", "", 0);
 
-	//if the game is restarted for a tournament
-	if (restart) {
-		return qtrue;
+	//if the game isn't restarted for a tournament
+	if (!restart) {
+		//initialize the bot states
+		memset( botstates, 0, sizeof(botstates) );
+
+		errnum = BotInitLibrary();
+		if (errnum != BLERR_NOERROR) return qfalse;
 	}
 
-	//initialize the bot states
-	memset( botstates, 0, sizeof(botstates) );
-
-	errnum = BotInitLibrary();
-	if (errnum != BLERR_NOERROR) return qfalse;
 	errnum = EA_Setup();			//ai_ea.c
 	if (errnum != BLERR_NOERROR) return qfalse;
 #ifndef TA_WEAPSYS_EX
@@ -1972,16 +1977,18 @@ int BotAIShutdown( int restart ) {
 	}
 	else {
 		trap_BotLibShutdown();
-		//
-		BotShutdownMoveAI();		//ai_move.c
-		BotShutdownGoalAI();		//ai_goal.c
-#ifndef TA_WEAPSYS_EX
-		BotShutdownWeaponAI();		//ai_weap.c
-#endif
-		BotShutdownWeights();		//ai_weight.c
-		//shut down bot elemantary actions
-		EA_Shutdown();
 	}
+
+	//
+	BotShutdownMoveAI();		//ai_move.c
+	BotShutdownGoalAI();		//ai_goal.c
+#ifndef TA_WEAPSYS_EX
+	BotShutdownWeaponAI();		//ai_weap.c
+#endif
+	BotShutdownWeights();		//ai_weight.c
+	//shut down bot elemantary actions
+	EA_Shutdown();
+
 	return qtrue;
 }
 

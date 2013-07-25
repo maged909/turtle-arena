@@ -1817,6 +1817,7 @@ extern	vmCvar_t		cg_teamDmLeadAnnouncements;
 extern	vmCvar_t		cg_voipShowMeter;
 extern	vmCvar_t		cg_voipShowCrosshairMeter;
 extern	vmCvar_t		cg_consoleLatency;
+extern	vmCvar_t		cg_drawShaderInfo;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;

@@ -252,6 +252,7 @@ vmCvar_t	cg_teamDmLeadAnnouncements;
 vmCvar_t	cg_voipShowMeter;
 vmCvar_t	cg_voipShowCrosshairMeter;
 vmCvar_t	cg_consoleLatency;
+vmCvar_t	cg_drawShaderInfo;
 
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 vmCvar_t 	cg_redTeamName;
@@ -533,6 +534,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_voipShowMeter, "cg_voipShowMeter", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_voipShowCrosshairMeter, "cg_voipShowCrosshairMeter", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_consoleLatency, "cg_consoleLatency", "3000", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_drawShaderInfo, "cg_drawShaderInfo", "0", 0, RANGE_BOOL },
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
