@@ -1222,11 +1222,7 @@ static void CG_Missile( centity_t *cent ) {
 #endif
 
 	// add to refresh list, possibly with quad glow
-#ifdef TA_WEAPSYS
-	CG_AddRefEntityWithPowerups( &ent, s1, s1->team );
-#else
-	CG_AddRefEntityWithPowerups( &ent, s1, TEAM_FREE );
-#endif
+	CG_AddRefEntityWithPowerups( &ent, s1 );
 }
 
 /*
@@ -1323,7 +1319,7 @@ static void CG_Grapple( centity_t *cent ) {
 #endif
 
 #ifdef TA_WEAPSYS
-	CG_AddRefEntityWithPowerups( &ent, s1, s1->team );
+	CG_AddRefEntityWithPowerups( &ent, s1 );
 #else
 	trap_R_AddRefEntityToScene( &ent );
 #endif

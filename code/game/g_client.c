@@ -1429,7 +1429,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 	// for statistics
 //	client->areabits = areabits;
 //	if ( !client->areabits )
-//		client->areabits = G_Alloc( (trap_AAS_PointReachabilityAreaIndex( NULL ) + 7) / 8 );
+//		client->areabits = trap_Alloc( (trap_AAS_PointReachabilityAreaIndex( NULL ) + 7) / 8, NULL );
 
 	return NULL;
 }
@@ -1691,7 +1691,7 @@ void ClientSpawn(gentity_t *ent, qboolean firstTime) {
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 	client->ps.eFlags = flags;
 	client->ps.contents = CONTENTS_BODY;
-	client->ps.capsule = qtrue;
+	client->ps.capsule = ( g_playerCapsule.integer == 1 ) ? qtrue : qfalse;
 
 	ent->s.groundEntityNum = ENTITYNUM_NONE;
 	ent->client = &level.clients[index];

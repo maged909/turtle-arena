@@ -15,7 +15,6 @@ Some of the major Spearmint features currently implemented are:
   * Four player splitscreen, offline and in network games
   * Extended API for game, cgame, and ui, includes some of the features from
            RTCW, WolfET, Tremulous, and World of Padman
-  * Capsule collision support, enabled for players by default.
   * Modified pure pk3 system, see PAKSUMS wiki page
   * Improved game, cgame, and ui API version handling
   * Removed code not needed for standalone games
@@ -323,6 +322,10 @@ New cvars
   r_shaderlod                       - used for if-endifs in shaders
                                       "if shaderlod 0.45" .. "endif"
                                        check if r_shaderlod > 0.45
+
+  g_playerCapsule                   - use capsule instead of box for player
+                                      collision. each player has it set at spawn
+                                      allowing mix of capsule and box in game
 
 
 New commands

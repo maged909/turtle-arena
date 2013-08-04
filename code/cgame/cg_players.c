@@ -2890,7 +2890,7 @@ Adds a piece with modifications or duplications for powerups
 Also called by CG_Missile for quad rockets, but nobody can tell...
 ===============
 */
-void CG_AddRefEntityWithPowerups_CustomSkeleton( refEntity_t *ent, refSkeleton_t *skeleton, entityState_t *state, int team ) {
+void CG_AddRefEntityWithPowerups_CustomSkeleton( refEntity_t *ent, refSkeleton_t *skeleton, entityState_t *state ) {
 #ifdef TURTLEARENA // POWERS
 	if ( state->powerups & ( 1 << PW_FLASHING ) ) {
 		if (state->otherEntityNum2 > 0) {
@@ -2910,7 +2910,7 @@ void CG_AddRefEntityWithPowerups_CustomSkeleton( refEntity_t *ent, refSkeleton_t
 	} else {
 		/*
 		if ( state->eFlags & EF_KAMIKAZE ) {
-			if (team == TEAM_BLUE)
+			if ( state->team == TEAM_BLUE )
 				ent->customShader = cgs.media.blueKamikazeShader;
 			else
 				ent->customShader = cgs.media.redKamikazeShader;
@@ -2923,7 +2923,7 @@ void CG_AddRefEntityWithPowerups_CustomSkeleton( refEntity_t *ent, refSkeleton_t
 #ifndef TURTLEARENA // POWERS
 		if ( state->powerups & ( 1 << PW_QUAD ) )
 		{
-			if (team == TEAM_RED)
+			if ( state->team == TEAM_RED )
 				ent->customShader = cgs.media.redQuadShader;
 			else
 				ent->customShader = cgs.media.quadShader;
@@ -2948,8 +2948,8 @@ void CG_AddRefEntityWithPowerups_CustomSkeleton( refEntity_t *ent, refSkeleton_t
 CG_AddRefEntityWithPowerups
 ===============
 */
-void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int team ) {
-	CG_AddRefEntityWithPowerups_CustomSkeleton(ent, NULL, state, team);
+void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state ) {
+	CG_AddRefEntityWithPowerups_CustomSkeleton(ent, NULL, state );
 }
 #else
 /*
@@ -2960,7 +2960,7 @@ Adds a piece with modifications or duplications for powerups
 Also called by CG_Missile for quad rockets, but nobody can tell...
 ===============
 */
-void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int team ) {
+void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state ) {
 #ifdef TURTLEARENA // POWERS
 	if ( state->powerups & ( 1 << PW_FLASHING ) ) {
 		if (state->otherEntityNum2 > 0) {
@@ -2980,7 +2980,7 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 	} else {
 		/*
 		if ( state->eFlags & EF_KAMIKAZE ) {
-			if (team == TEAM_BLUE)
+			if ( state->team == TEAM_BLUE )
 				ent->customShader = cgs.media.blueKamikazeShader;
 			else
 				ent->customShader = cgs.media.redKamikazeShader;
@@ -2993,7 +2993,7 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 #ifndef TURTLEARENA // POWERS
 		if ( state->powerups & ( 1 << PW_QUAD ) )
 		{
-			if (team == TEAM_RED)
+			if ( state->team == TEAM_RED )
 				ent->customShader = cgs.media.redQuadShader;
 			else
 				ent->customShader = cgs.media.quadShader;
@@ -3222,7 +3222,7 @@ void CG_Player( centity_t *cent ) {
 		legs.renderfx = renderfx;
 		VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
 
-		CG_AddRefEntityWithPowerups_CustomSkeleton( &legs, &skeleton, &cent->currentState, ci->team );
+		CG_AddRefEntityWithPowerups_CustomSkeleton( &legs, &skeleton, &cent->currentState );
 
 		VectorCopy( cent->lerpOrigin, torso.lightingOrigin );
 		torso.shadowPlane = shadowPlane;
@@ -3251,7 +3251,7 @@ void CG_Player( centity_t *cent ) {
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);	// don't positionally lerp at all
 
-	CG_AddRefEntityWithPowerups( &legs, &cent->currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &legs, &cent->currentState );
 
 	// if the model failed, allow the default nullmodel to be displayed
 	if (!legs.hModel) {
@@ -3278,7 +3278,7 @@ void CG_Player( centity_t *cent ) {
 	torso.shadowPlane = shadowPlane;
 	torso.renderfx = renderfx;
 
-	CG_AddRefEntityWithPowerups( &torso, &cent->currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &torso, &cent->currentState );
 #ifdef IOQ3ZTM // BONES
 	}
 #endif
@@ -3519,7 +3519,7 @@ void CG_Player( centity_t *cent ) {
 	head.shadowPlane = shadowPlane;
 	head.renderfx = renderfx;
 
-	CG_AddRefEntityWithPowerups( &head, &cent->currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &head, &cent->currentState );
 #ifdef IOQ3ZTM // BONES
 	}
 #endif

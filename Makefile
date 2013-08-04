@@ -182,6 +182,11 @@ ifndef SERVERBIN
 SERVERBIN=turtlearena-server
 endif
 
+ifndef APPBUNDLE
+# must manually change PRODUCT_NAME in make-macosx-app.sh
+APPBUNDLE=Spearmint.app
+endif
+
 ifndef BASEGAME
 BASEGAME=baseturtle
 endif
@@ -1400,7 +1405,7 @@ endif
 $(B).zip: $(TARGETS)
 ifeq ($(PLATFORM),darwin)
   ifdef ARCHIVE
-	@("./make-macosx-app.sh" release $(ARCH); if [ "$$?" -eq 0 ] && [ -d "$(B)/ioquake3.app" ]; then rm -f $@; cd $(B) && zip --symlinks -r9 ../../$@ `find "ioquake3.app" -print | sed -e "s!$(B)/!!g"`; else rm -f $@; cd $(B) && zip -r9 ../../$@ $(NAKED_TARGETS); fi)
+	@("./make-macosx-app.sh" release $(ARCH); if [ "$$?" -eq 0 ] && [ -d "$(B)/$(APPBUNDLE)" ]; then rm -f $@; cd $(B) && zip --symlinks -r9 ../../$@ `find "$(APPBUNDLE)" -print | sed -e "s!$(B)/!!g"`; else rm -f $@; cd $(B) && zip -r9 ../../$@ $(NAKED_TARGETS); fi)
   endif
 endif
 ifneq ($(PLATFORM),darwin)
@@ -2511,7 +2516,6 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/g_cmds.o \
   $(B)/$(BASEGAME)/game/g_combat.o \
   $(B)/$(BASEGAME)/game/g_items.o \
-  $(B)/$(BASEGAME)/game/g_mem.o \
   $(B)/$(BASEGAME)/game/g_misc.o \
   $(B)/$(BASEGAME)/game/g_missile.o \
   $(B)/$(BASEGAME)/game/g_mover.o \
@@ -2574,7 +2578,6 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/g_cmds.o \
   $(B)/$(MISSIONPACK)/game/g_combat.o \
   $(B)/$(MISSIONPACK)/game/g_items.o \
-  $(B)/$(MISSIONPACK)/game/g_mem.o \
   $(B)/$(MISSIONPACK)/game/g_misc.o \
   $(B)/$(MISSIONPACK)/game/g_missile.o \
   $(B)/$(MISSIONPACK)/game/g_mover.o \
