@@ -1595,6 +1595,12 @@ gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	VectorCopy (start, bolt->r.currentOrigin);
 
+	if ( self->client ) {
+		bolt->s.team = self->client->sess.sessionTeam;
+	} else {
+		bolt->s.team = TEAM_FREE;
+	}
+
 	return bolt;
 }	
 
@@ -1637,6 +1643,12 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	VectorCopy (start, bolt->r.currentOrigin);
 
+	if ( self->client ) {
+		bolt->s.team = self->client->sess.sessionTeam;
+	} else {
+		bolt->s.team = TEAM_FREE;
+	}
+
 	return bolt;
 }
 
@@ -1676,6 +1688,12 @@ gentity_t *fire_bfg (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorScale( dir, 2000, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
+
+	if ( self->client ) {
+		bolt->s.team = self->client->sess.sessionTeam;
+	} else {
+		bolt->s.team = TEAM_FREE;
+	}
 
 	return bolt;
 }
@@ -1717,6 +1735,12 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 
+	if ( self->client ) {
+		bolt->s.team = self->client->sess.sessionTeam;
+	} else {
+		bolt->s.team = TEAM_FREE;
+	}
+
 	return bolt;
 }
 
@@ -1751,7 +1775,12 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 	SnapVector( hook->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, hook->r.currentOrigin);
 
-	self->client->hook = hook;
+	if ( self->client ) {
+		self->client->hook = hook;
+		hook->s.team = self->client->sess.sessionTeam;
+	} else {
+		hook->s.team = TEAM_FREE;
+	}
 
 	return hook;
 }
@@ -1804,6 +1833,12 @@ gentity_t *fire_nail( gentity_t *self, vec3_t start, vec3_t forward, vec3_t righ
 
 	VectorCopy( start, bolt->r.currentOrigin );
 
+	if ( self->client ) {
+		bolt->s.team = self->client->sess.sessionTeam;
+	} else {
+		bolt->s.team = TEAM_FREE;
+	}
+
 	return bolt;
 }	
 
@@ -1839,8 +1874,6 @@ gentity_t *fire_prox( gentity_t *self, vec3_t start, vec3_t dir ) {
 	// if count == 1 then the prox mine left the player bbox and can attack to it
 	bolt->count = 0;
 
-	bolt->s.team = self->client->sess.sessionTeam;
-
 	bolt->s.pos.trType = TR_GRAVITY;
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
@@ -1848,6 +1881,12 @@ gentity_t *fire_prox( gentity_t *self, vec3_t start, vec3_t dir ) {
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 
 	VectorCopy (start, bolt->r.currentOrigin);
+
+	if ( self->client ) {
+		bolt->s.team = self->client->sess.sessionTeam;
+	} else {
+		bolt->s.team = TEAM_FREE;
+	}
 
 	return bolt;
 }

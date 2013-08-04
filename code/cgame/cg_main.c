@@ -440,9 +440,9 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE, RANGE_ALL },
 #endif
 #ifdef TA_MISC // TEAM_CHAT_CON
-	{ &cg_teamChatHeight, "cg_teamChatHeight", "8", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_teamChatHeight, "cg_teamChatHeight", "8", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
 #else
-	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
 #endif
 #ifndef TURTLEARENA // NO_CGFORCEMODLE
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE, RANGE_BOOL },

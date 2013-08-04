@@ -429,7 +429,7 @@ void CG_Draw3DHeadModel( int clientNum, float x, float y, float w, float h, vec3
 
 	trap_R_ClearScene();
 #ifdef IOQ3ZTM // ZTM: Show powerups on statusbar/scoreboard head models!
-	CG_AddRefEntityWithPowerups( &ent, &cg_entities[clientNum].currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &ent, &cg_entities[clientNum].currentState );
 #else
 	trap_R_AddRefEntityToScene( &ent );
 #endif
@@ -2248,6 +2248,8 @@ static void CG_DrawTeamInfo( void ) {
 		chatHeight = TEAMCHAT_HEIGHT;
 	if (chatHeight <= 0)
 		return; // disabled
+
+	CG_SetScreenPlacement( PLACE_LEFT, PLACE_BOTTOM );
 
 	if (cgs.teamLastChatPos != cgs.teamChatPos) {
 		if (cg.time - cgs.teamChatMsgTimes[cgs.teamLastChatPos % chatHeight] > cg_teamChatTime.integer

@@ -912,13 +912,6 @@ void ObeliskPain( gentity_t *self, gentity_t *attacker, int damage );
 #endif
 
 //
-// g_mem.c
-//
-void *G_Alloc( int size );
-void G_InitMemory( void );
-void Svcmd_GameMem_f( void );
-
-//
 // g_session.c
 //
 void G_ReadSessionData( gclient_t *client );
@@ -1045,7 +1038,6 @@ extern	vmCvar_t	g_quadfactor;
 extern	vmCvar_t	g_forcerespawn;
 extern	vmCvar_t	g_inactivity;
 extern	vmCvar_t	g_debugMove;
-extern	vmCvar_t	g_debugAlloc;
 extern	vmCvar_t	g_debugDamage;
 extern	vmCvar_t	g_weaponRespawn;
 extern	vmCvar_t	g_weaponTeamRespawn;
@@ -1081,6 +1073,7 @@ extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 #endif
 #endif
+extern	vmCvar_t	g_playerCapsule;
 #ifdef TA_SP
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_savegameLoading;
