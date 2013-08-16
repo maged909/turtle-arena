@@ -60,6 +60,8 @@ gentity_t		g_entities[MAX_GENTITIES];
 gclient_t		g_clients[MAX_CLIENTS];
 gconnection_t	g_connections[MAX_CLIENTS];
 
+qboolean	g_doFullMapRestart = qfalse;
+
 vmCvar_t	g_gametype;
 vmCvar_t	g_dmflags;
 vmCvar_t	g_fraglimit;
@@ -284,6 +286,7 @@ void G_RunFrame( int levelTime );
 void G_ShutdownGame( int restart );
 qboolean G_SnapshotCallback( int entityNum, int clientNum );
 void G_VidRestart( void );
+int G_MapRestart( int levelTime, int restartTime );
 void CheckExitRules( void );
 
 
@@ -332,6 +335,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case GAME_VID_RESTART:
 		G_VidRestart();
 		return 0;
+	case GAME_MAP_RESTART:
+		return G_MapRestart( arg0, arg1 );
 	case BOTAI_START_FRAME:
 		return BotAIStartFrame( arg0 );
 	}
@@ -539,7 +544,7 @@ void G_UpdateCvars( void ) {
 				}
 
 				if ( cv->gameFlags & GCF_DO_RESTART ) {
-					trap_Cvar_SetValue( "sv_dorestart", 1 );
+					g_doFullMapRestart = qtrue;
 				}
 			}
 		}
@@ -798,6 +803,52 @@ void G_VidRestart( void ) {
 		ClientUserinfoChanged( i );
 	}
 #endif
+}
+
+/*
+=================
+G_MapRestart
+
+This is called by the server when map_restart command is issued and when restart time is hit.
+
+return restart time, -1 to do a full map reload, or INT_MAX to prevent restart.
+=================
+*/
+int G_MapRestart( int levelTime, int restartTime ) {
+	int			delay;
+	char		buf[12];
+
+	// restart time hit
+	if ( restartTime && levelTime >= restartTime ) {
+		if ( g_doFullMapRestart ) {
+			// force full map reload
+			return -1;
+		}
+
+		return 0;
+	}
+
+	// don't let user change restart time
+	if ( restartTime ) {
+		return restartTime;
+	}
+
+	// warmup delays using g_warmup after map restart
+	if ( g_doWarmup.integer ) {
+		return 0;
+	}
+
+	if ( trap_Argc() > 1 ) {
+		trap_Argv( 1, buf, sizeof (buf) );
+		delay = atoi( buf );
+	}
+	else {
+		delay = 5;
+	}
+
+	restartTime = levelTime + delay * 1000;
+	trap_SetConfigstring( CS_WARMUP, va( "%i", restartTime ) );
+	return restartTime;
 }
 
 //===================================================================

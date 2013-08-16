@@ -78,8 +78,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return CG_CrosshairPlayer(arg0);
 	case CG_LAST_ATTACKER:
 		return CG_LastAttacker(arg0);
-    case CG_VOIP_STRING:
-      return (intptr_t)CG_VoIPString(arg0);
+	case CG_VOIP_STRING:
+		return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
 		CG_KeyEvent(arg0, arg1);
 		return 0;
@@ -92,7 +92,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
 		return 0;
-    case CG_CONSOLE_TEXT:
+	case CG_CONSOLE_TEXT:
 		CG_AddNotifyText();
 		return 0;
 	case CG_WANTSBINDKEYS:
@@ -2707,6 +2707,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 			continue;
 		}
 
+		trap_GetViewAngles( i, cg.localClients[i].viewangles );
 		CG_LocalClientAdded(i, clientNums[i]);
 	}
 
@@ -2800,6 +2801,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	s = CG_ConfigString( CS_LEVEL_START_TIME );
 	cgs.levelStartTime = atoi( s );
 
+	trap_SetMapTitle( CG_ConfigString( CS_MESSAGE ) );
 	trap_SetNetFields( sizeof (entityState_t), bg_entityStateFields, bg_numEntityStateFields,
 					   sizeof (playerState_t), bg_playerStateFields, bg_numPlayerStateFields );
 
@@ -2890,6 +2892,12 @@ Called before every level change or subsystem restart
 =================
 */
 void CG_Shutdown( void ) {
+	int i;
+
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		trap_SetViewAngles( i, cg.localClients[ i ].viewangles );
+	}
+
 	// some mods may need to do cleanup work here,
 	// like closing files or archiving session data
 }

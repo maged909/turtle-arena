@@ -1383,6 +1383,8 @@ void CL_ClearMemory(qboolean shutdownRef)
 		Hunk_Clear();
 		// clear collision map data
 		CM_ClearMap();
+		// clear net fields
+		MSG_ShutdownNetFields();
 	}
 	else {
 		// clear all the client data on the hunk
@@ -1586,6 +1588,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 			speex_bits_destroy(&clc.speexDecoderBits[i]);
 			speex_decoder_destroy(clc.speexDecoder[i]);
 		}
+		clc.speexInitialized = qfalse;
 	}
 	Cmd_RemoveCommand ("voip");
 #endif
@@ -3364,7 +3367,7 @@ void CL_InitRef( void ) {
   
 	ri.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	ri.CL_MaxSplitView = CL_MaxSplitView;
-	ri.CL_GetMapMessage = CL_GetMapMessage;
+	ri.CL_GetMapTitle = CL_GetMapTitle;
 	ri.CL_GetClientLocation = CL_GetClientLocation;
 	ri.zlib_compress = compress;
 	ri.zlib_crc32 = crc32;
@@ -4659,21 +4662,16 @@ void CL_ShowIP_f(void) {
 
 /*
 =================
-CL_GetMapMessage
+CL_GetMapTitle
 =================
 */
-void CL_GetMapMessage(char *buf, int bufLength) {
-	int		offset;
-
-	offset = cl.gameState.stringOffsets[CS_MESSAGE];
-	if (!offset) {
-		if( bufLength ) {
-			Q_strncpyz( buf, "Unknown", bufLength);
-		}
+void CL_GetMapTitle( char *buf, int bufLength ) {
+	if ( !clc.mapTitle[0] ) {
+		Q_strncpyz( buf, "Unknown", bufLength );
 		return;
 	}
 
-	Q_strncpyz( buf, cl.gameState.stringData+offset, bufLength);
+	Q_strncpyz( buf, clc.mapTitle, bufLength );
 }
 
 /*
