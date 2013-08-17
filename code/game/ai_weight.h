@@ -37,6 +37,8 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  *****************************************************************************/
 
+#define MAX_INVENTORYVALUE			999999
+
 #define WT_BALANCE			1
 #define MAX_WEIGHTS			128
 

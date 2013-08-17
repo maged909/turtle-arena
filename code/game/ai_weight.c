@@ -64,7 +64,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "match.h"				//string matching types and vars
 
 
-#define MAX_INVENTORYVALUE			999999
 #define EVALUATERECURSIVELY
 
 #define MAX_WEIGHT_FILES			128
