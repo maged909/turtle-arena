@@ -1173,6 +1173,8 @@ typedef struct {
 #define	KEYCATCH_MESSAGE		0x0004
 #define	KEYCATCH_CGAME			0x0008
 
+#define KEYCATCH_UI_CGAME		( KEYCATCH_UI | KEYCATCH_CGAME )
+
 
 // sound channels
 // channel 0 never willingly overrides

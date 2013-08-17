@@ -1393,26 +1393,7 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 			return;
 		}
 
-		// escape always gets out of CGAME stuff
-		if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
-			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
-			VM_Call (cgvm, CG_EVENT_HANDLING, CGAME_EVENT_NONE);
-			return;
-		}
-
-		if ( !( Key_GetCatcher( ) & KEYCATCH_UI ) ) {
-			if ( clc.state == CA_ACTIVE && !clc.demoplaying ) {
-				VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
-			}
-			else if ( clc.state != CA_DISCONNECTED ) {
-				CL_Disconnect_f();
-				S_StopAllSounds();
-				VM_Call( uivm, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-			}
-			return;
-		}
-
-		VM_Call( uivm, UI_KEY_EVENT, key, qtrue );
+		VM_Call( cgvm, CG_KEY_EVENT, key, qtrue );
 		return;
 	}
 
@@ -1424,11 +1405,7 @@ void CL_KeyDownEvent( int key, unsigned time, qboolean onlybinds )
 		if ( !onlybinds ) {
 			Console_Key( key );
 		}
-	} else if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if ( uivm && ( !onlybinds || VM_Call( uivm, UI_WANTSBINDKEYS ) ) ) {
-			VM_Call( uivm, UI_KEY_EVENT, key, qtrue );
-		} 
-	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
+	} else if ( Key_GetCatcher( ) & KEYCATCH_UI_CGAME ) {
 		if ( cgvm && ( !onlybinds || VM_Call( cgvm, CG_WANTSBINDKEYS ) ) ) {
 			VM_Call( cgvm, CG_KEY_EVENT, key, qtrue );
 		} 
@@ -1473,11 +1450,7 @@ void CL_KeyUpEvent( int key, unsigned time, qboolean onlybinds )
 	//
 	CL_ParseBinding( key, qfalse, time );
 
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
-		if ( !onlybinds || VM_Call( uivm, UI_WANTSBINDKEYS ) ) {
-			VM_Call( uivm, UI_KEY_EVENT, key, qfalse );
-		}
-	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvm ) {
+	if ( ( Key_GetCatcher( ) & KEYCATCH_UI_CGAME ) && cgvm ) {
 		if ( !onlybinds || VM_Call( cgvm, CG_WANTSBINDKEYS ) ) {
 			VM_Call( cgvm, CG_KEY_EVENT, key, qfalse );
 		}
@@ -1538,9 +1511,9 @@ void CL_CharEvent( int key ) {
 	{
 		Field_CharEvent( &g_consoleField, key );
 	}
-	else if ( Key_GetCatcher( ) & KEYCATCH_UI )
+	else if ( Key_GetCatcher( ) & KEYCATCH_UI_CGAME )
 	{
-		VM_Call( uivm, UI_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
+		VM_Call( cgvm, CG_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
 	}
 	else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) 
 	{

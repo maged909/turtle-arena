@@ -33,7 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 //
 // system traps
-// These functions are how cgame and ui communicates with the client system
+// These functions are how cgame communicates with the client system
 //
 
 // Additional shared traps in ../game/bg_misc.h
@@ -96,6 +96,9 @@ int			trap_GetDemoLength( void );
 
 void		trap_GetClientState( uiClientState_t *state );
 int			trap_GetConfigString( int index, char* buff, int buffsize );
+void		trap_SetMapTitle( const char *name );
+void		trap_SetViewAngles( int localPlayerNum, const vec3_t angles );
+void		trap_GetViewAngles( int localPlayerNum, const vec3_t angles );
 
 // model collision
 void		trap_CM_LoadMap( const char *mapname );

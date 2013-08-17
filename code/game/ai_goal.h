@@ -73,21 +73,6 @@ typedef struct bot_goalstate_s
 	float avoidgoaltimes[MAX_AVOIDGOALS];		//times to avoid the goals
 } bot_goalstate_t;
 
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-//game can send extra items not in "botfiles/items.c"
-//note: the items can be any type, not just weapons.
-typedef struct
-{
-	char classname[32];
-	char name[MAX_QPATH];
-	char model[MAX_QPATH];
-	int modelindex;
-	int respawntime;
-	int defaultWeight; // If item isn't in character item weight file use this weight.
-	int inventory;
-} bot_shareditem_t;
-#endif
-
 //reset the whole goal state, but keep the item weights
 void BotResetGoalState(int goalstate);
 //reset avoid goals
@@ -134,11 +119,7 @@ float BotAvoidGoalTime(int goalstate, int number);
 //set the avoid goal time
 void BotSetAvoidGoalTime(int goalstate, int number, float avoidtime);
 //initializes the items in the level
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-void BotInitLevelItems(bot_shareditem_t *itemInfos);
-#else
 void BotInitLevelItems(void);
-#endif
 //regularly update dynamic entity items (dropped weapons, flags etc.)
 void BotUpdateEntityItems(void);
 //interbreed the goal fuzzy logic

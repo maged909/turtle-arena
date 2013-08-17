@@ -31,13 +31,16 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifndef __UI_LOCAL_H__
 #define __UI_LOCAL_H__
 
-#include "../qcommon/q_shared.h"
-#include "../renderercommon/tr_types.h"
-#include "ui_public.h"
-#include "../cgame/cg_syscalls.h"
-#include "../client/keycodes.h"
-#include "../game/bg_misc.h"
+#include "../cgame/cg_local.h"
 #include "ui_shared.h"
+
+#ifdef IOQ3ZTM // FONT_REWRITE
+// ZTM: FIXME: cgame replaces height macros with function calls that aren't valid in main menu.
+#undef TINYCHAR_HEIGHT
+#undef SMALLCHAR_HEIGHT
+#undef BIGCHAR_HEIGHT
+#undef GIANTCHAR_HEIGHT
+#endif
 
 // global display context
 
@@ -384,7 +387,6 @@ extern sfxHandle_t	MenuField_Key( menufield_s* m, int* key );
 void UI_Report( void );
 void UI_Load( void );
 void UI_LoadMenus(const char *menuFile, qboolean reset);
-void _UI_SetActiveMenu( uiMenuCommand_t menu );
 int UI_AdjustTimeByGame(int time);
 void UI_ShowPostGame(qboolean newHigh);
 void UI_ClearScores( void );
@@ -523,28 +525,6 @@ extern void DriverInfo_Cache( void );
 //
 // ui_players.c
 //
-
-#ifndef IOQ3ZTM // LERP_FRAME_CLIENT_LESS // moved to bg_misc.h
-//FIXME ripped from cg_local.h
-typedef struct {
-	int			oldFrame;
-	int			oldFrameTime;		// time when ->oldFrame was exactly on
-
-	int			frame;
-	int			frameTime;			// time when ->frame will be exactly on
-
-	float		backlerp;
-
-	float		yawAngle;
-	qboolean	yawing;
-	float		pitchAngle;
-	qboolean	pitching;
-
-	int			animationNumber;	// may include ANIM_TOGGLEBIT
-	animation_t	*animation;
-	int			animationTime;		// time when the first frame of the animation will be exact
-} lerpFrame_t;
-#endif
 
 typedef struct {
 	// model info
@@ -895,12 +875,6 @@ typedef struct {
 extern uiInfo_t uiInfo;
 
 
-extern void			UI_Init( void );
-extern void			UI_Shutdown( void );
-extern void			UI_KeyEvent( int key );
-extern void			UI_MouseEvent( int localClientNum, int dx, int dy );
-extern void			UI_Refresh( int realtime );
-extern qboolean		UI_ConsoleCommand( int realTime );
 extern float		UI_ClampCvar( float min, float max, float value );
 extern void			UI_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 extern void			UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ); 
@@ -934,8 +908,6 @@ extern void			UI_PopMenu (void);
 extern void			UI_ForceMenuOff (void);
 extern char			*UI_Argv( int arg );
 extern char			*UI_Cvar_VariableString( const char *var_name );
-extern void			UI_Refresh( int time );
-extern void			UI_KeyEvent( int key );
 extern void			UI_StartDemoLoop( void );
 extern qboolean		m_entersound;
 void UI_LoadBestScores(const char *map, int game);

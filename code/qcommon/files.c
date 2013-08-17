@@ -229,7 +229,7 @@ typedef struct {
 	unzFile			handle;						// handle to zip file
 	int				checksum;					// checksum of the zip
 	int				numfiles;					// number of files in pk3
-	int				referenced;					// referenced file flags
+	qboolean			referenced;					// is pk3 referenced?
 	int				hashSize;					// hash table size (power of 2)
 	fileInPack_t*	*hashTable;					// hash table
 	fileInPack_t*	buildBuffer;				// buffer with the filenames etc.
@@ -1212,13 +1212,13 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 				{
 					// found it!
 
-					// mark the pak as having been referenced and mark specifics on cgame and ui
+					// mark the pak as having been referenced
 					// shaders, txt, arena files  by themselves do not count as a reference as 
 					// these are loaded from all pk3s 
 					// from every pk3 file.. 
 					len = strlen(filename);
 
-					if (!(pak->referenced & FS_GENERAL_REF))
+					if (!pak->referenced)
 					{
 						if(!FS_IsExt(filename, ".shader", len) &&
 						   !FS_IsExt(filename, ".txt", len) &&
@@ -1230,14 +1230,9 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						   Q_stricmp(filename, "vm/game.qvm") != 0 &&
 						   !strstr(filename, "levelshots"))
 						{
-							pak->referenced |= FS_GENERAL_REF;
+							pak->referenced = qtrue;
 						}
 					}
-
-					if(strstr(filename, "cgame.qvm"))
-						pak->referenced |= FS_CGAME_REF;
-					if(strstr(filename, "ui.qvm"))
-						pak->referenced |= FS_UI_REF;
 
 					if(uniqueFILE)
 					{
@@ -2214,14 +2209,26 @@ FS_AddFileToList
 ==================
 */
 static int FS_AddFileToList( char *name, char *list[MAX_FOUND_FILES], int nfiles ) {
-	int		i;
+	int		i, j, val;
 
 	if ( nfiles == MAX_FOUND_FILES - 1 ) {
 		return nfiles;
 	}
 	for ( i = 0 ; i < nfiles ; i++ ) {
-		if ( !Q_stricmp( name, list[i] ) ) {
-			return nfiles;		// allready in list
+		val = FS_PathCmp( name, list[i] );
+		if ( !val ) {
+			return nfiles;		// already in list
+		}
+		// insert into list
+		else if ( val < 0 ) {
+			for ( j = nfiles-1; j >= i; --j ) {
+				list[j+1] = list[j];
+			}
+
+			list[i] = CopyString( name );
+			nfiles++;
+
+			return nfiles;
 		}
 	}
 	list[nfiles] = CopyString( name );
@@ -2410,8 +2417,6 @@ char **FS_ListFilesEx( const char *path, const char **extensions, int numExts, i
 	if ( !nfiles ) {
 		return NULL;
 	}
-
-	FS_SortFileList((char **)&list, nfiles);
 
 	listCopy = Z_Malloc( ( nfiles + 1 ) * sizeof( *listCopy ) );
 	for ( i = 0 ; i < nfiles ; i++ ) {
@@ -2866,34 +2871,6 @@ int FS_PathCmp( const char *s1, const char *s2 ) {
 
 /*
 ================
-FS_SortFileList
-================
-*/
-void FS_SortFileList(char **filelist, int numfiles) {
-	int i, j, k, numsortedfiles;
-	char **sortedlist;
-
-	sortedlist = Z_Malloc( ( numfiles + 1 ) * sizeof( *sortedlist ) );
-	sortedlist[0] = NULL;
-	numsortedfiles = 0;
-	for (i = 0; i < numfiles; i++) {
-		for (j = 0; j < numsortedfiles; j++) {
-			if (FS_PathCmp(filelist[i], sortedlist[j]) < 0) {
-				break;
-			}
-		}
-		for (k = numsortedfiles; k > j; k--) {
-			sortedlist[k] = sortedlist[k-1];
-		}
-		sortedlist[j] = filelist[i];
-		numsortedfiles++;
-	}
-	Com_Memcpy(filelist, sortedlist, numfiles * sizeof( *filelist ) );
-	Z_Free(sortedlist);
-}
-
-/*
-================
 FS_NewDir_f
 ================
 */
@@ -2914,8 +2891,6 @@ void FS_NewDir_f( void ) {
 	Com_Printf( "---------------\n" );
 
 	dirnames = FS_ListFilteredFiles( "", "", filter, &ndirs, qfalse );
-
-	FS_SortFileList(dirnames, ndirs);
 
 	for ( i = 0; i < ndirs; i++ ) {
 		FS_ConvertPath(dirnames[i]);
@@ -3920,6 +3895,8 @@ static void FS_CheckPaks( qboolean quiet )
 	char			badGames[512];
 	int				pak;
 
+	badGames[0] = '\0';
+
 	FS_ReorderPaksumsPaks();
 
 	for (pak = 0; pak < fs_numPaksums; pak++) {
@@ -4127,26 +4104,6 @@ const char *FS_ReferencedPakNames( void ) {
 
 /*
 =====================
-FS_ClearPakReferences
-=====================
-*/
-void FS_ClearPakReferences( int flags ) {
-	searchpath_t *search;
-
-	if ( !flags ) {
-		flags = -1;
-	}
-	for ( search = fs_searchpaths; search; search = search->next ) {
-		// is the element a pak file and has it been referenced?
-		if ( search->pack ) {
-			search->pack->referenced &= ~flags;
-		}
-	}
-}
-
-
-/*
-=====================
 FS_PureServerSetLoadedPaks
 
 If the string is empty, all data sources will be allowed.
@@ -4299,9 +4256,6 @@ void FS_Restart( qboolean gameDirChanged ) {
 	// free anything we currently have loaded
 	FS_Shutdown(qfalse);
 
-	// clear pak references
-	FS_ClearPakReferences(0);
-
 	// try to start up normally
 	FS_Startup(!gameDirChanged);
 
@@ -4447,8 +4401,6 @@ void	FS_FilenameCompletion( const char *dir, const char *ext,
 	char	filename[ MAX_STRING_CHARS ];
 
 	filenames = FS_ListFilteredFiles( dir, ext, NULL, &nfiles, allowNonPureFilesOnDisk );
-
-	FS_SortFileList( filenames, nfiles );
 
 	for( i = 0; i < nfiles; i++ ) {
 		FS_ConvertPath( filenames[ i ] );

@@ -125,10 +125,8 @@ typedef struct iteminfo_s
 	float respawntime;					//respawn time
 	vec3_t mins;						//mins of the item
 	vec3_t maxs;						//maxs of the item
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
 	int defaultWeight;					//inline weight, for if only a constant value is needed.
 	int inventory;						//inline inventory number
-#endif
 
 	int number;							//number of the item info
 } iteminfo_t;
@@ -149,10 +147,8 @@ fielddef_t iteminfo_fields[] =
 {"respawntime", ITEMINFO_OFS(respawntime), FT_FLOAT},
 {"mins", ITEMINFO_OFS(mins), FT_FLOAT|FT_ARRAY, 3},
 {"maxs", ITEMINFO_OFS(maxs), FT_FLOAT|FT_ARRAY, 3},
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
 {"defaultWeight", ITEMINFO_OFS(defaultWeight), FT_INT},
 {"inventory", ITEMINFO_OFS(inventory), FT_INT},
-#endif
 {NULL, 0, 0}
 };
 
@@ -310,11 +306,6 @@ itemconfig_t *LoadItemConfig(char *filename)
 	BotAI_Print(PRT_DEVELOPER, "loaded %s\n", path);
 	return ic;
 } //end of the function LoadItemConfig
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-#define MAX_INVENTORYVALUE			999999 // be_ai_weight.c
-#ifndef max
-#define max(x,y) (x) > (y) ? (x) : (y)
-#endif
 //===========================================================================
 // atemps to create a fuzzy weight for item
 //
@@ -359,8 +350,8 @@ int CreateFuzzyWeight(weightconfig_t *iwc, const iteminfo_t *item)
 		// Setup balance
 		fs->type = WT_BALANCE;
 		fs->weight = item->defaultWeight;
-		fs->minweight = max(1, fs->weight/20.0f);
-		fs->maxweight = max(1, fs->weight*20.0f);
+		fs->minweight = MAX(1, fs->weight/20.0f);
+		fs->maxweight = MAX(1, fs->weight*20.0f);
 #else
 		// Setup a simple "return weight;"
 		fs->type = 0;
@@ -394,8 +385,8 @@ int CreateFuzzyWeight(weightconfig_t *iwc, const iteminfo_t *item)
 	// Setup balance
 	fs->type = WT_BALANCE;
 	fs->weight = item->defaultWeight;
-	fs->minweight = max(1, fs->weight/20.0f);
-	fs->maxweight = max(1, fs->weight*20.0f);
+	fs->minweight = MAX(1, fs->weight/20.0f);
+	fs->maxweight = MAX(1, fs->weight*20.0f);
 #else
 	// Setup a simple "return weight;"
 	fs->type = 0;
@@ -409,7 +400,6 @@ int CreateFuzzyWeight(weightconfig_t *iwc, const iteminfo_t *item)
 
 	return index;
 } //end of the function CreateFuzzyWeight
-#endif
 //===========================================================================
 // index to find the weight function of an iteminfo
 //
@@ -424,12 +414,10 @@ void ItemWeightIndex(const itemconfig_t *ic, weightconfig_t *iwc, int *index)
 	for (i = 0; i < ic->numiteminfo; i++)
 	{
 		index[i] = FindFuzzyWeight(iwc, ic->iteminfo[i].classname);
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
 		if (index[i] < 0)
 		{
 			index[i] = CreateFuzzyWeight(iwc, &ic->iteminfo[i]);
 		}
-#endif
 		if (index[i] < 0 && bot_developer.integer)
 		{
 			G_Printf("item info %d \"%s\" has no fuzzy weight\r\n", i, ic->iteminfo[i].classname);
@@ -580,11 +568,7 @@ void BotInitInfoEntities(void)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-void BotInitLevelItems(bot_shareditem_t *itemInfos)
-#else
 void BotInitLevelItems(void)
-#endif
 {
 	int i, spawnflags, value;
 	char classname[MAX_EPAIRKEY];
@@ -593,6 +577,9 @@ void BotInitLevelItems(void)
 	itemconfig_t *ic;
 	levelitem_t *li;
 	trace_t trace;
+	int bgNum;
+	bg_iteminfo_t *bgItem;
+	iteminfo_t *botItem;
 
 	//initialize the map locations and camp spots
 	BotInitInfoEntities();
@@ -608,42 +595,128 @@ void BotInitLevelItems(void)
 	//if there's no AAS file loaded
 	if (!trap_AAS_Loaded()) return;
 
-#ifdef TA_WEAPSYS // BOT_ITEM_INFOS
-	// Add the new items.
-	if (itemInfos != NULL)
+	//add items from scripts/iteminfo.txt and scripts/*.item
+	//this overrides everything except defaultWeight/inventory in botfiles/items.c
+	for ( bgNum = 0; bgNum < BG_NumItems(); bgNum++ )
 	{
-		int j;
+		bgItem = &bg_iteminfo[bgNum];
 
-		for (i = ic->numiteminfo, j = 0; i < MAX_ITEMS; i++, j++)
+		if (!bgItem->classname[0])
+			continue;
+
+		//find existing item info
+		for (i = 0; i < ic->numiteminfo; i++)
 		{
-			if (!itemInfos[j].classname)
+			if (!strcmp(bgItem->classname, ic->iteminfo[i].classname)) {
+				botItem = &ic->iteminfo[i];
 				break;
+			}
+		} //end for
+		if (i >= ic->numiteminfo)
+		{
+			if ( ic->numiteminfo >= MAX_ITEMS ) {
+				BotAI_Print(PRT_ERROR, "couldn't add bot item info for %s, no free item slot\n", bgItem->classname);
+				continue;
+			} //end if
+			botItem = &ic->iteminfo[ic->numiteminfo];
 
-			Q_strncpyz(ic->iteminfo[i].classname, itemInfos[j].classname, 32);
-			Q_strncpyz(ic->iteminfo[i].name, itemInfos[j].name, MAX_QPATH);
+			Q_strncpyz(botItem->classname, bgItem->classname, 32);
+			botItem->number = ic->numiteminfo;
+			ic->numiteminfo++;
+		} //end if
+
+		Q_strncpyz(botItem->name, bgItem->pickup_name, MAX_QPATH);
 #ifndef TA_DATA // UNUSED
-			Q_strncpyz(ic->iteminfo[i].model, itemInfos[j].model, MAX_QPATH);
+		Q_strncpyz(botItem->model, bgItem->world_model[0], MAX_QPATH);
 #endif
-			ic->iteminfo[i].modelindex = itemInfos[j].modelindex;
-			ic->iteminfo[i].respawntime = itemInfos[j].respawntime;
-			ic->iteminfo[i].defaultWeight = itemInfos[j].defaultWeight;
-			ic->iteminfo[i].inventory = itemInfos[j].inventory;
+		botItem->modelindex = bgNum;
 
 #ifndef TA_DATA // UNUNSED
-			ic->iteminfo[i].type = 0;
-			ic->iteminfo[i].index = 0;
+		botItem->type = 0;
+		botItem->index = 0;
 #endif
 
-			// Set mins/maxs
-			VectorSet(ic->iteminfo[i].mins, -13, -13, -13);
-			VectorSet(ic->iteminfo[i].maxs, 13, 13, 13);
+		VectorSet( botItem->mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS );
+		VectorSet( botItem->maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
 
-			ic->iteminfo[i].number = ic->numiteminfo;
-
-			ic->numiteminfo++;
-		}
-	}
+		//don't override default weight set in botfiles/items.c
+		if (botItem->defaultWeight <= 0)
+		{
+#ifdef TA_WEAPSYS
+			if (bgItem->giType == IT_WEAPON)
+			{
+				botItem->defaultWeight = BotWeaponWeight( bgItem->giTag );
+			} //end if
+			else
 #endif
+			{
+				botItem->defaultWeight = 1;
+
+			} //end else
+		} //end if
+
+		//don't override inventory set in botfiles/items.c
+		if (botItem->inventory <= 0)
+		{
+#ifdef TA_WEAPSYS
+			if (bgItem->giType == IT_WEAPON)
+			{
+				botItem->inventory = INVENTORY_WEAPON_START + bgItem->giTag - 1;
+			}
+			else
+#endif
+			{
+				botItem->inventory = 0;
+			}
+		} //end if
+
+		// ZTM: TODO: Get respawn time here and in Touch_Item the same way/using the same function call?
+		switch (bgItem->giType)
+		{
+			case IT_WEAPON:
+				if ( gametype == GT_TEAM  ) {
+					botItem->respawntime = trap_Cvar_VariableIntegerValue("g_weaponTeamRespawn");
+				} else {
+					botItem->respawntime = trap_Cvar_VariableIntegerValue("g_weaponrespawn");
+				}
+				break;
+
+			case IT_AMMO:
+				botItem->respawntime = RESPAWN_AMMO;
+				break;
+
+#ifdef TURTLEARENA // NIGHTS_ITEMS
+			case IT_SCORE:
+				botItem->respawntime = RESPAWN_SCORE;
+				break;
+#endif
+
+#ifndef TURTLEARENA // NOARMOR
+			case IT_ARMOR:
+				botItem->respawntime = RESPAWN_ARMOR;
+				break;
+#endif
+
+			case IT_HEALTH:
+				if (bgItem->quantity == 100)
+					botItem->respawntime = RESPAWN_MEGAHEALTH;
+				else
+					botItem->respawntime = RESPAWN_HEALTH;
+				break;
+
+			case IT_POWERUP:
+				botItem->respawntime = RESPAWN_POWERUP;
+				break;
+
+			case IT_HOLDABLE:
+				botItem->respawntime = RESPAWN_HOLDABLE;
+				break;
+
+			default:
+				botItem->respawntime = 35;
+				break;
+		} //end switch
+	} //end for
 
 	//validate the modelindexes of the item info
 	for (i = 0; i < ic->numiteminfo; i++)
