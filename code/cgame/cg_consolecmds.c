@@ -141,16 +141,71 @@ static void CG_ScoresUp_f( int localClientNum ) {
 	}
 }
 
+/*
+=============
+CG_SetModel_f
+=============
+*/
+void CG_SetModel_f( int localClientNum ) {
+	const char	*arg;
+	char	name[256];
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+	char	head[256];
+#else
+	char	cvarName[32];
+
+	Q_strncpyz( cvarName, Com_LocalClientCvarName( localClientNum, "model"), sizeof (cvarName) );
+#endif
+
+	arg = CG_Argv( 1 );
+	if ( arg[0] ) {
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+		trap_Cvar_Set( Com_LocalClientCvarName( localClientNum, "model"), arg );
+		arg = CG_Argv( 2 );
+#else
+		trap_Cvar_Set( cvarName, arg );
+#endif
+		trap_Cvar_Set( Com_LocalClientCvarName( localClientNum, "headmodel"), arg );
+	} else {
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+		trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName( localClientNum, "model"), name, sizeof(name) );
+		trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName( localClientNum, "headmodel"), head, sizeof(head) );
+		if (Q_stricmp(name, head) == 0) {
+			Com_Printf("player model is set to %s\n", name);
+		} else {
+			Com_Printf("player model is set to %s, player head model is set to %s\n", name, head);
+		}
+#else
+		trap_Cvar_VariableStringBuffer( cvarName, name, sizeof(name) );
+		Com_Printf("%s is set to %s\n", cvarName, name);
+#endif
+	}
+}
+
 #ifdef MISSIONPACK_HUD
 extern menuDef_t *menuScoreboard;
+extern displayContextDef_t cgDC;
 void Menu_Reset( void );			// FIXME: add to right include file
+#ifdef MISSIONPACK
+void UI_Load( void );
+#endif
 
 static void CG_LoadHud_f( void) {
   char buff[1024];
 	const char *hudSet;
   memset(buff, 0, sizeof(buff));
 
+#ifdef MISSIONPACK
+	// must reload both ui and hud at once, they share the string memory pool
+	UI_Load();
+
+	Init_Display(&cgDC);
+#else
+	Init_Display(&cgDC);
+
 	String_Init();
+#endif
+
 	Menu_Reset();
 	
 	trap_Cvar_VariableStringBuffer("cg_hudFiles", buff, sizeof(buff));
@@ -782,6 +837,11 @@ static playerConsoleCommand_t	playerCommands[] = {
 #ifndef TURTLEARENA // WEAPONS
 	{ "tauntGauntlet", CG_TauntGauntlet_f },
 #endif
+#endif
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+	{ "player", CG_SetModel_f },
+#else
+	{ "model", CG_SetModel_f },
 #endif
 	{ "viewpos", CG_Viewpos_f },
 #ifndef TA_WEAPSYS_EX

@@ -144,75 +144,16 @@ vmCvar_t  ui_debug;
 vmCvar_t  ui_initialized;
 vmCvar_t  ui_teamArenaFirstRun;
 
-void _UI_Init( qboolean inGameLoad, int maxSplitView );
-void _UI_Shutdown( void );
-void _UI_KeyEvent( int key, qboolean down );
-void _UI_MouseEvent( int localClientNum, int dx, int dy );
-int _UI_MousePosition( int localClientNum );
-void _UI_SetMousePosition( int localClientNum, int x, int y );
-void _UI_Refresh( int realtime );
-qboolean _UI_IsFullscreen( void );
-Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
-  switch ( command ) {
-	  case UI_GETAPIVERSION:
-		  return ( UI_API_MAJOR_VERSION << 16) | ( UI_API_MINOR_VERSION & 0xFFFF );
-
-	  case UI_INIT:
-		  _UI_Init(arg0, arg1);
-		  return 0;
-
-	  case UI_SHUTDOWN:
-		  _UI_Shutdown();
-		  return 0;
-
-	  case UI_KEY_EVENT:
-		  _UI_KeyEvent( arg0, arg1 );
-		  return 0;
-
-	  case UI_MOUSE_EVENT:
-		  _UI_MouseEvent( arg0, arg1, arg2 );
-		  return 0;
-
-	  case UI_MOUSE_POSITION:
-		  return _UI_MousePosition( arg0 );
-
-	  case UI_SET_MOUSE_POSITION:
-		  _UI_SetMousePosition( arg0, arg1, arg2 );
-		  return 0;
-
-	  case UI_REFRESH:
-		  _UI_Refresh( arg0 );
-		  return 0;
-
-	  case UI_IS_FULLSCREEN:
-		  return _UI_IsFullscreen();
-
-	  case UI_SET_ACTIVE_MENU:
-		  _UI_SetActiveMenu( arg0 );
-		  return 0;
-
-	  case UI_CONSOLE_COMMAND:
-		  return UI_ConsoleCommand(arg0);
-
-	  case UI_DRAW_CONNECT_SCREEN:
-		  UI_DrawConnectScreen( arg0 );
-		  return 0;
-
-	  case UI_WANTSBINDKEYS:
-		  return Display_WantsBindKeys();
-	}
-
-	return -1;
+qboolean UI_WantsBindKeys( void ) {
+	return Display_WantsBindKeys();
 }
-
-
 
 void AssetCache( void ) {
 	int n;
 	//if (Assets.textFont == NULL) {
 	//}
 	//Assets.background = trap_R_RegisterShaderNoMip( ASSET_BACKGROUND );
-	//Com_Printf("Menu Size: %i bytes\n", sizeof(Menus));
+	//Com_Printf("Menu Size: %i bytes\n", sizeof(uiInfo.uiDC.Menus));
 	uiInfo.uiDC.Assets.gradientBar = trap_R_RegisterShaderNoMip( ASSET_GRADIENTBAR );
 	uiInfo.uiDC.Assets.fxBasePic = trap_R_RegisterShaderNoMip( ART_FX_BASE );
 #ifdef TA_DATA // MORE_COLOR_EFFECTS
@@ -459,6 +400,32 @@ void Text_Paint(float x, float y, float scale, vec4_t color, const char *text, f
   }
 }
 
+// used by cgame/cg_info.c
+void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color ) {
+	int width;
+	float scale;
+
+	scale = ui_bigFont.value;
+
+	switch( style & UI_FORMATMASK ) {
+		case UI_CENTER:
+			width = Text_Width( str, scale, 0 );
+			x -= width / 2;
+			break;
+
+		case UI_RIGHT:
+			width = Text_Width( str, scale, 0 );
+			x -= width;
+			break;
+
+		case UI_LEFT:
+		default:
+			break;
+	}
+
+	Text_Paint( x, y, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? ITEM_TEXTSTYLE_SHADOWED : 0 );
+}
+
 void Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
   int len, count;
 	vec4_t newColor;
@@ -626,11 +593,11 @@ void UI_ShowPostGame(qboolean newHigh) {
 	trap_Cvar_SetValue( "cg_thirdPerson", 0 );
 #endif
 	uiInfo.soundHighScore = newHigh;
-  _UI_SetActiveMenu(UIMENU_POSTGAME);
+	UI_SetActiveMenu(UIMENU_POSTGAME);
 }
 /*
 =================
-_UI_Refresh
+UI_Refresh
 =================
 */
 
@@ -645,7 +612,7 @@ int frameCount = 0;
 int startTime;
 
 #define	UI_FPS_FRAMES	4
-void _UI_Refresh( int realtime )
+void UI_Refresh( int realtime )
 {
 	static int index;
 	static int	previousTimes[UI_FPS_FRAMES];
@@ -653,6 +620,8 @@ void _UI_Refresh( int realtime )
 	//if ( !( trap_Key_GetCatcher() & KEYCATCH_UI ) ) {
 	//	return;
 	//}
+
+	Init_Display(&uiInfo.uiDC);
 
 	uiInfo.uiDC.frameTime = realtime - uiInfo.uiDC.realTime;
 	uiInfo.uiDC.realTime = realtime;
@@ -706,10 +675,10 @@ void _UI_Refresh( int realtime )
 
 /*
 =================
-_UI_Shutdown
+UI_Shutdown
 =================
 */
-void _UI_Shutdown( void ) {
+void UI_Shutdown( void ) {
 	trap_LAN_SaveCachedServers();
 }
 
@@ -927,7 +896,7 @@ void UI_ParseMenu(const char *menuFile) {
 		//	break;
 		//}
 
-		//if ( menuCount == MAX_MENUS ) {
+		//if ( uiInfo.uiDC.menuCount == MAX_MENUS ) {
 		//	Com_Printf( "Too many menus!\n" );
 		//	break;
 		//}
@@ -986,6 +955,8 @@ void UI_LoadMenus(const char *menuFile, qboolean reset) {
 
 	start = trap_Milliseconds();
 
+	Init_Display(&uiInfo.uiDC);
+
 	handle = trap_PC_LoadSource( menuFile, NULL );
 	if (!handle) {
 		Com_Printf( S_COLOR_YELLOW "menu file not found: %s, using default\n", menuFile );
@@ -1028,10 +999,18 @@ void UI_LoadMenus(const char *menuFile, qboolean reset) {
 
 void UI_Load(void) {
 	char lastName[1024];
-  menuDef_t *menu = Menu_GetFocused();
-	char *menuSet = UI_Cvar_VariableString("ui_menuFiles");
+	menuDef_t *menu;
+	char *menuSet;
+
+	Init_Display(&uiInfo.uiDC);
+
+	menu = Menu_GetFocused();
+	menuSet = UI_Cvar_VariableString("ui_menuFiles");
+
 	if (menu && menu->window.name) {
-		strcpy(lastName, menu->window.name);
+		Q_strncpyz(lastName, menu->window.name,sizeof(lastName));
+	} else {
+		lastName[0] = '\0';
 	}
 	if (menuSet == NULL || menuSet[0] == '\0') {
 		menuSet = "ui/menus.txt";
@@ -1047,8 +1026,11 @@ void UI_Load(void) {
 #endif
 
 	UI_LoadMenus(menuSet, qtrue);
+	UI_LoadMenus("ui/ingame.txt", qfalse);
 	Menus_CloseAll();
-	Menus_ActivateByName(lastName);
+	if ( lastName[0] ) {
+		Menus_ActivateByName(lastName);
+	}
 
 }
 
@@ -5064,7 +5046,7 @@ static void UI_BuildQ3Model_List( void )
 UI_Init
 =================
 */
-void _UI_Init( qboolean inGameLoad, int maxSplitView ) {
+void UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	const char *menuSet;
 
 	uiInfo.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
@@ -5212,7 +5194,9 @@ void _UI_Init( qboolean inGameLoad, int maxSplitView ) {
 UI_KeyEvent
 =================
 */
-void _UI_KeyEvent( int key, qboolean down ) {
+void UI_KeyEvent( int key, qboolean down ) {
+
+	Init_Display(&uiInfo.uiDC);
 
   if (Menu_Count() > 0) {
     menuDef_t *menu = Menu_GetFocused();
@@ -5238,7 +5222,7 @@ void _UI_KeyEvent( int key, qboolean down ) {
 UI_MouseEvent
 =================
 */
-void _UI_MouseEvent( int localClientNum, int dx, int dy )
+void UI_MouseEvent( int localClientNum, int dx, int dy )
 {
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
@@ -5258,6 +5242,8 @@ void _UI_MouseEvent( int localClientNum, int dx, int dy )
 	else if (uiInfo.uiDC.cursory > SCREEN_HEIGHT)
 		uiInfo.uiDC.cursory = SCREEN_HEIGHT;
 
+	Init_Display(&uiInfo.uiDC);
+
   if (Menu_Count() > 0) {
     //menuDef_t *menu = Menu_GetFocused();
     //Menu_HandleMouseMove(menu, uiInfo.uiDC.cursorx, uiInfo.uiDC.cursory);
@@ -5271,7 +5257,7 @@ void _UI_MouseEvent( int localClientNum, int dx, int dy )
 UI_MousePosition
 =================
 */
-int _UI_MousePosition( int localClientNum )
+int UI_MousePosition( int localClientNum )
 {
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
@@ -5287,7 +5273,7 @@ int _UI_MousePosition( int localClientNum )
 UI_SetMousePosition
 =================
 */
-void _UI_SetMousePosition( int localClientNum, int x, int y )
+void UI_SetMousePosition( int localClientNum, int x, int y )
 {
 	if (localClientNum != 0) {
 		// ui currently only supports one cursor
@@ -5296,6 +5282,8 @@ void _UI_SetMousePosition( int localClientNum, int x, int y )
 
 	uiInfo.uiDC.cursorx = x / uiInfo.uiDC.xscale;
 	uiInfo.uiDC.cursory = y / uiInfo.uiDC.yscale;
+
+	Init_Display(&uiInfo.uiDC);
 
 	if( Menu_Count( ) > 0 ) {
 		Display_MouseMove( NULL, uiInfo.uiDC.cursorx, uiInfo.uiDC.cursory );
@@ -5311,8 +5299,10 @@ void UI_LoadNonIngame( void ) {
 	uiInfo.inGameLoad = qfalse;
 }
 
-void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
+void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	char buf[256];
+
+	Init_Display(&uiInfo.uiDC);
 
 	// this should be the ONLY way the menu system is brought up
 	// enusure minumum menu data is cached
@@ -5369,7 +5359,9 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
   }
 }
 
-qboolean _UI_IsFullscreen( void ) {
+qboolean UI_IsFullscreen( void ) {
+	Init_Display(&uiInfo.uiDC);
+
 	return Menus_AnyFullScreenVisible();
 }
 
@@ -5957,8 +5949,6 @@ void UI_RegisterCvars( void ) {
 
 	trap_Cvar_Register( NULL, "g_redTeam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO );
 	trap_Cvar_Register( NULL, "g_blueTeam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO );
-
-	BG_RegisterClientCvars(uiInfo.maxSplitView);
 }
 
 /*

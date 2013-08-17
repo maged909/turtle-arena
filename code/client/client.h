@@ -32,7 +32,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #include "../renderercommon/tr_public.h"
-#include "../ui/ui_public.h"
 #include "keys.h"
 #include "snd_public.h"
 #include "../cgame/cg_public.h"
@@ -48,7 +47,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 // Lower this define to change max supported local clients for client/renderer,
-// cgame/ui get max from client when they are initialized.
+// cgame gets max from client when it's initialized.
 #ifndef CL_MAX_SPLITVIEW
 #define CL_MAX_SPLITVIEW MAX_SPLITVIEW
 #endif
@@ -333,7 +332,6 @@ typedef struct {
 	qboolean	rendererStarted;
 	qboolean	soundStarted;
 	qboolean	soundRegistered;
-	qboolean	uiStarted;
 	qboolean	cgameStarted;
 
 	int			framecount;
@@ -381,7 +379,6 @@ extern	qboolean	cl_oldGameSet;
 //=============================================================================
 
 extern	vm_t			*cgvm;	// interface to cgame dll or vm
-extern	vm_t			*uivm;	// interface to ui dll or vm
 extern	refexport_t		re;		// interface to refresh .dll
 
 
@@ -628,12 +625,6 @@ void CL_CGameRendering( stereoFrame_t stereo );
 void CL_SetCGameTime( void );
 void CL_FirstSnapshot( void );
 void CL_ShaderStateChanged(void);
-
-//
-// cl_ui.c
-//
-void CL_InitUI( void );
-void CL_ShutdownUI( void );
 int Key_GetCatcher( void );
 void Key_SetCatcher( int catcher );
 void LAN_LoadCachedServers( void );

@@ -2389,10 +2389,6 @@ void	BG_DecomposeUserCmdValue( int value, int *weapon, int *holdable );
 #define UI_INVERSE		0x00002000
 #define UI_PULSE		0x00004000
 
-#if defined CGAME || defined UI
-void BG_RegisterClientCvars(int maxSplitview);
-#endif
-
 
 typedef struct
 {
