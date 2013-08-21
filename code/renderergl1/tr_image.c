@@ -1602,6 +1602,7 @@ static imageExtToLoaderMap_t imageLoaders[ ] =
 #ifndef TA_DATA
 	{ "png",  R_LoadPNG },
 #endif
+	{ "ftx",  R_LoadFTX },
 	{ "pcx",  R_LoadPCX },
 	{ "bmp",  R_LoadBMP }
 };

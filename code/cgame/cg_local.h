@@ -1752,26 +1752,17 @@ extern	vmCvar_t		cg_gun_frame;
 extern	vmCvar_t		cg_gun_x;
 extern	vmCvar_t		cg_gun_y;
 extern	vmCvar_t		cg_gun_z;
-extern	vmCvar_t		cg_drawGun[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_viewsize;
 extern	vmCvar_t		cg_tracerChance;
 extern	vmCvar_t		cg_tracerWidth;
 extern	vmCvar_t		cg_tracerLength;
-#ifndef TA_WEAPSYS_EX
-extern	vmCvar_t		cg_autoswitch[MAX_SPLITVIEW];
-#endif
 extern	vmCvar_t		cg_ignore;
 extern	vmCvar_t		cg_simpleItems;
 extern	vmCvar_t		cg_fov;
 #ifndef TURTLEARENA // NOZOOM
 extern	vmCvar_t		cg_zoomFov;
+
 #endif
-extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];
-extern	vmCvar_t		cg_thirdPersonAngle[MAX_SPLITVIEW];
-#ifdef IOQ3ZTM // ANALOG
-extern	vmCvar_t		cg_thirdPersonAnalog[MAX_SPLITVIEW];
-#endif
-extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_lagometer;
 extern	vmCvar_t		cg_drawAttacker;
@@ -1829,8 +1820,6 @@ extern	vmCvar_t		cg_blueTeamName;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
-extern	vmCvar_t		cg_currentSelectedPlayer[MAX_SPLITVIEW];
-extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 #ifndef IOQ3ZTM
 extern	vmCvar_t		cg_singlePlayer;
 #endif
@@ -1853,6 +1842,27 @@ extern	vmCvar_t		cg_laserTag;
 #ifdef TA_PATHSYS // 2DMODE
 extern vmCvar_t			cg_2dmode;
 extern vmCvar_t			cg_2dmodeOverride;
+#endif
+
+extern	vmCvar_t		cg_color1[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_color2[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_handicap[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_teamtask[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_teampref[MAX_SPLITVIEW];
+#ifndef TA_WEAPSYS_EX
+extern	vmCvar_t		cg_autoswitch[MAX_SPLITVIEW];
+#endif
+extern	vmCvar_t		cg_drawGun[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPersonAngle[MAX_SPLITVIEW];
+#ifdef IOQ3ZTM // ANALOG
+extern	vmCvar_t		cg_thirdPersonAnalog[MAX_SPLITVIEW];
+#endif
+extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
+
+#ifdef MISSIONPACK
+extern	vmCvar_t		cg_currentSelectedPlayer[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 #endif
 
 //

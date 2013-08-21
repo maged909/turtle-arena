@@ -1135,12 +1135,10 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 			{
 				depthFuncBits = 0;
 			}
-#ifdef IOQ3ZTM // IOSTVEF: Support EF keyword (it seems easier to understand.)
 			else if ( !Q_stricmp( token, "disable" ) )
 			{
 				depthFuncBits = 0;
 			}
-#endif
 			else if ( !Q_stricmp( token, "equal" ) )
 			{
 				depthFuncBits = GLS_DEPTHFUNC_EQUAL;
