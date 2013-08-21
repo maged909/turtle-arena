@@ -392,7 +392,6 @@ void UI_MainMenu( void ) {
 		Menu_AddItem( &s_errorMessage.menu,	&s_errorMessage.banner_image );
 #endif
 
-		trap_Key_SetCatcher( KEYCATCH_UI );
 		uis.menusp = 0;
 		UI_PushMenu ( &s_errorMessage.menu );
 		
@@ -577,7 +576,6 @@ void UI_MainMenu( void ) {
 #endif
 	Menu_AddItem( &s_main.menu,	&s_main.exit );             
 
-	trap_Key_SetCatcher( KEYCATCH_UI );
 	uis.menusp = 0;
 	UI_PushMenu ( &s_main.menu );
 		
