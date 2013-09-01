@@ -285,6 +285,8 @@ vmCvar_t	cg_voipShowMeter;
 vmCvar_t	cg_voipShowCrosshairMeter;
 vmCvar_t	cg_consoleLatency;
 vmCvar_t	cg_drawShaderInfo;
+vmCvar_t	cg_fovAspectAdjust;
+vmCvar_t	ui_stretch;
 
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 vmCvar_t 	cg_redTeamName;
@@ -539,6 +541,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_voipShowCrosshairMeter, "cg_voipShowCrosshairMeter", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_consoleLatency, "cg_consoleLatency", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_drawShaderInfo, "cg_drawShaderInfo", "0", 0, RANGE_BOOL },
+	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
@@ -553,6 +556,8 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_2dmodeOverride, "cg_2dmodeOverride", "0", 0, RANGE_ALL },
 #endif
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
+
+	{ &ui_stretch, "ui_stretch", "0", CVAR_ARCHIVE, RANGE_BOOL },
 };
 
 static userCvarTable_t userCvarTable[] = {
@@ -783,6 +788,10 @@ void CG_UpdateCvars( void ) {
 	CG_UpdateCgameCvars();
 	CG_UpdateUserCvars();
 	CG_UpdateInputCvars();
+
+	if ( !cg.connected ) {
+		return;
+	}
 
 	// check for modications here
 
@@ -2686,6 +2695,7 @@ static int CG_OwnerDrawWidth(int ownerDraw, float scale) {
 }
 
 static int CG_PlayCinematic(const char *name, float x, float y, float w, float h) {
+	CG_AdjustFrom640( &x, &y, &w, &h );
   return trap_CIN_PlayCinematic(name, x, y, w, h, CIN_loop);
 }
 
@@ -2694,6 +2704,7 @@ static void CG_StopCinematic(int handle) {
 }
 
 static void CG_DrawCinematic(int handle, float x, float y, float w, float h) {
+	CG_AdjustFrom640( &x, &y, &w, &h );
   trap_CIN_SetExtents(handle, x, y, w, h);
   trap_CIN_DrawCinematic(handle);
 }
@@ -2848,6 +2859,51 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	CG_RegisterCvars();
 
+	// load a few needed things before we do any screen updates
+#ifdef IOQ3ZTM // FONT_REWRITE
+	CG_LoadFont(&cgs.media.fontTiny, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 8, 8, 0);
+	CG_LoadFont(&cgs.media.fontSmall, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 8, 0);
+	CG_LoadFont(&cgs.media.fontBig, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 16, 0);
+	CG_LoadFont(&cgs.media.fontGiant, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 48, 32, 0);
+
+	CG_LoadFont(&cgs.media.fontPropSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
+	CG_LoadFont(&cgs.media.fontPropBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT, 22*0.66f, 0);
+#ifndef TA_DATA
+	CG_LoadFont(&cgs.media.fontPropGlowSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
+	CG_LoadFont(&cgs.media.fontPropGlowBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT, 22*0.66f, 0);
+#endif
+
+	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
+#else
+	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
+	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
+#endif
+
+	// get the rendering configuration from the client system
+	trap_GetGlconfig( &cgs.glconfig );
+
+	// Viewport scale and offset
+	cgs.screenXScaleStretch = cgs.glconfig.vidWidth * (1.0/640.0);
+	cgs.screenYScaleStretch = cgs.glconfig.vidHeight * (1.0/480.0);
+	if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
+		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
+		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
+		// wide screen
+		cgs.screenXBias = 0.5 * ( cgs.glconfig.vidWidth - ( cgs.glconfig.vidHeight * (640.0/480.0) ) );
+		cgs.screenXScale = cgs.screenYScale;
+		// no narrow screen
+		cgs.screenYBias = 0;
+	}
+	else {
+		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
+		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
+		// narrow screen
+		cgs.screenYBias = 0.5 * ( cgs.glconfig.vidHeight - ( cgs.glconfig.vidWidth * (480.0/640.0) ) );
+		cgs.screenYScale = cgs.screenXScale;
+		// no wide screen
+		cgs.screenXBias = 0;
+	}
+
 #ifdef MISSIONPACK_HUD
 	Init_Display(&cgDC);
 	String_Init();
@@ -2890,31 +2946,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	cgs.processedSnapshotNum = serverMessageNum;
 	cgs.serverCommandSequence = serverCommandSequence;
 
-	// load a few needed things before we do any screen updates
-#ifdef IOQ3ZTM // FONT_REWRITE
-	CG_LoadFont(&cgs.media.fontTiny, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 8, 8, 0);
-	CG_LoadFont(&cgs.media.fontSmall, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 8, 0);
-	CG_LoadFont(&cgs.media.fontBig, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 16, 0);
-	CG_LoadFont(&cgs.media.fontGiant, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 48, 32, 0);
-
-	CG_LoadFont(&cgs.media.fontPropSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
-	CG_LoadFont(&cgs.media.fontPropBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT, 22*0.66f, 0);
-#ifndef TA_DATA
-	CG_LoadFont(&cgs.media.fontPropGlowSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
-	CG_LoadFont(&cgs.media.fontPropGlowBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT, 22*0.66f, 0);
-#endif
-
-	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
-#else
-	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
-	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
-	cgs.media.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
-#ifndef TA_DATA
-	cgs.media.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
-#endif
-	cgs.media.charsetPropB		= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
-#endif
-
 	CG_InitConsoleCommands();
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
@@ -2937,31 +2968,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	cgs.redflag = cgs.blueflag = -1; // For compatibily, default to unset for
 	cgs.flagStatus = -1;
 	// old servers
-
-	// get the rendering configuration from the client system
-	trap_GetGlconfig( &cgs.glconfig );
-
-	// Viewport scale and offset
-	cgs.screenXScaleStretch = cgs.glconfig.vidWidth * (1.0/640.0);
-	cgs.screenYScaleStretch = cgs.glconfig.vidHeight * (1.0/480.0);
-	if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
-		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
-		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
-		// wide screen
-		cgs.screenXBias = 0.5 * ( cgs.glconfig.vidWidth - ( cgs.glconfig.vidHeight * (640.0/480.0) ) );
-		cgs.screenXScale = cgs.screenYScale;
-		// no narrow screen
-		cgs.screenYBias = 0;
-	}
-	else {
-		cgs.screenXScale = cgs.glconfig.vidWidth * (1.0/640.0);
-		cgs.screenYScale = cgs.glconfig.vidHeight * (1.0/480.0);
-		// narrow screen
-		cgs.screenYBias = 0.5 * ( cgs.glconfig.vidHeight - ( cgs.glconfig.vidWidth * (480.0/640.0) ) );
-		cgs.screenYScale = cgs.screenXScale;
-		// no wide screen
-		cgs.screenXBias = 0;
-	}
 
 	// get the gamestate from the client system
 	trap_GetGameState( &cgs.gameState );
@@ -3081,6 +3087,9 @@ Draw the frame
 */
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
 
+	// update cvars
+	CG_UpdateCvars();
+
 	if ( state >= CA_LOADING && !UI_IsFullscreen() ) {
 #ifdef MISSIONPACK_HUD
 		Init_Display(&cgDC);
@@ -3089,6 +3098,11 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	}
 
 	if ( state <= CA_LOADING || (trap_Key_GetCatcher() & KEYCATCH_UI) ) {
+		if ( ui_stretch.integer ) {
+			CG_SetScreenPlacement( PLACE_STRETCH, PLACE_STRETCH );
+		} else {
+			CG_SetScreenPlacement( PLACE_CENTER, PLACE_CENTER );
+		}
 		UI_Refresh( realTime );
 	}
 
