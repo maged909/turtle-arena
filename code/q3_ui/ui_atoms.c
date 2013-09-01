@@ -1971,6 +1971,15 @@ void UI_Refresh( int realtime )
 	{
 		if (uis.activemenu->fullscreen)
 		{
+#ifdef TA_DATA
+			// draw the background
+			if (trap_Cvar_VariableValue( "cl_paused" )) {
+				UI_DrawPicFullScreen( uis.menuBackInGameShader );
+			}
+			else {
+				UI_DrawPicFullScreen( uis.menuBackShader );
+			}
+#else
 			// wide and narrow aspect ratios screens need to have the sides cleared
 			if ( cgs.screenXBias || cgs.screenYBias ) {
 				trap_R_SetColor( g_color_table[0] );
@@ -1979,14 +1988,6 @@ void UI_Refresh( int realtime )
 			}
 
 			// draw the background
-#ifdef TA_DATA
-			if (trap_Cvar_VariableValue( "cl_paused" )) {
-				UI_DrawPicFullScreen( uis.menuBackInGameShader );
-			}
-			else {
-				UI_DrawPicFullScreen( uis.menuBackShader );
-			}
-#else
 			if( uis.activemenu->showlogo ) {
 				UI_DrawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackShader );
 			}
