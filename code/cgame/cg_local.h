@@ -1109,11 +1109,6 @@ typedef struct {
 #endif
 #else
 	qhandle_t	charsetShader;
-	qhandle_t	charsetProp;
-#ifndef TA_DATA
-	qhandle_t	charsetPropGlow;
-#endif
-	qhandle_t	charsetPropB;
 #endif
 	qhandle_t	whiteShader;
 
@@ -1813,6 +1808,8 @@ extern	vmCvar_t		cg_voipShowMeter;
 extern	vmCvar_t		cg_voipShowCrosshairMeter;
 extern	vmCvar_t		cg_consoleLatency;
 extern	vmCvar_t		cg_drawShaderInfo;
+extern	vmCvar_t		cg_fovAspectAdjust;
+extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
