@@ -518,7 +518,7 @@ UI_SPMenu_f
 void UI_SPMenu_f( void ) {
 	int		n;
 
-	n = atoi( UI_Argv( 1 ) );
+	n = atoi( CG_Argv( 1 ) );
 	uis.menusp = 0;
 	UI_SPMenu();
 	Menu_SetCursorToItem( &spMenuInfo.menu, spMenuInfo.menu.items[n + 3] );

@@ -519,23 +519,11 @@ typedef struct {
 	qboolean inGameLoad;
 	int		maxSplitView;
 
-	int		unscaledCursorX; // 0 to glconfig.vidWidth
-	int		unscaledCursorY;
-
 }	uiInfo_t;
 
 extern uiInfo_t uiInfo;
 
 
-extern float		UI_ClampCvar( float min, float max, float value );
-extern void			UI_DrawNamedPic( float x, float y, float width, float height, const char *picname );
-extern void			UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ); 
-extern void			UI_FillRect( float x, float y, float width, float height, const float *color );
-extern void			UI_DrawRect( float x, float y, float width, float height, const float *color );
-extern void     UI_DrawTopBottom(float x, float y, float w, float h);
-extern void     UI_DrawSides(float x, float y, float w, float h);
-extern void			UI_UpdateScreen( void );
-extern void			UI_SetColor( const float *rgba );
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
 #ifdef IOQ3ZTM // FONT_REWRITE
 extern qboolean		UI_LoadFont(font_t *font, const char *ttfName, const char *shaderName, int pointSize,
@@ -551,15 +539,9 @@ extern int			UI_ProportionalStringWidth( const char* str, int style );
 extern void			UI_DrawString( int x, int y, const char* str, int style, vec4_t color );
 extern int			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
 extern qboolean 	UI_CursorInRect (int x, int y, int width, int height);
-extern void			UI_AdjustFrom640( float *x, float *y, float *w, float *h );
-extern void			UI_DrawTextBox (int x, int y, int width, int lines);
 extern qboolean		UI_IsFullscreen( void );
 extern void			UI_SetActiveMenu( uiMenuCommand_t menu );
 extern void			UI_ForceMenuOff (void);
-extern char			*UI_Argv( int arg );
-extern char			*UI_Cvar_VariableString( const char *var_name );
-extern void			UI_StartDemoLoop( void );
-extern qboolean		m_entersound;
 void UI_LoadBestScores(const char *map, int game);
 
 //

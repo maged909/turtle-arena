@@ -34,6 +34,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifndef TA_MISC
 
+#ifdef TA_WEAPSYS
+// ZTM: weapon_t is an int, so -1 is okay for dummy value.
+#define WP_NUM_WEAPONS -1
+#endif
+
 #ifndef TA_PLAYERSYS // PLAYERCFG_ANIMATION_TIMES
 #define UI_TIMER_GESTURE		2300
 #endif
@@ -1018,7 +1023,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 #endif
 	}
 
-	UI_AdjustFrom640( &x, &y, &w, &h );
+	CG_AdjustFrom640( &x, &y, &w, &h );
 
 	y -= jumpHeight;
 

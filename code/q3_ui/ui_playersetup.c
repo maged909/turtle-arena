@@ -271,8 +271,8 @@ static void PlayerSettings_DrawEffects( void *self ) {
 		trap_R_SetColor( colorMdGrey );
 	}
 
-	UI_DrawHandlePic( item->generic.x, item->generic.y + 2, 128, 8, s_playersetup.fxBasePic );
-	UI_DrawHandlePic( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y, 16, 12, s_playersetup.fxPic[item->curvalue] );
+	CG_DrawPic( item->generic.x, item->generic.y + 2, 128, 8, s_playersetup.fxBasePic );
+	CG_DrawPic( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y, 16, 12, s_playersetup.fxPic[item->curvalue] );
 
 	trap_R_SetColor( NULL );
 
@@ -286,15 +286,7 @@ static void PlayerSettings_DrawEffects( void *self ) {
 
 		color[3] = 0.5 + 0.5 * sin( uis.realtime / PULSE_DIVISOR );
 
-		// UI_DrawRect, but width and height are 2.
-		// top
-		UI_FillRect( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y, 16, 2, color );
-		// bottom
-		UI_FillRect( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + 10, 16, 2, color );
-		// left
-		UI_FillRect( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + 2, 2, 8, color );
-		// right
-		UI_FillRect( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f + 14, item->generic.y + 2, 2, 8, color );
+		CG_DrawRect( item->generic.x + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y, 16, 12, 2, color );
 	}
 }
 
@@ -829,7 +821,7 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 		}
 
 		// name
-		Q_strncpyz( s_playersetup.name[i].field.buffer, UI_Cvar_VariableString(
+		Q_strncpyz( s_playersetup.name[i].field.buffer, CG_Cvar_VariableString(
 				Com_LocalClientCvarName(i, "name")), sizeof(s_playersetup.name[i].field.buffer) );
 
 		// handicap
