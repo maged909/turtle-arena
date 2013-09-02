@@ -78,7 +78,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_CONSOLE_COMMAND:
 		{
 			qboolean found = UI_ConsoleCommand(arg0);
-			if ( !found && cg.connected )
+			if ( !found )
 				found = CG_ConsoleCommand();
 			return found;
 		}
@@ -837,7 +837,7 @@ void CG_UpdateCvars( void ) {
 }
 
 int CG_CrosshairPlayer( int localClientNum ) {
-	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
+	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
@@ -849,7 +849,7 @@ int CG_CrosshairPlayer( int localClientNum ) {
 }
 
 int CG_LastAttacker( int localClientNum ) {
-	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
+	if (!cg.snap || localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
@@ -1074,6 +1074,19 @@ const char *CG_Argv( int arg ) {
 	static char	buffer[MAX_STRING_CHARS];
 
 	trap_Argv( arg, buffer, sizeof( buffer ) );
+
+	return buffer;
+}
+
+/*
+================
+CG_Cvar_VariableString
+================
+*/
+char *CG_Cvar_VariableString( const char *var_name ) {
+	static char	buffer[MAX_STRING_CHARS];
+
+	trap_Cvar_VariableStringBuffer( var_name, buffer, sizeof( buffer ) );
 
 	return buffer;
 }
@@ -2859,6 +2872,8 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 
 	CG_RegisterCvars();
 
+	CG_InitConsoleCommands();
+
 	// load a few needed things before we do any screen updates
 #ifdef IOQ3ZTM // FONT_REWRITE
 	CG_LoadFont(&cgs.media.fontTiny, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 8, 8, 0);
@@ -2945,8 +2960,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 
 	cgs.processedSnapshotNum = serverMessageNum;
 	cgs.serverCommandSequence = serverCommandSequence;
-
-	CG_InitConsoleCommands();
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 #ifdef TA_HOLDSYS/*2*/

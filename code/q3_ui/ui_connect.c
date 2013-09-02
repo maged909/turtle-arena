@@ -184,11 +184,12 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 	if ( !overlay ) {
 		// draw the dialog background
-		UI_SetColor( color_white );
 #ifdef TA_DATA
+		trap_R_SetColor( NULL );
 		UI_DrawPicFullScreen( uis.menuBackShader );
 #else
-		UI_DrawHandlePic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackShader );
+		CG_ClearScreen();
+		CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackShader );
 #endif
 	}
 

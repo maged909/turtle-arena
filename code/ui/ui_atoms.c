@@ -35,52 +35,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 **********************************************************************/
 #include "ui_local.h"
 
-qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
-
-qboolean newUI = qfalse;
-
-
-/*
-=================
-UI_ClampCvar
-=================
-*/
-float UI_ClampCvar( float min, float max, float value )
-{
-	if ( value < min ) return min;
-	if ( value > max ) return max;
-	return value;
-}
-
-/*
-=================
-UI_StartDemoLoop
-=================
-*/
-void UI_StartDemoLoop( void ) {
-	trap_Cmd_ExecuteText( EXEC_APPEND, "d1\n" );
-}
-
-
-char *UI_Argv( int arg ) {
-	static char	buffer[MAX_STRING_CHARS];
-
-	trap_Argv( arg, buffer, sizeof( buffer ) );
-
-	return buffer;
-}
-
-
-char *UI_Cvar_VariableString( const char *var_name ) {
-	static char	buffer[MAX_STRING_CHARS];
-
-	trap_Cvar_VariableStringBuffer( var_name, buffer, sizeof( buffer ) );
-
-	return buffer;
-}
-
-
-
 #ifdef TA_SP
 void UI_SetBestScores(arcadeScore_t *newInfo, qboolean postGame) {
 	trap_Cvar_Set("ui_scoreName", 			newInfo->name);
@@ -365,18 +319,18 @@ static void UI_CalcPostGameStats( void ) {
 	memcpy(gamedata->magic, ARCADE_GAMEDATA_MAGIC, ARRAY_LEN(gamedata->magic));
 	gamedata->version = ARCADE_GAMEDATA_VERSION;
 
-	time = (atoi(UI_Argv(1)) - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
-	redScore = atoi(UI_Argv(2));
-	blueScore = atoi(UI_Argv(3));
+	time = (atoi(CG_Argv(1)) - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
+	redScore = atoi(CG_Argv(2));
+	blueScore = atoi(CG_Argv(3));
 
 	// Setup newScore
 	Q_strncpyz(newScore->name, name, STRARRAY_LEN(newScore->name));
-	Q_strncpyz(newScore->character, UI_Argv(4), STRARRAY_LEN(newScore->character));
-	newScore->score = atoi(UI_Argv(5));
+	Q_strncpyz(newScore->character, CG_Argv(4), STRARRAY_LEN(newScore->character));
+	newScore->score = atoi(CG_Argv(5));
 	newScore->time = time;
 
 	// CTF
-	newScore->captures = atoi(UI_Argv(6));
+	newScore->captures = atoi(CG_Argv(6));
 	newScore->redScore = redScore;
 	newScore->blueScore = blueScore;
 
@@ -417,30 +371,31 @@ static void UI_CalcPostGameStats( void ) {
 		trap_FS_FCloseFile(f);
 	}					 
 
-	newInfo.accuracy = atoi(UI_Argv(3));
+	newInfo.accuracy = atoi(CG_Argv(3));
 #ifdef TURTLEARENA // AWARDS
-	newInfo.baseScore = atoi(UI_Argv(4));
-	newInfo.perfects = atoi(UI_Argv(5));
+	newInfo.baseScore = atoi(CG_Argv(4));
+	newInfo.perfects = atoi(CG_Argv(5));
 
 	// Extra data for missionpack
-	newInfo.defends = atoi(UI_Argv(6));
-	newInfo.assists = atoi(UI_Argv(7));
-	newInfo.redScore = atoi(UI_Argv(8));
-	newInfo.blueScore = atoi(UI_Argv(9));
-	time = atoi(UI_Argv(10));
-	newInfo.captures = atoi(UI_Argv(11));
+	newInfo.defends = atoi(CG_Argv(6));
+	newInfo.assists = atoi(CG_Argv(7));
+	newInfo.redScore = atoi(CG_Argv(8));
+	newInfo.blueScore = atoi(CG_Argv(9));
+	time = atoi(CG_Argv(10));
+	newInfo.captures = atoi(CG_Argv(11));
 #else
-	newInfo.impressives = atoi(UI_Argv(4));
-	newInfo.excellents = atoi(UI_Argv(5));
-	newInfo.defends = atoi(UI_Argv(6));
-	newInfo.assists = atoi(UI_Argv(7));
-	newInfo.gauntlets = atoi(UI_Argv(8));
-	newInfo.baseScore = atoi(UI_Argv(9));
-	newInfo.perfects = atoi(UI_Argv(10));
-	newInfo.redScore = atoi(UI_Argv(11));
-	newInfo.blueScore = atoi(UI_Argv(12));
-	time = atoi(UI_Argv(13));
-	newInfo.captures = atoi(UI_Argv(14));
+	newInfo.accuracy = atoi(CG_Argv(3));
+	newInfo.impressives = atoi(CG_Argv(4));
+	newInfo.excellents = atoi(CG_Argv(5));
+	newInfo.defends = atoi(CG_Argv(6));
+	newInfo.assists = atoi(CG_Argv(7));
+	newInfo.gauntlets = atoi(CG_Argv(8));
+	newInfo.baseScore = atoi(CG_Argv(9));
+	newInfo.perfects = atoi(CG_Argv(10));
+	newInfo.redScore = atoi(CG_Argv(11));
+	newInfo.blueScore = atoi(CG_Argv(12));
+	time = atoi(CG_Argv(13));
+	newInfo.captures = atoi(CG_Argv(14));
 #endif
 
 	newInfo.time = (time - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
@@ -514,12 +469,12 @@ UI_ConsoleCommand
 =================
 */
 qboolean UI_ConsoleCommand( int realTime ) {
-	char	*cmd;
+	const char	*cmd;
 
 	uiInfo.uiDC.frameTime = realTime - uiInfo.uiDC.realTime;
 	uiInfo.uiDC.realTime = realTime;
 
-	cmd = UI_Argv( 0 );
+	cmd = CG_Argv( 0 );
 
 	// ensure minimum menu data is available
 	//Menu_Cache();
@@ -551,9 +506,9 @@ qboolean UI_ConsoleCommand( int realTime ) {
 			char shader2[MAX_QPATH];
 			char shader3[MAX_QPATH];
 			
-			Q_strncpyz(shader1, UI_Argv(1), sizeof(shader1));
-			Q_strncpyz(shader2, UI_Argv(2), sizeof(shader2));
-			Q_strncpyz(shader3, UI_Argv(3), sizeof(shader3));
+			Q_strncpyz(shader1, CG_Argv(1), sizeof(shader1));
+			Q_strncpyz(shader2, CG_Argv(2), sizeof(shader2));
+			Q_strncpyz(shader3, CG_Argv(3), sizeof(shader3));
 			
 			trap_R_RemapShader(shader1, shader2, shader3);
 			return qtrue;
@@ -576,113 +531,6 @@ qboolean UI_ConsoleCommand( int realTime ) {
 	}
 
 	return qfalse;
-}
-
-/*
-================
-UI_AdjustFrom640
-
-Adjusted for resolution and screen aspect ratio
-================
-*/
-void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
-	CG_AdjustFrom640( x, y, w, h );
-}
-
-void UI_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
-	qhandle_t	hShader;
-
-	hShader = trap_R_RegisterShaderNoMip( picname );
-	UI_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
-}
-
-void UI_DrawHandlePic( float x, float y, float w, float h, qhandle_t hShader ) {
-	float	s0;
-	float	s1;
-	float	t0;
-	float	t1;
-
-	if( w < 0 ) {	// flip about vertical
-		w  = -w;
-		s0 = 1;
-		s1 = 0;
-	}
-	else {
-		s0 = 0;
-		s1 = 1;
-	}
-
-	if( h < 0 ) {	// flip about horizontal
-		h  = -h;
-		t0 = 1;
-		t1 = 0;
-	}
-	else {
-		t0 = 0;
-		t1 = 1;
-	}
-	
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, w, h, s0, t0, s1, t1, hShader );
-}
-
-/*
-================
-UI_FillRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void UI_FillRect( float x, float y, float width, float height, const float *color ) {
-	trap_R_SetColor( color );
-
-	UI_AdjustFrom640( &x, &y, &width, &height );
-	trap_R_DrawStretchPic( x, y, width, height, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-
-	trap_R_SetColor( NULL );
-}
-
-void UI_DrawSides(float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-	trap_R_DrawStretchPic( x + w - 1, y, 1, h, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-}
-
-void UI_DrawTopBottom(float x, float y, float w, float h) {
-	UI_AdjustFrom640( &x, &y, &w, &h );
-	trap_R_DrawStretchPic( x, y, w, 1, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-	trap_R_DrawStretchPic( x, y + h - 1, w, 1, 0, 0, 0, 0, uiInfo.uiDC.whiteShader );
-}
-/*
-================
-UI_DrawRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
-void UI_DrawRect( float x, float y, float width, float height, const float *color ) {
-	trap_R_SetColor( color );
-
-  UI_DrawTopBottom(x, y, width, height);
-  UI_DrawSides(x, y, width, height);
-
-	trap_R_SetColor( NULL );
-}
-
-void UI_SetColor( const float *rgba ) {
-	trap_R_SetColor( rgba );
-}
-
-void UI_UpdateScreen( void ) {
-	trap_UpdateScreen();
-}
-
-
-void UI_DrawTextBox (int x, int y, int width, int lines)
-{
-	UI_FillRect( x + BIGCHAR_WIDTH/2, y + BIGCHAR_HEIGHT/2, ( width + 1 ) * BIGCHAR_WIDTH, ( lines + 1 ) * BIGCHAR_HEIGHT, colorBlack );
-	UI_DrawRect( x + BIGCHAR_WIDTH/2, y + BIGCHAR_HEIGHT/2, ( width + 1 ) * BIGCHAR_WIDTH, ( lines + 1 ) * BIGCHAR_HEIGHT, colorWhite );
 }
 
 qboolean UI_CursorInRect (int x, int y, int width, int height)

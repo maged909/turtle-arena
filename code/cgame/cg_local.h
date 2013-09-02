@@ -1867,6 +1867,7 @@ extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 //
 const char *CG_ConfigString( int index );
 const char *CG_Argv( int arg );
+char *CG_Cvar_VariableString( const char *var_name );
 
 int CG_MaxSplitView(void);
 
@@ -1999,6 +2000,7 @@ screenPlacement_e CG_GetScreenVerticalPlacement(void);
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h );
 void CG_FillRect( float x, float y, float width, float height, const float *color );
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
+void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 void CG_SetClipRegion( float x, float y, float w, float h );
 void CG_ClearClipRegion( void );
 
@@ -2044,10 +2046,10 @@ void CG_GetColorForHealth( int health, vec4_t hcolor );
 void CG_GetColorForHealth( int health, int armor, vec4_t hcolor );
 #endif
 
-void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
 void CG_DrawRect( float x, float y, float width, float height, float size, const float *color );
 void CG_DrawSides(float x, float y, float w, float h, float size);
 void CG_DrawTopBottom(float x, float y, float w, float h, float size);
+void CG_ClearScreen( void );
 
 
 //

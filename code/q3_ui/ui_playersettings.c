@@ -299,8 +299,8 @@ static void PlayerSettings_DrawEffects( void *self ) {
 
 	xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
 
-	UI_DrawHandlePic( item->generic.x + 64, item->generic.y + PROP_HEIGHT + 8, 128, 8, s_playersettings.fxBasePic );
-	UI_DrawHandlePic( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, s_playersettings.fxPic[item->curvalue] );
+	CG_DrawPic( item->generic.x + 64, item->generic.y + PROP_HEIGHT + 8, 128, 8, s_playersettings.fxBasePic );
+	CG_DrawPic( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, s_playersettings.fxPic[item->curvalue] );
 
 #ifdef IOQ3ZTM // UI_COLOR2
 	if (focus) {
@@ -315,15 +315,7 @@ static void PlayerSettings_DrawEffects( void *self ) {
 
 		color[3] = 0.5 + 0.5 * sin( uis.realtime / PULSE_DIVISOR );
 
-		// UI_DrawRect, but width and height are 2.
-		// top
-		UI_FillRect( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 2, color );
-		// bottom
-		UI_FillRect( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6 + 10, 16, 2, color );
-		// left
-		UI_FillRect( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6 + 2, 2, 8, color );
-		// right
-		UI_FillRect( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f + 14, item->generic.y + PROP_HEIGHT + 6 + 2, 2, 8, color );
+		CG_DrawRect( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, 2, color );
 	}
 #endif
 }
@@ -413,7 +405,7 @@ static void PlayerSettings_SetMenuItems( void ) {
 	int		h;
 
 	// name
-	Q_strncpyz( s_playersettings.name.field.buffer, UI_Cvar_VariableString(
+	Q_strncpyz( s_playersettings.name.field.buffer, CG_Cvar_VariableString(
 			Com_LocalClientCvarName(s_playersettings.localClient, "name")), sizeof(s_playersettings.name.field.buffer) );
 
 	// effects color
@@ -439,7 +431,7 @@ static void PlayerSettings_SetMenuItems( void ) {
 	viewangles[ROLL]  = 0;
 
 	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo,
-			UI_Cvar_VariableString( Com_LocalClientCvarName(s_playersettings.localClient, "model") ) );
+			CG_Cvar_VariableString( Com_LocalClientCvarName(s_playersettings.localClient, "model") ) );
 #ifdef TA_WEAPSYS
 	UI_PlayerInfo_SetInfo( &s_playersettings.playerinfo,
 			BG_LegsStandForWeapon(&s_playersettings.playerinfo.playercfg, s_playersettings.playerinfo.weapon),

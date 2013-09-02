@@ -315,7 +315,7 @@ static void UI_SPPostgameMenu_DrawAwardsMedals( int max ) {
 		medal = postgameMenuInfo.awardsEarned[n];
 		amount = postgameMenuInfo.awardsLevels[n];
 
-		UI_DrawNamedPic( x, y, 48, 48, ui_medalPicNames[medal] );
+		CG_DrawNamedPic( x, y, 48, 48, ui_medalPicNames[medal] );
 
 		if( medal == AWARD_ACCURACY ) {
 			Com_sprintf( buf, sizeof(buf), "%i%%", amount );
@@ -407,7 +407,7 @@ static void UI_SPPostgameMenu_MenuDrawScoreLine( int startx, int y, vec4_t color
 
 	// Draw player model icon
 	x += 13;
-	UI_DrawHandlePic( x, y - 4, 26, 26, characterIcon );
+	CG_DrawPic( x, y - 4, 26, 26, characterIcon );
 	x += 26;
 
 	// Draw time (right justified)
@@ -861,18 +861,18 @@ static void UI_CalcPostGameStats(void) {
 	gamedata->version = ARCADE_GAMEDATA_VERSION;
 	
 	// Setup new score line
-	time = (atoi(UI_Argv(1)) - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
-	redScore = atoi(UI_Argv(2));
-	blueScore = atoi(UI_Argv(3));
+	time = (atoi(CG_Argv(1)) - trap_Cvar_VariableValue("ui_matchStartTime")) / 1000;
+	redScore = atoi(CG_Argv(2));
+	blueScore = atoi(CG_Argv(3));
 
 	// Setup newScore, name is set in UI_SavePostGameStats.
 	Q_strncpyz(newScore->name, "", STRARRAY_LEN(newScore->name));
-	Q_strncpyz(newScore->character, UI_Argv(4), STRARRAY_LEN(newScore->character));
-	newScore->score = atoi(UI_Argv(5));
+	Q_strncpyz(newScore->character, CG_Argv(4), STRARRAY_LEN(newScore->character));
+	newScore->score = atoi(CG_Argv(5));
 	newScore->time = time;
 
 	// CTF
-	newScore->captures = atoi(UI_Argv(6));
+	newScore->captures = atoi(CG_Argv(6));
 	newScore->redScore = redScore;
 	newScore->blueScore = blueScore;
 
@@ -946,8 +946,8 @@ void UI_SPPostgameMenu_f( void ) {
 
 	postgameMenuInfo.level = atoi( Info_ValueForKey( arenainfo, "num" ) );
 
-	postgameMenuInfo.numClients = atoi( UI_Argv( 1 ) );
-	playerClientNum = atoi( UI_Argv( 2 ) );
+	postgameMenuInfo.numClients = atoi( CG_Argv( 1 ) );
+	playerClientNum = atoi( CG_Argv( 2 ) );
 	playerGameRank = 8;		// in case they ended game as a spectator
 
 	if( postgameMenuInfo.numClients > MAX_SCOREBOARD_CLIENTS ) {
@@ -955,9 +955,9 @@ void UI_SPPostgameMenu_f( void ) {
 	}
 
 	for( n = 0; n < postgameMenuInfo.numClients; n++ ) {
-		postgameMenuInfo.clientNums[n] = atoi( UI_Argv( 8 + n * 3 + 1 ) );
-		postgameMenuInfo.ranks[n] = atoi( UI_Argv( 8 + n * 3 + 2 ) );
-		postgameMenuInfo.scores[n] = atoi( UI_Argv( 8 + n * 3 + 3 ) );
+		postgameMenuInfo.clientNums[n] = atoi( CG_Argv( 8 + n * 3 + 1 ) );
+		postgameMenuInfo.ranks[n] = atoi( CG_Argv( 8 + n * 3 + 2 ) );
+		postgameMenuInfo.scores[n] = atoi( CG_Argv( 8 + n * 3 + 3 ) );
 
 		if( postgameMenuInfo.clientNums[n] == playerClientNum ) {
 			playerGameRank = (postgameMenuInfo.ranks[n] & ~RANK_TIED_FLAG) + 1;
@@ -967,16 +967,16 @@ void UI_SPPostgameMenu_f( void ) {
 	UI_SetBestScore( postgameMenuInfo.level, playerGameRank );
 
 	// process award stats and prepare presentation data
-	awardValues[AWARD_ACCURACY] = atoi( UI_Argv( 3 ) );
+	awardValues[AWARD_ACCURACY] = atoi( CG_Argv( 3 ) );
 #ifdef TURTLEARENA // AWARDS
-	awardValues[AWARD_FRAGS] = atoi( UI_Argv( 4 ) );
-	awardValues[AWARD_PERFECT] = atoi( UI_Argv( 5 ) );
+	awardValues[AWARD_FRAGS] = atoi( CG_Argv( 4 ) );
+	awardValues[AWARD_PERFECT] = atoi( CG_Argv( 5 ) );
 #else
-	awardValues[AWARD_IMPRESSIVE] = atoi( UI_Argv( 4 ) );
-	awardValues[AWARD_EXCELLENT] = atoi( UI_Argv( 5 ) );
-	awardValues[AWARD_GAUNTLET] = atoi( UI_Argv( 6 ) );
-	awardValues[AWARD_FRAGS] = atoi( UI_Argv( 7 ) );
-	awardValues[AWARD_PERFECT] = atoi( UI_Argv( 8 ) );
+	awardValues[AWARD_IMPRESSIVE] = atoi( CG_Argv( 4 ) );
+	awardValues[AWARD_EXCELLENT] = atoi( CG_Argv( 5 ) );
+	awardValues[AWARD_GAUNTLET] = atoi( CG_Argv( 6 ) );
+	awardValues[AWARD_FRAGS] = atoi( CG_Argv( 7 ) );
+	awardValues[AWARD_PERFECT] = atoi( CG_Argv( 8 ) );
 #endif
 
 	postgameMenuInfo.numAwards = 0;
