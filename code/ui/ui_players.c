@@ -32,6 +32,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "ui_local.h"
 
+#ifdef TA_WEAPSYS
+// ZTM: weapon_t is an int, so -1 is okay for dummy value.
+#define WP_NUM_WEAPONS -1
+#endif
 
 #ifndef TA_PLAYERSYS // PLAYERCFG_ANIMATION_TIMES
 #define UI_TIMER_GESTURE		2300
