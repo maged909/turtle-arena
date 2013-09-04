@@ -1775,14 +1775,6 @@ typedef struct
 	int commandId;
 } clearDepthCommand_t;
 
-#ifdef TA_BLOOM
-typedef struct {
-	int		commandId;
-	float	x, y;
-	float	w, h;
-} bloomCommand_t;
-#endif
-
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
@@ -1797,9 +1789,6 @@ typedef enum {
 	RC_VIDEOFRAME,
 	RC_COLORMASK,
 	RC_CLEARDEPTH
-#ifdef TA_BLOOM
-	,RC_BLOOM
-#endif
 } renderCommand_t;
 
 
@@ -1851,9 +1840,6 @@ void RE_RotatedPic( float x, float y, float w, float h,
 void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
 void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader );
-#ifdef TA_BLOOM
-void RB_SetGL2D (void);
-#endif
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
 void RE_SavePNG(const char *filename, int width, int height, byte *data, int padding);
@@ -1874,12 +1860,6 @@ int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius );
 void R_FogOff( void );
 void RB_FogOn( void );
 void RB_Fog( int fogNum );
-
-#ifdef TA_BLOOM
-// bloom stuff
-void R_BloomInit( void );
-void R_BloomScreen( int x, int y, int w, int h );
-#endif
 
 
 #endif //TR_LOCAL_H

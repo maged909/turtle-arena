@@ -73,7 +73,6 @@ endif
 #							bloody textures, netgamers, etc NOTE: This can be defined without defining "NOBLOOD"
 #							ZTM: TODO: Rename this define to ...?
 # NOBLOOD				Removes blood. If this is defined, NOTRATEDM must also be defined.
-# TA_BLOOM				Post-process bloom light effect, based on code from OpenArena.
 #####
 # TA_WEAPSYS			This is the core changes to the weapon system
 #							loads the weapons from a text file, allowing for easy modifing,
@@ -108,7 +107,7 @@ BUILD_DEFINES = -DNOTRATEDM -DNOBLOOD \
 					-DTA_HOLDSYS \
 					-DTA_WEAPSYS -DTA_PLAYERSYS \
 					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_NPCSYS -DTA_PATHSYS\
-					-DTA_BLOOM -DTA_SPLITVIEW
+					-DTA_SPLITVIEW
 
 BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \
 					-DTA_WEAPSYS_EX -DTA_DATA \
@@ -1804,7 +1803,6 @@ Q3R2STRINGOBJ = \
 Q3ROBJ = \
   $(B)/renderergl1/tr_animation.o \
   $(B)/renderergl1/tr_backend.o \
-  $(B)/renderergl1/tr_bloom.o \
   $(B)/renderergl1/tr_bsp.o \
   $(B)/renderergl1/tr_cmds.o \
   $(B)/renderergl1/tr_curve.o \

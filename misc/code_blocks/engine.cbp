@@ -1112,9 +1112,6 @@
 		<Unit filename="../../code/renderergl1/tr_backend.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/renderergl1/tr_bloom.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../../code/renderergl1/tr_bsp.c">
 			<Option compilerVar="CC" />
 		</Unit>

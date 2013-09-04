@@ -276,9 +276,6 @@ typedef struct {
 	menuslider_s	tq;
 	menulist_s  	fs;
 	menulist_s  	lighting;
-#ifdef TA_BLOOM
-	menulist_s  	bloom;
-#endif
 	menulist_s  	allow_extensions;
 	menulist_s  	texturebits;
 	menulist_s  	geometry;
@@ -300,9 +297,6 @@ typedef struct
 	int filter;
 	int driver;
 	qboolean extensions;
-#ifdef TA_BLOOM
-	int bloom;
-#endif
 } InitialVideoOptions_s;
 
 static InitialVideoOptions_s	s_ivo;
@@ -310,26 +304,6 @@ static graphicsoptions_t		s_graphicsoptions;
 
 static InitialVideoOptions_s s_ivo_templates[] =
 {
-#ifdef TA_BLOOM
-	{
-		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue, 0	// Note: If r_availableModes is found, mode is changed to -2.
-	},
-	{
-		4, qtrue, 2, 0, 2, 1, 1, 0, qtrue, 0	// JDC: this was tq 3
-	},
-	{
-		3, qtrue, 2, 0, 0, 1, 0, 0, qtrue, 0
-	},
-	{
-		2, qtrue, 1, 0, 0, 0, 0, 0, qtrue, 0
-	},
-	{
-		2, qtrue, 1, 1, 0, 0, 0, 0, qtrue, 0
-	},
-	{
-		3, qtrue, 1, 0, 0, 1, 0, 0, qtrue, 0
-	}
-#else
 	{
 		6, qtrue, 3, 0, 2, 2, 1, 0, qtrue	// Note: If r_availableModes is found, mode is changed to -2.
 	},
@@ -348,7 +322,6 @@ static InitialVideoOptions_s s_ivo_templates[] =
 	{
 		3, qtrue, 1, 0, 0, 1, 0, 0, qtrue
 	}
-#endif
 };
 
 #define NUM_IVO_TEMPLATES ( ARRAY_LEN( s_ivo_templates ) )
@@ -521,9 +494,6 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.extensions  = s_graphicsoptions.allow_extensions.curvalue;
 	s_ivo.tq          = s_graphicsoptions.tq.curvalue;
 	s_ivo.lighting    = s_graphicsoptions.lighting.curvalue;
-#ifdef TA_BLOOM
-	s_ivo.bloom    = s_graphicsoptions.bloom.curvalue;
-#endif
 	s_ivo.geometry    = s_graphicsoptions.geometry.curvalue;
 	s_ivo.filter      = s_graphicsoptions.filter.curvalue;
 	s_ivo.texturebits = s_graphicsoptions.texturebits.curvalue;
@@ -588,10 +558,6 @@ static void GraphicsOptions_CheckConfig( void )
 			continue;
 		if ( s_ivo_templates[i].lighting != s_graphicsoptions.lighting.curvalue )
 			continue;
-#ifdef TA_BLOOM
-		if ( s_ivo_templates[i].bloom != s_graphicsoptions.bloom.curvalue )
-			continue;
-#endif
 		if ( s_ivo_templates[i].geometry != s_graphicsoptions.geometry.curvalue )
 			continue;
 		if ( s_ivo_templates[i].filter != s_graphicsoptions.filter.curvalue )
@@ -653,12 +619,6 @@ static void GraphicsOptions_UpdateMenuItems( void )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
-#ifdef TA_BLOOM
-	if ( s_ivo.bloom != s_graphicsoptions.bloom.curvalue )
-	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
-	}
-#endif
 	if ( s_ivo.driver != s_graphicsoptions.driver.curvalue )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
@@ -736,9 +696,6 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 	trap_Cvar_Reset("r_stencilbits");
 
 	trap_Cvar_SetValue( "r_vertexLight", s_graphicsoptions.lighting.curvalue );
-#ifdef TA_BLOOM
-	trap_Cvar_SetValue( "r_bloom", s_graphicsoptions.bloom.curvalue );
-#endif
 
 	if ( s_graphicsoptions.geometry.curvalue == 2 )
 	{
@@ -807,9 +764,6 @@ static void GraphicsOptions_Event( void* ptr, int event ) {
 			resToRatio[ s_graphicsoptions.mode.curvalue ];
 		s_graphicsoptions.tq.curvalue          = ivo->tq;
 		s_graphicsoptions.lighting.curvalue    = ivo->lighting;
-#ifdef TA_BLOOM
-		s_graphicsoptions.bloom.curvalue       = ivo->bloom;
-#endif
 		s_graphicsoptions.texturebits.curvalue = ivo->texturebits;
 		s_graphicsoptions.geometry.curvalue    = ivo->geometry;
 		s_graphicsoptions.filter.curvalue      = ivo->filter;
@@ -923,9 +877,6 @@ static void GraphicsOptions_SetMenuItems( void )
 	}
 
 	s_graphicsoptions.lighting.curvalue = trap_Cvar_VariableValue( "r_vertexLight" ) != 0;
-#ifdef TA_BLOOM
-	s_graphicsoptions.bloom.curvalue = trap_Cvar_VariableValue( "r_bloom" ) != 0;
-#endif
 	switch ( ( int ) trap_Cvar_VariableValue( "r_texturebits" ) )
 	{
 	default:
@@ -1171,17 +1122,6 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.lighting.itemnames     = lighting_names;
 	y += BIGCHAR_HEIGHT+2;
 
-#ifdef TA_BLOOM
-	// references/modifies "r_bloom"
-	s_graphicsoptions.bloom.generic.type  = MTYPE_SPINCONTROL;
-	s_graphicsoptions.bloom.generic.name	 = "Bloom:";
-	s_graphicsoptions.bloom.generic.flags = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
-	s_graphicsoptions.bloom.generic.x	 = 400;
-	s_graphicsoptions.bloom.generic.y	 = y;
-	s_graphicsoptions.bloom.itemnames     = enabled_names;
-	y += BIGCHAR_HEIGHT+2;
-#endif
-
 	// references/modifies "r_lodBias" & "subdivisions"
 	s_graphicsoptions.geometry.generic.type  = MTYPE_SPINCONTROL;
 	s_graphicsoptions.geometry.generic.name	 = "Geometric Detail:";
@@ -1268,9 +1208,6 @@ void GraphicsOptions_MenuInit( void )
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.mode );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.fs );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.lighting );
-#ifdef TA_BLOOM
-	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.bloom );
-#endif
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.geometry );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.tq );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.texturebits );
