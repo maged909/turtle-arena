@@ -1213,7 +1213,6 @@ extern	cvar_t	*r_uiFullScreen;				// ui is running fullscreen
 
 extern	cvar_t	*r_logFile;						// number of frames to emit GL logs
 #ifdef IOQ3ZTM // CELSHADING
-extern	cvar_t	*r_celshadalgo;					// Cel shading, Chooses method: 0 = disabled, 1 = whiteTexture, 10 = kuwahara, 20 = snn.
 extern	cvar_t	*r_celoutline;					// Cel outline. The integer value is the width of the cel outline to draw.
 #endif
 extern	cvar_t	*r_showtris;					// enables wireframe rendering of the world
