@@ -194,7 +194,6 @@
 			<Add option="-DTA_ENTSYS" />
 			<Add option="-DTA_NPCSYS" />
 			<Add option="-DTA_PATHSYS" />
-			<Add option="-DTA_BLOOM" />
 			<Add option="-DTA_SPLITVIEW" />
 			<Add option="-DTURTLEARENA" />
 			<Add option="-DTA_MISC" />
