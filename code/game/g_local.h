@@ -833,7 +833,6 @@ void G_DeNiGHTSizePlayer( gentity_t *ent );
 //
 qboolean	ConsoleCommand( void );
 void G_RegisterCommands( void );
-void G_UnregisterCommands( void );
 void G_ProcessIPBans(void);
 qboolean G_FilterPacket (char *from);
 
