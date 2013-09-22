@@ -284,6 +284,16 @@ typedef struct centity_s {
 	// exact interpolated position of entity on this frame
 	vec3_t			lerpOrigin;
 	vec3_t			lerpAngles;
+
+	// client side dlights
+	int				dl_frame;
+	int				dl_oldframe;
+	float			dl_backlerp;
+	int				dl_time;
+	char			dl_stylestring[64];
+	int				dl_sound;
+	int				dl_atten;
+
 } centity_t;
 
 
@@ -1013,6 +1023,8 @@ typedef struct {
 	// information screen text during loading
 	char		infoScreenText[MAX_STRING_CHARS];
 
+	qboolean	lightstylesInited;
+
 	// global centerprinting (drawn over all viewports)
 	int			centerPrintTime;
 	float		centerPrintCharScale;
@@ -1600,6 +1612,7 @@ typedef struct {
 
 	int				serverCommandSequence;	// reliable command stream counter
 	int				processedSnapshotNum;// the number of snapshots cgame has requested
+	int				previousSnapshotNum;// the snapshot from before vid_restart
 
 	qboolean		localServer;		// detected on startup by checking sv_running
 
@@ -1807,7 +1820,10 @@ extern	vmCvar_t		cg_voipShowMeter;
 extern	vmCvar_t		cg_voipShowCrosshairMeter;
 extern	vmCvar_t		cg_consoleLatency;
 extern	vmCvar_t		cg_drawShaderInfo;
+extern	vmCvar_t		cg_coronafardist;
+extern	vmCvar_t		cg_coronas;
 extern	vmCvar_t		cg_fovAspectAdjust;
+extern	vmCvar_t		cg_fadeExplosions;
 extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
@@ -1898,6 +1914,8 @@ void CG_BuildSpectatorString( void );
 
 void CG_RemoveNotifyLine( cglc_t *localClient );
 void CG_AddNotifyText( void );
+
+void CG_SetupDlightstyles( void );
 
 
 //
@@ -2314,7 +2332,8 @@ void CG_DrawLetterbox(void);
 //
 // cg_snapshot.c
 //
-void CG_ProcessSnapshots( void );
+void CG_ProcessSnapshots( qboolean initialOnly );
+void CG_RestoreSnapshot( void );
 playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
 
 

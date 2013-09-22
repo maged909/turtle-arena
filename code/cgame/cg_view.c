@@ -1705,13 +1705,17 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	trap_R_ClearScene();
 
 	// set up cg.snap and possibly cg.nextSnap
-	CG_ProcessSnapshots();
+	CG_ProcessSnapshots( qfalse );
 
 	// if we haven't received any snapshots yet, all
 	// we can draw is the information screen
 	if ( !cg.snap || ( cg.snap->snapFlags & SNAPFLAG_NOT_ACTIVE ) ) {
 		CG_DrawInformation();
 		return;
+	}
+
+	if ( !cg.lightstylesInited ) {
+		CG_SetupDlightstyles();
 	}
 
 	// this counter will be bumped for every valid scene we generate

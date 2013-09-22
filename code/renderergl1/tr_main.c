@@ -1488,7 +1488,7 @@ void R_AddEntitySurfaces (void) {
 		  tr.currentEntityNum++ ) {
 		ent = tr.currentEntity = &tr.refdef.entities[tr.currentEntityNum];
 
-		ent->needDlights = qfalse;
+		ent->needDlights = 0;
 
 		// preshift the value we are going to OR into the drawsurf sort
 		tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
@@ -1609,6 +1609,8 @@ void R_GenerateDrawSurfs( void ) {
 	}
 
 	R_SetupProjection(&tr.viewParms, r_zproj->value, qtrue);
+
+	R_CullDlights();
 
 	R_AddWorldSurfaces ();
 

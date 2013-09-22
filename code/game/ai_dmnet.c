@@ -2263,7 +2263,7 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		// if attacking an obelisk
 		if ( bs->enemy == redobelisk.entitynum ||
 			bs->enemy == blueobelisk.entitynum ) {
-			target[2] += 16;
+			target[2] += OBELISK_TARGET_HEIGHT;
 		}
 #endif
 	}
@@ -2571,7 +2571,7 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 			// if attacking an obelisk
 			if ( bs->enemy == redobelisk.entitynum ||
 				bs->enemy == blueobelisk.entitynum ) {
-				target[2] += 16;
+				target[2] += OBELISK_TARGET_HEIGHT;
 			}
 #endif
 		}
@@ -2752,7 +2752,7 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 			// if attacking an obelisk
 			if ( bs->enemy == redobelisk.entitynum ||
 				bs->enemy == blueobelisk.entitynum ) {
-				target[2] += 16;
+				target[2] += OBELISK_TARGET_HEIGHT;
 			}
 #endif
 		}

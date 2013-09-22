@@ -233,6 +233,12 @@ struct gentity_s {
 	int			mustcut; // Only takes damage from WIF_CUTS weapons
 #endif
 
+	// dlights
+	vec3_t		dl_color;
+	char		*dl_stylestring;
+	char		*dl_shader;
+	int			dl_atten;
+
 	// info for bots
 	qboolean	botvalid;
 	float		update_time;
@@ -625,6 +631,7 @@ bg_iteminfo_t *G_RandomWeaponItem( gentity_t *ent, int flags );
 //
 // g_utils.c
 //
+int		G_FindConfigstringIndex( char *name, int start, int max, qboolean create );
 int		G_ModelIndex( char *name );
 int		G_SoundIndex( char *name );
 #ifdef IOQ3ZTM // Particles

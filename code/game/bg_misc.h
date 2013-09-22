@@ -79,6 +79,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define LOCKON_TIME 500 // Time it take to be fully facing target
 #endif
 
+#ifdef MISSIONPACK
+#define OBELISK_TARGET_HEIGHT	56
+#endif
+
+
+#define MAX_DLIGHT_CONFIGSTRINGS 16
+
 //
 // config strings are a general means of communicating variable length strings
 // from the server to all connected clients.
@@ -128,12 +135,14 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 #ifdef TA_ENTSYS // MISC_OBJECT
-#define CS_MAX					(CS_STRINGS+MAX_STRINGS)
+#define CS_DLIGHTS				(CS_STRINGS+MAX_STRINGS)
 #elif defined IOQ3ZTM // Particles
-#define CS_MAX					(CS_PARTICLES+MAX_PARTICLES_AREAS)
+#define CS_DLIGHTS				(CS_PARTICLES+MAX_PARTICLES_AREAS)
 #else
-#define CS_MAX					(CS_PARTICLES+MAX_LOCATIONS)
+#define CS_DLIGHTS              (CS_PARTICLES+MAX_LOCATIONS)
 #endif
+
+#define CS_MAX					(CS_DLIGHTS+MAX_DLIGHT_CONFIGSTRINGS)
 
 #if (CS_MAX) > MAX_CONFIGSTRINGS
 #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS
@@ -249,6 +258,7 @@ typedef struct entityState_s {
 	int		groundEntityNum;	// ENTITYNUM_NONE = in air
 
 	int		constantLight;	// r + (g<<8) + (b<<16) + (intensity<<24)
+	int		dl_intensity;	// used for coronas
 	int		loopSound;		// constantly loop this sound
 
 	int		modelindex2;
@@ -263,6 +273,8 @@ typedef struct entityState_s {
 #ifdef TURTLEARENA
 	int		generic1;
 #endif
+
+	int		density;            // for particle effects
 
 	// for players
 	int		powerups;		// bit flags
@@ -2303,6 +2315,7 @@ typedef enum {
 	ET_INVISIBLE,
 	ET_GRAPPLE,				// grapple hooked on wall
 	ET_TEAM,
+	ET_CORONA,
 #ifdef TA_ENTSYS // MISC_OBJECT
 	ET_MISCOBJECT,
 #endif

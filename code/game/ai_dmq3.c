@@ -3131,10 +3131,11 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	int movetype, i, attackentity;
 	float attack_skill, jumper, croucher, dist, strafechange_time;
 	float attack_dist, attack_range;
-	vec3_t forward, backward, sideward, hordir, up = {0, 0, 1};
+	vec3_t forward, backward, sideward, start, hordir, up = {0, 0, 1};
 	aas_entityinfo_t entinfo;
 	bot_moveresult_t moveresult;
 	bot_goal_t goal;
+	bsp_trace_t bsptrace;
 
 	attackentity = bs->enemy;
 	//
@@ -3180,7 +3181,18 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 			bs->attackcrouch_time = FloatTime() + croucher * 5;
 		}
 	}
-	if (bs->attackcrouch_time > FloatTime()) movetype = MOVE_CROUCH;
+	//
+	if (bs->attackcrouch_time > FloatTime()) {
+		// get the start point aiming from
+		VectorCopy(bs->origin, start);
+		start[2] += CROUCH_VIEWHEIGHT;
+		BotAI_Trace(&bsptrace, start, NULL, NULL, entinfo.origin, bs->client, MASK_SHOT);
+
+		// only try to crouch if the enemy remains visible
+		if (bsptrace.fraction >= 1.0 || bsptrace.ent == attackentity) {
+			movetype = MOVE_CROUCH;
+		}
+	}
 	//if the bot should jump
 	if (movetype == MOVE_JUMP) {
 		//if jumped last frame
@@ -3448,7 +3460,21 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	//
 	if (curenemy >= 0) {
 		BotEntityInfo(curenemy, &curenemyinfo);
-		if (EntityCarriesFlag(&curenemyinfo)) return qfalse;
+		// only concentrate on flag carrier if not carrying a flag
+		if (EntityCarriesFlag(&curenemyinfo) && !BotCTFCarryingFlag(bs)) {
+			return qfalse;
+		}
+#ifdef MISSIONPACK_HARVESTER
+		// only concentrate on cube carrier if not carrying cubes
+		if (EntityCarriesCubes(&curenemyinfo) && !BotHarvesterCarryingCubes(bs)) {
+			return qfalse;
+		}
+#endif
+		// looking for revenge
+		if (curenemy == bs->revenge_enemy && bs->revenge_kills > 0) {
+			return qfalse;
+		}
+		//
 		VectorSubtract(curenemyinfo.origin, bs->origin, dir);
 		cursquaredist = VectorLengthSquared(dir);
 	}
@@ -3488,6 +3514,14 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (i == bs->client) continue;
 		//if it's the current enemy
 		if (i == curenemy) continue;
+		//if the enemy has targeting disabled
+		if (g_entities[i].flags & FL_NOTARGET) {
+			continue;
+		}
+		//if on the same team
+		if (BotSameTeam(bs, i)) {
+			continue;
+		}
 		//
 		BotEntityInfo(i, &entinfo);
 		//
@@ -3508,16 +3542,18 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		//calculate the distance towards the enemy
 		VectorSubtract(entinfo.origin, bs->origin, dir);
 		squaredist = VectorLengthSquared(dir);
-		//if this entity is not carrying a flag
-		if (!EntityCarriesFlag(&entinfo))
+		//if this entity is not carrying a flag or cubes
+		if (!EntityCarriesFlag(&entinfo)
+#ifdef MISSIONPACK_HARVESTER
+			&& !EntityCarriesCubes(&entinfo)
+#endif
+			)
 		{
 			//if this enemy is further away than the current one
 			if (curenemy >= 0 && squaredist > cursquaredist) continue;
 		} //end if
 		//if the bot has no
 		if (squaredist > Square(900.0 + alertness * 4000.0)) continue;
-		//if on the same team
-		if (BotSameTeam(bs, i)) continue;
 		//if the bot's health decreased or the enemy is shooting
 		if (curenemy < 0 && (healthdecrease || EntityIsShooting(&entinfo)))
 			f = 360;
@@ -3793,7 +3829,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		// if attacking an obelisk
 		if ( bs->enemy == redobelisk.entitynum ||
 			bs->enemy == blueobelisk.entitynum ) {
-			target[2] += 32;
+			target[2] += OBELISK_TARGET_HEIGHT;
 		}
 #endif
 		//aim at the obelisk
@@ -5515,11 +5551,22 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 		case EV_OBITUARY:
 		{
 			int target, attacker, mod;
+			float vengefulness;
+			qboolean getRevenge;
 
 			target = state->otherEntityNum;
 			attacker = state->otherEntityNum2;
 			mod = state->eventParm;
-			//
+
+			//does the bot want revenge?
+			if (level.numPlayingClients < 3) {
+				getRevenge = qfalse;
+			} else {
+				vengefulness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VENGEFULNESS, 0, 1);
+				getRevenge = (random() < vengefulness);
+			}
+
+			//the bot was killed
 			if (target == bs->client) {
 				bs->botdeathtype = mod;
 #ifdef TA_WEAPSYS
@@ -5533,6 +5580,20 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 				else bs->botsuicide = qfalse;
 				//
 				bs->num_deaths++;
+				//
+				if (!bs->botsuicide) {
+					if (getRevenge) {
+						if (attacker != bs->revenge_enemy) {
+							bs->revenge_enemy = attacker;
+							bs->revenge_kills = 0;
+						}
+
+						bs->revenge_kills++;
+					} else {
+						bs->revenge_enemy = -1;
+						bs->revenge_kills = 0;
+					}
+				}
 			}
 			//else if this client was killed by the bot
 			else if (attacker == bs->client) {
@@ -5541,6 +5602,18 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 				bs->killedenemy_time = FloatTime();
 				//
 				bs->num_kills++;
+				// revenge!
+				if (target == bs->revenge_enemy) {
+					if (getRevenge) {
+						bs->revenge_kills--;
+					} else {
+						bs->revenge_kills = 0;
+					}
+
+					if (bs->revenge_kills <= 0) {
+						bs->revenge_enemy = -1;
+					}
+				}
 			}
 			else if (attacker == bs->enemy && target == attacker) {
 				bs->enemysuicide = qtrue;

@@ -3094,12 +3094,12 @@ void CG_AddPlayerWeapon( refEntity_t *parent, refSkeleton_t *parentSkeleton, pla
 #endif
 #ifdef TA_WEAPSYS
 			if ( flashColor[0] || flashColor[1] || flashColor[2] ) {
-				trap_R_AddLightToScene( flash.origin, flashDLight,
+				trap_R_AddLightToScene( flash.origin, flashDLight, 1.0f,
 					flashColor[0], flashColor[1], flashColor[2] );
 			}
 #else
 			if ( weapon->flashDlightColor[0] || weapon->flashDlightColor[1] || weapon->flashDlightColor[2] ) {
-				trap_R_AddLightToScene( flash.origin, flashDLight, weapon->flashDlightColor[0],
+				trap_R_AddLightToScene( flash.origin, flashDLight, 1.0f, weapon->flashDlightColor[0],
 					weapon->flashDlightColor[1], weapon->flashDlightColor[2] );
 			}
 #endif
