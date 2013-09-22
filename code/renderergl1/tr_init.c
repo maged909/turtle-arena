@@ -128,7 +128,6 @@ cvar_t	*r_roundImagesDown;
 cvar_t	*r_colorMipLevels;
 cvar_t	*r_picmip;
 #ifdef IOQ3ZTM // CELSHADING
-cvar_t	*r_celshadalgo; // Cel shading algorithm selection.
 cvar_t	*r_celoutline; // Cel border width.
 #endif
 cvar_t	*r_showtris;
@@ -1258,7 +1257,6 @@ void R_Register( void )
 	r_debugSurface = ri.Cvar_Get ("r_debugSurface", "0", CVAR_CHEAT);
 	r_nobind = ri.Cvar_Get ("r_nobind", "0", CVAR_CHEAT);
 #ifdef IOQ3ZTM // CELSHADING
-	r_celshadalgo = ri.Cvar_Get ("r_celshadalgo", "0", CVAR_ARCHIVE|CVAR_LATCH);
 	r_celoutline = ri.Cvar_Get("r_celoutline","0", CVAR_ARCHIVE);
 #endif
 	r_showtris = ri.Cvar_Get ("r_showtris", "0", CVAR_CHEAT);
@@ -1371,10 +1369,6 @@ void R_Init( void ) {
 	R_InitFogTable();
 
 	R_Register();
-
-#ifdef TA_BLOOM
-	R_BloomInit();
-#endif
 
 	max_polys = r_maxpolys->integer;
 	if (max_polys < MAX_POLYS)
@@ -1547,6 +1541,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp, qboolean headless ) 
 	re.LightForPoint = R_LightForPoint;
 	re.AddLightToScene = RE_AddLightToScene;
 	re.AddAdditiveLightToScene = RE_AddAdditiveLightToScene;
+	re.AddCoronaToScene = RE_AddCoronaToScene;
 	re.RenderScene = RE_RenderScene;
 
 	re.SetColor = RE_SetColor;

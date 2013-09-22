@@ -1677,89 +1677,70 @@ static void UI_LoadGame_f(void) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, va( "map %s\n", loadmap ) );
 	}
 }
+
+/*
+==================
+UI_Arcade_f
+==================
+*/
+static void UI_Arcade_f( void ) {
+	UI_StartServerMenu( qfalse );
+}
+
+/*
+==================
+UI_SPComplete_f
+==================
+*/
+static void UI_SPComplete_f( void ) {
+	trap_Cvar_Set( "com_errorMessage", "Completed single player platformer test!" );
+}
+
+/*
+==================
+UI_SPGameOver_f
+==================
+*/
+static void UI_SPGameOver_f( void ) {
+	trap_Cvar_Set( "com_errorMessage", "Game Over" );
+}
 #endif
+
+consoleCommand_t	ui_commands[] = {
+#ifdef TA_SP
+	{ "loadgame", UI_LoadGame_f, 0 },
+	{ "singleplayermenu", UI_SPMenu_f, 0 },
+	{ "arcade", UI_Arcade_f, 0 },
+	{ "sp_complete", UI_SPComplete_f, CMD_INGAME },
+	{ "sp_gameover", UI_SPGameOver_f, CMD_INGAME },
+#else
+	{ "levelselect", UI_SPLevelMenu_f, 0 },
+#endif
+	{ "postgame", UI_SPPostgameMenu_f, CMD_INGAME },
+	{ "ui_cache", UI_Cache_f, 0 },
+	{ "ui_cinematics", UI_CinematicsMenu_f, 0 },
+	{ "ui_teamOrders", UI_TeamOrdersMenu_f, CMD_INGAME },
+	{ "iamacheater", UI_SPUnlock_f, 0 },
+#ifndef TA_SP
+	{ "iamamonkey", UI_SPUnlockMedals_f, 0 }
+#endif
+};
+
+int ui_numCommands = ARRAY_LEN( ui_commands );
 
 /*
 =================
 UI_ConsoleCommand
+
+update frame time, commands are executed by CG_ConsoleCommand
 =================
 */
-qboolean UI_ConsoleCommand( int realTime ) {
-	const char	*cmd;
-
+void UI_ConsoleCommand( int realTime ) {
 	uis.frametime = realTime - uis.realtime;
 	uis.realtime = realTime;
 
-	cmd = CG_Argv( 0 );
-
 	// ensure minimum menu data is available
 	Menu_Cache();
-
-#ifdef TA_SP
-	if ( Q_stricmp (cmd, "loadgame") == 0 ) {
-		UI_LoadGame_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "singleplayermenu") == 0 ) {
-		UI_SPMenu_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "arcade") == 0 ) {
-		UI_StartServerMenu( qfalse );
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "sp_complete") == 0 ) {
-		trap_Cvar_Set( "com_errorMessage", "Completed single player platformer test!" );
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "sp_gameover") == 0 ) {
-		trap_Cvar_Set( "com_errorMessage", "Game Over" );
-		return qtrue;
-	}
-#else
-	if ( Q_stricmp (cmd, "levelselect") == 0 ) {
-		UI_SPLevelMenu_f();
-		return qtrue;
-	}
-#endif
-
-	if ( Q_stricmp (cmd, "postgame") == 0 ) {
-		UI_SPPostgameMenu_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_cache") == 0 ) {
-		UI_Cache_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_cinematics") == 0 ) {
-		UI_CinematicsMenu_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "ui_teamOrders") == 0 ) {
-		UI_TeamOrdersMenu_f();
-		return qtrue;
-	}
-
-	if ( Q_stricmp (cmd, "iamacheater") == 0 ) {
-		UI_SPUnlock_f();
-		return qtrue;
-	}
-
-#ifndef TA_SP
-	if ( Q_stricmp (cmd, "iamamonkey") == 0 ) {
-		UI_SPUnlockMedals_f();
-		return qtrue;
-	}
-#endif
-
-	return qfalse;
 }
 
 /*

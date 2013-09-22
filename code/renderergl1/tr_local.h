@@ -54,14 +54,24 @@ typedef unsigned int glIndex_t;
 #define MAX_STATE_NAME 32
 
 
+typedef struct corona_s {
+	vec3_t		origin;
+	vec3_t		color;			// range from 0.0 to 1.0, should be color normalized
+	vec3_t		transformed;	// origin in local coordinate system
+	float		scale;			// uses r_flaresize as the baseline (1.0)
+	int			id;
+	qboolean	visible;		// still send the corona request, even if not visible, for proper fading
+} corona_t;
 
 typedef struct dlight_s {
-	vec3_t	origin;
-	vec3_t	color;				// range from 0.0 to 1.0, should be color normalized
-	float	radius;
+	vec3_t		origin;
+	vec3_t		color;				// range from 0.0 to 1.0, should be color normalized
+	float		radius;
+	float		radiusInverseCubed;	// attenuation optimization
+	float		intensity;			// 1.0 = fullbright, > 1.0 = overbright
+	int			flags;
 
-	vec3_t	transformed;		// origin in local coordinate system
-	int		additive;			// texture detail is lost tho when the lightmap is dark
+	vec3_t		transformed;		// origin in local coordinate system
 } dlight_t;
 
 
@@ -72,7 +82,7 @@ typedef struct {
 
 	float		axisLength;		// compensate for non-normalized axis
 
-	qboolean	needDlights;	// true for bmodels that touch a dlight
+	int			needDlights;	// bits for dlights that may touch this bmodel
 	qboolean	lightingCalculated;
 	vec3_t		lightDir;		// normalized direction towards light
 	vec3_t		ambientLight;	// color normalized to 0-255
@@ -479,8 +489,12 @@ typedef struct {
 	refSkeleton_t	*skeletons;
 #endif
 
+	int			dlightBits;
 	int			num_dlights;
 	struct dlight_s	*dlights;
+
+	int			num_coronas;
+	struct corona_s	*coronas;
 
 	int			numPolys;
 	struct srfPoly_s	*polys;
@@ -498,23 +512,24 @@ typedef struct {
 //=================================================================================
 
 // skins allow models to be retextured without modifying the model file
+
 #ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
 #define MAX_SKIN_SURFACE_SHADERS 10
 #endif
-typedef struct {
-	char		name[MAX_QPATH];
+typedef struct skinSurface_s {
+	char			name[MAX_QPATH];
 #ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
 	shader_t	*shaders[MAX_SKIN_SURFACE_SHADERS];
 	int			numShaders;
 #else
 	shader_t	*shader;
 #endif
+	struct skinSurface_s	*next;
 } skinSurface_t;
 
 typedef struct skin_s {
 	char		name[MAX_QPATH];		// game path, including extension
-	int			numSurfaces;
-	skinSurface_t	*surfaces[MD3_MAX_SURFACES];
+	skinSurface_t	*surfaces;
 } skin_t;
 
 
@@ -1213,7 +1228,6 @@ extern	cvar_t	*r_uiFullScreen;				// ui is running fullscreen
 
 extern	cvar_t	*r_logFile;						// number of frames to emit GL logs
 #ifdef IOQ3ZTM // CELSHADING
-extern	cvar_t	*r_celshadalgo;					// Cel shading, Chooses method: 0 = disabled, 1 = whiteTexture, 10 = kuwahara, 20 = snn.
 extern	cvar_t	*r_celoutline;					// Cel outline. The integer value is the width of the cel outline to draw.
 #endif
 extern	cvar_t	*r_showtris;					// enables wireframe rendering of the world
@@ -1491,7 +1505,7 @@ FLARES
 
 void R_ClearFlares( void );
 
-void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, vec3_t normal );
+void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, float scale, vec3_t normal, int id, qboolean cgvisible );
 void RB_AddDlightFlares( void );
 void RB_RenderFlares (void);
 
@@ -1503,6 +1517,7 @@ LIGHTS
 ============================================================
 */
 
+void R_CullDlights( void );
 void R_DlightBmodel( bmodel_t *bmodel );
 void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent );
 void R_TransformDlights( int count, dlight_t *dl, orientationr_t *or );
@@ -1581,8 +1596,9 @@ void RE_AddRefEntityToScene( const refEntity_t *ent );
 #endif
 void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
-void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
-void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
+void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
+void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, qboolean visible );
 void RE_RenderScene( const refdef_t *fd );
 
 /*
@@ -1775,14 +1791,6 @@ typedef struct
 	int commandId;
 } clearDepthCommand_t;
 
-#ifdef TA_BLOOM
-typedef struct {
-	int		commandId;
-	float	x, y;
-	float	w, h;
-} bloomCommand_t;
-#endif
-
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
@@ -1797,9 +1805,6 @@ typedef enum {
 	RC_VIDEOFRAME,
 	RC_COLORMASK,
 	RC_CLEARDEPTH
-#ifdef TA_BLOOM
-	,RC_BLOOM
-#endif
 } renderCommand_t;
 
 
@@ -1818,6 +1823,7 @@ typedef enum {
 typedef struct {
 	drawSurf_t	drawSurfs[MAX_DRAWSURFS];
 	dlight_t	dlights[MAX_DLIGHTS];
+	corona_t	coronas[MAX_CORONAS];
 	trRefEntity_t	entities[MAX_REFENTITIES];
 #ifdef IOQ3ZTM // BONES
 	refSkeleton_t	skeletons[MAX_CUSTOM_SKELETONS];
@@ -1851,9 +1857,6 @@ void RE_RotatedPic( float x, float y, float w, float h,
 void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
 void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader );
-#ifdef TA_BLOOM
-void RB_SetGL2D (void);
-#endif
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
 void RE_SavePNG(const char *filename, int width, int height, byte *data, int padding);
@@ -1874,12 +1877,6 @@ int R_PointFogNum( const trRefdef_t *refdef, vec3_t point, float radius );
 void R_FogOff( void );
 void RB_FogOn( void );
 void RB_Fog( int fogNum );
-
-#ifdef TA_BLOOM
-// bloom stuff
-void R_BloomInit( void );
-void R_BloomScreen( int x, int y, int w, int h );
-#endif
 
 
 #endif //TR_LOCAL_H

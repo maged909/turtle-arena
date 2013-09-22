@@ -345,29 +345,29 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 			shader = R_GetShaderByHandle( ent->e.customShader );
 		} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
 			skin_t *skin;
-			int		j;
+			skinSurface_t *skinSurf;
 
 			skin = R_GetSkinByHandle( ent->e.customSkin );
 
 			// match the surface name to something in the skin file
 			shader = tr.defaultShader;
-			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+			for ( skinSurf = skin->surfaces ; skinSurf ; skinSurf = skinSurf->next ) {
 				// the names have both been lowercased
-				if ( !strcmp( skin->surfaces[j]->name, surface->name ) ) {
+				if ( !strcmp( skinSurf->name, surface->name ) ) {
 #ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
 					int index;
 
 					if (ent->e.skinFraction == 1.0f) {
-						index = skin->surfaces[j]->numShaders-1;
+						index = skinSurf->numShaders-1;
 					} else if (ent->e.skinFraction == 0.0f) {
 						index = 0;
 					} else { // >= 0 && < 1
-						index = (ent->e.skinFraction * skin->surfaces[j]->numShaders);
+						index = (ent->e.skinFraction * skinSurf->numShaders);
 					}
 
-					shader = skin->surfaces[j]->shaders[index];
+					shader = skinSurf->shaders[index];
 #else
-					shader = skin->surfaces[j]->shader;
+					shader = skinSurf->shader;
 #endif
 					break;
 				}

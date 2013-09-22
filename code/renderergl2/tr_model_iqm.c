@@ -773,12 +773,14 @@ Add all surfaces of this model
 void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	iqmData_t		*data;
 	srfIQModel_t		*surface;
-	int			i, j;
+	int			i;
 	qboolean		personalModel;
 	int			cull;
 	int			fogNum;
+	int         cubemapIndex;
 	shader_t		*shader;
 	skin_t			*skin;
+	skinSurface_t	*skinSurf;
 
 	data = tr.currentModel->modelData;
 	surface = data->surfaces;
@@ -829,6 +831,8 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	//
 	fogNum = R_ComputeIQMFogNum( data, ent );
 
+	cubemapIndex = R_CubemapForPoint(ent->e.origin);
+
 	for ( i = 0 ; i < data->num_surfaces ; i++ ) {
 		if(ent->e.customShader)
 			shader = R_GetShaderByHandle( ent->e.customShader );
@@ -837,11 +841,11 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			skin = R_GetSkinByHandle(ent->e.customSkin);
 			shader = tr.defaultShader;
 
-			for(j = 0; j < skin->numSurfaces; j++)
+			for(skinSurf = skin->surfaces; skinSurf; skinSurf = skinSurf->next)
 			{
-				if (!strcmp(skin->surfaces[j]->name, surface->name))
+				if (!strcmp(skinSurf->name, surface->name))
 				{
-					shader = skin->surfaces[j]->shader;
+					shader = skinSurf->shader;
 					break;
 				}
 			}
@@ -857,7 +861,7 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			&& fogNum == 0
 			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) ) 
 			&& shader->sort == SS_OPAQUE ) {
-			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, 0, 0 );
+			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, 0, 0, 0 );
 		}
 
 		// projection shadows work fine with personal models
@@ -865,11 +869,11 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			&& fogNum == 0
 			&& (ent->e.renderfx & RF_SHADOW_PLANE )
 			&& shader->sort == SS_OPAQUE ) {
-			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, 0, 0 );
+			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, 0, 0, 0 );
 		}
 
 		if( !personalModel ) {
-			R_AddDrawSurf( (void *)surface, shader, fogNum, 0, 0 );
+			R_AddDrawSurf( (void *)surface, shader, fogNum, 0, 0, cubemapIndex );
 		}
 
 		surface++;

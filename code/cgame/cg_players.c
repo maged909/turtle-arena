@@ -200,7 +200,7 @@ static qboolean	CG_ParseAnimationFile( const char *filename, clientInfo_t *ci ) 
 			text_p = prev;	// unget the token
 			break;
 		}
-		Com_Printf( "unknown token '%s' is %s\n", token, filename );
+		Com_Printf( "unknown token '%s' in %s\n", token, filename );
 	}
 
 	// read information for each frame
@@ -2462,7 +2462,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso, refSkeleton_
 #ifndef TURTLEARENA // POWERS
 	// quad gives a dlight
 	if ( powerups & ( 1 << PW_QUAD ) ) {
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1 );
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 0.2f, 0.2f, 1 );
 	}
 #endif
 
@@ -2485,7 +2485,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso, refSkeleton_
 			CG_TrailItem( cent, cgs.media.redFlagModel );
 		}
 #endif
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 0.2f, 0.2f );
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 0.2f, 0.2f );
 	}
 
 	// blueflag
@@ -2499,7 +2499,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso, refSkeleton_
 			CG_TrailItem( cent, cgs.media.blueFlagModel );
 		}
 #endif
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1.0 );
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 0.2f, 0.2f, 1.0f );
 	}
 
 	// neutralflag
@@ -2513,7 +2513,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso, refSkeleton_
 			CG_TrailItem( cent, cgs.media.neutralFlagModel );
 		}
 #endif
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 1.0, 1.0 );
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f, 1.0f );
 	}
 
 	// haste leaves smoke trails

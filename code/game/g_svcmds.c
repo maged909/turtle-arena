@@ -371,6 +371,9 @@ void	Svcmd_EntityList_f (void) {
 		case ET_GRAPPLE:
 			G_Printf("ET_GRAPPLE          ");
 			break;
+		case ET_CORONA:
+			G_Printf("ET_CORONA           ");
+			break;
 #ifdef TA_ENTSYS
 		case ET_MISCOBJECT:
 			G_Printf("ET_MISCOBJECT       ");
@@ -560,17 +563,5 @@ void G_RegisterCommands( void )
 		if( svcmds[ i ].dedicated && !g_dedicated.integer )
 			continue;
 		trap_AddCommand( svcmds[ i ].cmd );
-	}
-}
-
-void G_UnregisterCommands( void )
-{
-	int i;
-
-	for( i = 0; i < numSvCmds; i++ )
-	{
-		if( svcmds[ i ].dedicated && !g_dedicated.integer )
-			continue;
-		trap_RemoveCommand( svcmds[ i ].cmd );
 	}
 }

@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define __UI_LOCAL_H__
 
 #include "../cgame/cg_local.h"
+#include "../ui/ui_public.h"
 
 #ifdef IOQ3ZTM // FONT_REWRITE
 // ZTM: FIXME: cgame replaces height macros with function calls that aren't valid in main menu.
@@ -110,9 +111,7 @@ extern vmCvar_t	ui_browserGameType;
 extern vmCvar_t	ui_browserSortKey;
 extern vmCvar_t	ui_browserShowFull;
 extern vmCvar_t	ui_browserShowEmpty;
-#ifdef IOQ3ZTM // G_HUMANPLAYERS
 extern vmCvar_t	ui_browserShowBots;
-#endif
 
 extern vmCvar_t	ui_brassTime;
 extern vmCvar_t	ui_drawCrosshair;

@@ -253,7 +253,7 @@ typedef struct
 #endif
 #ifndef TA_WEAPSYS_EX
 	menuaction_s		machinegun;
-	menuaction_s		chainsaw;
+	menuaction_s		gauntlet;
 	menuaction_s		shotgun;
 	menuaction_s		grenadelauncher;
 	menuaction_s		rocketlauncher;
@@ -761,7 +761,7 @@ static menucommon_s *g_weapons_controls[] = {
 	(menucommon_s *)&s_controls.nextweapon,
 	(menucommon_s *)&s_controls.prevweapon,
 	(menucommon_s *)&s_controls.autoswitch,    
-	(menucommon_s *)&s_controls.chainsaw,         
+	(menucommon_s *)&s_controls.gauntlet,         
 	(menucommon_s *)&s_controls.machinegun,
 	(menucommon_s *)&s_controls.shotgun,          
 	(menucommon_s *)&s_controls.grenadelauncher,
@@ -2188,11 +2188,11 @@ static void Controls_MenuInit( int localClient )
 #endif
 
 #ifndef TA_WEAPSYS_EX
-	s_controls.chainsaw.generic.type	  = MTYPE_ACTION;
-	s_controls.chainsaw.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.chainsaw.generic.callback  = Controls_ActionEvent;
-	s_controls.chainsaw.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.chainsaw.generic.id        = ID_WEAPON1;
+	s_controls.gauntlet.generic.type	  = MTYPE_ACTION;
+	s_controls.gauntlet.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.gauntlet.generic.callback  = Controls_ActionEvent;
+	s_controls.gauntlet.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.gauntlet.generic.id        = ID_WEAPON1;
 
 	s_controls.machinegun.generic.type	    = MTYPE_ACTION;
 	s_controls.machinegun.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
@@ -2606,7 +2606,7 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.nextweapon );
 	Menu_AddItem( &s_controls.menu, &s_controls.prevweapon );
 	Menu_AddItem( &s_controls.menu, &s_controls.autoswitch );
-	Menu_AddItem( &s_controls.menu, &s_controls.chainsaw );
+	Menu_AddItem( &s_controls.menu, &s_controls.gauntlet );
 	Menu_AddItem( &s_controls.menu, &s_controls.machinegun );
 	Menu_AddItem( &s_controls.menu, &s_controls.shotgun );
 	Menu_AddItem( &s_controls.menu, &s_controls.grenadelauncher );

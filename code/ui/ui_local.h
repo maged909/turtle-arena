@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define __UI_LOCAL_H__
 
 #include "../cgame/cg_local.h"
+#include "ui_public.h"
 #include "ui_shared.h"
 
 #ifdef IOQ3ZTM // FONT_REWRITE
@@ -83,9 +84,7 @@ extern vmCvar_t	ui_browserMaster;
 extern vmCvar_t	ui_browserGameType;
 extern vmCvar_t	ui_browserShowFull;
 extern vmCvar_t	ui_browserShowEmpty;
-#ifdef IOQ3ZTM // G_HUMANPLAYERS
 extern vmCvar_t	ui_browserShowBots;
-#endif
 
 extern vmCvar_t	ui_brassTime;
 extern vmCvar_t	ui_drawCrosshair;

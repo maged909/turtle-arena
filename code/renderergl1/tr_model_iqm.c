@@ -773,12 +773,13 @@ Add all surfaces of this model
 void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 	iqmData_t		*data;
 	srfIQModel_t		*surface;
-	int			i, j;
+	int			i;
 	qboolean		personalModel;
 	int			cull;
 	int			fogNum;
 	shader_t		*shader;
 	skin_t			*skin;
+	skinSurface_t	*skinSurf;
 
 	data = tr.currentModel->modelData;
 	surface = data->surfaces;
@@ -837,24 +838,24 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			skin = R_GetSkinByHandle(ent->e.customSkin);
 			shader = tr.defaultShader;
 
-			for(j = 0; j < skin->numSurfaces; j++)
+			for(skinSurf = skin->surfaces; skinSurf; skinSurf = skinSurf->next)
 			{
-				if (!strcmp(skin->surfaces[j]->name, surface->name))
+				if (!strcmp(skinSurf->name, surface->name))
 				{
 #ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
 					int index;
 
 					if (ent->e.skinFraction == 1.0f) {
-						index = skin->surfaces[j]->numShaders-1;
+						index = skinSurf->numShaders-1;
 					} else if (ent->e.skinFraction == 0.0f) {
 						index = 0;
 					} else { // >= 0 && < 1
-						index = (ent->e.skinFraction * skin->surfaces[j]->numShaders);
+						index = (ent->e.skinFraction * skinSurf->numShaders);
 					}
 
-					shader = skin->surfaces[j]->shaders[index];
+					shader = skinSurf->shaders[index];
 #else
-					shader = skin->surfaces[j]->shader;
+					shader = skinSurf->shader;
 #endif
 					break;
 				}

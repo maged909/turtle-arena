@@ -320,15 +320,6 @@ void CL_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int 
 					  playerStateFields, numPlayerStateFields, playerStateSize );
 }
 
-/*
-=====================
-CL_AddCgameCommand
-=====================
-*/
-void CL_AddCgameCommand( const char *cmdName ) {
-	Cmd_AddCommand( cmdName, NULL );
-}
-
 
 /*
 =====================
@@ -867,14 +858,24 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 		case SORT_MAP:
 			res = Q_stricmp( server1->mapName, server2->mapName );
 			break;
+		case SORT_MAXCLIENTS:
 		case SORT_CLIENTS:
-#ifdef IOQ3ZTM // G_HUMANPLAYERS
+		case SORT_HUMANS:
+		case SORT_BOTS:
 			{
 				int clients1, clients2;
 
-				if (!Cvar_VariableIntegerValue("ui_browserShowBots")) {
+				if ( sortKey == SORT_MAXCLIENTS ) {
+					clients1 = server1->maxClients;
+					clients2 = server2->maxClients;
+				}
+				else if ( sortKey == SORT_HUMANS ) {
 					clients1 = server1->g_humanplayers;
 					clients2 = server2->g_humanplayers;
+				}
+				else if ( sortKey == SORT_BOTS ) {
+					clients1 = server1->clients - server1->g_humanplayers;
+					clients2 = server2->clients - server2->g_humanplayers;
 				}
 				else {
 					clients1 = server1->clients;
@@ -891,20 +892,12 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 					res = 0;
 				}
 			}
-#else
-			if (server1->clients < server2->clients) {
-				res = -1;
-			}
-			else if (server1->clients > server2->clients) {
-				res = 1;
-			}
-			else {
-				res = 0;
-			}
-#endif
 			break;
-		case SORT_GAME:
+		case SORT_GAMETYPE:
 			res = Q_stricmp( server1->gameType, server2->gameType );
+			break;
+		case SORT_GAMEDIR:
+			res = Q_stricmp( server1->game, server2->game );
 			break;
 		case SORT_PING:
 			if (server1->ping < server2->ping) {
@@ -1118,6 +1111,8 @@ void CL_ShutdownCGame( void ) {
 	VM_Call( cgvm, CG_SHUTDOWN );
 	VM_Free( cgvm );
 	cgvm = NULL;
+
+	Cmd_RemoveCommandsByFunc( CL_GameCommand );
 }
 
 /*
@@ -1198,10 +1193,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cvar_Update( VMA(1) );
 		return 0;
 	case CG_CVAR_SET:
-		Cvar_SetSafe( VMA(1), VMA(2) );
+		Cvar_VM_Set( VMA(1), VMA(2), qfalse );
 		return 0;
 	case CG_CVAR_SET_VALUE:
-		Cvar_SetValueSafe( VMA(1), VMF(2) );
+		Cvar_VM_SetValue( VMA(1), VMF(2), qfalse );
 		return 0;
 	case CG_CVAR_RESET:
 		Cvar_Reset( VMA(1) );
@@ -1254,10 +1249,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cbuf_ExecuteTextSafe( args[1], VMA(2) );
 		return 0;
 	case CG_ADDCOMMAND:
-		CL_AddCgameCommand( VMA(1) );
+		Cmd_AddCommandSafe( VMA(1), CL_GameCommand );
 		return 0;
 	case CG_REMOVECOMMAND:
-		Cmd_RemoveCommandSafe( VMA(1) );
+		Cmd_RemoveCommandSafe( VMA(1), CL_GameCommand );
 		return 0;
 	case CG_SENDCLIENTCOMMAND:
 		CL_AddReliableCommand(VMA(1), qfalse);
@@ -1380,10 +1375,13 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_LIGHTFORPOINT:
 		return re.LightForPoint( VMA(1), VMA(2), VMA(3), VMA(4) );
 	case CG_R_ADDLIGHTTOSCENE:
-		re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
+		re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6) );
 		return 0;
 	case CG_R_ADDADDITIVELIGHTTOSCENE:
-		re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
+		re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6) );
+		return 0;
+	case CG_R_ADDCORONATOSCENE:
+		re.AddCoronaToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5), args[6], args[7] );
 		return 0;
 	case CG_R_RENDERSCENE:
 		re.RenderScene( VMA(1) );
@@ -1814,15 +1812,15 @@ void CL_InitCGame( void ) {
 ====================
 CL_GameCommand
 
-See if the current console command is claimed by the cgame
+Pass the current console command to cgame
 ====================
 */
-qboolean CL_GameCommand( void ) {
+void CL_GameCommand( void ) {
 	if ( !cgvm ) {
-		return qfalse;
+		return;
 	}
 
-	return VM_Call( cgvm, CG_CONSOLE_COMMAND, cls.realtime );
+	VM_Call( cgvm, CG_CONSOLE_COMMAND, cls.realtime );
 }
 
 /*

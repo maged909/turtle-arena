@@ -30,6 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 // cg_main.c -- initialization and primary entry point for cgame
 #include "cg_local.h"
+#include "../ui/ui_public.h"
 
 #ifdef MISSIONPACK_HUD
 #include "../ui/ui_shared.h"
@@ -76,12 +77,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_Shutdown();
 		return 0;
 	case CG_CONSOLE_COMMAND:
-		{
-			qboolean found = UI_ConsoleCommand(arg0);
-			if ( !found )
-				found = CG_ConsoleCommand();
-			return found;
-		}
+		return CG_ConsoleCommand(arg0);
 	case CG_REFRESH:
 		CG_Refresh( arg0, arg1, arg2, arg3, arg4 );
 		return 0;
@@ -285,7 +281,10 @@ vmCvar_t	cg_voipShowMeter;
 vmCvar_t	cg_voipShowCrosshairMeter;
 vmCvar_t	cg_consoleLatency;
 vmCvar_t	cg_drawShaderInfo;
+vmCvar_t	cg_coronafardist;
+vmCvar_t	cg_coronas;
 vmCvar_t	cg_fovAspectAdjust;
+vmCvar_t	cg_fadeExplosions;
 vmCvar_t	ui_stretch;
 
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
@@ -541,7 +540,10 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_voipShowCrosshairMeter, "cg_voipShowCrosshairMeter", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_consoleLatency, "cg_consoleLatency", "3000", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_drawShaderInfo, "cg_drawShaderInfo", "0", 0, RANGE_BOOL },
+	{ &cg_coronafardist, "cg_coronafardist", "1536", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
 	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
@@ -1098,6 +1100,71 @@ CG_MaxSplitView
 */
 int CG_MaxSplitView(void) {
 	return cgs.maxSplitView;
+}
+
+//========================================================================
+
+/*
+=================
+CG_SetupDlightstyles
+=================
+*/
+void CG_SetupDlightstyles( void ) {
+	int i, j;
+	char        *str;
+	char        *token;
+	int entnum;
+	centity_t   *cent;
+
+	cg.lightstylesInited = qtrue;
+
+	for ( i = 1; i < MAX_DLIGHT_CONFIGSTRINGS; i++ ) {
+		str = (char *) CG_ConfigString( CS_DLIGHTS + i );
+		if ( !strlen( str ) ) {
+			break;
+		}
+
+		token = COM_Parse( &str );   // ent num
+		entnum = atoi( token );
+
+		if ( entnum < 0 || entnum >= MAX_GENTITIES ) {
+			continue;
+		}
+
+		cent = &cg_entities[entnum];
+
+		token = COM_Parse( &str );   // stylestring
+		Q_strncpyz( cent->dl_stylestring, token, sizeof( cent->dl_stylestring ) );
+
+		token = COM_Parse( &str );   // offset
+		cent->dl_frame      = atoi( token );
+		cent->dl_oldframe   = cent->dl_frame - 1;
+		if ( cent->dl_oldframe < 0 ) {
+			cent->dl_oldframe = strlen( cent->dl_stylestring );
+		}
+
+		token = COM_Parse( &str );   // sound id
+		cent->dl_sound = atoi( token );
+
+		token = COM_Parse( &str );   // attenuation
+		cent->dl_atten = atoi( token );
+
+		for ( j = 0; j < strlen( cent->dl_stylestring ); j++ ) {
+
+			cent->dl_stylestring[j] += cent->dl_atten;  // adjust character for attenuation/amplification
+
+			// clamp result
+			if ( cent->dl_stylestring[j] < 'a' ) {
+				cent->dl_stylestring[j] = 'a';
+			}
+			if ( cent->dl_stylestring[j] > 'z' ) {
+				cent->dl_stylestring[j] = 'z';
+			}
+		}
+
+		cent->dl_backlerp   = 0.0;
+		cent->dl_time       = cg.time;
+	}
 }
 
 //========================================================================
@@ -2954,6 +3021,7 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 			continue;
 		}
 
+		trap_Mouse_SetState( i, MOUSE_CLIENT );
 		trap_GetViewAngles( i, cg.localClients[i].viewangles );
 		CG_LocalClientAdded(i, clientNums[i]);
 	}
@@ -3055,6 +3123,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 
 	CG_StartMusic();
 
+	cg.lightstylesInited = qfalse;
+
 	CG_LoadingString( "" );
 
 #ifdef MISSIONPACK
@@ -3064,6 +3134,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	CG_ShaderStateChanged();
 
 	trap_S_ClearLoopingSounds( qtrue );
+
+	CG_RestoreSnapshot();
 
 #if defined IOQ3ZTM && defined TURTLEARENA // THIRD_PERSON LASERTAG
 	if (cg_laserTag.integer)

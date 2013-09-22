@@ -32,6 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // executed by a key binding
 
 #include "cg_local.h"
+#include "../ui/ui_public.h"
 #ifdef MISSIONPACK
 #include "../ui/ui_shared.h"
 #endif
@@ -51,7 +52,7 @@ void CG_TargetCommand_f( int localPlayerNum ) {
 	}
 
 	trap_Argv( 1, test, 4 );
-	trap_Cmd_ExecuteText(EXEC_NOW, va( "%s %i %i", Com_LocalClientCvarName( localPlayerNum, "gc" ), targetNum, atoi( test ) ) );
+	trap_SendClientCommand( va( "%s %i %i", Com_LocalClientCvarName( localPlayerNum, "gc" ), targetNum, atoi( test ) ) );
 }
 
 
@@ -682,15 +683,40 @@ void CG_GenerateTracemap(void)
 	BG_GenerateTracemap(cgs.mapname, cg.mapcoordsMins, cg.mapcoordsMaxs, &gen);
 }
 
-#define CMD_INGAME 1
+/*
+==================
+CG_RemapShader_f
+==================
+*/
+static void CG_RemapShader_f( void ) {
+	char shader1[MAX_QPATH];
+	char shader2[MAX_QPATH];
+	char timeoffset[MAX_QPATH];
 
-typedef struct {
-	char	*cmd;
-	void	(*function)(void);
-	int		flags;
-} consoleCommand_t;
+	if ( cg.connected && trap_Cvar_VariableIntegerValue( "sv_pure" ) ) {
+		CG_Printf( "%s command cannot be used on pure servers.\n", CG_Argv( 0 ) );
+		return;
+	}
 
-static consoleCommand_t	commands[] = {
+	if (trap_Argc() < 2 || trap_Argc() > 4) {
+		CG_Printf( "Usage: %s <original shader> [new shader] [time offset]\n", CG_Argv( 0 ) );
+		return;
+	}
+
+	Q_strncpyz( shader1, CG_Argv( 1 ), sizeof(shader1) );
+	Q_strncpyz( shader2, CG_Argv( 2 ), sizeof( shader2 ) );
+
+	if ( !strlen( shader2 ) ) {
+		// reset shader remap
+		Q_strncpyz( shader2, shader1, sizeof(shader2) );
+	}
+
+	Q_strncpyz( timeoffset, CG_Argv( 3 ), sizeof( timeoffset ) );
+
+	trap_R_RemapShader( shader1, shader2, timeoffset );
+}
+
+static consoleCommand_t	cg_commands[] = {
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
 	{ "nextframe", CG_TestModelNextFrame_f, CMD_INGAME },
@@ -713,8 +739,11 @@ static consoleCommand_t	commands[] = {
 	{ "startOrbit", CG_StartOrbit_f, CMD_INGAME },
 	//{ "camera", CG_Camera_f, CMD_INGAME },
 	{ "loaddeferred", CG_LoadDeferredPlayers, CMD_INGAME },
-	{ "generateTracemap", CG_GenerateTracemap, CMD_INGAME }
+	{ "generateTracemap", CG_GenerateTracemap, CMD_INGAME },
+	{ "remapShader", CG_RemapShader_f, 0 }
 };
+
+static int cg_numCommands = ARRAY_LEN( cg_commands );
 
 typedef struct {
 	char	*cmd;
@@ -855,6 +884,47 @@ static playerConsoleCommand_t	playerCommands[] = {
 #endif
 };
 
+static int numPlayerCommands = ARRAY_LEN( playerCommands );
+
+/*
+=================
+CG_CheckCmdFlags
+=================
+*/
+static qboolean CG_CheckCmdFlags( const char *cmd, int flags ) {
+	if ( ( flags & CMD_INGAME ) && !cg.snap ) {
+		CG_Printf("Must be in game to use command \"%s\"\n", cmd);
+		return qtrue;
+	}
+
+	if ( ( flags & CMD_MENU ) && cg.connected ) {
+		CG_Printf("Cannot use command \"%s\" while in game\n", cmd);
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+=================
+CG_CheckCommands
+=================
+*/
+static qboolean CG_CheckCommands( consoleCommand_t *commands, int numCommands, const char *cmd ) {
+	int i;
+
+	for ( i = 0 ; i < numCommands ; i++ ) {
+		if ( !Q_stricmp( cmd, commands[i].cmd )) {
+			if ( CG_CheckCmdFlags( cmd, commands[i].flags ) ) {
+				return qtrue;
+			}
+			commands[i].function();
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
 /*
 =================
 CG_ConsoleCommand
@@ -863,21 +933,24 @@ The string has been tokenized and can be retrieved with
 Cmd_Argc() / Cmd_Argv()
 =================
 */
-qboolean CG_ConsoleCommand( void ) {
+qboolean CG_ConsoleCommand( int realTime ) {
+	char		buffer[BIG_INFO_STRING];
 	const char	*cmd;
 	int		i;
 	int		localPlayerNum;
 	const char	*baseCmd;
+
+	// update UI frame time
+	UI_ConsoleCommand( realTime );
 
 	cmd = CG_Argv(0);
 
 	localPlayerNum = Com_LocalClientForCvarName( cmd );
 	baseCmd = Com_LocalClientBaseCvarName( cmd );
 
-	for ( i = 0 ; i < ARRAY_LEN( playerCommands ) ; i++ ) {
+	for ( i = 0 ; i < numPlayerCommands ; i++ ) {
 		if ( !Q_stricmp( baseCmd, playerCommands[i].cmd )) {
-			if ( ( playerCommands[i].flags & CMD_INGAME ) && !cg.snap ) {
-				CG_Printf("You must be in game to use command \"%s\"\n", cmd);
+			if ( CG_CheckCmdFlags( cmd, playerCommands[i].flags ) ) {
 				return qtrue;
 			}
 			playerCommands[i].function( localPlayerNum );
@@ -885,18 +958,21 @@ qboolean CG_ConsoleCommand( void ) {
 		}
 	}
 
-	if ( localPlayerNum != 0 )
-		return qfalse;
-
-	for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
-		if ( !Q_stricmp( cmd, commands[i].cmd )) {
-			if ( ( commands[i].flags & CMD_INGAME ) && !cg.snap ) {
-				CG_Printf("You must be in game to use command \"%s\"\n", cmd);
-				return qtrue;
-			}
-			commands[i].function();
+	if ( localPlayerNum == 0 ) {
+		if ( CG_CheckCommands( cg_commands, cg_numCommands, cmd ) ) {
 			return qtrue;
 		}
+
+		if ( CG_CheckCommands( ui_commands, ui_numCommands, cmd ) ) {
+			return qtrue;
+		}
+	}
+
+	if ( cg.connected && trap_GetDemoState() != DS_PLAYBACK ) {
+		// the game server will interpret these commands
+		trap_LiteralArgs( buffer, sizeof ( buffer ) );
+		trap_SendClientCommand( buffer );
+		return qtrue;
 	}
 
 	return qfalse;
@@ -914,11 +990,15 @@ so it can perform tab completion
 void CG_InitConsoleCommands( void ) {
 	int		i, j;
 
-	for ( i = 0 ; i < ARRAY_LEN( commands ) ; i++ ) {
-		trap_AddCommand( commands[i].cmd );
+	for ( i = 0 ; i < cg_numCommands ; i++ ) {
+		trap_AddCommand( cg_commands[i].cmd );
 	}
 
-	for ( i = 0 ; i < ARRAY_LEN( playerCommands ) ; i++ ) {
+	for ( i = 0 ; i < ui_numCommands ; i++ ) {
+		trap_AddCommand( ui_commands[i].cmd );
+	}
+
+	for ( i = 0 ; i < numPlayerCommands ; i++ ) {
 		for ( j = 0; j < CG_MaxSplitView(); j++ ) {
 			trap_AddCommand( Com_LocalClientCvarName( j, playerCommands[i].cmd ) );
 		}
@@ -967,6 +1047,4 @@ void CG_InitConsoleCommands( void ) {
 		trap_AddCommand(Com_LocalClientCvarName(i, "dropflag"));
 #endif
 	}
-
-	trap_AddCommand ("addbot");
 }

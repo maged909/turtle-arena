@@ -194,7 +194,6 @@
 			<Add option="-DTA_ENTSYS" />
 			<Add option="-DTA_NPCSYS" />
 			<Add option="-DTA_PATHSYS" />
-			<Add option="-DTA_BLOOM" />
 			<Add option="-DTA_SPLITVIEW" />
 			<Add option="-DTURTLEARENA" />
 			<Add option="-DTA_MISC" />
@@ -1110,9 +1109,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/renderergl1/tr_backend.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../../code/renderergl1/tr_bloom.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/renderergl1/tr_bsp.c">
