@@ -1698,6 +1698,43 @@ void BotChooseWeapon(bot_state_t *bs) {
 
 /*
 ==================
+BotWantsToWalk
+==================
+*/
+qboolean BotWantsToWalk(bot_state_t *bs) {
+
+	if (bs->walker <= 0.5f) {
+		return qfalse;
+	}
+	//never walk if carrying a flag
+	if (BotCTFCarryingFlag(bs)) {
+		return qfalse;
+	}
+#ifdef MISSIONPACK
+	if (Bot1FCTFCarryingFlag(bs)) {
+		return qfalse;
+	}
+#ifdef MISSIONPACK_HARVESTER
+	//never walk if carrying cubes
+	if (BotHarvesterCarryingCubes(bs)) {
+		return qfalse;
+	}
+#endif
+	//never walk with the scout powerup
+	if (bs->inventory[INVENTORY_SCOUT]) {
+		return qfalse;
+	}
+#endif
+	//never walk with the haste powerup
+	if (bs->inventory[INVENTORY_HASTE]) {
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+/*
+==================
 BotSetupForMovement
 ==================
 */
@@ -1734,7 +1771,9 @@ void BotSetupForMovement(bot_state_t *bs) {
 	if (bs->cur_ps.pm_flags & PMF_DUCKED) initmove.presencetype = PRESENCE_CROUCH;
 	else initmove.presencetype = PRESENCE_NORMAL;
 	//
-	if (bs->walker > 0.5) initmove.or_moveflags |= MFL_WALK;
+	if (BotWantsToWalk(bs)) {
+		initmove.or_moveflags |= MFL_WALK;
+	}
 	//
 	VectorCopy(bs->viewangles, initmove.viewangles);
 	//
@@ -4008,17 +4047,18 @@ void BotAimAtEnemy(bot_state_t *bs) {
 				}
 			}
 		}
-		//if the projectile does radial damage
+		//if the projectile does large radial damage
 		if (aim_skill > 0.6 &&
 #ifdef TA_WEAPSYS
-			(bgProj->splashRadius > 0 && bgProj->splashDamage > 0)
+			(bgProj->splashDamage > 0 && bgProj->splashRadius > 50)
 #else
-			wi.proj.damagetype & DAMAGETYPE_RADIAL
+			(wi.proj.damagetype & DAMAGETYPE_RADIAL) && wi.proj.radius > 50
 #endif
 			)
 		{
-			//if the enemy isn't standing significantly higher than the bot
-			if (entinfo.origin[2] < bs->origin[2] + 16) {
+			//if the enemy isn't standing significantly higher than the bot and isn't in water
+			if (entinfo.origin[2] < bs->origin[2] + 16
+				&& !(trap_AAS_PointContents(entinfo.origin) & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA))) {
 				//try to aim at the ground in front of the enemy
 				VectorCopy(entinfo.origin, end);
 				end[2] -= 64;
