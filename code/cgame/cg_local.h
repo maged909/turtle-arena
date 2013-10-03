@@ -1357,6 +1357,7 @@ typedef struct {
 #endif
 
 	// sounds
+	sfxHandle_t	itemPickupSounds[MAX_ITEMS];
 	sfxHandle_t	quadSound;
 	sfxHandle_t	tracerSound;
 	sfxHandle_t	selectSound;
@@ -1386,6 +1387,7 @@ typedef struct {
 	sfxHandle_t	sfx_chghit;
 	sfxHandle_t	sfx_chghitflesh;
 	sfxHandle_t	sfx_chghitmetal;
+	sfxHandle_t	sfx_chgstart;
 	sfxHandle_t kamikazeExplodeSound;
 	sfxHandle_t kamikazeImplodeSound;
 	sfxHandle_t kamikazeFarSound;
