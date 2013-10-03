@@ -126,12 +126,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 			SetTeam( &g_entities[client - level.clients], value );
 		}
 	} else {
-#ifdef TA_SP // SP_BOSS
-		// allow specifying team, mainly for boss bots
 		value = Info_ValueForKey( userinfo, "teampref" );
-		if (!*value)
-#endif
-		value = Info_ValueForKey( userinfo, "team" );
 		if ( value[0] == 's' ) {
 			// a willing spectator, not a waiting-in-line
 			sess->sessionTeam = TEAM_SPECTATOR;
