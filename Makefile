@@ -259,10 +259,6 @@ ifndef USE_CODEC_VORBIS
 USE_CODEC_VORBIS=1
 endif
 
-ifndef USE_CODEC_THEORA
-USE_CODEC_THEORA=0
-endif
-
 ifndef USE_CODEC_OPUS
 USE_CODEC_OPUS=1
 endif
@@ -355,7 +351,6 @@ NSISDIR=misc/nsis
 SDLHDIR=$(MOUNT_DIR)/SDL12
 LIBSDIR=$(MOUNT_DIR)/libs
 VORBISDIR=$(MOUNT_DIR)/libvorbis
-THEORADIR=$(MOUNT_DIR)/libtheora
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -484,10 +479,6 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     endif
   endif
 
-  ifeq ($(USE_CODEC_THEORA),1)
-    CLIENT_LIBS += -ltheora
-  endif
-
   ifeq ($(USE_MUMBLE),1)
     CLIENT_LIBS += -lrt
   endif
@@ -579,10 +570,6 @@ ifeq ($(PLATFORM),darwin)
 
   ifneq ($(USE_INTERNAL_FREETYPE), 1)
     BASE_CFLAGS += $(FREETYPE_CFLAGS)
-  endif
-
-  ifeq ($(USE_CODEC_THEORA),1)
-    CLIENT_LIBS += -ltheora
   endif
 
   BASE_CFLAGS += -D_THREAD_SAFE=1
@@ -744,22 +731,11 @@ ifeq ($(PLATFORM),mingw32)
                       $(LIBSDIR)/win64/libSDL64.dll.a
     SDLDLL=SDL64.dll
     endif
-
-    # Extra libs, easier to just include in source tree
-    ifeq ($(USE_CODEC_THEORA),1)
-      CLIENT_CFLAGS += -I$(THEORADIR)/include
-      CLIENT_LIBS += $(WINLIBDIR)/libtheora.a
-    endif
-
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)
     CLIENT_LIBS += $(SDL_LIBS)
     RENDERER_LIBS += $(SDL_LIBS)
     SDLDLL=SDL.dll
-
-    ifeq ($(USE_CODEC_THEORA),1)
-      CLIENT_LIBS += -ltheora
-    endif
   endif
 
 else # ifeq mingw32
@@ -891,10 +867,6 @@ ifeq ($(PLATFORM),openbsd)
     ifneq ($(USE_OPENAL_DLOPEN),1)
       CLIENT_LIBS += $(THREAD_LIBS) -lopenal
     endif
-  endif
-
-  ifeq ($(USE_CODEC_THEORA),1)
-    CLIENT_LIBS += -ltheora
   endif
 
   ifeq ($(USE_CURL),1)
@@ -1139,10 +1111,6 @@ ifeq ($(NEED_OGG),1)
   else
     CLIENT_LIBS += -logg
   endif
-endif
-
-ifeq ($(USE_CODEC_THEORA),1)
-  CLIENT_CFLAGS += -DUSE_CIN_THEORA
 endif
 
 ifeq ($(USE_RENDERER_DLOPEN),1)
@@ -1601,7 +1569,6 @@ $(Q3ASM): $(Q3ASMOBJ)
 Q3OBJ = \
   $(B)/client/cl_cgame.o \
   $(B)/client/cl_cin.o \
-  $(B)/client/cl_cin_ogm.o \
   $(B)/client/cl_console.o \
   $(B)/client/cl_input.o \
   $(B)/client/cl_keys.o \
