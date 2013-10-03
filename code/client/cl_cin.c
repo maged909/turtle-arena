@@ -35,8 +35,6 @@ Suite 120, Rockville, Maryland 20850 USA.
  *
  * $Archive: /MissionPack/code/client/cl_cin.c $
  *
- * cl_glconfig.hwtype trtypes 3dfx/ragepro need 256x256
- *
  *****************************************************************************/
 
 #include "client.h"
@@ -1047,8 +1045,8 @@ static void readQuadInfo( byte *qData )
         cinTable[currentHandle].drawX = cinTable[currentHandle].CIN_WIDTH;
         cinTable[currentHandle].drawY = cinTable[currentHandle].CIN_HEIGHT;
         
-	// rage pro is very slow at 512 wide textures, voodoo can't do it at all
-	if ( cls.glconfig.hardwareType == GLHW_RAGEPRO || cls.glconfig.maxTextureSize <= 256) {
+	// some old drivers can't do it at all
+	if (cls.glconfig.maxTextureSize <= 256) {
                 if (cinTable[currentHandle].drawX>256) {
                         cinTable[currentHandle].drawX = 256;
                 }
@@ -1056,11 +1054,7 @@ static void readQuadInfo( byte *qData )
                         cinTable[currentHandle].drawY = 256;
                 }
 		if (cinTable[currentHandle].CIN_WIDTH != 256 || cinTable[currentHandle].CIN_HEIGHT != 256) {
-#ifdef IOQ3ZTM // Only spam developers?
-			Com_DPrintf("HACK: approxmimating cinematic for Rage Pro or Voodoo\n");
-#else
-			Com_Printf("HACK: approxmimating cinematic for Rage Pro or Voodoo\n");
-#endif
+			Com_Printf("HACK: approxmimating cinematic to 256x256 from %dx%d\n", cinTable[currentHandle].CIN_WIDTH, cinTable[currentHandle].CIN_HEIGHT);
 		}
 	}
 }
@@ -1453,8 +1447,8 @@ e_status CIN_RunCinematic (int handle)
 				cinTable[currentHandle].drawX = cinTable[currentHandle].CIN_WIDTH;
 				cinTable[currentHandle].drawY = cinTable[currentHandle].CIN_HEIGHT;
 
-				// rage pro is very slow at 512 wide textures, voodoo can't do it at all
-				if ( cls.glconfig.hardwareType == GLHW_RAGEPRO || cls.glconfig.maxTextureSize <= 256) {
+				// some old drivers can't do it at all
+				if (cls.glconfig.maxTextureSize <= 256) {
 					if (cinTable[currentHandle].drawX>256) {
 							cinTable[currentHandle].drawX = 256;
 					}
@@ -1462,7 +1456,7 @@ e_status CIN_RunCinematic (int handle)
 							cinTable[currentHandle].drawY = 256;
 					}
 					if (cinTable[currentHandle].CIN_WIDTH != 256 || cinTable[currentHandle].CIN_HEIGHT != 256) {
-						Com_DPrintf("HACK: approxmimating cinematic for Rage Pro or Voodoo\n");
+						Com_Printf("HACK: approxmimating cinematic to 256x256 from %dx%d\n", cinTable[currentHandle].CIN_WIDTH, cinTable[currentHandle].CIN_HEIGHT);
 					}
 				}
 			}

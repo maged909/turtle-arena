@@ -1227,7 +1227,6 @@ typedef struct {
 	qhandle_t	noammoShader;
 
 	qhandle_t	smokePuffShader;
-	qhandle_t	smokePuffRageProShader;
 	qhandle_t	shotgunSmokePuffShader;
 #ifndef TA_WEAPSYS
 	qhandle_t	plasmaBallShader;

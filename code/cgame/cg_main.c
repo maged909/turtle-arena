@@ -1656,7 +1656,6 @@ static void CG_RegisterGraphics( void ) {
 #endif
 
 	cgs.media.smokePuffShader = trap_R_RegisterShader( "smokePuff" );
-	cgs.media.smokePuffRageProShader = trap_R_RegisterShader( "smokePuffRagePro" );
 	cgs.media.shotgunSmokePuffShader = trap_R_RegisterShader( "shotgunSmokePuff" );
 #ifndef TA_WEAPSYS
 #ifdef MISSIONPACK
