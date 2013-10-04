@@ -773,6 +773,8 @@ void CG_Music_f( void ) {
 		loopVolume = atof( CG_Argv( 4 ) );
 	}
 
+	CG_GetMusicForIntro( intro, loop, &volume, &loopVolume );
+
 	trap_S_StartBackgroundTrack( intro, loop, volume, loopVolume );
 }
 
@@ -782,7 +784,7 @@ CG_StopMusic_f
 =================
 */
 void CG_StopMusic_f( void ) {
-	trap_S_StopBackgroundTrack();
+	CG_StopMusic();
 }
 
 static consoleCommand_t	cg_commands[] = {

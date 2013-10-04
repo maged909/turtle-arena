@@ -44,7 +44,7 @@ typedef struct
 #define MAX_MUSICDEFS 128
 musicDef_t musicDefs[MAX_MUSICDEFS];
 
-void CG_GetMusicForIntro(char *intro, char *loop, float *volume)
+void CG_GetMusicForIntro( char *intro, char *loop, float *volume, float *loopVolume )
 {
 	int i;
 	char name[MAX_QPATH];
@@ -76,6 +76,9 @@ void CG_GetMusicForIntro(char *intro, char *loop, float *volume)
 
 			if (volume) {
 				*volume = musicDefs[i].volume;
+			}
+			if (loopVolume) {
+				*loopVolume = musicDefs[i].volume;
 			}
 			break;
 		}
@@ -221,6 +224,7 @@ void CG_SetMusic( const char *constIntro, const char *constLoop )
 	char	intro[MAX_QPATH];
 	char	loop[MAX_QPATH];
 	float	volume;
+	float	loopVolume;
 
 	if ( !constIntro || !*constIntro ) {
 		CG_StopMusic();
@@ -234,7 +238,7 @@ void CG_SetMusic( const char *constIntro, const char *constLoop )
 	Q_strncpyz( intro, constIntro, sizeof ( intro ) );
 	Q_strncpyz( loop, constLoop, sizeof ( loop ) );
 
-	CG_GetMusicForIntro( intro, loop, &volume );
+	CG_GetMusicForIntro( intro, loop, &volume, &loopVolume );
 
-	trap_S_StartBackgroundTrack( intro, loop, volume, volume );
+	trap_S_StartBackgroundTrack( intro, loop, volume, loopVolume );
 }

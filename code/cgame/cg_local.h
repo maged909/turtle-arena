@@ -2518,6 +2518,7 @@ void IN_Button14Up( int localPlayerNum );
 // cg_audio.c
 //
 void CG_InitAudio( void );
+void CG_GetMusicForIntro( char *intro, char *loop, float *volume, float *loopVolume );
 void CG_SetMusic( const char *intro, const char *loop );
 void CG_StopMusic( void );
 
