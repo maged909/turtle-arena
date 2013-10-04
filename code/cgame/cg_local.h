@@ -2513,3 +2513,11 @@ void IN_Button13Up( int localPlayerNum );
 void IN_Button14Down( int localPlayerNum );
 void IN_Button14Up( int localPlayerNum );
 
+
+//
+// cg_audio.c
+//
+void CG_InitAudio( void );
+void CG_SetMusic( const char *intro, const char *loop );
+void CG_StopMusic( void );
+

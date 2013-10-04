@@ -399,8 +399,7 @@ void UI_MainMenu( void ) {
 	}
 
 #ifdef TA_MISC
-	trap_S_StopBackgroundTrack();
-	trap_S_StartBackgroundTrack("music/menu.ogg", NULL);
+	CG_SetMusic("music/menu", NULL);
 #endif
 
 	s_main.menu.draw = Main_MenuDraw;

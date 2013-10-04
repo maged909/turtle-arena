@@ -2220,7 +2220,7 @@ void CG_StartMusic( void ) {
 	Q_strncpyz( parm1, COM_Parse( &s ), sizeof( parm1 ) );
 	Q_strncpyz( parm2, COM_Parse( &s ), sizeof( parm2 ) );
 
-	trap_S_StartBackgroundTrack( parm1, parm2 );
+	CG_SetMusic( parm1, parm2 );
 }
 #ifdef MISSIONPACK_HUD
 char *CG_GetMenuBuffer(const char *filename) {
@@ -2990,6 +2990,8 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 	Init_Display(&cgDC);
 	String_Init();
 #endif
+
+	CG_InitAudio();
 
 	UI_Init( inGameLoad, maxSplitView );
 }
