@@ -1185,7 +1185,7 @@ static void CG_RegisterItemSounds( int itemNum ) {
 	item = BG_ItemForItemNum(itemNum);
 
 	if( item->pickup_sound[0] ) {
-		trap_S_RegisterSound( item->pickup_sound, qfalse );
+		cgs.media.itemPickupSounds[ itemNum ] = trap_S_RegisterSound( item->pickup_sound, qfalse );
 	}
 
 	// parse the space seperated precache string for other media
@@ -1505,6 +1505,7 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.sfx_chghit = trap_S_RegisterSound( "sound/weapons/vulcan/wvulimpd.wav", qfalse );
 	cgs.media.sfx_chghitflesh = trap_S_RegisterSound( "sound/weapons/vulcan/wvulimpl.wav", qfalse );
 	cgs.media.sfx_chghitmetal = trap_S_RegisterSound( "sound/weapons/vulcan/wvulimpm.wav", qfalse );
+	cgs.media.sfx_chgstop = trap_S_RegisterSound( "sound/weapons/vulcan/wvulwind.wav", qfalse );
 #endif
 	cgs.media.weaponHoverSound = trap_S_RegisterSound( "sound/weapons/weapon_hover.wav", qfalse );
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
@@ -1656,7 +1657,6 @@ static void CG_RegisterGraphics( void ) {
 #endif
 
 	cgs.media.smokePuffShader = trap_R_RegisterShader( "smokePuff" );
-	cgs.media.smokePuffRageProShader = trap_R_RegisterShader( "smokePuffRagePro" );
 	cgs.media.shotgunSmokePuffShader = trap_R_RegisterShader( "shotgunSmokePuff" );
 #ifndef TA_WEAPSYS
 #ifdef MISSIONPACK
@@ -2220,7 +2220,7 @@ void CG_StartMusic( void ) {
 	Q_strncpyz( parm1, COM_Parse( &s ), sizeof( parm1 ) );
 	Q_strncpyz( parm2, COM_Parse( &s ), sizeof( parm2 ) );
 
-	trap_S_StartBackgroundTrack( parm1, parm2 );
+	CG_SetMusic( parm1, parm2 );
 }
 #ifdef MISSIONPACK_HUD
 char *CG_GetMenuBuffer(const char *filename) {
@@ -2990,6 +2990,8 @@ void CG_Init( qboolean inGameLoad, int maxSplitView ) {
 	Init_Display(&cgDC);
 	String_Init();
 #endif
+
+	CG_InitAudio();
 
 	UI_Init( inGameLoad, maxSplitView );
 }

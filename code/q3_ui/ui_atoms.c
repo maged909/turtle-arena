@@ -1341,7 +1341,7 @@ int UI_DrawChar( int x, int y, int ch, int style, vec4_t color )
 qboolean UI_IsFullscreen( void ) {
 	if ( uis.activemenu && ( trap_Key_GetCatcher() & KEYCATCH_UI )
 #ifdef TA_DATA
-		&& (!trap_Cvar_VariableValue("cl_paused") || cgs.glconfig.hardwareType == GLHW_RAGEPRO)
+		&& !trap_Cvar_VariableValue("cl_paused")
 #endif
 		)
 	{

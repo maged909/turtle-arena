@@ -1953,19 +1953,10 @@ void Menu_Cache( void )
 	uis.rb_off          = trap_R_RegisterShaderNoMip( "menu/art/switch_off" );
 
 	uis.whiteShader = trap_R_RegisterShaderNoMip( "white" );
-	if ( cgs.glconfig.hardwareType == GLHW_RAGEPRO ) {
-		// the blend effect turns to shit with the normal 
-		uis.menuBackShader	= trap_R_RegisterShaderNoMip( "menubackRagePro" );
+	uis.menuBackShader	= trap_R_RegisterShaderNoMip( "menuback" );
 #ifdef TA_DATA
-		uis.menuBackInGameShader	= trap_R_RegisterShaderNoMip( "menubackInGameRagePro" );
-#endif
-	} else {
-		uis.menuBackShader	= trap_R_RegisterShaderNoMip( "menuback" );
-#ifdef TA_DATA
-		uis.menuBackInGameShader	= trap_R_RegisterShaderNoMip( "menubackInGame" );
-#endif
-	}
-#ifndef TA_DATA
+	uis.menuBackInGameShader	= trap_R_RegisterShaderNoMip( "menubackInGame" );
+#else
 	uis.menuBackNoLogoShader = trap_R_RegisterShaderNoMip( "menubacknologo" );
 #endif
 

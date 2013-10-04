@@ -1227,7 +1227,6 @@ typedef struct {
 	qhandle_t	noammoShader;
 
 	qhandle_t	smokePuffShader;
-	qhandle_t	smokePuffRageProShader;
 	qhandle_t	shotgunSmokePuffShader;
 #ifndef TA_WEAPSYS
 	qhandle_t	plasmaBallShader;
@@ -1358,6 +1357,7 @@ typedef struct {
 #endif
 
 	// sounds
+	sfxHandle_t	itemPickupSounds[MAX_ITEMS];
 	sfxHandle_t	quadSound;
 	sfxHandle_t	tracerSound;
 	sfxHandle_t	selectSound;
@@ -1387,6 +1387,7 @@ typedef struct {
 	sfxHandle_t	sfx_chghit;
 	sfxHandle_t	sfx_chghitflesh;
 	sfxHandle_t	sfx_chghitmetal;
+	sfxHandle_t	sfx_chgstop;
 	sfxHandle_t kamikazeExplodeSound;
 	sfxHandle_t kamikazeImplodeSound;
 	sfxHandle_t kamikazeFarSound;
@@ -2511,4 +2512,13 @@ void IN_Button13Down( int localPlayerNum );
 void IN_Button13Up( int localPlayerNum );
 void IN_Button14Down( int localPlayerNum );
 void IN_Button14Up( int localPlayerNum );
+
+
+//
+// cg_audio.c
+//
+void CG_InitAudio( void );
+void CG_GetMusicForIntro( char *intro, char *loop, float *volume, float *loopVolume );
+void CG_SetMusic( const char *intro, const char *loop );
+void CG_StopMusic( void );
 
