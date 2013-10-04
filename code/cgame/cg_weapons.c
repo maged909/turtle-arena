@@ -2051,7 +2051,7 @@ static float	CG_MachinegunSpinAngle( centity_t *cent ) {
 #else
 #ifdef MISSIONPACK
 		if ( cent->currentState.weapon == WP_CHAINGUN && !cent->pe.barrelSpinning ) {
-			trap_S_StartSound( NULL, cent->currentState.number, CHAN_WEAPON, cgs.media.sfx_chgstart );
+			trap_S_StartSound( NULL, cent->currentState.number, CHAN_WEAPON, cgs.media.sfx_chgstop );
 		}
 #endif
 #endif

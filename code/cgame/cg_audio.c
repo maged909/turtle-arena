@@ -236,5 +236,5 @@ void CG_SetMusic( const char *constIntro, const char *constLoop )
 
 	CG_GetMusicForIntro( intro, loop, &volume );
 
-	trap_S_StartBackgroundTrack( intro, loop );
+	trap_S_StartBackgroundTrack( intro, loop, volume, volume );
 }
