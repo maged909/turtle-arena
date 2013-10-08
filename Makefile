@@ -271,6 +271,10 @@ ifndef USE_VOIP
 USE_VOIP=1
 endif
 
+ifndef USE_FREETYPE
+USE_FREETYPE=1
+endif
+
 ifndef USE_INTERNAL_SPEEX
 USE_INTERNAL_SPEEX=1
 endif
@@ -483,12 +487,10 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     CLIENT_LIBS += -lrt
   endif
 
-  ifeq ($(USE_LOCAL_HEADERS),1)
-    CLIENT_CFLAGS += -I$(SDLHDIR)/include
-  endif
-
-  ifneq ($(USE_INTERNAL_FREETYPE), 1)
-    BASE_CFLAGS += $(FREETYPE_CFLAGS)
+  ifeq ($(USE_FREETYPE),1)
+    ifneq ($(USE_INTERNAL_FREETYPE), 1)
+      BASE_CFLAGS += $(FREETYPE_CFLAGS)
+    endif
   endif
 
   ifeq ($(ARCH),x86)
@@ -568,8 +570,10 @@ ifeq ($(PLATFORM),darwin)
     endif
   endif
 
-  ifneq ($(USE_INTERNAL_FREETYPE), 1)
-    BASE_CFLAGS += $(FREETYPE_CFLAGS)
+  ifeq ($(USE_FREETYPE),1)
+    ifneq ($(USE_INTERNAL_FREETYPE), 1)
+      BASE_CFLAGS += $(FREETYPE_CFLAGS)
+    endif
   endif
 
   BASE_CFLAGS += -D_THREAD_SAFE=1
@@ -684,9 +688,11 @@ ifeq ($(PLATFORM),mingw32)
   CLIENT_LDFLAGS += -mwindows
   CLIENT_LIBS = -lgdi32 -lole32
   RENDERER_LIBS = -lgdi32 -lole32 -lopengl32
-  
-  ifneq ($(USE_INTERNAL_FREETYPE),1)
-    BASE_CFLAGS += -Ifreetype2
+
+  ifeq ($(USE_FREETYPE),1)
+    ifneq ($(USE_INTERNAL_FREETYPE),1)
+      BASE_CFLAGS += -Ifreetype2
+    endif
   endif
 
   ifeq ($(USE_CURL),1)
@@ -1015,6 +1021,10 @@ endif
 
 TARGETS =
 
+ifeq ($(USE_FREETYPE),1)
+  BASE_CFLAGS += -DBUILD_FREETYPE
+endif
+
 ifndef FULLBINEXT
   FULLBINEXT=.$(ARCH)$(BINEXT)
 endif
@@ -1149,11 +1159,13 @@ else
   RENDERER_LIBS += -ljpeg
 endif
 
+ifeq ($(USE_FREETYPE),1)
 ifeq ($(USE_INTERNAL_FREETYPE),1)
   BASE_CFLAGS += -I$(FTDIR)/include \
 					-DFT2_BUILD_LIBRARY
 else
   RENDERER_LIBS += -lfreetype
+endif
 endif
 
 ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
@@ -1866,6 +1878,7 @@ ifneq ($(USE_INTERNAL_JPEG),0)
     $(B)/renderergl1/jutils.o
 endif
 
+ifeq ($(USE_FREETYPE),1)
 ifneq ($(USE_INTERNAL_FREETYPE),0)
   FTOBJ += \
     $(B)/renderergl1/ftinit.o \
@@ -1892,6 +1905,7 @@ ifneq ($(USE_INTERNAL_FREETYPE),0)
     $(B)/renderergl1/type1cid.o \
     $(B)/renderergl1/type42.o \
     $(B)/renderergl1/winfnt.o
+endif
 endif
 
 ifeq ($(ARCH),x86)

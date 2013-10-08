@@ -54,6 +54,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "tr_common.h"
 #include "../qcommon/qcommon.h"
 
+#ifdef BUILD_FREETYPE
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_ERRORS_H
@@ -66,11 +67,13 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define _TRUNC(x)  ((x) >> 6)
 
 FT_Library ftLibrary = NULL;  
+#endif
 
 #define MAX_FONTS 12
 static int registeredFontCount = 0;
 static fontInfo_t registeredFont[MAX_FONTS];
 
+#ifdef BUILD_FREETYPE
 void R_GetGlyphInfo(FT_GlyphSlot glyph, int *left, int *right, int *width, int *top, int *bottom, int *height, int *pitch) {
 	*left  = _FLOOR( glyph->metrics.horiBearingX );
 	*right = _CEIL( glyph->metrics.horiBearingX + glyph->metrics.width );
@@ -278,6 +281,7 @@ static glyphInfo_t *RE_ConstructGlyphInfo(int imageSize, unsigned char *imageOut
 
 	return &glyph;
 }
+#endif
 
 static int fdOffset;
 static byte	*fdFile;
@@ -358,6 +362,7 @@ qboolean R_LoadPreRenderedFont( const char *datName, fontInfo_t *font ) {
 	return qfalse;
 }
 
+#ifdef BUILD_FREETYPE
 /*
 ===============
 R_LoadScalableFont
@@ -521,6 +526,7 @@ qboolean R_LoadScalableFont( const char *name, int pointSize, fontInfo_t *font )
 	ri.FS_FreeFile(faceData);
 	return qtrue;
 }
+#endif
 
 /*
 ==================
@@ -549,8 +555,10 @@ static qboolean R_GetFont(const char *name, int pointSize, fontInfo_t *font) {
 		return qfalse;
 	}
 
+#ifdef BUILD_FREETYPE
 	if ( R_LoadScalableFont( name, pointSize, font ) )
 		return qtrue;
+#endif
 
 	if ( R_LoadPreRenderedFont( datName, font ) )
 		return qtrue;
@@ -588,24 +596,32 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
 			return;
 	}
 
+#ifdef BUILD_FREETYPE
 	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s.\n", fontName );
+#else
+	ri.Printf( PRINT_WARNING, "RE_RegisterFont: Failed to register font %s (Note: FreeType code is not available).\n", fontName );
+#endif
 }
 
 
 void R_InitFreeType(void) {
+#ifdef BUILD_FREETYPE
 	if (FT_Init_FreeType( &ftLibrary )) {
 		ri.Printf(PRINT_WARNING, "R_InitFreeType: Unable to initialize FreeType.\n");
 	}
+#endif
 
 	registeredFontCount = 0;
 }
 
 
 void R_DoneFreeType(void) {
+#ifdef BUILD_FREETYPE
 	if (ftLibrary) {
 		FT_Done_FreeType( ftLibrary );
 		ftLibrary = NULL;
 	}
+#endif
 
 	registeredFontCount = 0;
 }
