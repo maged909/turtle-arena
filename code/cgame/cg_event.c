@@ -1031,7 +1031,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_ITEM_PICKUP:
 		DEBUGNAME("EV_ITEM_PICKUP");
 		{
+#ifndef TURTLEARENA // POWERS
 			bg_iteminfo_t	*item;
+#endif
 			int				index;
 
 			index = es->eventParm;		// player predicted
@@ -1040,13 +1042,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				break;
 			}
 
+#ifdef TURTLEARENA // POWERS
+			trap_S_StartSound (NULL, es->number, CHAN_AUTO,	cgs.media.itemPickupSounds[ index ] );
+#else
 			item = BG_ItemForItemNum(index);
 
-#ifdef TURTLEARENA // POWERS
-			if ( item->pickup_sound[0] ) {
-				trap_S_StartSound (NULL, es->number, CHAN_AUTO,	trap_S_RegisterSound( item->pickup_sound, qfalse ) );
-			}
-#else
 			// powerups and team items will have a separate global sound, this one
 			// will be played at prediction time
 			if ( item->giType == IT_POWERUP || item->giType == IT_TEAM) {
