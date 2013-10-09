@@ -741,34 +741,3 @@ qboolean trap_getCameraInfo( int time, vec3_t *origin, vec3_t *angles) {
 }
 */
 
-#ifdef IOQ3ZTM // BONES
-void trap_R_AddRefEntityToScene_CustomSkeleton( const refEntity_t *re, const refSkeleton_t *rs ) {
-	syscall( CG_R_ADDREFENTITYTOSCENE_CUSTOMSKELETON, re, rs );
-}
-
-int trap_R_JointIndexForName(qhandle_t handle, const char *jointName)
-{
-	return syscall( CG_R_JOINTINDEXFORNAME, handle, jointName );
-}
-
-qboolean trap_R_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp)
-{
-	return syscall( CG_R_SETUPSKELETON, handle, refSkel, frame, oldframe, PASSFLOAT(backlerp) );
-}
-
-qboolean trap_R_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel,
-								int legsFrame, int legsOldFrame, float legsBacklerp,
-								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
-								int headFrame, int headOldFrame, float headBacklerp)
-{
-	return syscall( CG_R_SETUPPLAYERSKELETON, handle, refSkel, legsFrame, legsOldFrame, PASSFLOAT(legsBacklerp),
-							torsoFrame, torsoOldFrame, PASSFLOAT(torsoBacklerp),
-							headFrame, headOldFrame, PASSFLOAT(headBacklerp));
-}
-
-void trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out)
-{
-	syscall( CG_R_MAKESKELETONABSOLUTE, in, out );
-}
-#endif
-

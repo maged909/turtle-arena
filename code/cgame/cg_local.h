@@ -550,12 +550,6 @@ typedef struct {
 
 	qhandle_t		modelIcon;
 
-#ifdef IOQ3ZTM // BONES
-	// single model player
-	qhandle_t		playerModel;
-	qhandle_t		playerSkin;
-#endif
-
 #ifdef TA_PLAYERSYS
 	bg_playercfg_t  playercfg;
 #else
@@ -2164,17 +2158,10 @@ void CG_AddPacketEntities( void );
 void CG_Beam( centity_t *cent );
 void CG_AdjustPositionForMover(const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out, vec3_t angles_in, vec3_t angles_out);
 
-#ifdef IOQ3ZTM // BONES
-qboolean CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
-							qhandle_t parentModel, const refSkeleton_t *parentSkeleton, char *tagName );
-qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
-							qhandle_t parentModel, const refSkeleton_t *parentSkeleton, char *tagName );
-#else
 qboolean CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
 							qhandle_t parentModel, char *tagName );
 qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
 							qhandle_t parentModel, char *tagName );
-#endif
 
 
 
@@ -2232,7 +2219,7 @@ void CG_RailTrail( clientInfo_t *ci, vec3_t start, vec3_t end );
 void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi );
 #endif
 void CG_AddViewWeapon (playerState_t *ps);
-void CG_AddPlayerWeapon( refEntity_t *parent, refSkeleton_t *parentSkeleton, playerState_t *ps, centity_t *cent, int team );
+void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team );
 #ifndef TA_WEAPSYS_EX
 void CG_DrawWeaponSelect( void );
 

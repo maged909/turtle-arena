@@ -564,11 +564,6 @@ typedef struct {
 	qhandle_t		headModel;
 	qhandle_t		headSkin;
 
-#ifdef IOQ3ZTM // BONES
-	qhandle_t		playerModel;
-	qhandle_t		playerSkin;
-#endif
-
 #ifdef TA_PLAYERSYS
 	bg_playercfg_t	playercfg;
 #else

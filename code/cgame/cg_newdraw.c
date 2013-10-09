@@ -705,16 +705,11 @@ static void CG_DrawSelectedPlayerHead( rectDef_t *rect, qboolean draw2D, qboolea
 	ci = cgs.clientinfo + ((voice) ? cg.cur_lc->currentVoiceClient : sortedTeamPlayers[team][CG_GetSelectedPlayer( cg.cur_localClientNum )]);
 
 	if (ci) {
-#ifdef IOQ3ZTM // BONES
-		cm = ci->headModel;
-		if ( cg_draw3dIcons.integer && cm ) {
-#else
 		if ( cg_draw3dIcons.integer ) {
 			cm = ci->headModel;
 			if ( !cm ) {
 				return;
 			}
-#endif
 
 			// offset the origin y and z to center the head
 			trap_R_ModelBounds( cm, mins, maxs, 0, 0, 0 );

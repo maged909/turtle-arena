@@ -940,45 +940,21 @@ void G_LoadPlayer(int clientNum, const char *inModelName, const char *inHeadMode
 	client->pers.torsoModel = 0;
 	client->pers.legsModel = 0;
 
-#ifdef IOQ3ZTM // BONES
-	// Try loading single model player
-	Com_sprintf( filename, sizeof( filename ), "models/players/%s/player.iqm", model );
-	client->pers.playerModel = trap_R_RegisterModel(filename);
+	Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper.md3", model );
+	client->pers.torsoModel = trap_R_RegisterModel(filename);
 
-	// Try loading multimodel player
-	if (!client->pers.playerModel) {
-#endif
-		Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper.md3", model );
-		client->pers.torsoModel = trap_R_RegisterModel(filename);
-
-		Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower.md3", model );
-		client->pers.legsModel = trap_R_RegisterModel(filename);
-#ifdef IOQ3ZTM // BONES
-	}
-#endif
+	Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower.md3", model );
+	client->pers.legsModel = trap_R_RegisterModel(filename);
 
 	// Server doesn't have the player, fall back to default model.
-#ifdef IOQ3ZTM // BONES
-	if (!client->pers.playerModel && (!client->pers.torsoModel || !client->pers.legsModel)) {
-		// Try loading single model player
-		Com_sprintf( filename, sizeof( filename ), "models/players/%s/player.iqm", DEFAULT_MODEL );
-		client->pers.playerModel = trap_R_RegisterModel(filename);
+	if (!client->pers.torsoModel) {
+		Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper.md3", DEFAULT_MODEL );
+		client->pers.torsoModel = trap_R_RegisterModel(filename);
 	}
-
-	// Try loading multimodel player
-	if (!client->pers.playerModel) {
-#endif
-		if (!client->pers.torsoModel) {
-			Com_sprintf( filename, sizeof( filename ), "models/players/%s/upper.md3", DEFAULT_MODEL );
-			client->pers.torsoModel = trap_R_RegisterModel(filename);
-		}
-		if (!client->pers.legsModel) {
-			Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower.md3", DEFAULT_MODEL );
-			client->pers.legsModel = trap_R_RegisterModel(filename);
-		}
-#ifdef IOQ3ZTM // BONES
+	if (!client->pers.legsModel) {
+		Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower.md3", DEFAULT_MODEL );
+		client->pers.legsModel = trap_R_RegisterModel(filename);
 	}
-#endif
 #endif
 
 	// Check if player has really changed!

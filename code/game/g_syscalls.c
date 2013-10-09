@@ -285,33 +285,6 @@ void trap_SnapVector( float *v ) {
 	syscall( G_SNAPVECTOR, v );
 }
 
-#ifdef IOQ3ZTM // BONES
-int trap_R_JointIndexForName(qhandle_t handle, const char *jointName)
-{
-	return syscall( G_JOINTINDEXFORNAME, handle, jointName );
-}
-
-qboolean trap_R_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp)
-{
-	return syscall( G_SETUPSKELETON, handle, refSkel, frame, oldframe, PASSFLOAT(backlerp) );
-}
-
-qboolean trap_R_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel,
-								int legsFrame, int legsOldFrame, float legsBacklerp,
-								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
-								int headFrame, int headOldFrame, float headBacklerp)
-{
-	return syscall( G_SETUPPLAYERSKELETON, handle, refSkel, legsFrame, legsOldFrame, PASSFLOAT(legsBacklerp),
-							torsoFrame, torsoOldFrame, PASSFLOAT(torsoBacklerp),
-							headFrame, headOldFrame, PASSFLOAT(headBacklerp));
-}
-
-void trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out)
-{
-	syscall( G_MAKESKELETONABSOLUTE, in, out );
-}
-#endif
-
 void trap_AddCommand( const char *cmdName ) {
 	syscall( G_ADDCOMMAND, cmdName );
 }
@@ -691,6 +664,7 @@ void trap_BotSetChatGender(int chatstate, int gender) {
 void trap_BotSetChatName(int chatstate, char *name, int client) {
 	syscall( BOTLIB_AI_SET_CHAT_NAME, chatstate, name, client );
 }
+
 
 int trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child) {
 	return syscall( BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION, numranks, ranks, parent1, parent2, child );

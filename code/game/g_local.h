@@ -35,10 +35,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_public.h"
 #include "ai_ea.h"
 
-#ifdef IOQ3ZTM // BONES
-#include "../renderercommon/tr_types.h"
-#endif
-
 //==================================================================
 
 // the "gameversion" client command will print this plus compile date
@@ -335,11 +331,6 @@ typedef struct {
 
 	// Player axis, setup using G_PlayerAngles
 	vec3_t legsAxis[3], torsoAxis[3], headAxis[3];
-
-#ifdef IOQ3ZTM // BONES
-	qhandle_t		playerModel;
-	refSkeleton_t	playerSkeleton;
-#endif
 #endif
 } clientPersistant_t;
 

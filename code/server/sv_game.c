@@ -565,20 +565,6 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_R_MODELBOUNDS:
 		return re.ModelBounds( args[1], VMA(2), VMA(3), args[4], args[5], VMF(6) );
 
-#ifdef IOQ3ZTM // BONES
-	case G_JOINTINDEXFORNAME:
-		return re.JointIndexForName(args[1], VMA(2));
-	case G_SETUPSKELETON:
-		return re.SetupSkeleton(args[1], VMA(2), args[3], args[4], VMF(5));
-	case G_SETUPPLAYERSKELETON:
-		return re.SetupPlayerSkeleton(args[1], VMA(2), args[3], args[4], VMF(5),
-										args[6], args[7], VMF(8),
-										args[9], args[10], VMF(11));
-	case G_MAKESKELETONABSOLUTE:
-		re.MakeSkeletonAbsolute(VMA(1), VMA(2));
-		return 0;
-#endif
-
 		//====================================
 
 	case BOTLIB_SETUP:

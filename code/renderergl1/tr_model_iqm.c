@@ -957,63 +957,6 @@ static void ComputeJointMats( iqmData_t *data, int frame, int oldframe,
 	}
 }
 
-#ifdef IOQ3ZTM // BONES
-void OrientationMultiply( orientation_t a, orientation_t b, orientation_t *out ) {
-	int i, j;
-
-	for (i = 0; i < 3; ++i) {
-		for (j = 0; j < 3; ++j) {
-			out->axis[i][j] = a.axis[i][0] * b.axis[0][j] + a.axis[i][1] * b.axis[1][j] + a.axis[i][2] * b.axis[2][j];
-		}
-		out->origin[i] = a.axis[i][0] * b.origin[0] + a.axis[i][1] * b.origin[1] + a.axis[i][2] * b.origin[2] + a.origin[i];
-	}
-}
-
-// Convert orientation_t to matrix 3x4 (float[12])
-void OrientationToMatrix34(orientation_t orientation, float *mat) {
-	int i;
-
-	for (i = 0; i < 3; ++i) {
-		mat[4*i+0] = orientation.axis[i][0];
-		mat[4*i+1] = orientation.axis[i][1];
-		mat[4*i+2] = orientation.axis[i][2];
-		mat[4*i+3] = orientation.origin[i];
-	}
-}
-
-// Convert matrix 3x4 (float[12]) to orientation_t
-void Matrix34ToOrientation(const float *mat, orientation_t *orientation) {
-	int i;
-
-	for (i = 0; i < 3; ++i) {
-		orientation->axis[i][0] = mat[4*i+0];
-		orientation->axis[i][1] = mat[4*i+1];
-		orientation->axis[i][2] = mat[4*i+2];
-		orientation->origin[i] = mat[4*i+3];
-	}
-}
-
-void ComputeJointRelativeOrientation( iqmData_t *data, int frame, int oldframe,
-			      float backlerp, int joint, orientation_t *orientation ) {
-	float	mat[12];
-	float	*mat1, *mat2;
-
-	if ( oldframe == frame ) {
-		mat1 = data->poseMats + 12 * data->num_joints * frame;
-
-		Com_Memcpy( mat, mat1 + 12*joint, 12 * sizeof(float) );
-	} else  {
-		mat1 = data->poseMats + 12 * data->num_joints * frame;
-		mat2 = data->poseMats + 12 * data->num_joints * oldframe;
-		
-		InterpolateMatrix( mat1 + 12*joint, mat2 + 12*joint,
-				   backlerp, mat );
-	}
-
-	Matrix34ToOrientation(mat, orientation);
-}
-#endif
-
 
 /*
 =================
@@ -1033,34 +976,6 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	vec2_t		(*outTexCoord)[2];
 	color4ub_t	*outColor;
 
-#ifdef IOQ3ZTM // BONES
-	int		*tri;
-	glIndex_t	*ptr;
-	glIndex_t	base;
-
-	RB_CHECKOVERFLOW( surf->num_vertexes, surf->num_triangles * 3 );
-
-	outXYZ = &tess.xyz[tess.numVertexes];
-	outNormal = &tess.normal[tess.numVertexes];
-	outTexCoord = &tess.texCoords[tess.numVertexes];
-	outColor = &tess.vertexColors[tess.numVertexes];
-
-	if (backEnd.currentEntity->customSkeleton != -1) {
-		refSkeleton_t *refSkel = &backEnd.refdef.skeletons[backEnd.currentEntity->customSkeleton];
-
-		// Convert to matrix 3x4
-		for( i = 0; i < data->num_joints; i++ ) {
-			OrientationToMatrix34(refSkel->joints[i], jointMats + 12*i);
-		}
-	} else if ( data->num_joints > 0 ) {
-		int	frame = data->num_frames ? backEnd.currentEntity->e.frame % data->num_frames : 0;
-		int	oldframe = data->num_frames ? backEnd.currentEntity->e.oldframe % data->num_frames : 0;
-		float	backlerp = backEnd.currentEntity->e.backlerp;
-
-		// compute interpolated joint matrices
-		ComputePoseMats( data, frame, oldframe, backlerp, jointMats );
-	}
-#else
 	int	frame = data->num_frames ? backEnd.currentEntity->e.frame % data->num_frames : 0;
 	int	oldframe = data->num_frames ? backEnd.currentEntity->e.oldframe % data->num_frames : 0;
 	float	backlerp = backEnd.currentEntity->e.backlerp;
@@ -1080,7 +995,6 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface ) {
 	if ( data->num_joints > 0 ) {
 		ComputePoseMats( data, frame, oldframe, backlerp, jointMats );
 	}
-#endif
 
 	// transform vertexes and fill other data
 	for( i = 0; i < surf->num_vertexes;
@@ -1202,9 +1116,6 @@ int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 
 	ComputeJointMats( data, startFrame, endFrame, frac, jointMats );
 
-#ifdef IOQ3ZTM // BONES
-	Matrix34ToOrientation(&jointMats[12 * joint], tag);
-#else
 	tag->axis[0][0] = jointMats[12 * joint + 0];
 	tag->axis[1][0] = jointMats[12 * joint + 1];
 	tag->axis[2][0] = jointMats[12 * joint + 2];
@@ -1217,7 +1128,6 @@ int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
 	tag->axis[1][2] = jointMats[12 * joint + 9];
 	tag->axis[2][2] = jointMats[12 * joint + 10];
 	tag->origin[2] = jointMats[12 * joint + 11];
-#endif
 
 	return qtrue;
 }
