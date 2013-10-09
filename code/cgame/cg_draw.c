@@ -453,12 +453,7 @@ void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t head
 
 	ci = &cgs.clientinfo[ clientNum ];
 
-#ifdef IOQ3ZTM // BONES
-	if ( cg_draw3dIcons.integer && ci->headModel )
-#else
-	if ( cg_draw3dIcons.integer )
-#endif
-	{
+	if ( cg_draw3dIcons.integer ) {
 		cm = ci->headModel;
 		if ( !cm ) {
 			return;

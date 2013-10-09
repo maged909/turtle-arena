@@ -179,16 +179,5 @@ void	trap_BotSetChatName(int chatstate, char *name, int client);
 
 int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child);
 
-
-#ifdef IOQ3ZTM // BONES
-int trap_R_JointIndexForName(qhandle_t handle, const char *jointName);
-qboolean trap_R_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
-qboolean trap_R_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel,
-								int legsFrame, int legsOldFrame, float legsBacklerp,
-								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
-								int headFrame, int headOldFrame, float headBacklerp);
-void	trap_R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
-#endif
-
 #endif
 

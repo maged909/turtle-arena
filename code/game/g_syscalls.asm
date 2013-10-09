@@ -205,10 +205,3 @@ equ trap_GeneticParentsAndChildSelection	-528
 
 equ trap_AAS_PointReachabilityAreaIndex	-529
 
-
-;; IOQ3ZTM // BONES
-equ trap_R_JointIndexForName	-601
-equ trap_R_SetupSkeleton		-602
-equ trap_R_SetupPlayerSkeleton	-603
-equ trap_R_MakeSkeletonAbsolute	-604
-

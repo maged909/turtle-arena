@@ -88,10 +88,6 @@ typedef struct {
 	vec3_t		ambientLight;	// color normalized to 0-255
 	int			ambientLightInt;	// 32 bit rgba packed
 	vec3_t		directedLight;
-
-#ifdef IOQ3ZTM // BONES
-	int			customSkeleton;
-#endif
 } trRefEntity_t;
 
 
@@ -483,11 +479,6 @@ typedef struct {
 
 	int			num_entities;
 	trRefEntity_t	*entities;
-
-#ifdef IOQ3ZTM // BONES
-	int			num_skeletons;
-	refSkeleton_t	*skeletons;
-#endif
 
 	int			dlightBits;
 	int			num_dlights;
@@ -921,15 +912,6 @@ model_t		*R_GetModelByHandle( qhandle_t hModel );
 int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, 
 					 float frac, const char *tagName );
 int			R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs, int startFrame, int endFrame, float frac );
-
-#ifdef IOQ3ZTM // BONES
-int RE_JointIndexForName(qhandle_t handle, const char *jointName);
-qboolean RE_SetupSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int frame, int oldframe, float backlerp);
-qboolean RE_SetupPlayerSkeleton(qhandle_t handle, refSkeleton_t *refSkel, int legsFrame, int legsOldFrame, float legsBacklerp,
-								int torsoFrame, int torsoOldFrame, float torsoBacklerp,
-								int headFrame, int headOldFrame, float headBacklerp);
-void R_MakeSkeletonAbsolute(const refSkeleton_t *in, refSkeleton_t *out);
-#endif
 
 void		R_Modellist_f (void);
 
@@ -1589,11 +1571,7 @@ SCENE GENERATION
 void R_InitNextFrame( void );
 
 void RE_ClearScene( void );
-#ifdef IOQ3ZTM // BONES
-void RE_AddRefEntityToScene( const refEntity_t *ent, const refSkeleton_t *customSkeleton );
-#else
 void RE_AddRefEntityToScene( const refEntity_t *ent );
-#endif
 void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
@@ -1621,10 +1599,6 @@ void RB_IQMSurfaceAnim( surfaceType_t *surface );
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
                   int startFrame, int endFrame,
                   float frac, const char *tagName );
-#ifdef IOQ3ZTM // BONES
-void ComputeJointRelativeOrientation( iqmData_t *data, int frame, int oldframe,
-			      float backlerp, int joint, orientation_t *orientation );
-#endif
 
 /*
 =============================================================
@@ -1814,10 +1788,6 @@ typedef enum {
 #define	MAX_POLYS		600
 #define	MAX_POLYVERTS	3000
 
-#ifdef IOQ3ZTM // BONES
-#define MAX_CUSTOM_SKELETONS (MAX_CLIENTS*MAX_SPLITVIEW)
-#endif
-
 // all of the information needed by the back end must be
 // contained in a backEndData_t
 typedef struct {
@@ -1825,9 +1795,6 @@ typedef struct {
 	dlight_t	dlights[MAX_DLIGHTS];
 	corona_t	coronas[MAX_CORONAS];
 	trRefEntity_t	entities[MAX_REFENTITIES];
-#ifdef IOQ3ZTM // BONES
-	refSkeleton_t	skeletons[MAX_CUSTOM_SKELETONS];
-#endif
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
 	srfPolyBuffer_t *polybuffers;//[MAX_POLYS];

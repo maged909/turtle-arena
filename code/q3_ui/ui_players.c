@@ -408,39 +408,15 @@ static void UI_LegsSequencing( playerInfo_t *pi ) {
 UI_PositionEntityOnTag
 ======================
 */
-#ifdef IOQ3ZTM // BONES
 static qboolean UI_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
-							clipHandle_t parentModel, const refSkeleton_t *parentSkeleton, char *tagName )
-#else
-static qboolean UI_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
-							clipHandle_t parentModel, char *tagName )
-#endif
-{
+							clipHandle_t parentModel, char *tagName ) {
 	int				i;
 	orientation_t	lerped;
 	qboolean		returnValue;
 
-#ifdef IOQ3ZTM // BONES
-	if (parentSkeleton && parentSkeleton->type == ST_ABSOLUTE) {
-		int joint = trap_R_JointIndexForName(parentModel, tagName);
-
-		returnValue = (joint >= 0 && joint < parentSkeleton->numJoints);
-
-		if (returnValue) {
-			// Found joint
-			memcpy(&lerped, &parentSkeleton->joints[joint], sizeof (lerped));
-		} else {
-			// Joint not found
-			memset(&lerped, 0, sizeof (lerped));
-		}
-	} else {
-#endif
 	// lerp the tag
 	returnValue = trap_R_LerpTag( &lerped, parentModel, parent->oldframe, parent->frame,
 		1.0 - parent->backlerp, tagName );
-#ifdef IOQ3ZTM // BONES
-	}
-#endif
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );
@@ -461,40 +437,16 @@ static qboolean UI_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *
 UI_PositionRotatedEntityOnTag
 ======================
 */
-#ifdef IOQ3ZTM // BONES
 static qboolean UI_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
-							clipHandle_t parentModel, const refSkeleton_t *parentSkeleton, char *tagName )
-#else
-static qboolean UI_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
-							clipHandle_t parentModel, char *tagName )
-#endif
-{
+							clipHandle_t parentModel, char *tagName ) {
 	int				i;
 	orientation_t	lerped;
 	vec3_t			tempAxis[3];
 	qboolean		returnValue;
 
-#ifdef IOQ3ZTM // BONES
-	if (parentSkeleton && parentSkeleton->type == ST_ABSOLUTE) {
-		int joint = trap_R_JointIndexForName(parentModel, tagName);
-
-		returnValue = (joint >= 0 && joint < parentSkeleton->numJoints);
-
-		if (returnValue) {
-			// Found joint
-			memcpy(&lerped, &parentSkeleton->joints[joint], sizeof (lerped));
-		} else {
-			// Joint not found
-			memset(&lerped, 0, sizeof (lerped));
-		}
-	} else {
-#endif
 	// lerp the tag
 	returnValue = trap_R_LerpTag( &lerped, parentModel, parent->oldframe, parent->frame,
 		1.0 - parent->backlerp, tagName );
-#ifdef IOQ3ZTM // BONES
-	}
-#endif
 
 	// FIXME: allow origin offsets along tag?
 	VectorCopy( parent->origin, entity->origin );
@@ -680,33 +632,6 @@ static void UI_PlayerAnimation( playerInfo_t *pi, int *legsOld, int *legs, float
 	*torso = pi->torso.frame;
 	*torsoBackLerp = pi->torso.backlerp;
 }
-
-#ifdef IOQ3ZTM // BONES
-/*
-===============
-UI_PlayerSkeleton
-===============
-*/
-static void UI_PlayerSkeleton(playerInfo_t *pi, refEntity_t *legs, refEntity_t *torso,
-							refEntity_t *head, refSkeleton_t *absSkeleton)
-{
-	refSkeleton_t skeleton;
-
-	if (!pi->playerModel) {
-		return;
-	}
-
-	if (trap_R_SetupPlayerSkeleton(pi->playerModel, &skeleton,
-								legs->frame, legs->oldframe, legs->backlerp,
-								torso->frame, torso->oldframe, torso->backlerp,
-								head->frame, head->oldframe, head->backlerp))
-	{
-		// ZTM: TODO: Set torso and head axis in skeleton.
-
-		trap_R_MakeSkeletonAbsolute(&skeleton, absSkeleton);
-	}
-}
-#endif
 
 
 #ifndef IOQ3ZTM // BG_SWING_ANGLES
@@ -962,9 +887,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	refEntity_t		legs;
 	refEntity_t		torso;
 	refEntity_t		head;
-#ifdef IOQ3ZTM // BONES
-	refSkeleton_t	skeleton;
-#endif
 #ifdef TA_WEAPSYS
 	refEntity_t		gun[MAX_HANDS];
 #else
@@ -989,16 +911,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	char *originalTagNames[3] = { "tag_weapon", "tag_flag", NULL };
 #endif
 
-#ifdef IOQ3ZTM // BONES
-	if ( (!pi->playerModel && (!pi->legsModel || !pi->torsoModel || !pi->headModel))
-#ifdef TA_PLAYERSYS
-	|| !pi->playercfg.animations[0].numFrames ) {
-#else
-	|| !pi->animations[0].numFrames ) {
-#endif
-		return;
-	}
-#else
 	if ( !pi->legsModel || !pi->torsoModel || !pi->headModel
 #ifdef TA_PLAYERSYS
 	|| !pi->playercfg.animations[0].numFrames ) {
@@ -1007,7 +919,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 #endif
 		return;
 	}
-#endif
 
 	dp_realtime = time;
 
@@ -1073,26 +984,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 	renderfx = RF_LIGHTING_ORIGIN | RF_NOSHADOW;
 
-#ifdef IOQ3ZTM // BONES
-	if (pi->playerModel) {
-		// get skeleton
-		UI_PlayerSkeleton( pi, &legs, &torso, &head, &skeleton );
-
-		//
-		// add the player
-		//
-		legs.hModel = pi->playerModel;
-		legs.customSkin = pi->playerSkin;
-
-		VectorCopy( origin, legs.origin );
-
-		VectorCopy( origin, legs.lightingOrigin );
-		legs.renderfx = renderfx;
-		VectorCopy (legs.origin, legs.oldorigin);
-
-		trap_R_AddRefEntityToScene_CustomSkeleton( &legs, &skeleton );
-	} else {
-#endif
 	//
 	// add the legs
 	//
@@ -1145,9 +1036,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	head.renderfx = renderfx;
 
 	trap_R_AddRefEntityToScene( &head );
-#ifdef IOQ3ZTM // BONES
-	}
-#endif
 
 	//
 	// add the gun
@@ -1176,20 +1064,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 				continue;
 			}
 
-#ifdef IOQ3ZTM // BONES
-			if (pi->playerModel) {
-				if (
-#ifdef TURTLEARENA // PLAYERS
-					!UI_PositionEntityOnTag( &gun[i], &legs, pi->playerModel, &skeleton, newTagNames[i]) &&
-#endif
-					!UI_PositionEntityOnTag( &gun[i], &legs, pi->playerModel, &skeleton, originalTagNames[i]))
-				{
-					// Failed to find tag
-					continue;
-				}
-			}
-			else
-#endif
 			if (
 #ifdef TURTLEARENA // PLAYERS
 				!UI_PositionEntityOnTag( &gun[i], &torso, pi->torsoModel, NULL, newTagNames[i]) &&
@@ -1212,11 +1086,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 			Byte4Copy( colorWhite, gun.shaderRGBA );
 		}
 		VectorCopy( origin, gun.lightingOrigin );
-#ifdef IOQ3ZTM // BONES
-		if (pi->playerModel)
-			UI_PositionEntityOnTag( &gun, &legs, pi->playerModel, &skeleton, "tag_weapon");
-		else
-#endif
 		UI_PositionEntityOnTag( &gun, &torso, pi->torsoModel, NULL, "tag_weapon");
 		gun.renderfx = renderfx;
 		trap_R_AddRefEntityToScene( &gun );
@@ -1367,20 +1236,6 @@ UI_RegisterClientSkin
 */
 static qboolean UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, const char *skinName ) {
 	char		filename[MAX_QPATH];
-
-#ifdef IOQ3ZTM // BONES
-	// single model player has single skin
-	if (pi->playerModel) {
-		Com_sprintf( filename, sizeof( filename ), "models/players/%s/player_%s.skin", modelName, skinName );
-		pi->playerSkin = trap_R_RegisterSkin( filename );
-
-		if (!pi->playerSkin) {
-			return qfalse;
-		}
-
-		return qtrue;
-	}
-#endif
 
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower_%s.skin", modelName, skinName );
 	pi->legsSkin = trap_R_RegisterSkin( filename );
@@ -1554,14 +1409,6 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 
 	// load cmodels before models so filecache works
 
-#ifdef IOQ3ZTM // BONES
-	// Try loading single model player
-	Com_sprintf( filename, sizeof( filename ), "models/players/%s/player.iqm", modelName );
-	pi->playerModel = trap_R_RegisterModel( filename );
-
-	// Try loading multimodel player
-	if (!pi->playerModel) {
-#endif
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/lower.md3", modelName );
 	pi->legsModel = trap_R_RegisterModel( filename );
 	if ( !pi->legsModel ) {
@@ -1582,9 +1429,6 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 		Com_Printf( "Failed to load model file %s\n", filename );
 		return qfalse;
 	}
-#ifdef IOQ3ZTM // BONES
-	}
-#endif
 
 	// if any skins failed to load, fall back to default
 	if ( !UI_RegisterClientSkin( pi, modelName, skinName ) ) {

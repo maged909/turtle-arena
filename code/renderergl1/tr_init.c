@@ -1509,13 +1509,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp, qboolean headless ) 
 	re.LerpTag = R_LerpTag;
 	re.ModelBounds = R_ModelBounds;
 
-#ifdef IOQ3ZTM // BONES
-	re.JointIndexForName = RE_JointIndexForName;
-	re.SetupSkeleton = RE_SetupSkeleton;
-	re.SetupPlayerSkeleton = RE_SetupPlayerSkeleton;
-	re.MakeSkeletonAbsolute = R_MakeSkeletonAbsolute;
-#endif
-
 	re.ClearScene = RE_ClearScene;
 	re.AddRefEntityToScene = RE_AddRefEntityToScene;
 	re.AddPolyToScene = RE_AddPolyToScene;

@@ -41,11 +41,6 @@ int			r_firstSceneCorona;
 int			r_numentities;
 int			r_firstSceneEntity;
 
-#ifdef IOQ3ZTM // BONES
-int			r_numskeletons;
-int			r_firstSceneSkeleton;
-#endif
-
 int			r_numpolys;
 int			r_firstScenePoly;
 
@@ -75,11 +70,6 @@ void R_InitNextFrame( void ) {
 	r_numentities = 0;
 	r_firstSceneEntity = 0;
 
-#ifdef IOQ3ZTM // BONES
-	r_numskeletons = 0;
-	r_firstSceneSkeleton = 0;
-#endif
-
 	r_numpolys = 0;
 	r_firstScenePoly = 0;
 
@@ -100,9 +90,6 @@ void RE_ClearScene( void ) {
 	r_firstSceneDlight = r_numdlights;
 	r_firstSceneCorona = r_numcoronas;
 	r_firstSceneEntity = r_numentities;
-#ifdef IOQ3ZTM // BONES
-	r_firstSceneSkeleton = r_numskeletons;
-#endif
 	r_firstScenePoly = r_numpolys;
 	r_firstScenePolybuffer = r_numpolybuffers;
 }
@@ -293,12 +280,7 @@ RE_AddRefEntityToScene
 
 =====================
 */
-#ifdef IOQ3ZTM // BONES
-void RE_AddRefEntityToScene( const refEntity_t *ent, const refSkeleton_t *customSkeleton )
-#else
-void RE_AddRefEntityToScene( const refEntity_t *ent )
-#endif
-{
+void RE_AddRefEntityToScene( const refEntity_t *ent ) {
 	if ( !tr.registered ) {
 		return;
 	}
@@ -320,17 +302,6 @@ void RE_AddRefEntityToScene( const refEntity_t *ent )
 
 	backEndData->entities[r_numentities].e = *ent;
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;
-
-#ifdef IOQ3ZTM // BONES
-	// Custom skeleton
-	if (customSkeleton && r_numskeletons < MAX_CUSTOM_SKELETONS) {
-		backEndData->entities[r_numentities].customSkeleton = r_numskeletons;
-		R_MakeSkeletonAbsolute(customSkeleton, &backEndData->skeletons[r_numskeletons]);
-		r_numskeletons++;
-	} else {
-		backEndData->entities[r_numentities].customSkeleton = -1;
-	}
-#endif
 
 	r_numentities++;
 }
@@ -516,11 +487,6 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
 	tr.refdef.entities = &backEndData->entities[r_firstSceneEntity];
 
-#ifdef IOQ3ZTM // BONES
-	tr.refdef.num_skeletons = r_numskeletons - r_firstSceneSkeleton;
-	tr.refdef.skeletons = &backEndData->skeletons[r_firstSceneSkeleton];
-#endif
-
 	tr.refdef.num_dlights = r_numdlights - r_firstSceneDlight;
 	tr.refdef.dlights = &backEndData->dlights[r_firstSceneDlight];
 	tr.refdef.dlightBits = 0;
@@ -579,9 +545,6 @@ void RE_RenderScene( const refdef_t *fd ) {
 	// the next scene rendered in this frame will tack on after this one
 	r_firstSceneDrawSurf = tr.refdef.numDrawSurfs;
 	r_firstSceneEntity = r_numentities;
-#ifdef IOQ3ZTM // BONES
-	r_firstSceneSkeleton = r_numskeletons;
-#endif
 	r_firstSceneDlight = r_numdlights;
 	r_firstScenePoly = r_numpolys;
 	r_firstScenePolybuffer = r_numpolybuffers;
