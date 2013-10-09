@@ -278,6 +278,11 @@ static sfx_t *S_FindName( const char *name ) {
 		return NULL;
 	}
 
+	if (name[0] == '*') {
+		Com_Printf( S_COLOR_YELLOW "WARNING: Tried to load player sound directly: %s\n", name );
+		return NULL;
+	}
+
 	hash = S_HashSFXName(name);
 
 	sfx = sfxHash[hash];
@@ -412,16 +417,17 @@ void S_Base_BeginRegistration( void ) {
 	s_soundMuted = qfalse;		// we can play again
 
 	if (s_numSfx == 0) {
+		int default_sfx;
+
 		SND_setup();
 
 		Com_Memset(s_knownSfx, '\0', sizeof(s_knownSfx));
 		Com_Memset(sfxHash, '\0', sizeof(sfx_t *) * LOOP_HASH);
 
-#ifdef TA_DATA // OPENARENA
-		S_Base_RegisterSound("sound/misc/silence.wav", qfalse);
-#else
-		S_Base_RegisterSound("sound/feedback/hit.wav", qfalse);		// changed to a sound in baseq3
-#endif
+		default_sfx = S_Base_RegisterSound(com_gameConfig.defaultSound, qfalse);
+
+		if ( s_knownSfx[default_sfx].defaultSound )
+			Com_Error( ERR_FATAL, "Can't load default sound effect %s", com_gameConfig.defaultSound );
 	}
 }
 

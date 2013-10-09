@@ -218,6 +218,11 @@ static sfxHandle_t S_AL_BufferFind(const char *filename)
 		return 0;
 	}
 
+	if ( filename[0] == '*' ) {
+		Com_Printf( S_COLOR_YELLOW "WARNING: Tried to load player sound directly: %s\n", filename );
+		return 0;
+	}
+
 	for(i = 0; i < numSfx; i++)
 	{
 		if(!Q_stricmp(knownSfx[i].filename, filename))
@@ -252,10 +257,8 @@ S_AL_BufferUseDefault
 */
 static void S_AL_BufferUseDefault(sfxHandle_t sfx)
 {
-	if(sfx == default_sfx)
-		Com_Error(ERR_FATAL, "Can't load default sound effect %s", knownSfx[sfx].filename);
-
-	Com_Printf( S_COLOR_YELLOW "WARNING: Using default sound for %s\n", knownSfx[sfx].filename);
+	if (sfx != default_sfx)
+		Com_Printf( S_COLOR_YELLOW "WARNING: Using default sound for %s\n", knownSfx[sfx].filename);
 	knownSfx[sfx].isDefault = qtrue;
 	knownSfx[sfx].buffer = knownSfx[default_sfx].buffer;
 }
@@ -334,10 +337,6 @@ static void S_AL_BufferLoad(sfxHandle_t sfx, qboolean cache)
 
 	// Nothing?
 	if(curSfx->filename[0] == '\0')
-		return;
-
-	// Player SFX
-	if(curSfx->filename[0] == '*')
 		return;
 
 	// Already done?
@@ -459,12 +458,12 @@ qboolean S_AL_BufferInit( void )
 	numSfx = 0;
 
 	// Load the default sound, and lock it
-#ifdef TA_DATA // OPENARENA
-	default_sfx = S_AL_BufferFind("sound/misc/silence.wav");
-#else
-	default_sfx = S_AL_BufferFind("sound/feedback/hit.wav");
-#endif
+	default_sfx = S_AL_BufferFind(com_gameConfig.defaultSound);
 	S_AL_BufferUse(default_sfx);
+
+	if( knownSfx[default_sfx].isDefault )
+		Com_Error( ERR_FATAL, "Can't load default sound effect %s", com_gameConfig.defaultSound );
+
 	knownSfx[default_sfx].isLocked = qtrue;
 
 	// All done
