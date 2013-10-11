@@ -39,11 +39,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 extern	botlib_export_t	*botlib_export;
 
-#ifndef IOQ3ZTM
 extern qboolean loadCamera(const char *name);
 extern void startCamera(int time);
 extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
-#endif
 
 /*
 ====================
