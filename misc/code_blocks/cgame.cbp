@@ -147,6 +147,9 @@
 		<Unit filename="../../code/cgame/cg_audio.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/cgame/cg_console.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/cgame/cg_consolecmds.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -163,6 +166,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/cgame/cg_event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../code/cgame/cg_field.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../../code/cgame/cg_info.c">

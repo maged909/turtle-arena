@@ -82,6 +82,66 @@ static void CG_SizeDown_f (void) {
 	trap_Cvar_SetValue("cg_viewsize", Com_Clamp( 30, 100, (int)(cg_viewsize.integer-10) ) );
 }
 
+/*
+================
+CG_MessageMode_f
+================
+*/
+void CG_MessageMode_f( void ) {
+	Q_strncpyz( cg.messageCommand, "say", sizeof (cg.messageCommand) );
+	Q_strncpyz( cg.messagePrompt, "Say:", sizeof (cg.messagePrompt) );
+	MField_Clear( &cg.messageField );
+	cg.messageField.widthInChars = 30;
+	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+================
+CG_MessageMode2_f
+================
+*/
+void CG_MessageMode2_f( void ) {
+	Q_strncpyz( cg.messageCommand, "say_team", sizeof (cg.messageCommand) );
+	Q_strncpyz( cg.messagePrompt, "Team Say:", sizeof (cg.messagePrompt) );
+	MField_Clear( &cg.messageField );
+	cg.messageField.widthInChars = 25;
+	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+================
+CG_MessageMode3_f
+================
+*/
+void CG_MessageMode3_f( void ) {
+	int playerNum = CG_CrosshairPlayer( 0 );
+	if ( playerNum < 0 || playerNum >= MAX_CLIENTS ) {
+		return;
+	}
+	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.clientinfo[ playerNum ].name );
+	MField_Clear( &cg.messageField );
+	cg.messageField.widthInChars = 30;
+	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
+/*
+================
+CG_MessageMode4_f
+================
+*/
+void CG_MessageMode4_f( void ) {
+	int playerNum = CG_LastAttacker( 0 );
+	if ( playerNum < 0 || playerNum >= MAX_CLIENTS ) {
+		return;
+	}
+	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.clientinfo[ playerNum ].name );
+	MField_Clear( &cg.messageField );
+	cg.messageField.widthInChars = 30;
+	trap_Key_SetCatcher( trap_Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
+}
+
 
 /*
 =============
@@ -814,7 +874,13 @@ static consoleCommand_t	cg_commands[] = {
 	{ "remapShader", CG_RemapShader_f, 0 },
 	{ "play", CG_Play_f, 0 },
 	{ "music", CG_Music_f, 0 },
-	{ "stopmusic", CG_StopMusic_f, 0 }
+	{ "stopmusic", CG_StopMusic_f, 0 },
+	{ "messageMode", CG_MessageMode_f },
+	{ "messageMode2", CG_MessageMode2_f },
+	{ "messageMode3", CG_MessageMode3_f },
+	{ "messageMode4", CG_MessageMode4_f },
+	{ "clear", Con_ClearConsole_f },
+	{ "toggleconsole", Con_ToggleConsole_f }
 };
 
 static int cg_numCommands = ARRAY_LEN( cg_commands );
