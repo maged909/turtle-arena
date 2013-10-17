@@ -1788,18 +1788,6 @@ infoParm_t	infoParms[] = {
 	{"nolightmap",	0,	SURF_NOLIGHTMAP,0 },	// don't generate a lightmap
 	{"nodlight",	0,	SURF_NODLIGHT, 0 },		// don't ever add dynamic lights
 	{"dust",		0,	SURF_DUST, 0}			// leave a dust trail when walking on this surface
-
-#ifdef TA_MISC // MATERIALS
-	,
-	// material surface types
-	{"dirt",		0,	SURF_DIRT,		0 },
-	{"grass",		0,	SURF_GRASS,		0 },
-	{"wood",		0,	SURF_WOOD,		0 },
-	{"stone",		0,	SURF_STONE,		0 },
-	{"sparks",		0,	SURF_SPARKS,	0 },
-	{"glass",		0,	SURF_GLASS,		0 },
-	{"metal",		0,	SURF_METAL,		0 }
-#endif
 };
 
 

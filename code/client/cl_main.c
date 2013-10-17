@@ -105,12 +105,6 @@ cvar_t	*cl_guidServerUniq;
 
 cvar_t	*cl_consoleKeys;
 
-#ifdef IOQ3ZTM // USE_FREETYPE
-cvar_t  *cl_consoleFont;
-cvar_t  *cl_consoleFontSize;
-cvar_t  *cl_consoleFontKerning;
-#endif
-
 cvar_t	*cl_rate;
 
 clientActive_t		cl;
@@ -2974,7 +2968,6 @@ void CL_Frame ( int msec ) {
 			cls.realtime += cls.frametime;
 			SCR_UpdateScreen();
 			S_Update();
-			Con_RunConsole();
 			cls.framecount++;
 			return;
 		}
@@ -3089,8 +3082,6 @@ void CL_Frame ( int msec ) {
 
 	// advance local effects for next frame
 	SCR_RunCinematic();
-
-	Con_RunConsole();
 
 	cls.framecount++;
 }
@@ -3223,18 +3214,6 @@ void CL_InitRenderer( void ) {
 		CL_DrawLoadingScreen();
 		cls.drawnLoadingScreen = qtrue;
 	}
-
-	// load character sets
-#ifdef IOQ3ZTM // FONT_REWRITE
-	SCR_LoadFont(&cls.fontSmall, cl_consoleFont->string, "gfx/2d/bigchars", cl_consoleFontSize->integer,
-			cl_consoleFontSize->integer*0.66f, cl_consoleFontKerning->value);
-	SCR_LoadFont(&cls.fontBig, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 16, 0);
-#else
-	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
-#endif
-	cls.consoleShader = re.RegisterShader( "console" );
-	g_console_field_width = cls.glconfig.vidWidth / SMALLCHAR_WIDTH - 2;
-	g_consoleField.widthInChars = g_console_field_width;
 }
 
 /*
@@ -3271,10 +3250,6 @@ void CL_StartHunkUsers( qboolean rendererOnly ) {
 	if ( !cls.soundRegistered ) {
 		cls.soundRegistered = qtrue;
 		S_BeginRegistration();
-	}
-
-	if( com_dedicated->integer ) {
-		return;
 	}
 
 	if ( !cls.cgameStarted ) {
@@ -3517,11 +3492,7 @@ void CL_Init( void ) {
 	cl_cURLLib = Cvar_Get("cl_cURLLib", DEFAULT_CURL_LIB, CVAR_ARCHIVE);
 #endif
 
-#ifdef IOQ3ZTM // USE_FREETYPE
-	cl_conXOffset = Cvar_Get ("cl_conXOffset", "10", 0);
-#else
 	cl_conXOffset = Cvar_Get ("cl_conXOffset", "0", 0);
-#endif
 #ifdef MACOS_X
 	// In game video is REALLY slow in Mac OS X right now due to driver slowness
 	cl_inGameVideo = Cvar_Get ("r_inGameVideo", "0", CVAR_ARCHIVE);
@@ -3548,11 +3519,6 @@ void CL_Init( void ) {
 
 	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE);
-#ifdef IOQ3ZTM // USE_FREETYPE
-	cl_consoleFont = Cvar_Get ("cl_consoleFont", "fonts/mplus-1mn-regular.ttf", CVAR_ARCHIVE);
-	cl_consoleFontSize = Cvar_Get ("cl_consoleFontSize", "16", CVAR_ARCHIVE);
-	cl_consoleFontKerning = Cvar_Get ("cl_consoleFontKerning", "0", CVAR_ARCHIVE);
-#endif
 
 	// select which local client (using bits) should join a server on connect
 	Cvar_Get ("cl_localClients", "1", 0 );

@@ -93,6 +93,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define SURF_DUST				0x40000 // leave a dust trail when walking on this surface
 
 #ifdef TA_MISC // MATERIALS
+#if ( defined GAME || defined CGAME )
 // MT_DIRT
 #define SURF_DIRT				0x80000
 #define SURF_GRASS				0x100000
@@ -101,4 +102,5 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define SURF_SPARKS				0x800000
 #define SURF_GLASS				0x1000000
 #define SURF_METAL				0x2000000
+#endif
 #endif

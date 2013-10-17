@@ -4228,6 +4228,28 @@ void CG_DrawDemoRecording( void ) {
 }
 
 /*
+=================
+CG_DrawMessageMode
+=================
+*/
+void CG_DrawMessageMode( void ) {
+	if ( !( trap_Key_GetCatcher( ) & KEYCATCH_MESSAGE ) ) {
+		return;
+	}
+
+	// draw the chat line
+	CG_DrawBigString( 8, 232, cg.messagePrompt, 1.0f );
+
+#ifdef IOQ3ZTM // FONT_REWRITE
+	MField_Draw( &cg.messageField, 8 + ( strlen( cg.messagePrompt ) * BIGCHAR_WIDTH ), 232,
+			&cgs.media.fontBig, g_color_table[ColorIndex(COLOR_WHITE)], 2 );
+#else
+	MField_Draw( &cg.messageField, 8 + ( strlen( cg.messagePrompt ) * BIGCHAR_WIDTH ), 232,
+			BIGCHAR_WIDTH, BIGCHAR_HEIGHT, g_color_table[ColorIndex(COLOR_WHITE)] );
+#endif
+}
+
+/*
 =====================
 CG_DrawScreen2D
 
@@ -4262,6 +4284,7 @@ void CG_DrawScreen2D( stereoFrame_t stereoView ) {
 	}
 
 	CG_DrawDemoRecording();
+	CG_DrawMessageMode();
 }
 
 #ifdef IOQ3ZTM // LETTERBOX

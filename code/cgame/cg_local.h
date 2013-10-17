@@ -146,6 +146,26 @@ typedef enum {
 
 //=================================================
 
+#define	MAX_EDIT_LINE	256
+typedef struct {
+	int		cursor;
+	int		scroll;
+	int		widthInChars;
+	char	buffer[MAX_EDIT_LINE];
+	int		maxchars;
+} mfield_t;
+
+void	MField_Clear( mfield_t *edit );
+void	MField_KeyDownEvent( mfield_t *edit, int key );
+void	MField_CharEvent( mfield_t *edit, int ch );
+#ifdef IOQ3ZTM // FONT_REWRITE
+void	MField_Draw( mfield_t *edit, int x, int y, font_t *font, vec4_t color, int drawShadow );
+#else
+void	MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, vec4_t color );
+#endif
+
+//=================================================
+
 // player entities need to track more information
 // than any other type of entity.
 
@@ -969,9 +989,12 @@ typedef struct {
 	qboolean	thisFrameTeleport;
 	qboolean	nextFrameTeleport;
 
+	int			realTime;
+	int			realFrameTime;
+
 	int			frametime;		// cg.time - cg.oldTime
 
-	int			time;			// this is the time value that the client
+	int			time;			// this is the server time value that the client
 								// is rendering at.
 	int			oldTime;		// time at last frame, used for missile trails and prediction checking
 
@@ -1025,6 +1048,11 @@ typedef struct {
 	int			centerPrintY;
 	char		centerPrint[1024];
 	int			centerPrintLines;
+
+	// say, say_team, ...
+	char		messageCommand[32];
+	char		messagePrompt[64];
+	mfield_t		messageField;
 
 	// scoreboard
 	int			scoresRequestTime;
@@ -1102,6 +1130,7 @@ typedef enum
 // stored in the clientInfo_t, itemInfo_t, weaponInfo_t, and powerupInfo_t
 typedef struct {
 #ifdef IOQ3ZTM // FONT_REWRITE
+	font_t		fontConsole;
 	font_t		fontGiant;
 	font_t		fontBig;
 	font_t		fontSmall;
@@ -1116,6 +1145,7 @@ typedef struct {
 	qhandle_t	charsetShader;
 #endif
 	qhandle_t	whiteShader;
+	qhandle_t	consoleShader;
 
 #ifdef MISSIONPACK
 	qhandle_t	redCubeModel;
@@ -1699,6 +1729,10 @@ extern	npcInfo_t		cg_npcs[MAX_NPCS];
 #endif
 extern	markPoly_t		cg_markPolys[MAX_MARK_POLYS];
 
+extern	vmCvar_t		con_conspeed;
+extern	vmCvar_t		con_autochat;
+extern	vmCvar_t		con_autoclear;
+
 extern	vmCvar_t		cg_centertime;
 extern	vmCvar_t		cg_runpitch;
 extern	vmCvar_t		cg_runroll;
@@ -1908,7 +1942,7 @@ score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 
 void CG_RemoveNotifyLine( cglc_t *localClient );
-void CG_AddNotifyText( void );
+void CG_AddNotifyText( int realTime, qboolean restoredText );
 
 void CG_SetupDlightstyles( void );
 
@@ -2027,7 +2061,12 @@ void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, vec4_t colo
 
 void CG_DrawFontString( font_t *font, int x, int y, const char *s, float alpha );
 void CG_DrawFontStringColor( font_t *font, int x, int y, const char *s, vec4_t color );
+
+void CG_DrawFontChar( font_t *font, float scale, float x, float y, int ch, qboolean adjustFrom640 );
+#else
+void CG_DrawChar( int x, int y, int width, int height, int ch );
 #endif
+
 void CG_DrawString( float x, float y, const char *string, 
 				   float charWidth, float charHeight, const float *modulate );
 void CG_DrawStringExt( int x, int y, const char *string, const float *setColor, 
@@ -2042,6 +2081,7 @@ void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawTinyString( int x, int y, const char *s, float alpha );
 void CG_DrawTinyStringColor( int x, int y, const char *s, vec4_t color );
 
+int CG_DrawStrlenEx( const char *str, int maxchars );
 int CG_DrawStrlen( const char *str );
 
 float	*CG_FadeColor( int startMsec, int totalMsec );
@@ -2350,6 +2390,17 @@ void CG_DrawInformation( void );
 //
 qboolean CG_DrawOldScoreboard( void );
 void CG_DrawOldTourneyScoreboard( void );
+
+//
+// cg_console.c
+//
+void CG_ConsoleInit( void );
+void CG_ConsolePrint( const char *text );
+void CG_CloseConsole( void );
+void Con_ClearConsole_f( void );
+void Con_ToggleConsole_f( void );
+void CG_RunConsole( connstate_t state );
+void Console_Key ( int key, qboolean down );
 
 //
 // cg_consolecmds.c
