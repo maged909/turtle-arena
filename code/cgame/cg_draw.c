@@ -3591,6 +3591,8 @@ static qboolean CG_DrawFollow( void ) {
 
 	CG_DrawGiantString(CENTER_X, 40, name, 1.0F );
 
+	CG_DrawBotInfo( 40 + GIANT_HEIGHT );
+
 	return qtrue;
 }
 
@@ -3626,8 +3628,6 @@ static qboolean CG_DrawUseEntity(void)
 	y = SCREEN_HEIGHT-h-12;
 
 	CG_DrawBigString(x, y, s, 1);
-
-	CG_DrawBotInfo( 40 + GIANT_HEIGHT );
 
 	return qtrue;
 }
