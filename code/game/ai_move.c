@@ -93,7 +93,7 @@ int weapindex_grapple;
 int weapindex_rocketlauncher;
 #endif
 //type of model, func_plat or func_bobbing
-int modeltypes[MAX_MODELS];
+int modeltypes[MAX_SUBMODELS];
 
 static bot_movestate_t botmovestates[MAX_CLIENTS+1];
 
@@ -220,6 +220,43 @@ float AngleDiff(float ang1, float ang2)
 	} //end else
 	return diff;
 } //end of the function AngleDiff
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+void BotPrintTravelType(int traveltype)
+{
+	char *str;
+	//
+	switch(traveltype & TRAVELTYPE_MASK)
+	{
+		case TRAVEL_INVALID: str = "TRAVEL_INVALID"; break;
+		case TRAVEL_WALK: str = "TRAVEL_WALK"; break;
+		case TRAVEL_CROUCH: str = "TRAVEL_CROUCH"; break;
+		case TRAVEL_BARRIERJUMP: str = "TRAVEL_BARRIERJUMP"; break;
+		case TRAVEL_JUMP: str = "TRAVEL_JUMP"; break;
+		case TRAVEL_LADDER: str = "TRAVEL_LADDER"; break;
+		case TRAVEL_WALKOFFLEDGE: str = "TRAVEL_WALKOFFLEDGE"; break;
+		case TRAVEL_SWIM: str = "TRAVEL_SWIM"; break;
+		case TRAVEL_WATERJUMP: str = "TRAVEL_WATERJUMP"; break;
+		case TRAVEL_TELEPORT: str = "TRAVEL_TELEPORT"; break;
+		case TRAVEL_ELEVATOR: str = "TRAVEL_ELEVATOR"; break;
+		case TRAVEL_ROCKETJUMP: str = "TRAVEL_ROCKETJUMP"; break;
+		case TRAVEL_BFGJUMP: str = "TRAVEL_BFGJUMP"; break;
+		case TRAVEL_GRAPPLEHOOK: str = "TRAVEL_GRAPPLEHOOK"; break;
+		case TRAVEL_DOUBLEJUMP: str = "TRAVEL_DOUBLEJUMP"; break;
+		case TRAVEL_RAMPJUMP: str = "TRAVEL_RAMPJUMP"; break;
+		case TRAVEL_STRAFEJUMP: str = "TRAVEL_STRAFEJUMP"; break;
+		case TRAVEL_JUMPPAD: str = "TRAVEL_JUMPPAD"; break;
+		case TRAVEL_FUNCBOB: str = "TRAVEL_FUNCBOB"; break;
+		default:
+			BotAI_Print(PRT_MESSAGE, S_COLOR_RED "UNKNOWN TRAVEL TYPE (%d)" S_COLOR_WHITE, (traveltype & TRAVELTYPE_MASK));
+			return;
+	} //end switch
+	BotAI_Print(PRT_MESSAGE, "%s", str);
+} //end of the function AAS_PrintTravelType
 //===========================================================================
 //
 // Parameter:			-
@@ -416,9 +453,7 @@ int BotReachabilityArea(vec3_t origin, int testground)
 		} //end for
 		if (!testground) break;
 	} //end for
-//#ifdef DEBUG
-	//BotAI_Print(PRT_MESSAGE, "no reachability area\n");
-//#endif //DEBUG
+	//BotAI_Print(PRT_DEVELOPER, "no reachability area\n");
 	return firstareanum;
 } //end of the function BotReachabilityArea*/
 //===========================================================================
@@ -562,7 +597,7 @@ void BotSetBrushModelTypes(void)
 	int ent, modelnum;
 	char classname[MAX_EPAIRKEY], model[MAX_EPAIRKEY];
 
-	Com_Memset(modeltypes, 0, MAX_MODELS * sizeof(int));
+	Com_Memset(modeltypes, 0, MAX_SUBMODELS * sizeof(int));
 	//
 	for (ent = trap_AAS_NextBSPEntity(0); ent; ent = trap_AAS_NextBSPEntity(ent))
 	{
@@ -571,7 +606,7 @@ void BotSetBrushModelTypes(void)
 		if (model[0]) modelnum = atoi(model+1);
 		else modelnum = 0;
 
-		if (modelnum < 0 || modelnum >= MAX_MODELS)
+		if (modelnum < 0 || modelnum >= MAX_SUBMODELS)
 		{
 			BotAI_Print(PRT_MESSAGE, "entity %s model number out of range\n", classname);
 			continue;
@@ -841,9 +876,7 @@ int BotGetReachabilityToGoal(vec3_t origin, int areanum,
 		} //end for
 		if (i != MAX_AVOIDREACH && avoidreachtries[i] > AVOIDREACH_TRIES)
 		{
-#ifdef DEBUG
-			BotAI_Print(PRT_DEVELOPER, "avoiding reachability %d\n", avoidreach[i]);
-#endif //DEBUG
+			//BotAI_Print(PRT_DEVELOPER, "avoiding reachability %d\n", avoidreach[i]);
 			continue;
 		} //end if
 #endif //AVOIDREACH
@@ -1411,9 +1444,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 	{
 		result->blocked = qtrue;
 		result->blockentity = trace.entityNum;
-#ifdef DEBUG
-		//BotAI_Print(PRT_MESSAGE, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
-#endif //DEBUG
+		//BotAI_Print(PRT_DEVELOPER, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
 	} //end if
 	//if not in an area with reachability
 	else if (checkbottom && !trap_AAS_AreaReachability(ms->areanum))
@@ -1427,9 +1458,7 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 			result->blocked = qtrue;
 			result->blockentity = trace.entityNum;
 			result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
-#ifdef DEBUG
-			//BotAI_Print(PRT_MESSAGE, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
-#endif //DEBUG
+			//BotAI_Print(PRT_DEVELOPER, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
 		} //end if
 	} //end else
 } //end of the function BotCheckBlocked
@@ -3061,11 +3090,13 @@ bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal)
 	vec3_t dir;
 	float dist, speed;
 
-#ifdef DEBUG
-	//BotAI_Print(PRT_MESSAGE, "%s: moving straight to goal\n", ClientName(ms->entitynum-1));
-	//trap_AAS_ClearShownDebugLines();
-	//trap_AAS_DebugLine(ms->origin, goal->origin, LINECOLOR_RED);
-#endif //DEBUG
+#if 0
+	if (bot_developer.integer) {
+		BotAI_Print(PRT_MESSAGE, "%s: moving straight to goal\n", ClientName(ms->entitynum-1));
+		trap_AAS_ClearShownDebugLines();
+		trap_AAS_DebugLine(ms->origin, goal->origin, LINECOLOR_RED);
+	}
+#endif
 	//walk straight to the goal origin
 	dir[0] = goal->origin[0] - ms->origin[0];
 	dir[1] = goal->origin[1] - ms->origin[1];
@@ -3145,9 +3176,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	//
 	if (!goal)
 	{
-#ifdef DEBUG
-		BotAI_Print(PRT_MESSAGE, "client %d: movetogoal -> no goal\n", ms->client);
-#endif //DEBUG
+		BotAI_Print(PRT_DEVELOPER, "client %d: movetogoal -> no goal\n", ms->client);
 		result->failure = qtrue;
 		return;
 	} //end if
@@ -3167,7 +3196,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		if (ent != -1)
 		{
 			modelnum = g_entities[ent].s.modelindex;
-			if (modelnum >= 0 && modelnum < MAX_MODELS)
+			if (modelnum >= 0 && modelnum < MAX_SUBMODELS)
 			{
 				modeltype = modeltypes[modelnum];
 
@@ -3318,13 +3347,12 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			} //end if
 			else
 			{
-#ifdef DEBUG
 				if (bot_developer.integer)
 				{
 					if (ms->reachability_time < trap_AAS_Time())
 					{
 						BotAI_Print(PRT_MESSAGE, "client %d: reachability timeout in ", ms->client);
-						trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+						BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 						BotAI_Print(PRT_MESSAGE, "\n");
 					} //end if
 					/*
@@ -3333,7 +3361,6 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 						BotAI_Print(PRT_MESSAGE, "changed from area %d to %d\n", ms->lastareanum, ms->areanum);
 					} //end if*/
 				} //end if
-#endif //DEBUG
 				//if the goal area changed or the reachability timed out
 				//or the area changed
 				if (ms->lastgoalareanum != goal->areanum ||
@@ -3352,9 +3379,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			//if the area has no reachability links
 			if (!trap_AAS_AreaReachability(ms->areanum))
 			{
-#ifdef DEBUG
 				BotAI_Print(PRT_DEVELOPER, "area %d no reachability\n", ms->areanum);
-#endif //DEBUG
 			} //end if
 			//get a new reachability leading towards the goal
 			reachnum = BotGetReachabilityToGoal(ms->origin, ms->areanum,
@@ -3379,12 +3404,10 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				BotAddToAvoidReach(ms, reachnum, AVOIDREACH_TIME);
 #endif //AVOIDREACH
 			} //end if
-#ifdef DEBUG
-			
 			else if (bot_developer.integer)
 			{
 				BotAI_Print(PRT_MESSAGE, "goal not reachable\n");
-				Com_Memset(&reach, 0, sizeof(aas_reachability_t)); //make compiler happy
+				//Com_Memset(&reach, 0, sizeof(aas_reachability_t)); //make compiler happy
 			} //end else
 			if (bot_developer.integer)
 			{
@@ -3397,7 +3420,6 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 					} //end if
 				} //end if
 			} //end if
-#endif //DEBUG
 		} //end else
 		//
 		ms->lastreachnum = reachnum;
@@ -3412,15 +3434,18 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			//
 #ifdef DEBUG_AI_MOVE
 			trap_AAS_ClearShownDebugLines();
-			trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+			BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 			trap_AAS_ShowReachability(&reach);
 #endif //DEBUG_AI_MOVE
 			//
-#ifdef DEBUG
-			//BotAI_Print(PRT_MESSAGE, "client %d: ", ms->client);
-			//trap_AAS_PrintTravelType(reach.traveltype);
-			//BotAI_Print(PRT_MESSAGE, "\n");
-#endif //DEBUG
+#if 0
+			if (bot_developer.integer)
+			{
+				BotAI_Print(PRT_MESSAGE, "client %d: ", ms->client);
+				BotPrintTravelType(reach.traveltype);
+				BotAI_Print(PRT_MESSAGE, "\n");
+			}
+#endif
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
 				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;
@@ -3455,17 +3480,16 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			result->flags |= resultflags;
 			Com_Memset(&reach, 0, sizeof(aas_reachability_t));
 		} //end else
-#ifdef DEBUG
+		//
 		if (bot_developer.integer)
 		{
 			if (result->failure)
 			{
 				BotAI_Print(PRT_MESSAGE, "client %d: movement failure in ", ms->client);
-				trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+				BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 				BotAI_Print(PRT_MESSAGE, "\n");
 			} //end if
 		} //end if
-#endif //DEBUG
 	} //end if
 	else
 	{
@@ -3525,11 +3549,14 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			//BotAI_Print(PRT_MESSAGE, "%s: NOT onground, swimming or against ladder\n", ClientName(ms->entitynum-1));
 			trap_AAS_ReachabilityFromNum(ms->lastreachnum, &reach);
 			result->traveltype = reach.traveltype;
-#ifdef DEBUG
-			//BotAI_Print(PRT_MESSAGE, "client %d finish: ", ms->client);
-			//trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
-			//BotAI_Print(PRT_MESSAGE, "\n");
-#endif //DEBUG
+#if 0
+			if (bot_developer.integer)
+			{
+				BotAI_Print(PRT_MESSAGE, "client %d finish: ", ms->client);
+				BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+				BotAI_Print(PRT_MESSAGE, "\n");
+			}
+#endif
 			//
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
@@ -3559,17 +3586,16 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				} //end case
 			} //end switch
 			result->traveltype = reach.traveltype;
-#ifdef DEBUG
+			//
 			if (bot_developer.integer)
 			{
 				if (result->failure)
 				{
 					BotAI_Print(PRT_MESSAGE, "client %d: movement failure in finish ", ms->client);
-					trap_AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
+					BotPrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
 					BotAI_Print(PRT_MESSAGE, "\n");
 				} //end if
 			} //end if
-#endif //DEBUG
 		} //end if
 	} //end else
 	//FIXME: is it right to do this here?

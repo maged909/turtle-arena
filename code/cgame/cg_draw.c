@@ -3519,6 +3519,60 @@ static void CG_DrawIntermission( void ) {
 
 /*
 =================
+CG_DrawBotInfo
+
+Draw info for bot that client is following.
+=================
+*/
+static qboolean CG_DrawBotInfo( int y ) {
+	const char	*info, *str, *leader, *carrying, *action;
+	int x;
+
+	if ( !(cg.cur_ps->pm_flags & PMF_FOLLOW) ) {
+		return qfalse;
+	}
+
+	info = CG_ConfigString( CS_BOTINFO + cg.cur_ps->clientNum );
+
+	if (!*info) {
+		return qfalse;
+	}
+
+	action = Info_ValueForKey(info, "a");
+
+	if ( *action ) {
+		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( action ) );
+
+		CG_DrawBigString( x, y, action, 1.0F );
+
+		y += BIGCHAR_HEIGHT + 2;
+	}
+
+	leader = Info_ValueForKey(info, "l");
+
+	if ( *leader ) {
+		str = "bot is leader";
+		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( str ) );
+
+		CG_DrawBigString( x, y, str, 1.0F );
+
+		y += BIGCHAR_HEIGHT + 2;
+	}
+
+	carrying = Info_ValueForKey(info, "c");
+
+	if ( *carrying ) {
+		str = va("bot carrying: %s", carrying);
+		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( str ) );
+
+		CG_DrawBigString( x, y, str, 1.0F );
+	}
+
+	return qtrue;
+}
+
+/*
+=================
 CG_DrawFollow
 =================
 */
@@ -3572,6 +3626,8 @@ static qboolean CG_DrawUseEntity(void)
 	y = SCREEN_HEIGHT-h-12;
 
 	CG_DrawBigString(x, y, s, 1);
+
+	CG_DrawBotInfo( 40 + GIANT_HEIGHT );
 
 	return qtrue;
 }
