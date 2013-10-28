@@ -2505,12 +2505,8 @@ void CL_InitServerInfo( serverInfo_t *server, netadr_t *address ) {
 	server->game[0] = '\0';
 	server->gameType[0] = '\0';
 	server->netType = 0;
-#ifdef IOQ3ZTM // IOQ3BUGFIX: Why aren't all fields initialized here?
-	server->clients = 0;
-	//server->visible = qfalse; // ZTM: Don't touch?
 	server->g_humanplayers = 0;
 	server->g_needpass = 0;
-#endif
 }
 
 #define MAX_SERVERSPERPACKET	256
@@ -3529,11 +3525,7 @@ void CL_Init( void ) {
 	cl_voipVADThreshold = Cvar_Get ("cl_voipVADThreshold", "0.25", CVAR_ARCHIVE);
 
 	// This is a protocol version number.
-#ifdef IOQ3ZTM // Default voip to off in client
 	cl_voip = Cvar_Get ("cl_voip", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE);
-#else
-	cl_voip = Cvar_Get ("cl_voip", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE);
-#endif
 	Cvar_CheckRange( cl_voip, 0, 1, qtrue );
 #endif
 
@@ -3812,20 +3804,8 @@ void CL_ServerInfoPacket( netadr_t from, msg_t *msg ) {
 
 	// add this to the list
 	cls.numlocalservers = i+1;
-	cls.localServers[i].adr = from;
-	cls.localServers[i].clients = 0;
-	cls.localServers[i].hostName[0] = '\0';
-	cls.localServers[i].mapName[0] = '\0';
-	cls.localServers[i].maxClients = 0;
-	cls.localServers[i].maxPing = 0;
-	cls.localServers[i].minPing = 0;
-	cls.localServers[i].ping = -1;
-	cls.localServers[i].game[0] = '\0';
-	cls.localServers[i].gameType[0] = '\0';
-	cls.localServers[i].netType = from.type;
-	cls.localServers[i].g_humanplayers = 0;
-	cls.localServers[i].g_needpass = 0;
-									 
+	CL_InitServerInfo( &cls.localServers[i], &from );
+
 	Q_strncpyz( info, MSG_ReadString( msg ), MAX_INFO_STRING );
 	if (strlen(info)) {
 		if (info[strlen(info)-1] != '\n') {
