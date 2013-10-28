@@ -3529,11 +3529,7 @@ void CL_Init( void ) {
 	cl_voipVADThreshold = Cvar_Get ("cl_voipVADThreshold", "0.25", CVAR_ARCHIVE);
 
 	// This is a protocol version number.
-#ifdef IOQ3ZTM // Default voip to off in client
 	cl_voip = Cvar_Get ("cl_voip", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE);
-#else
-	cl_voip = Cvar_Get ("cl_voip", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE);
-#endif
 	Cvar_CheckRange( cl_voip, 0, 1, qtrue );
 #endif
 
