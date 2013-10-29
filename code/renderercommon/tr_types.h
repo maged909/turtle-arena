@@ -63,9 +63,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	RF_SHADOW_PLANE		0x0100		// use refEntity->shadowPlane
 #define	RF_WRAP_FRAMES		0x0200		// mod the model frames by the maxframes to allow continuous
 
-#ifdef IOQ3ZTM // RENDERFLAGS
-#define RF_FORCE_ENT_ALPHA	0x0400		// IOSTVEF: override shader alpha value and take the one from the entity.
-#endif
+#define RF_FORCE_ENT_ALPHA	0x0400		// override shader alpha value and take the one from the entity
 
 // refdef flags
 #define RDF_NOWORLDMODEL	0x0001		// used for player configuration screen

@@ -128,18 +128,11 @@ void RB_CheckOverflow( int verts, int indexes ) {
 
 }
 
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-int R_SortOrder(trRefEntity_t *ent) {
-	return SS_BAD;
+void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap ) {
+
 }
 
-void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
-				   int fogIndex, int dlightMap, int sortOrder )
-#else
-void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
-				   int fogIndex, int dlightMap )
-#endif
-{
+void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap ) {
 
 }
 

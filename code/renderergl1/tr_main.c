@@ -1335,39 +1335,39 @@ static void R_RadixSort( drawSurf_t *source, int size )
 
 /*
 =================
-R_AddDrawSurf
+R_AddEntDrawSurf
 =================
 */
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
-				   int fogIndex, int dlightMap, int sortOrder )
-#else
-void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
-				   int fogIndex, int dlightMap )
-#endif
-{
+void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, 
+				   int fogIndex, int dlightMap ) {
 	int			index;
+	int			sortOrder;
 
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-	if (sortOrder == SS_BAD && shader) {
+	if ( ent && ( ent->e.renderfx & RF_FORCE_ENT_ALPHA ) ) {
+		sortOrder = SS_BLEND0;
+	} else {
 		sortOrder = shader->sort;
 	}
-#endif
 
 	// instead of checking for overflow, we just mask the index
 	// so it wraps around
 	index = tr.refdef.numDrawSurfs & DRAWSURF_MASK;
 	// the sort data is packed into a single 64 bit value so it can be
 	// compared quickly during the qsorting process
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
 	R_ComposeSort(&tr.refdef.drawSurfs[index], shader->sortedIndex, sortOrder,
 					tr.shiftedEntityNum, fogIndex, dlightMap);
-#else
-	R_ComposeSort(&tr.refdef.drawSurfs[index], shader->sortedIndex, shader->sort,
-					tr.shiftedEntityNum, fogIndex, dlightMap);
-#endif
 	tr.refdef.drawSurfs[index].surface = surface;
 	tr.refdef.numDrawSurfs++;
+}
+
+/*
+=================
+R_AddDrawSurf
+=================
+*/
+void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
+				   int fogIndex, int dlightMap ) {
+	R_AddEntDrawSurf( NULL, surface, shader, fogIndex, dlightMap );
 }
 
 /*
@@ -1394,19 +1394,6 @@ void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOr
 	*fogNum = ( drawSurf->sort >> QSORT_FOGNUM_SHIFT ) & 31;
 	*dlightMap = drawSurf->sort & 3;
 }
-
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-/*
-=================
-R_SortOrder
-
-Returns entity defined sort order, returns SS_BAD if no sort order is defined
-=================
-*/
-int R_SortOrder(trRefEntity_t *ent) {
-	return ((ent && (ent->e.renderfx & RF_FORCE_ENT_ALPHA) && ent->e.shaderRGBA[3] < 0xFF) ? SS_BLEND0 : SS_BAD);
-}
-#endif
 
 /*
 =================
@@ -1527,11 +1514,7 @@ void R_AddEntitySurfaces (void) {
 		case RT_RAIL_CORE:
 		case RT_RAIL_RINGS:
 			shader = R_GetShaderByHandle( ent->e.customShader );
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_SortOrder(ent) );
-#else
 			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0 );
-#endif
 			break;
 
 		case RT_MODEL:
@@ -1540,11 +1523,7 @@ void R_AddEntitySurfaces (void) {
 
 			tr.currentModel = R_GetModelByHandle( ent->e.hModel );
 			if (!tr.currentModel) {
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, R_SortOrder(ent) );
-#else
 				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
-#endif
 			} else {
 				// Check if model format doesn't support only rendering shadows
 				if (onlyRenderShadows && (tr.currentModel->type == MOD_BAD
@@ -1570,11 +1549,7 @@ void R_AddEntitySurfaces (void) {
 					R_AddBrushModelSurfaces( ent );
 					break;
 				case MOD_BAD:		// null model axis
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-					R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, R_SortOrder(ent) );
-#else
 					R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
-#endif
 					break;
 				default:
 					ri.Error( ERR_DROP, "R_AddEntitySurfaces: Bad modeltype" );
