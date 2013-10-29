@@ -143,11 +143,7 @@ void R_AddPolygonSurfaces( void ) {
 
 	for ( i = 0, poly = tr.refdef.polys; i < tr.refdef.numPolys ; i++, poly++ ) {
 		sh = R_GetShaderByHandle( poly->hShader );
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-		R_AddDrawSurf( ( void * )poly, sh, R_PolyFogNum( poly ), qfalse, SS_BAD );
-#else
 		R_AddDrawSurf( ( void * )poly, sh, R_PolyFogNum( poly ), qfalse );
-#endif
 	}
 }
 
@@ -243,11 +239,7 @@ void R_AddPolygonBufferSurfaces( void ) {
 	for ( i = 0, polybuffer = tr.refdef.polybuffers; i < tr.refdef.numPolyBuffers ; i++, polybuffer++ ) {
 		sh = R_GetShaderByHandle( polybuffer->pPolyBuffer->shader );
 
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-		R_AddDrawSurf( ( void * )polybuffer, sh, R_PolyBufferFogNum( polybuffer ), qfalse, SS_BAD );
-#else
 		R_AddDrawSurf( ( void * )polybuffer, sh, R_PolyBufferFogNum( polybuffer ), qfalse );
-#endif
 	}
 }
 

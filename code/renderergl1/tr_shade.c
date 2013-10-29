@@ -1787,10 +1787,9 @@ void SetIteratorFog( void ) {
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	int stage;
-#ifdef IOQ3ZTM // IOSTVEF RENDERFLAGS
 	qboolean overridealpha;
-	int oldalphaGen = 0;
-#endif
+	int oldAlphaGen;
+	int oldStateBits;
 
 	for ( stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -1801,26 +1800,26 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			break;
 		}
 
-#ifdef IOQ3ZTM // IOSTVEF RENDERFLAGS
-		// Override the shader alpha channel if requested.
-		if (backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA)
+		// override the shader alpha channel if requested
+		if ( backEnd.currentEntity && backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
 		{
 			overridealpha = qtrue;
-			oldalphaGen = pStage->alphaGen;
+			oldAlphaGen = pStage->alphaGen;
+			oldStateBits = pStage->stateBits;
 			pStage->alphaGen = AGEN_ENTITY;
-		} else {
+
+			// set bits for blendfunc blend
+			pStage->stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+
+			// keep the original alphafunc, if any
+			pStage->stateBits |= ( oldStateBits & GLS_ATEST_BITS );
+		}
+		else
+		{
 			overridealpha = qfalse;
 		}
-#endif
 
 		ComputeColors( pStage );
-
-#ifdef IOQ3ZTM // IOSTVEF RENDERFLAGS
-		if (overridealpha) {
-			pStage->alphaGen = oldalphaGen;
-		}
-#endif
-
 		ComputeTexCoords( pStage );
 
 		if ( !setArraysOnce )
@@ -1864,19 +1863,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				RB_FogOn();
 			}
 
-#ifdef IOQ3ZTM // IOSTVEF RENDERFLAGS
-			if (overridealpha && backEnd.currentEntity->e.shaderRGBA[3] < 0xFF
-					&& !(pStage->stateBits & GLS_ATEST_BITS))
-			{
-				GL_State(
-					// remove the shader set values.
-					(pStage->stateBits & ~(GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS | GLS_ATEST_BITS))
-					// Now add the default values.
-					| GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_ATEST_GT_0
-					);
-			}
-			else
-#endif
 			GL_State( pStage->stateBits );
 
 			//
@@ -1884,6 +1870,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			R_DrawElements( input->numIndexes, input->indexes );
 		}
+
+		if ( overridealpha )
+		{
+			pStage->alphaGen = oldAlphaGen;
+			pStage->stateBits = oldStateBits;
+		}
+
 		// allow skipping out to show just lightmaps during development
 		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap || pStage->bundle[0].vertexLightmap ) )
 		{

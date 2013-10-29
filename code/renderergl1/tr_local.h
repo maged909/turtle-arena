@@ -941,7 +941,7 @@ the bits are allocated as follows:
 0-1   : dlightmap index
 2-6   : fog index
 7-16  : entity index
-17-31 : sorted shader index
+17-30 : sorted shader index
 
 	ZTM - increased entity bits (for splitscreen), made sort 64 bit
 0-1   : dlightmap index (2 bits)
@@ -1271,13 +1271,9 @@ void R_ComposeSort( drawSurf_t *drawSurf, int sortedShaderIndex, int sortOrder,
 void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOrder,
 					 int *entityNum, int *fogNum, int *dlightMap );
 
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-int R_SortOrder(trRefEntity_t *ent);
-
-void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap, int sortOrder );
-#else
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap );
-#endif
+
+void R_AddEntDrawSurf( trRefEntity_t *ent, surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap );
 
 
 #define	CULL_IN		0		// completely unclipped

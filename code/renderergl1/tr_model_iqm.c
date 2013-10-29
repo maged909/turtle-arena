@@ -872,11 +872,7 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			&& fogNum == 0
 			&& !(ent->e.renderfx & ( RF_NOSHADOW | RF_DEPTHHACK ) ) 
 			&& shader->sort == SS_OPAQUE ) {
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, qfalse, R_SortOrder(ent) );
-#else
 			R_AddDrawSurf( (void *)surface, tr.shadowShader, 0, 0 );
-#endif
 		}
 
 		// projection shadows work fine with personal models
@@ -884,19 +880,11 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			&& fogNum == 0
 			&& (ent->e.renderfx & RF_SHADOW_PLANE )
 			&& shader->sort == SS_OPAQUE ) {
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, qfalse, R_SortOrder(ent) );
-#else
 			R_AddDrawSurf( (void *)surface, tr.projectionShadowShader, 0, 0 );
-#endif
 		}
 
 		if( !personalModel ) {
-#ifdef IOQ3ZTM // RENDERFLAGS RF_FORCE_ENT_ALPHA
-			R_AddDrawSurf( (void *)surface, shader, fogNum, qfalse, R_SortOrder(ent) );
-#else
-			R_AddDrawSurf( (void *)surface, shader, fogNum, 0 );
-#endif
+			R_AddEntDrawSurf( ent, (void *)surface, shader, fogNum, 0 );
 		}
 
 		surface++;
