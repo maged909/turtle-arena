@@ -1117,6 +1117,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean overridealpha;
 	int oldAlphaGen;
 	int	oldStateBits;
+	qboolean overridecolor;
+	int oldRgbGen;
 	
 	vec4_t fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
 	float eyeT = 0;
@@ -1157,6 +1159,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else
 		{
 			overridealpha = qfalse;
+		}
+
+		// override the shader color channels if requested
+		if ( backEnd.currentEntity && backEnd.currentEntity->e.renderfx & RF_RGB_TINT )
+		{
+			overridecolor = qtrue;
+			oldRgbGen = pStage->rgbGen;
+			pStage->rgbGen = CGEN_ENTITY;
+		}
+		else
+		{
+			overridecolor = qfalse;
 		}
 
 		if (backEnd.depthFill)
@@ -1440,12 +1454,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// set state
 			//
-			if ( pStage->bundle[0].vertexLightmap && r_vertexLight->integer && !r_uiFullScreen->integer && r_lightmap->integer )
-			{
-				GL_BindToTMU( tr.whiteImage, 0 );
-			}
-			else 
-				R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
+			R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
 
 			GLSL_SetUniformInt(sp, UNIFORM_TEXTURE1ENV, 0);
 		}
@@ -1474,8 +1483,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			pStage->stateBits = oldStateBits;
 		}
 
+		if ( overridecolor )
+		{
+			pStage->rgbGen = oldRgbGen;
+		}
+
 		// allow skipping out to show just lightmaps during development
-		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap || pStage->bundle[0].vertexLightmap ) )
+		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap ) )
 		{
 			break;
 		}

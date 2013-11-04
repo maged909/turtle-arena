@@ -91,7 +91,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 
 
-#define MAX_DLIGHT_CONFIGSTRINGS 16
+#define MAX_DLIGHT_CONFIGSTRINGS 128
 
 //
 // config strings are a general means of communicating variable length strings
@@ -132,7 +132,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CS_LOCATIONS			(CS_PLAYERS+MAX_CLIENTS)
 #define CS_PARTICLES			(CS_LOCATIONS+MAX_LOCATIONS)
 #ifdef TA_ENTSYS // MISC_OBJECT
-#define MAX_STRINGS 256
+#define MAX_STRINGS 128
 #ifdef IOQ3ZTM // Particles
 #define CS_STRINGS				(CS_PARTICLES+MAX_PARTICLES_AREAS)
 #else

@@ -1540,9 +1540,6 @@ void CL_Disconnect( qboolean showMainMenu ) {
 		return;
 	}
 
-	// shutting down the client so enter full screen ui mode
-	Cvar_Set("r_uiFullScreen", "1");
-
 	if ( clc.demorecording ) {
 		CL_StopRecord_f ();
 	}
@@ -2149,9 +2146,6 @@ void CL_DownloadsComplete( void ) {
 
 	// let the client game init and load data
 	clc.state = CA_LOADING;
-
-	// starting to load a map so we get out of full screen ui mode
-	Cvar_Set("r_uiFullScreen", "0");
 
 	// flush client memory and start loading stuff
 	// this will also (re)load the cgame vm
@@ -2979,13 +2973,13 @@ void CL_Frame ( int msec ) {
 	if ( CL_VideoRecording( ) && cl_aviFrameRate->integer && msec) {
 		// save the current screen
 		if ( !clc.demoplaying || clc.state == CA_ACTIVE || cl_forceavidemo->integer ) {
+			float fps = MIN(cl_aviFrameRate->value * com_timescale->value, 1000.0f);
+			float frameDuration = MAX(1000.0f / fps, 1.0f) + clc.aviVideoFrameRemainder;
+
 			CL_TakeVideoFrame( );
 
-			// fixed time for next frame'
-			msec = (int)ceil( (1000.0f / cl_aviFrameRate->value) * com_timescale->value );
-			if (msec == 0) {
-				msec = 1;
-			}
+			msec = (int)frameDuration;
+			clc.aviVideoFrameRemainder = frameDuration - msec;
 		}
 	}
 	

@@ -180,8 +180,6 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 #endif
 	yStart = 16;
 
-	Menu_Cache();
-
 	if ( !overlay ) {
 		// draw the dialog background
 #ifdef TA_DATA
