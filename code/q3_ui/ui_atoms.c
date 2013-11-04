@@ -1352,10 +1352,6 @@ qboolean UI_IsFullscreen( void ) {
 }
 
 void UI_SetActiveMenu( uiMenuCommand_t menu ) {
-	// this should be the ONLY way the menu system is brought up
-	// enusure minumum menu data is cached
-	Menu_Cache();
-
 	switch ( menu ) {
 	case UIMENU_NONE:
 		UI_ForceMenuOff();
@@ -1740,9 +1736,6 @@ update frame time, commands are executed by CG_ConsoleCommand
 void UI_ConsoleCommand( int realTime ) {
 	uis.frametime = realTime - uis.realtime;
 	uis.realtime = realTime;
-
-	// ensure minimum menu data is available
-	Menu_Cache();
 }
 
 /*

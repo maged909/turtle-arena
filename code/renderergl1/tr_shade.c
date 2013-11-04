@@ -949,15 +949,15 @@ static void ProjectDlightTexture_altivec( void ) {
 			{
 				vec3_t	dir;
 
-				dir[ 0 ] = radius - fabs( dist[ 0 ] );
+				dir[ 0 ] = radius - fabs( dist0 );
 				if ( dir[ 0 ] <= 0.0f ) {
 					continue;
 				}
-				dir[ 1 ] = radius - fabs( dist[ 1 ] );
+				dir[ 1 ] = radius - fabs( dist1 );
 				if ( dir[ 1 ] <= 0.0f ) {
 					continue;
 				}
-				dir[ 2 ] = radius - fabs( dist[ 2 ] );
+				dir[ 2 ] = radius - fabs( dist2 );
 				if ( dir[ 2 ] <= 0.0f ) {
 					continue;
 				}
@@ -1790,6 +1790,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	qboolean overridealpha;
 	int oldAlphaGen;
 	int oldStateBits;
+	qboolean overridecolor;
+	int oldRgbGen;
 
 	for ( stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -1819,6 +1821,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			overridealpha = qfalse;
 		}
 
+		// override the shader color channels if requested
+		if ( backEnd.currentEntity && backEnd.currentEntity->e.renderfx & RF_RGB_TINT )
+		{
+			overridecolor = qtrue;
+			oldRgbGen = pStage->rgbGen;
+			pStage->rgbGen = CGEN_ENTITY;
+		}
+		else
+		{
+			overridecolor = qfalse;
+		}
+
 		ComputeColors( pStage );
 		ComputeTexCoords( pStage );
 
@@ -1845,12 +1859,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// set state
 			//
-			if ( pStage->bundle[0].vertexLightmap && ( r_vertexLight->integer && !r_uiFullScreen->integer ) && r_lightmap->integer )
-			{
-				GL_Bind( tr.whiteImage );
-			}
-			else
-				R_BindAnimatedImage( &pStage->bundle[0] );
+			R_BindAnimatedImage( &pStage->bundle[0] );
 
 			// per stage fogging (detail textures)
 			if ( tess.shader->noFog && pStage->isFogged ) {
@@ -1877,8 +1886,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			pStage->stateBits = oldStateBits;
 		}
 
+		if ( overridecolor )
+		{
+			pStage->rgbGen = oldRgbGen;
+		}
+
 		// allow skipping out to show just lightmaps during development
-		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap || pStage->bundle[0].vertexLightmap ) )
+		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap ) )
 		{
 			break;
 		}

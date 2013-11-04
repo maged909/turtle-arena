@@ -49,10 +49,6 @@ typedef unsigned int glIndex_t;
 #define SHADERNUM_BITS	14
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
-//#define MAX_SHADER_STATES 2048
-#define MAX_STATES_PER_SHADER 32
-#define MAX_STATE_NAME 32
-
 
 typedef struct corona_s {
 	vec3_t		origin;
@@ -292,7 +288,6 @@ typedef struct {
 
 	int				videoMapHandle;
 	qboolean		isLightmap;
-	qboolean		vertexLightmap;
 	qboolean		isVideoMap;
 } textureBundle_t;
 
@@ -425,26 +420,10 @@ typedef struct shader_s {
   float clampTime;                                  // time this shader is clamped to
   float timeOffset;                                 // current time offset for this shader
 
-  int numStates;                                    // if non-zero this is a state shader
-  struct shader_s *currentShader;                   // current state if this is a state shader
-  struct shader_s *parentShader;                    // current state if this is a state shader
-  int currentState;                                 // current state index for cycle purposes
-  long expireTime;                                  // time in milliseconds this expires
-
   struct shader_s *remappedShader;                  // current shader this one is remapped too
-
-  int shaderStates[MAX_STATES_PER_SHADER];          // index to valid shader states
 
 	struct	shader_s	*next;
 } shader_t;
-
-typedef struct shaderState_s {
-  char shaderName[MAX_QPATH];     // name of shader this state belongs to
-  char name[MAX_STATE_NAME];      // name of this state
-  char stateShader[MAX_QPATH];    // shader this name invokes
-  int cycleTime;                  // time this cycle lasts, <= 0 is forever
-  shader_t *shader;
-} shaderState_t;
 
 
 // trRefdef_t holds everything that comes in refdef_t,
@@ -740,6 +719,7 @@ typedef struct {
 	int		num_frames;
 	int		num_surfaces;
 	int		num_joints;
+	int		num_poses;
 	struct srfIQModel_s	*surfaces;
 
 	float		*positions;
@@ -747,9 +727,17 @@ typedef struct {
 	float		*normals;
 	float		*tangents;
 	byte		*blendIndexes;
-	byte		*blendWeights;
+	union {
+		float	*f;
+		byte	*b;
+	} blendWeights;
 	byte		*colors;
 	int		*triangles;
+
+	// depending upon the exporter, blend indices and weights might be int/float
+	// as opposed to the recommended byte/byte, for example Noesis exports
+	// int/float whereas the official IQM tool exports byte/byte
+	byte blendWeightsType; // IQM_UBYTE or IQM_FLOAT
 
 	int		*jointParents;
 	float		*jointMats;
@@ -1206,7 +1194,6 @@ extern	cvar_t	*r_offsetUnits;
 extern	cvar_t	*r_fullbright;					// avoid lightmap pass
 extern	cvar_t	*r_lightmap;					// render lightmaps only
 extern	cvar_t	*r_vertexLight;					// vertex lighting mode for better performance
-extern	cvar_t	*r_uiFullScreen;				// ui is running fullscreen
 
 extern	cvar_t	*r_logFile;						// number of frames to emit GL logs
 #ifdef IOQ3ZTM // CELSHADING
