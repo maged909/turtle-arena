@@ -897,21 +897,7 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 			{
 				if (!strcmp(skinSurf->name, surface->name))
 				{
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-					int index;
-
-					if (ent->e.skinFraction == 1.0f) {
-						index = skinSurf->numShaders-1;
-					} else if (ent->e.skinFraction == 0.0f) {
-						index = 0;
-					} else { // >= 0 && < 1
-						index = (ent->e.skinFraction * skinSurf->numShaders);
-					}
-
-					shader = skinSurf->shaders[index];
-#else
 					shader = skinSurf->shader;
-#endif
 					break;
 				}
 			}

@@ -292,9 +292,6 @@ typedef struct entityState_s {
 #ifdef TA_WEAPSYS
 	int		weaponHands;
 #endif
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-	float	skinFraction;
-#endif
 } entityState_t;
 
 

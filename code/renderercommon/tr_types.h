@@ -138,9 +138,6 @@ typedef struct {
 	int			skinNum;			// inline skin index
 	qhandle_t	customSkin;			// NULL for default skin
 	qhandle_t	customShader;		// use one image for the entire thing
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-	float		skinFraction;		// 0 to 1, select which shader from the skin to use
-#endif
 
 	// misc
 	byte		shaderRGBA[4];		// colors used by rgbgen entity shaders

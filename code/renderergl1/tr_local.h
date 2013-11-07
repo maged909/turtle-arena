@@ -171,10 +171,6 @@ typedef enum {
 	AGEN_WAVEFORM,
 	AGEN_PORTAL,
 	AGEN_CONST
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS_AGEN
-	,AGEN_DAMAGE
-	,AGEN_ONE_MINUS_DAMAGE
-#endif
 } alphaGen_t;
 
 typedef enum {
@@ -482,18 +478,9 @@ typedef struct {
 //=================================================================================
 
 // skins allow models to be retextured without modifying the model file
-
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-#define MAX_SKIN_SURFACE_SHADERS 10
-#endif
 typedef struct skinSurface_s {
 	char			name[MAX_QPATH];
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-	shader_t	*shaders[MAX_SKIN_SURFACE_SHADERS];
-	int			numShaders;
-#else
-	shader_t	*shader;
-#endif
+	shader_t		*shader;
 	struct skinSurface_s	*next;
 } skinSurface_t;
 

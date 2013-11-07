@@ -107,9 +107,6 @@ vmNetField_t	bg_entityStateFields[] =
 #ifdef TA_WEAPSYS
 ,{ NETF(weaponHands), 4 }
 #endif
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-,{ NETF(skinFraction), 0 }
-#endif
 };
 
 int bg_numEntityStateFields = ARRAY_LEN(bg_entityStateFields);
@@ -1289,15 +1286,6 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	// cgame needs the weaponHands for all clients.
 	s->weaponHands = ps->weaponHands;
 #endif
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-	if (ps->stats[STAT_HEALTH] <= 0) {
-		s->skinFraction = 1.0f;
-	} else if (ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH]) {
-		s->skinFraction = 0.0f;
-	} else {
-		s->skinFraction = 1.0f - ((float)ps->stats[STAT_HEALTH] / (float)ps->stats[STAT_MAX_HEALTH]);
-	}
-#endif
 #ifdef TA_PLAYERSYS // LADDER
 	VectorCopy( ps->origin2, s->origin2 );
 #endif
@@ -1399,15 +1387,6 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 #ifdef TA_WEAPSYS
 	// cgame needs the weaponHands for all clients.
 	s->weaponHands = ps->weaponHands;
-#endif
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-	if (ps->stats[STAT_HEALTH] <= 0) {
-		s->skinFraction = 1.0f;
-	} else if (ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH]) {
-		s->skinFraction = 0.0f;
-	} else {
-		s->skinFraction = 1.0f - ((float)ps->stats[STAT_HEALTH] / (float)ps->stats[STAT_MAX_HEALTH]);
-	}
 #endif
 #ifdef TA_PLAYERSYS // LADDER
 	VectorCopy( ps->origin2, s->origin2 );

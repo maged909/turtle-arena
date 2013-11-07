@@ -1342,16 +1342,6 @@ static qboolean ParseStage( shaderStage_t *stage, char **text, int *ifIndent )
 					shader.portalRange = atof( token );
 				}
 			}
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS_AGEN
-			else if ( !Q_stricmp( token, "damage" ) )
-			{
-				stage->alphaGen = AGEN_DAMAGE;
-			}
-			else if ( !Q_stricmp( token, "oneMinusDamage" ) )
-			{
-				stage->alphaGen = AGEN_ONE_MINUS_DAMAGE;
-			}
-#endif
 			else
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: unknown alphaGen parameter '%s' in shader '%s'\n", token, shader.name );
@@ -2445,16 +2435,6 @@ static qboolean ParseShader( char **text )
 					shader.celoutline.portalRange = atof( token );
 				}
 			}
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS_AGEN
-			else if ( !Q_stricmp( token, "damage" ) )
-			{
-				shader.celoutline.alphaGen = AGEN_DAMAGE;
-			}
-			else if ( !Q_stricmp( token, "oneMinusDamage" ) )
-			{
-				shader.celoutline.alphaGen = AGEN_ONE_MINUS_DAMAGE;
-			}
-#endif
 			else
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: unknown celoutlineAlphaGen parameter '%s' in shader '%s'\n", token, shader.name );

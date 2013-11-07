@@ -443,18 +443,6 @@ void R_SetCelOutlineColors(const celoutline_t *celoutline, byte *colors)
 		}
 #endif
 		break;
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS_AGEN
-	case AGEN_DAMAGE: // more visible as damaged
-		if (backEnd.currentEntity) {
-			colors[3] = backEnd.currentEntity->e.skinFraction * 0xff;
-		}
-		break;
-	case AGEN_ONE_MINUS_DAMAGE: // less visible as damaged
-		if (backEnd.currentEntity) {
-			colors[3] = (1.0f - backEnd.currentEntity->e.skinFraction) * 0xff;
-		}
-		break;
-#endif
 	}
 
 #if 0
@@ -1592,22 +1580,6 @@ static void ComputeColors( shaderStage_t *pStage )
 			}
 		}
 		break;
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS_AGEN
-	case AGEN_DAMAGE: // more visible as damaged
-		if (backEnd.currentEntity) {
-			for ( i = 0; i < tess.numVertexes; i++ ) {
-				tess.svars.colors[i][3] = backEnd.currentEntity->e.skinFraction * 0xff;
-			}
-		}
-		break;
-	case AGEN_ONE_MINUS_DAMAGE: // less visible as damaged
-		if (backEnd.currentEntity) {
-			for ( i = 0; i < tess.numVertexes; i++ ) {
-				tess.svars.colors[i][3] = (1.0f - backEnd.currentEntity->e.skinFraction) * 0xff;
-			}
-		}
-		break;
-#endif
 	}
 
 	//
