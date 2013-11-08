@@ -336,23 +336,6 @@ typedef struct {
 	float		density;
 } fogParms_t;
 
-#ifdef IOQ3ZTM // CELSHADING
-typedef struct
-{
-	float			width;				// Width of cel outline.
-
-	float			portalRange;		// distance to fog out at
-
-	waveForm_t		rgbWave;
-	colorGen_t		rgbGen;
-
-	waveForm_t		alphaWave;
-	alphaGen_t		alphaGen;
-
-	byte			constantColor[4];	// for CGEN_CONST and AGEN_CONST
-} celoutline_t;
-#endif
-
 
 typedef struct shader_s {
 	char		name[MAX_QPATH];		// game path, including extension
@@ -386,10 +369,6 @@ typedef struct shader_s {
 	vec4_t distanceCull;				// opaque alpha range for foliage (inner, outer, alpha threshold, 1/(outer-inner))
 
 	int			multitextureEnv;		// 0, GL_MODULATE, GL_ADD (FIXME: put in stage)
-
-#ifdef IOQ3ZTM // CELSHADING
-	celoutline_t celoutline;
-#endif
 
 	cullType_t	cullType;				// CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
 	qboolean	polygonOffset;			// set for decals and other items that must be offset 
@@ -1183,9 +1162,6 @@ extern	cvar_t	*r_lightmap;					// render lightmaps only
 extern	cvar_t	*r_vertexLight;					// vertex lighting mode for better performance
 
 extern	cvar_t	*r_logFile;						// number of frames to emit GL logs
-#ifdef IOQ3ZTM // CELSHADING
-extern	cvar_t	*r_celoutline;					// Cel outline. The integer value is the width of the cel outline to draw.
-#endif
 extern	cvar_t	*r_showtris;					// enables wireframe rendering of the world
 extern	cvar_t	*r_showsky;						// forces sky in front of all surfaces
 extern	cvar_t	*r_shownormals;					// draws wireframe normals
