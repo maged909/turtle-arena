@@ -1275,11 +1275,9 @@ static void ComputeTexCoords( shaderStage_t *pStage ) {
 		case TCGEN_ENVIRONMENT_MAPPED:
 			RB_CalcEnvironmentTexCoords( ( float * ) tess.svars.texcoords[b] );
 			break;
-#ifdef IOQ3ZTM // ZEQ2_CEL
 		case TCGEN_ENVIRONMENT_CELSHADE_MAPPED:
 			RB_CalcEnvironmentCelShadeTexCoords( ( float * ) tess.svars.texcoords[b] );
 			break;
-#endif
 		case TCGEN_BAD:
 			return;
 		}
