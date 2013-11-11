@@ -52,9 +52,9 @@ R_DrawElements
 void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex )
 {
 	if (glRefConfig.drawRangeElements)
-		qglDrawRangeElementsEXT(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(GL_INDEX_TYPE)));
+		qglDrawRangeElementsEXT(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 	else
-		qglDrawElements(GL_TRIANGLES, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(GL_INDEX_TYPE)));
+		qglDrawElements(GL_TRIANGLES, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 	
 }
 
@@ -867,6 +867,11 @@ static void ForwardDlight( void ) {
 		GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, pStage->rgbGen);
 		GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, pStage->alphaGen);
 
+		if (pStage->bundle[0].tcGen == TCGEN_ENVIRONMENT_CELSHADE_MAPPED)
+		{
+			GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
+		}
+
 		GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, dl->color);
 
 		VectorSet(vector, 0, 0, 0);
@@ -1316,6 +1321,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
 
 			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
+		}
+		else if (pStage->bundle[0].tcGen == TCGEN_ENVIRONMENT_CELSHADE_MAPPED)
+		{
+			GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
 		}
 
 		if (pStage->alphaGen == AGEN_PORTAL)

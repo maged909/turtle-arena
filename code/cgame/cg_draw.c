@@ -408,9 +408,6 @@ void CG_Draw3DHeadModel( int clientNum, float x, float y, float w, float h, vec3
 	VectorCopy( origin, ent.origin );
 	ent.hModel = model;
 	ent.customSkin = skin;
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-	ent.skinFraction = cg_entities[clientNum].currentState.skinFraction;
-#endif
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
 	refdef.rdflags = RDF_NOWORLDMODEL;

@@ -1587,46 +1587,12 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 			continue;
 		}
 
-#ifndef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
 		// parse the shader name
 		token = COM_ParseExt2( &text_p, qfalse, ',' );
 		Q_strncpyz( shaderName, token, sizeof( shaderName ) );
-#endif
 
 		surf = ri.Hunk_Alloc( sizeof( skinSurface_t ), h_low );
 		Q_strncpyz( surf->name, surfName, sizeof( surf->name ) );
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-		for (surf->numShaders = 0; surf->numShaders < MAX_SKIN_SURFACE_SHADERS; surf->numShaders++)
-		{
-			if ( *text_p == ',' ) {
-				text_p++;
-			}
-
-			token = COM_ParseExt2( &text_p, qfalse, ',' );
-
-			if (!token[0]) {
-				// End of line
-				break;
-			}
-
-#ifdef IOQ3ZTM // $DIR_IN_SKIN
-			// Lengths "$(dir)"=6, PATH_SEPERATOR=1, path=1 or more
-			//  $(dir)/torso.png
-			if (strlen(token) > 6 && Q_stricmpn("$(dir)", token, 6) == 0)
-			{
-				Q_strncpyz(shaderName, path, MAX_QPATH);
-				Q_strcat(shaderName, MAX_QPATH, &token[6]); // skip "$(dir)"
-			}
-			else {
-				Q_strncpyz(shaderName, token, MAX_QPATH);
-			}
-
-			surf->shaders[surf->numShaders] = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
-#else
-			surf->shaders[surf->numShaders] = R_FindShader( token, LIGHTMAP_NONE, qtrue );
-#endif
-		}
-#else
 #ifdef IOQ3ZTM // $DIR_IN_SKIN
 		// Lengths "$(dir)"=6, PATH_SEPERATOR=1, path=1 or more
 		//  $(dir)/torso.png
@@ -1640,7 +1606,6 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 		else
 #else
 		surf->shader = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
-#endif
 #endif
 
 		if ( !skin->surfaces ) {
@@ -1697,11 +1662,7 @@ R_SkinList_f
 ===============
 */
 void	R_SkinList_f( void ) {
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-	int			i, j;
-#else
 	int			i;
-#endif
 	skin_t		*skin;
 	skinSurface_t *surf;
 
@@ -1712,18 +1673,8 @@ void	R_SkinList_f( void ) {
 
 		ri.Printf( PRINT_ALL, "%3i:%s\n", i, skin->name );
 		for ( surf = skin->surfaces ; surf ; surf = surf->next ) {
-#ifdef IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
-			ri.Printf( PRINT_ALL, "       %s =", surf->name );
-
-			for ( j = 0 ; j < surf->numShaders ; j++ ) {
-				ri.Printf( PRINT_ALL, " %s", surf->shaders[j]->name );
-			}
-
-			ri.Printf( PRINT_ALL, "\n" );
-#else
 			ri.Printf( PRINT_ALL, "       %s = %s\n", 
 				surf->name, surf->shader->name );
-#endif
 		}
 	}
 	ri.Printf (PRINT_ALL, "------------------\n");
