@@ -1600,13 +1600,9 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 		{
 			Q_strncpyz(shaderName, path, MAX_QPATH);
 			Q_strcat(shaderName, MAX_QPATH, &token[6]); // skip "$(dir)"
-
-			surf->shader = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
 		}
-		else
-#else
-		surf->shader = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
 #endif
+		surf->shader = R_FindShader( shaderName, LIGHTMAP_NONE, qtrue );
 
 		if ( !skin->surfaces ) {
 			skin->surfaces = surf;
