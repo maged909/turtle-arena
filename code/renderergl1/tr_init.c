@@ -568,11 +568,7 @@ void R_LevelShot( screenshotType_e type, const char *ext ) {
 	if (height > glConfig.vidHeight)
 		height = glConfig.vidHeight;
 
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s_small%s", tr.world->baseName, ext);
-#else
-	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s%s", tr.world->baseName, ext);
-#endif
 
 	source = RB_ReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, &offset, &spadlen);
 
@@ -649,23 +645,14 @@ void R_ScreenShotTGA_f (void) {
 	char	checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 	qboolean	levelshot;
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_TGA, ".tga" );
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 		levelshot = qtrue;
-#else
-		return;
-#endif
-	}
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	else {
+	} else {
 		levelshot = qfalse;
 	}
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
 		silent = qtrue;
@@ -673,14 +660,9 @@ void R_ScreenShotTGA_f (void) {
 		silent = qfalse;
 	}
 
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	if (levelshot)
-	{
+	if ( levelshot ) {
 		sprintf( checkname, "levelshots/%s.tga", tr.world->baseName );
-	}
-	else
-#endif
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.tga", ri.Cmd_Argv( 1 ) );
 	} else {
@@ -721,23 +703,14 @@ void R_ScreenShotJPEG_f (void) {
 	char		checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 	qboolean	levelshot;
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_JPEG, ".jpg" );
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 		levelshot = qtrue;
-#else
-		return;
-#endif
-	}
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	else {
+	} else {
 		levelshot = qfalse;
 	}
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
 		silent = qtrue;
@@ -745,14 +718,9 @@ void R_ScreenShotJPEG_f (void) {
 		silent = qfalse;
 	}
 
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	if (levelshot)
-	{
+	if ( levelshot ) {
 		sprintf( checkname, "levelshots/%s.jpg", tr.world->baseName );
-	}
-	else
-#endif
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.jpg", ri.Cmd_Argv( 1 ) );
 	} else {
@@ -793,23 +761,14 @@ void R_ScreenShotPNG_f (void) {
 	char	checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 	qboolean	levelshot;
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_PNG, ".png" );
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 		levelshot = qtrue;
-#else
-		return;
-#endif
-	}
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	else {
+	} else {
 		levelshot = qfalse;
 	}
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
 		silent = qtrue;
@@ -817,14 +776,9 @@ void R_ScreenShotPNG_f (void) {
 		silent = qfalse;
 	}
 
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	if (levelshot)
-	{
+	if ( levelshot ) {
 		sprintf( checkname, "levelshots/%s.png", tr.world->baseName );
-	}
-	else
-#endif
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.png", ri.Cmd_Argv( 1 ) );
 	} else {
