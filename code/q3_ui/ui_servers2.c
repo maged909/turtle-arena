@@ -490,11 +490,12 @@ static void ArenaServers_UpdatePicture( void ) {
 	}
 	else {
 		servernodeptr = g_arenaservers.table[g_arenaservers.list.curvalue].servernode;
-#ifdef TA_DATA // TEAMARENA_LEVELSHOTS
+
 		Com_sprintf( picname, sizeof(picname), "levelshots/%s_small", servernodeptr->mapname );
-#else
-		Com_sprintf( picname, sizeof(picname), "levelshots/%s.tga", servernodeptr->mapname );
-#endif
+		if ( !trap_R_RegisterShaderNoMip( picname ) ) {
+			Com_sprintf( picname, sizeof(picname), "levelshots/%s", servernodeptr->mapname );
+		}
+
 		g_arenaservers.mappic.generic.name = picname;
 	
 	}

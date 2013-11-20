@@ -568,11 +568,7 @@ void R_LevelShot( screenshotType_e type, const char *ext ) {
 	if (height > glConfig.vidHeight)
 		height = glConfig.vidHeight;
 
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s_small%s", tr.world->baseName, ext);
-#else
-	Com_sprintf(fileName, sizeof(fileName), "levelshots/%s%s", tr.world->baseName, ext);
-#endif
 
 	source = RB_ReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, &offset, &spadlen);
 
@@ -649,23 +645,14 @@ void R_ScreenShotTGA_f (void) {
 	char	checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 	qboolean	levelshot;
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_TGA, ".tga" );
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 		levelshot = qtrue;
-#else
-		return;
-#endif
-	}
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	else {
+	} else {
 		levelshot = qfalse;
 	}
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
 		silent = qtrue;
@@ -673,14 +660,9 @@ void R_ScreenShotTGA_f (void) {
 		silent = qfalse;
 	}
 
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	if (levelshot)
-	{
+	if ( levelshot ) {
 		sprintf( checkname, "levelshots/%s.tga", tr.world->baseName );
-	}
-	else
-#endif
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.tga", ri.Cmd_Argv( 1 ) );
 	} else {
@@ -721,23 +703,14 @@ void R_ScreenShotJPEG_f (void) {
 	char		checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 	qboolean	levelshot;
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_JPEG, ".jpg" );
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 		levelshot = qtrue;
-#else
-		return;
-#endif
-	}
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	else {
+	} else {
 		levelshot = qfalse;
 	}
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
 		silent = qtrue;
@@ -745,14 +718,9 @@ void R_ScreenShotJPEG_f (void) {
 		silent = qfalse;
 	}
 
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	if (levelshot)
-	{
+	if ( levelshot ) {
 		sprintf( checkname, "levelshots/%s.jpg", tr.world->baseName );
-	}
-	else
-#endif
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.jpg", ri.Cmd_Argv( 1 ) );
 	} else {
@@ -793,23 +761,14 @@ void R_ScreenShotPNG_f (void) {
 	char	checkname[MAX_OSPATH];
 	static	int	lastNumber = -1;
 	qboolean	silent;
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 	qboolean	levelshot;
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "levelshot" ) ) {
 		R_LevelShot( ST_PNG, ".png" );
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
 		levelshot = qtrue;
-#else
-		return;
-#endif
-	}
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	else {
+	} else {
 		levelshot = qfalse;
 	}
-#endif
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
 		silent = qtrue;
@@ -817,14 +776,9 @@ void R_ScreenShotPNG_f (void) {
 		silent = qfalse;
 	}
 
-#ifdef IOQ3ZTM // TEAMARENA_LEVELSHOTS
-	if (levelshot)
-	{
+	if ( levelshot ) {
 		sprintf( checkname, "levelshots/%s.png", tr.world->baseName );
-	}
-	else
-#endif
-	if ( ri.Cmd_Argc() == 2 && !silent ) {
+	} else if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.png", ri.Cmd_Argv( 1 ) );
 	} else {
@@ -1133,12 +1087,8 @@ void R_Register( void )
 	ri.Cvar_CheckRange( r_ext_multisample, 0, 4, qtrue );
 	r_overBrightBits = ri.Cvar_Get ("r_overBrightBits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH);
-#ifdef IOQ3ZTM // ZTM: Default to display resolution!
-	r_mode = ri.Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
-#else
 	r_mode = ri.Cvar_Get( "r_mode", "6", CVAR_ARCHIVE | CVAR_LATCH );
-#endif
-	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE );
+	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE );
 	r_noborder = ri.Cvar_Get("r_noborder", "0", CVAR_ARCHIVE);
 	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customheight = ri.Cvar_Get( "r_customheight", "1024", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1163,11 +1113,7 @@ void R_Register( void )
 	//
 	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE|CVAR_CHEAT );
 	r_lodbias = ri.Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE );
-#ifdef IOQ3ZTM // Enable light flares by default
 	r_flares = ri.Cvar_Get ("r_flares", "1", CVAR_ARCHIVE );
-#else
-	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE );
-#endif
 	r_zfar = ri.Cvar_Get("r_zfar", "0", CVAR_CHEAT);
 	r_znear = ri.Cvar_Get( "r_znear", "4", CVAR_CHEAT );
 	ri.Cvar_CheckRange( r_znear, 0.001f, 200, qfalse );
@@ -1244,7 +1190,7 @@ void R_Register( void )
 	r_noportals = ri.Cvar_Get ("r_noportals", "0", CVAR_CHEAT);
 	r_shadows = ri.Cvar_Get( "cg_shadows", "1", 0 );
 
-	r_marksOnTriangleMeshes = ri.Cvar_Get("r_marksOnTriangleMeshes", "1", CVAR_ARCHIVE);
+	r_marksOnTriangleMeshes = ri.Cvar_Get("r_marksOnTriangleMeshes", "0", CVAR_ARCHIVE);
 
 	// ZTM: FIXME: r_useGlFog doesn't work correctly with some multistage shaders. So when r_vertexLight is 0 it's fine.
 	r_useGlFog = ri.Cvar_Get("r_useGlFog", "0", CVAR_CHEAT);
