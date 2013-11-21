@@ -970,6 +970,7 @@ typedef struct {
 	
 	int			clientFrame;		// incremented each frame
 
+	int			cinematicHandle;	// handle for fullscreen cinematic
 	qboolean	demoPlayback;
 	qboolean	levelShot;			// taking a level menu screenshot
 	int			deferredPlayerLoading;
@@ -2417,6 +2418,8 @@ typedef struct {
 
 qboolean CG_ConsoleCommand( int realTime );
 void CG_InitConsoleCommands( void );
+
+void CG_StopCinematic_f( void );
 
 //
 // cg_servercmds.c
