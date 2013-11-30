@@ -1266,9 +1266,7 @@ void RB_CalcRotateTexCoords( float degsPerSecond, float *st )
 **
 ** Calculates specular coefficient and places it in the alpha channel
 */
-#ifndef IOQ3ZTM
 vec3_t lightOrigin = { -960, 1980, 96 };		// FIXME: track dynamically
-#endif
 
 void RB_CalcSpecularAlpha( unsigned char *alphas ) {
 	int			i;
@@ -1278,35 +1276,6 @@ void RB_CalcSpecularAlpha( unsigned char *alphas ) {
 	int			b;
 	vec3_t		lightDir;
 	int			numVertexes;
-#ifdef IOQ3ZTM // IOQ3BUGFIX: Dynamic lightOrigin for Specular (This may not be proper, but it's better)
-	vec3_t		lightOrigin;
-	trRefEntity_t	*ent;
-
-	ent = backEnd.currentEntity;
-
-	if (ent)
-	{
-		//
-		// trace a sample point down to find ambient light
-		//
-		if ( ent->e.renderfx & RF_LIGHTING_ORIGIN ) {
-			// seperate lightOrigins are needed so an object that is
-			// sinking into the ground can still be lit, and so
-			// multi-part models can be lit identically
-			VectorCopy( ent->e.lightingOrigin, lightOrigin );
-		} else {
-			VectorCopy( ent->e.origin, lightOrigin );
-		}
-
-		// Use the inverse of ent->lightDir to VectorMA length of directedLight to set lightOrigin
-		VectorMA(lightOrigin, -VectorLength(ent->directedLight), ent->lightDir, lightOrigin);
-	}
-	else
-	{
-		// Default hardcoded light origin
-		VectorSet(lightOrigin, -960, 1980, 96);
-	}
-#endif
 
 	v = tess.xyz[0];
 	normal = tess.normal[0];
