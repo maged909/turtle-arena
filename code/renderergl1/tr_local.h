@@ -448,6 +448,8 @@ typedef struct {
 	int			numDrawSurfs;
 	struct drawSurf_s	*drawSurfs;
 
+	int			numSkins;
+	struct skin_s *skins;
 
 } trRefdef_t;
 
@@ -456,14 +458,13 @@ typedef struct {
 
 // skins allow models to be retextured without modifying the model file
 typedef struct skinSurface_s {
-	char			name[MAX_QPATH];
+	char			*name;
 	shader_t		*shader;
-	struct skinSurface_s	*next;
 } skinSurface_t;
 
 typedef struct skin_s {
-	char		name[MAX_QPATH];		// game path, including extension
-	skinSurface_t	*surfaces;
+	int			numSurfaces;
+	qhandle_t	*surfaces; // indexes in tr.skinSurfaces
 } skin_t;
 
 
@@ -518,7 +519,6 @@ typedef enum {
 	SF_POLY,
 	SF_POLYBUFFER,
 	SF_MD3,
-	SF_MD4,
 	SF_MDR,
 	SF_IQM,
 	SF_FLARE,
@@ -838,7 +838,6 @@ typedef enum {
 	MOD_BAD,
 	MOD_BRUSH,
 	MOD_MESH,
-	MOD_MD4,
 	MOD_MDR,
 	MOD_IQM
 } modtype_t;
@@ -851,7 +850,7 @@ typedef struct model_s {
 	int			dataSize;	// just for listing purposes
 	bmodel_t	*bmodel;		// only if type == MOD_BRUSH
 	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MESH
-	void	*modelData;			// only if type == (MOD_MD4 | MOD_MDR | MOD_IQM)
+	void	*modelData;			// only if type == (MOD_MDR | MOD_IQM)
 
 	int			 numLods;
 } model_t;
@@ -871,6 +870,7 @@ void		R_Modellist_f (void);
 
 #define	MAX_DRAWIMAGES			2048
 #define	MAX_SKINS				1024
+#define	MAX_SKINSURFACES		(MAX_SKINS*16)
 
 
 #define	MAX_DRAWSURFS			0x10000
@@ -1074,8 +1074,9 @@ typedef struct {
 	shader_t				*shaders[MAX_SHADERS];
 	shader_t				*sortedShaders[MAX_SHADERS];
 
-	int						numSkins;
-	skin_t					*skins[MAX_SKINS];
+	int						numSkinSurfaces;
+	skinSurface_t			skinSurfaces[MAX_SKINSURFACES];
+	int						skinSurfaceNameMemory;
 
 	float					sinTable[FUNCTABLE_SIZE];
 	float					squareTable[FUNCTABLE_SIZE];
@@ -1292,6 +1293,7 @@ void		RE_LoadWorldMap( const char *mapname );
 void		RE_SetWorldVisData( const byte *vis );
 qhandle_t	RE_RegisterModel( const char *name );
 qhandle_t	RE_RegisterSkin( const char *name );
+qhandle_t	RE_AllocSkinSurface( const char *surface, qhandle_t hShader );
 void		RE_Shutdown( qboolean destroyWindow );
 
 qboolean	R_GetEntityToken( char *buffer, int size );
@@ -1324,7 +1326,6 @@ void	R_InitImages( void );
 void	R_DeleteTextures( void );
 int		R_SumOfUsedImages( void );
 void	R_InitSkins( void );
-skin_t	*R_GetSkinByHandle( qhandle_t hSkin );
 
 int R_ComputeLOD( trRefEntity_t *ent );
 
@@ -1513,6 +1514,7 @@ SCENE GENERATION
 */
 
 void R_InitNextFrame( void );
+qhandle_t RE_AddSkinToFrame( int numSurfaces, const qhandle_t *surfaces );
 
 void RE_ClearScene( void );
 void RE_AddRefEntityToScene( const refEntity_t *ent );
@@ -1533,9 +1535,8 @@ ANIMATED MODELS
 
 // void R_MakeAnimModel( model_t *model );      haven't seen this one really, so not needed I guess.
 void R_AddAnimSurfaces( trRefEntity_t *ent );
-void RB_SurfaceAnim( md4Surface_t *surfType );
 void R_MDRAddAnimSurfaces( trRefEntity_t *ent );
-void RB_MDRSurfaceAnim( md4Surface_t *surface );
+void RB_MDRSurfaceAnim( mdrSurface_t *surface );
 void MC_UnCompress(float mat[3][4],const unsigned char * comp);
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
 void R_AddIQMSurfaces( trRefEntity_t *ent );
@@ -1737,6 +1738,8 @@ typedef struct {
 	dlight_t	dlights[MAX_DLIGHTS];
 	corona_t	coronas[MAX_CORONAS];
 	trRefEntity_t	entities[MAX_REFENTITIES];
+	skin_t		skins[MAX_SKINS];
+	qhandle_t	skinSurfaces[MAX_SKINSURFACES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
 	srfPolyBuffer_t *polybuffers;//[MAX_POLYS];

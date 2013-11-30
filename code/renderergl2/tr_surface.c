@@ -968,6 +968,7 @@ static void RB_SurfaceLightningBolt( void ) {
 	}
 }
 
+#if 0
 /*
 ** VectorArrayNormalize
 *
@@ -1023,12 +1024,14 @@ static void VectorArrayNormalize(vec4_t *normals, unsigned int count)
 #endif
 
 }
+#endif
 
 
 
 /*
 ** LerpMeshVertexes
 */
+#if 0
 #if idppc_altivec
 static void LerpMeshVertexes_altivec(md3Surface_t *surf, float backlerp)
 {
@@ -1157,6 +1160,7 @@ static void LerpMeshVertexes_altivec(md3Surface_t *surf, float backlerp)
     	VectorArrayNormalize((vec4_t *)tess.normal[tess.numVertexes], numVerts);
    	}
 }
+#endif
 #endif
 
 static void LerpMeshVertexes_scalar(mdvSurface_t *surf, float backlerp)
@@ -1814,7 +1818,6 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfacePolychain,		// SF_POLY,
 	(void(*)(void*))RB_SurfacePolyBuffer,		// SF_POLYBUFFER,
 	(void(*)(void*))RB_SurfaceMesh,			// SF_MDV,
-	(void(*)(void*))RB_SurfaceAnim,			// SF_MD4,
 	(void(*)(void*))RB_MDRSurfaceAnim,		// SF_MDR,
 	(void(*)(void*))RB_IQMSurfaceAnim,		// SF_IQM,
 	(void(*)(void*))RB_SurfaceFlare,		// SF_FLARE,

@@ -480,17 +480,17 @@ static void CG_MiscObject( centity_t *cent ) {
 #endif
 		{
 			cent->oe.model = cgs.gameModels[s1->modelindex];
-			cent->oe.skin = 0;
+			cent->oe.skin.numSurfaces = 0;
 
 			// Check for skin set in entity
 			if (s1->time2 > 0) {
 				const char *skin = CG_ConfigString( CS_STRINGS + s1->time2 - 1 );
-				cent->oe.skin = trap_R_RegisterSkin(skin);
+				CG_RegisterSkin( skin, &cent->oe.skin, qfalse );
 			}
 
 			// Check for default skin
-			if (!cent->oe.skin && *cent->objectcfg->skin) {
-				cent->oe.skin = trap_R_RegisterSkin(cent->objectcfg->skin);
+			if (!cent->oe.skin.numSurfaces && *cent->objectcfg->skin) {
+				CG_RegisterSkin( cent->objectcfg->skin, &cent->oe.skin, qfalse );
 			}
 		}
 	}
@@ -536,7 +536,7 @@ static void CG_MiscObject( centity_t *cent ) {
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
 
 	ent.hModel = cent->oe.model;
-	ent.customSkin = cent->oe.skin;
+	ent.customSkin = CG_AddSkinToFrame( &cent->oe.skin );
 
 	// Flags for only drawing or not drawing a object in mirrors
 	if (s1->eFlags & EF_ONLY_MIRROR) {
@@ -619,7 +619,7 @@ void CG_RegisterNPCVisuals( int npcNum ) {
 	npcInfo->registered = qtrue;
 
 	npcInfo->model = trap_R_RegisterModel( npc->model );
-	npcInfo->skin = 0; //todo
+	//npcInfo->skin //todo
 }
 #endif
 
@@ -816,7 +816,7 @@ static void CG_Item( centity_t *cent ) {
 
 	ent.hModel = cg_items[es->modelindex].models[0];
 #ifdef IOQ3ZTM // FLAG_MODEL
-	ent.customSkin = cg_items[es->modelindex].skin;
+	ent.customSkin = CG_AddSkinToFrame( &cg_items[es->modelindex].skin );
 #endif
 
 	VectorCopy( cent->lerpOrigin, ent.origin);
@@ -1784,11 +1784,11 @@ static void CG_TeamBase( centity_t *cent ) {
 
 		if ( cent->currentState.modelindex == TEAM_RED ) {
 			model.hModel = cgs.media.harvesterModel;
-			model.customSkin = cgs.media.harvesterRedSkin;
+			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterRedSkin );
 		}
 		else if ( cent->currentState.modelindex == TEAM_BLUE ) {
 			model.hModel = cgs.media.harvesterModel;
-			model.customSkin = cgs.media.harvesterBlueSkin;
+			model.customSkin = CG_AddSkinToFrame( &cgs.media.harvesterBlueSkin );
 		}
 		else {
 			model.hModel = cgs.media.harvesterNeutralModel;

@@ -342,7 +342,7 @@ CG_Draw3DModel
 
 ================
 */
-void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandle_t skin, vec3_t origin, vec3_t angles ) {
+void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles ) {
 	refdef_t		refdef;
 	refEntity_t		ent;
 
@@ -358,7 +358,7 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandl
 	AnglesToAxis( angles, ent.axis );
 	VectorCopy( origin, ent.origin );
 	ent.hModel = model;
-	ent.customSkin = skin;
+	ent.customSkin = CG_AddSkinToFrame( skin );
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
 	refdef.rdflags = RDF_NOWORLDMODEL;
@@ -392,12 +392,12 @@ void CG_Draw3DHeadModel( int clientNum, float x, float y, float w, float h, vec3
 	refEntity_t		ent;
 	clientInfo_t	*ci;
 	qhandle_t		model;
-	qhandle_t		skin;
+	cgSkin_t		*skin;
 
 	ci = &cgs.clientinfo[ clientNum ];
 
 	model = ci->headModel;
-	skin = ci->headSkin;
+	skin = &ci->modelSkin;
 
 	CG_AdjustFrom640( &x, &y, &w, &h );
 
@@ -407,7 +407,7 @@ void CG_Draw3DHeadModel( int clientNum, float x, float y, float w, float h, vec3
 	AnglesToAxis( angles, ent.axis );
 	VectorCopy( origin, ent.origin );
 	ent.hModel = model;
-	ent.customSkin = skin;
+	ent.customSkin = CG_AddSkinToFrame( skin );
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
 	refdef.rdflags = RDF_NOWORLDMODEL;
@@ -477,7 +477,7 @@ void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t head
 #if defined IOQ3ZTM || defined IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
 		CG_Draw3DHeadModel( clientNum, x, y, w, h, origin, headAngles );
 #else
-		CG_Draw3DModel( x, y, w, h, ci->headModel, ci->headSkin, origin, headAngles );
+		CG_Draw3DModel( x, y, w, h, ci->headModel, &ci->modelSkin, origin, headAngles );
 #endif
 	} else if ( cg_drawIcons.integer ) {
 		CG_DrawPic( x, y, w, h, ci->modelIcon );
@@ -521,13 +521,13 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		vec3_t			origin, angles;
 		vec3_t			mins, maxs;
 		qhandle_t		model;
-		qhandle_t		skin;
+		cgSkin_t		*skin;
 
 		VectorClear( angles );
 		angles[YAW] = 60 * sin( cg.time / 2000.0 );
 
 		model = cg_items[ itemIndex ].models[0];
-		skin = cg_items[ itemIndex ].skin;
+		skin = &cg_items[ itemIndex ].skin;
 
 		// offset the origin y and z to center the flag
 		trap_R_ModelBounds( model, mins, maxs, 0, 0, 0 );
@@ -586,7 +586,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		} else {
 			return;
 		}
-		CG_Draw3DModel( x, y, w, h, handle, 0, origin, angles );
+		CG_Draw3DModel( x, y, w, h, handle, NULL, origin, angles );
 	} else if ( cg_drawIcons.integer ) {
 		bg_iteminfo_t *item;
 
@@ -1185,9 +1185,9 @@ static void CG_DrawStatusBar( void ) {
 		angles[YAW] = 90 + 20 * sin( cg.time / 1000.0 );
 		CG_Draw3DModel( CHAR_WIDTH*3 + TEXT_ICON_SPACE, 432, ICON_SIZE, ICON_SIZE,
 #ifdef TA_WEAPSYS
-					   cg_weapongroups[ cent->currentState.weapon ].ammoModel, 0, origin, angles );
+					   cg_weapongroups[ cent->currentState.weapon ].ammoModel, NULL, origin, angles );
 #else
-					   cg_weapons[ cent->currentState.weapon ].ammoModel, 0, origin, angles );
+					   cg_weapons[ cent->currentState.weapon ].ammoModel, NULL, origin, angles );
 #endif
 	}
 
@@ -1207,7 +1207,7 @@ static void CG_DrawStatusBar( void ) {
 		origin[2] = -10;
 		angles[YAW] = ( cg.time & 2047 ) * 360 / 2048.0;
 		CG_Draw3DModel( 370 + CHAR_WIDTH*3 + TEXT_ICON_SPACE, 432, ICON_SIZE, ICON_SIZE,
-					   cgs.media.armorModel, 0, origin, angles );
+					   cgs.media.armorModel, NULL, origin, angles );
 	}
 	//
 	// ammo
