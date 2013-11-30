@@ -240,6 +240,13 @@ typedef struct {
 #endif
 } playerEntity_t;
 
+
+#define MAX_CG_SKIN_SURFACES 32
+typedef struct {
+	int numSurfaces;
+	qhandle_t surfaces[MAX_CG_SKIN_SURFACES];
+} cgSkin_t;
+
 //=================================================
 
 
@@ -253,7 +260,7 @@ enum
 typedef struct
 {
 	qhandle_t		model;
-	qhandle_t		skin;
+	cgSkin_t		skin;
 
 	lerpFrame_t		lerp;
 	int				anim; // current animation ( may have ANIM_TOGGLEBIT )
@@ -560,13 +567,10 @@ typedef struct {
 #endif
 
 	qhandle_t		legsModel;
-	qhandle_t		legsSkin;
-
 	qhandle_t		torsoModel;
-	qhandle_t		torsoSkin;
-
 	qhandle_t		headModel;
-	qhandle_t		headSkin;
+
+	cgSkin_t		modelSkin;
 
 	qhandle_t		modelIcon;
 
@@ -719,7 +723,7 @@ typedef struct {
 	qhandle_t		models[MAX_ITEM_MODELS];
 	qhandle_t		icon;
 #ifdef IOQ3ZTM // FLAG_MODEL
-	qhandle_t		skin;
+	cgSkin_t		skin;
 #endif
 } itemInfo_t;
 
@@ -728,7 +732,7 @@ typedef struct {
 	qboolean		registered;
 
 	qhandle_t		model;
-	qhandle_t		skin;
+	cgSkin_t		skin;
 } npcInfo_t;
 #endif
 
@@ -1167,9 +1171,9 @@ typedef struct {
 	qhandle_t	flagPoleModel;
 	qhandle_t	flagFlapModel;
 
-	qhandle_t	redFlagFlapSkin;
-	qhandle_t	blueFlagFlapSkin;
-	qhandle_t	neutralFlagFlapSkin;
+	cgSkin_t	redFlagFlapSkin;
+	cgSkin_t	blueFlagFlapSkin;
+	cgSkin_t	neutralFlagFlapSkin;
 #elif defined TA_WEAPSYS // MELEE_TRAIL
 	qhandle_t	flagFlapModel;
 #endif
@@ -1190,8 +1194,8 @@ typedef struct {
 	qhandle_t	overloadEnergyModel;
 
 	qhandle_t	harvesterModel;
-	qhandle_t	harvesterRedSkin;
-	qhandle_t	harvesterBlueSkin;
+	cgSkin_t	harvesterRedSkin;
+	cgSkin_t	harvesterBlueSkin;
 	qhandle_t	harvesterNeutralModel;
 #endif
 
@@ -2147,7 +2151,7 @@ void CG_InitTeamChat( void );
 void CG_GetTeamColor(vec4_t *color);
 const char *CG_GetGameStatusText( void );
 const char *CG_GetKillerText( void );
-void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, qhandle_t skin, vec3_t origin, vec3_t angles);
+void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles);
 #if defined IOQ3ZTM || defined IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
 void CG_Draw3DHeadModel( int clientNum, float x, float y, float w, float h, vec3_t origin, vec3_t angles );
 #endif
@@ -2169,6 +2173,8 @@ qboolean CG_AnyScoreboardShowing( void );
 void CG_Player( centity_t *cent );
 void CG_ResetPlayerEntity( centity_t *cent );
 void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state );
+qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin );
+qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append );
 void CG_NewClientInfo( int clientNum );
 sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName );
 

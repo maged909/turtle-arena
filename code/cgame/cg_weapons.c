@@ -1631,7 +1631,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
 
 #ifdef IOQ3ZTM // FLAG_MODEL
 	if (item->skin && item->skin[0]) {
-		itemInfo->skin = trap_R_RegisterSkin( item->skin );
+		CG_RegisterSkin( item->skin, &itemInfo->skin, qfalse );
 	}
 #endif
 
