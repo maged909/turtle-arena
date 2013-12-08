@@ -907,7 +907,7 @@ void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi )
 	beam.shaderRGBA[1] = 0xff;
 	beam.shaderRGBA[2] = 0xff;
 	beam.shaderRGBA[3] = 0xff;
-	trap_R_AddRefEntityToScene( &beam );
+	CG_AddRefEntityWithMinLight( &beam );
 }
 
 /*
@@ -1900,7 +1900,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin
 #else
 	beam.customShader = cgs.media.lightningShader;
 #endif
-	trap_R_AddRefEntityToScene( &beam );
+	CG_AddRefEntityWithMinLight( &beam );
 
 	// add the impact flare if it hit something
 	if ( trace.fraction < 1.0 ) {
@@ -1932,7 +1932,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin
 		angles[1] = rand() % 360;
 		angles[2] = rand() % 360;
 		AnglesToAxis( angles, beam.axis );
-		trap_R_AddRefEntityToScene( &beam );
+		CG_AddRefEntityWithMinLight( &beam );
 #endif
 	}
 }
@@ -1975,7 +1975,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 
 	beam.reType = RT_LIGHTNING;
 	beam.customShader = cgs.media.lightningShader;
-	trap_R_AddRefEntityToScene( &beam );
+	CG_AddRefEntityWithMinLight( &beam );
 
 	// add the impact flare if it hit something
 	if ( trace.fraction < 1.0 ) {
@@ -1995,7 +1995,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 		angles[1] = rand() % 360;
 		angles[2] = rand() % 360;
 		AnglesToAxis( angles, beam.axis );
-		trap_R_AddRefEntityToScene( &beam );
+		CG_AddRefEntityWithMinLight( &beam );
 	}
 }
 */
@@ -2134,27 +2134,27 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, entityState_t *state ) {
 			gun->renderfx |= RF_FORCE_ENT_ALPHA;
 			gun->shaderRGBA[3] = state->otherEntityNum2;
 		}
-		trap_R_AddRefEntityToScene( gun );
+		CG_AddRefEntityWithMinLight( gun );
 
 		gun->customShader = cgs.media.playerTeleportShader;
-		trap_R_AddRefEntityToScene( gun );
+		CG_AddRefEntityWithMinLight( gun );
 	} else
 #endif
 	if ( state->powerups & ( 1 << PW_INVIS ) ) {
 		gun->customShader = cgs.media.invisShader;
-		trap_R_AddRefEntityToScene( gun );
+		CG_AddRefEntityWithMinLight( gun );
 	} else {
-		trap_R_AddRefEntityToScene( gun );
+		CG_AddRefEntityWithMinLight( gun );
 
 #ifndef TURTLEARENA // POWERS
 		if ( state->powerups & ( 1 << PW_BATTLESUIT ) ) {
 			gun->customShader = cgs.media.battleWeaponShader;
-			trap_R_AddRefEntityToScene( gun );
+			CG_AddRefEntityWithMinLight( gun );
 		}
 #endif
 		if ( state->powerups & ( 1 << PW_QUAD ) ) {
 			gun->customShader = cgs.media.quadWeaponShader;
-			trap_R_AddRefEntityToScene( gun );
+			CG_AddRefEntityWithMinLight( gun );
 		}
 	}
 }
@@ -3063,7 +3063,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 #else
 		CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 #endif
-		trap_R_AddRefEntityToScene( &flash );
+		CG_AddRefEntityWithMinLight( &flash );
 
 
 		if ( ps || cg.cur_lc->renderingThirdPerson ||
@@ -3271,7 +3271,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		hand.hModel = ci->torsoModel;
 	}
 #endif
-	hand.renderfx = RF_DEPTHHACK | RF_NO_MIRROR | RF_MINLIGHT;
+	hand.renderfx = RF_DEPTHHACK | RF_NO_MIRROR;
 
 	// add everything onto the hand
 	CG_AddPlayerWeapon( &hand, ps, &cg.cur_lc->predictedPlayerEntity, ps->persistant[PERS_TEAM] );
