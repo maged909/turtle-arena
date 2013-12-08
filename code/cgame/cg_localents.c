@@ -280,10 +280,10 @@ void CG_AddFragment( localEntity_t *le ) {
 			le->refEntity.renderfx |= RF_LIGHTING_ORIGIN;
 			oldZ = le->refEntity.origin[2];
 			le->refEntity.origin[2] -= 16 * ( 1.0 - (float)t / SINK_TIME );
-			trap_R_AddRefEntityToScene( &le->refEntity );
+			CG_AddRefEntityWithMinLight( &le->refEntity );
 			le->refEntity.origin[2] = oldZ;
 		} else {
-			trap_R_AddRefEntityToScene( &le->refEntity );
+			CG_AddRefEntityWithMinLight( &le->refEntity );
 		}
 
 		return;
@@ -305,7 +305,7 @@ void CG_AddFragment( localEntity_t *le ) {
 			AnglesToAxis( angles, le->refEntity.axis );
 		}
 
-		trap_R_AddRefEntityToScene( &le->refEntity );
+		CG_AddRefEntityWithMinLight( &le->refEntity );
 
 #ifndef NOTRATEDM // No gibs.
 		// add a blood trail
@@ -334,7 +334,7 @@ void CG_AddFragment( localEntity_t *le ) {
 	// reflect the velocity on the trace plane
 	CG_ReflectVelocity( le, &trace );
 
-	trap_R_AddRefEntityToScene( &le->refEntity );
+	CG_AddRefEntityWithMinLight( &le->refEntity );
 }
 
 /*
@@ -365,7 +365,7 @@ void CG_AddFadeRGB( localEntity_t *le ) {
 	re->shaderRGBA[2] = le->color[2] * c;
 	re->shaderRGBA[3] = le->color[3] * c;
 
-	trap_R_AddRefEntityToScene( re );
+	CG_AddRefEntityWithMinLight( re );
 }
 
 /*
@@ -407,7 +407,7 @@ static void CG_AddMoveScaleFade( localEntity_t *le ) {
 		return;
 	}
 
-	trap_R_AddRefEntityToScene( re );
+	CG_AddRefEntityWithMinLight( re );
 }
 
 
@@ -443,7 +443,7 @@ static void CG_AddScaleFade( localEntity_t *le ) {
 		return;
 	}
 
-	trap_R_AddRefEntityToScene( re );
+	CG_AddRefEntityWithMinLight( re );
 }
 
 
@@ -483,7 +483,7 @@ static void CG_AddFallScaleFade( localEntity_t *le ) {
 		return;
 	}
 
-	trap_R_AddRefEntityToScene( re );
+	CG_AddRefEntityWithMinLight( re );
 }
 
 
@@ -526,7 +526,7 @@ static void CG_AddExplosion( localEntity_t *ex ) {
 #endif
 
 	// add the entity
-	trap_R_AddRefEntityToScene(ent);
+	CG_AddRefEntityWithMinLight(ent);
 
 #ifndef IOQ3ZTM // ZTM: Anything glows!
 	// add the dlight
@@ -682,7 +682,7 @@ void CG_AddKamikaze( localEntity_t *le ) {
 		shockwave.shaderRGBA[2] = 0xff - c;
 		shockwave.shaderRGBA[3] = 0xff - c;
 
-		trap_R_AddRefEntityToScene( &shockwave );
+		CG_AddRefEntityWithMinLight( &shockwave );
 	}
 
 	if (t > KAMI_EXPLODE_STARTTIME && t < KAMI_IMPLODE_ENDTIME) {
@@ -710,7 +710,7 @@ void CG_AddKamikaze( localEntity_t *le ) {
 		VectorScale( axis[2], c * KAMI_BOOMSPHERE_MAXRADIUS / KAMI_BOOMSPHEREMODEL_RADIUS, re->axis[2] );
 		re->nonNormalizedAxes = qtrue;
 
-		trap_R_AddRefEntityToScene( re );
+		CG_AddRefEntityWithMinLight( re );
 		// add the dlight
 		trap_R_AddLightToScene( re->origin, c * 1000.0, 1.0, 1.0, 1.0, c );
 	}
@@ -753,7 +753,7 @@ void CG_AddKamikaze( localEntity_t *le ) {
 		shockwave.shaderRGBA[2] = 0xff - c;
 		shockwave.shaderRGBA[3] = 0xff - c;
 
-		trap_R_AddRefEntityToScene( &shockwave );
+		CG_AddRefEntityWithMinLight( &shockwave );
 	}
 }
 #endif
@@ -765,7 +765,7 @@ CG_AddInvulnerabilityImpact
 ===================
 */
 void CG_AddInvulnerabilityImpact( localEntity_t *le ) {
-	trap_R_AddRefEntityToScene( &le->refEntity );
+	CG_AddRefEntityWithMinLight( &le->refEntity );
 }
 
 /*
@@ -790,7 +790,7 @@ void CG_AddInvulnerabilityJuiced( localEntity_t *le ) {
 	else
 #endif
 	{
-		trap_R_AddRefEntityToScene( &le->refEntity );
+		CG_AddRefEntityWithMinLight( &le->refEntity );
 	}
 }
 #endif
@@ -805,7 +805,7 @@ void CG_AddRefEntity( localEntity_t *le ) {
 		CG_FreeLocalEntity( le );
 		return;
 	}
-	trap_R_AddRefEntityToScene( &le->refEntity );
+	CG_AddRefEntityWithMinLight( &le->refEntity );
 }
 
 #endif

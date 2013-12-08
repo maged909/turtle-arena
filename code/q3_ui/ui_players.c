@@ -996,7 +996,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 	legs.renderfx = renderfx;
 	VectorCopy (legs.origin, legs.oldorigin);
 
-	trap_R_AddRefEntityToScene( &legs );
+	CG_AddRefEntityWithMinLight( &legs );
 
 	if (!legs.hModel) {
 		return;
@@ -1018,7 +1018,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 	torso.renderfx = renderfx;
 
-	trap_R_AddRefEntityToScene( &torso );
+	CG_AddRefEntityWithMinLight( &torso );
 
 	//
 	// add the head
@@ -1035,7 +1035,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 	head.renderfx = renderfx;
 
-	trap_R_AddRefEntityToScene( &head );
+	CG_AddRefEntityWithMinLight( &head );
 
 	//
 	// add the gun
@@ -1074,7 +1074,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 				continue;
 			}
 
-			trap_R_AddRefEntityToScene( &gun[i] );
+			CG_AddRefEntityWithMinLight( &gun[i] );
 		}
 #else
 		memset( &gun, 0, sizeof(gun) );
@@ -1088,7 +1088,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		VectorCopy( origin, gun.lightingOrigin );
 		UI_PositionEntityOnTag( &gun, &torso, pi->torsoModel, NULL, "tag_weapon");
 		gun.renderfx = renderfx;
-		trap_R_AddRefEntityToScene( &gun );
+		CG_AddRefEntityWithMinLight( &gun );
 #endif
 	}
 
@@ -1146,7 +1146,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		UI_PositionRotatedEntityOnTag( &barrel, &gun, pi->weaponModel, NULL, "tag_barrel");
 #endif
 
-		trap_R_AddRefEntityToScene( &barrel );
+		CG_AddRefEntityWithMinLight( &barrel );
 	}
 
 	//
@@ -1190,7 +1190,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 			VectorCopy( origin, flash.lightingOrigin );
 			UI_PositionEntityOnTag( &flash, &gun, pi->weaponModel, NULL, "tag_flash");
 			flash.renderfx = renderfx;
-			trap_R_AddRefEntityToScene( &flash );
+			CG_AddRefEntityWithMinLight( &flash );
 		}
 
 		// make a dlight for the flash

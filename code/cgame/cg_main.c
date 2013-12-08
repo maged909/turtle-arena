@@ -65,6 +65,8 @@ This must be the very first function compiled into the .q3vm file
 Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
 
 	switch ( command ) {
+	case CG_GETAPINAME:
+			return (intptr_t)CG_API_NAME;
 	case CG_GETAPIVERSION:
 		return ( CG_API_MAJOR_VERSION << 16) | ( CG_API_MINOR_VERSION & 0xFFFF );
 	case CG_INIT:
@@ -123,7 +125,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_CREATE_USER_CMD:
 		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4), arg5);
 	default:
-		CG_Error( "vmMain: unknown command %i", command );
+		CG_Error( "cgame vmMain: unknown command %i", command );
 		break;
 	}
 	return -1;
@@ -2835,7 +2837,7 @@ void CG_LoadHudMenu( void ) {
 	cgDC.drawSides = &CG_DrawSides;
 	cgDC.drawTopBottom = &CG_DrawTopBottom;
 	cgDC.clearScene = &trap_R_ClearScene;
-	cgDC.addRefEntityToScene = &trap_R_AddRefEntityToScene;
+	cgDC.addRefEntityToScene = &CG_AddRefEntityWithMinLight;
 	cgDC.renderScene = &trap_R_RenderScene;
 	cgDC.registerFont = &trap_R_RegisterFont;
 	cgDC.ownerDrawItem = &CG_OwnerDraw;
@@ -2983,6 +2985,7 @@ void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo ) {
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 #endif
 	cgs.media.consoleShader		= trap_R_RegisterShader( "console" );
+	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
 
 	// get the rendering configuration from the client system
 	trap_GetGlconfig( &cgs.glconfig );
