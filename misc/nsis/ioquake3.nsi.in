@@ -11,8 +11,8 @@
 !define URL "http://turtlearena.googlecode.com/"
 
 !define GAMENAME "Turtle Arena"
-!define CLIENT "turtlearena.x86.exe"
-!define SERVER "turtlearena-server.x86.exe"
+!define CLIENT "turtlearena_x86.exe"
+!define SERVER "turtlearena-server_x86.exe"
 !define GAMEDIR "Turtle Arena"
 !define GAMEKEY "turtlearena"
 
@@ -102,8 +102,8 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   File "../../build/release-mingw32-x86/${SERVER}"
   File "../../build/release-mingw32-x86/${CLIENT}"
 !ifdef USE_RENDERER_DLOPEN
-  File "../../build/release-mingw32-x86/renderer_opengl1_x86.dll"
-  File "../../build/release-mingw32-x86/renderer_opengl2_x86.dll"
+  File "../../build/release-mingw32-x86/mint-renderer-opengl1_x86.dll"
+  File "../../build/release-mingw32-x86/mint-renderer-opengl2_x86.dll"
 !endif
 
   File "CODE_LICENSE.txt"
@@ -115,14 +115,12 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   SetOutPath "$INSTDIR\${MODDIR}"
   File "XXXASSETPATHXXX/assets0.pk3"
   File "XXXASSETPATHXXX/assets1-qvms.pk3"
-  File "../../build/release-mingw32-x86/${MODDIR}/cgamex86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR}/gamex86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR}/uix86.dll"
+  File "../../build/release-mingw32-x86/${MODDIR}/mint-cgame_x86.dll"
+  File "../../build/release-mingw32-x86/${MODDIR}/mint-game_x86.dll"
 !ifdef MODDIR2
   SetOutPath "$INSTDIR\${MODDIR2}"
-  File "../../build/release-mingw32-x86/${MODDIR2}/cgamex86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR2}/gamex86.dll"
-  File "../../build/release-mingw32-x86/${MODDIR2}/uix86.dll"
+  File "../../build/release-mingw32-x86/${MODDIR2}/mint-cgame_x86.dll"
+  File "../../build/release-mingw32-x86/${MODDIR2}/mint-game_x86.dll"
 !endif
 
   ; Write the installation path into the registry
@@ -192,19 +190,17 @@ Section "Uninstall"
   Delete $INSTDIR\${MODDIR}\assets0.pk3
   Delete $INSTDIR\${MODDIR}\assets1-qvms.pk3
   Delete $INSTDIR\${MODDIR}\assets2-music.pk3
-  Delete $INSTDIR\${MODDIR}\cgamex86.dll
-  Delete $INSTDIR\${MODDIR}\gamex86.dll
-  Delete $INSTDIR\${MODDIR}\uix86.dll
+  Delete $INSTDIR\${MODDIR}\mint-cgame_x86.dll
+  Delete $INSTDIR\${MODDIR}\mint-game_x86.dll
 !ifdef MODDIR2
-  Delete $INSTDIR\${MODDIR2}\cgamex86.dll
-  Delete $INSTDIR\${MODDIR2}\gamex86.dll
-  Delete $INSTDIR\${MODDIR2}\uix86.dll
+  Delete $INSTDIR\${MODDIR2}\mint-cgame_x86.dll
+  Delete $INSTDIR\${MODDIR2}\mint-game_x86.dll
 !endif
   Delete $INSTDIR\${CLIENT}
   Delete $INSTDIR\${SERVER}
 !ifdef USE_RENDERER_DLOPEN
-  Delete $INSTDIR\renderer_opengl1_x86.dll
-  Delete $INSTDIR\renderer_opengl2_x86.dll
+  Delete $INSTDIR\mint-renderer-opengl1_x86.dll
+  Delete $INSTDIR\mint-renderer-opengl2_x86.dll
 !endif
 
   Delete $INSTDIR\CODE_LICENSE.txt

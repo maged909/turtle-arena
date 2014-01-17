@@ -1416,7 +1416,7 @@ int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, i
 		Com_Error(ERR_FATAL, "Filesystem call made without initialization");
 
 	if(enableDll)
-		Com_sprintf(dllName, sizeof(dllName), "%s" ARCH_STRING DLL_EXT, name);
+		Com_sprintf(dllName, sizeof(dllName), "%s_" ARCH_STRING DLL_EXT, name);
 
 	Com_sprintf(qvmName, sizeof(qvmName), "vm/%s.qvm", name);
 
@@ -2703,9 +2703,7 @@ void FS_GetModDescription( const char *modDir, char *description, int descriptio
 	int				nDescLen;
 	FILE			*file;
 
-	descPath[0] = '\0';
-	strcpy(descPath, modDir);
-	strcat(descPath, "/description.txt");
+	Com_sprintf( descPath, sizeof ( descPath ), "%s/description.txt", modDir );
 	nDescLen = FS_SV_FOpenFileRead( descPath, &descHandle );
 
 	if ( nDescLen > 0 && descHandle) {

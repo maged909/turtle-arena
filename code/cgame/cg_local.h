@@ -335,7 +335,7 @@ typedef struct markPoly_s {
 	qhandle_t	markShader;
 	qboolean	alphaFade;		// fade alpha instead of rgb
 	float		color[4];
-	poly_t		poly;
+	int			numVerts;
 	polyVert_t	verts[MAX_VERTS_ON_POLY];
 } markPoly_t;
 
@@ -1620,6 +1620,7 @@ typedef struct {
 
 typedef struct cg_gamemodel_s {
 	qhandle_t model;
+	cgSkin_t skin;
 	vec3_t org;
 	vec3_t axes[3];
 	vec_t radius;
