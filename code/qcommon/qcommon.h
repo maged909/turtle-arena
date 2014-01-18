@@ -264,7 +264,7 @@ PROTOCOL
 ==============================================================
 */
 
-#define	PROTOCOL_VERSION	1
+#define	PROTOCOL_VERSION	2
 #define PROTOCOL_LEGACY_VERSION	0
 
 // maintain a list of compatible protocols for demo playing
@@ -353,8 +353,9 @@ typedef enum {
 	TRAP_POW,
 	TRAP_EXP,
 	TRAP_LOG,
-	TRAP_LOG10
-} sharedTraps_t;
+	TRAP_LOG10,
+	TRAP_SYSCALL
+} qvmTraps_t;
 
 void	VM_Init( void );
 vm_t	*VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *), 
