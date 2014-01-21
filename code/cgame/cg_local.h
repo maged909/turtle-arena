@@ -1851,6 +1851,9 @@ extern	vmCvar_t		cg_oldRail;
 extern	vmCvar_t		cg_oldRocket;
 extern	vmCvar_t		cg_oldPlasma;
 extern	vmCvar_t		cg_trueLightning;
+extern	vmCvar_t		cg_railWidth;
+extern	vmCvar_t		cg_railCoreWidth;
+extern	vmCvar_t		cg_railSegmentLength;
 extern	vmCvar_t		cg_atmosphericEffects;
 extern	vmCvar_t		cg_teamDmLeadAnnouncements;
 extern	vmCvar_t		cg_voipShowMeter;
@@ -2375,6 +2378,16 @@ void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
 playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
 
+
+//
+// cg_surface.c
+//
+qboolean CG_AddCustomSurface( const refEntity_t *re );
+void CG_SurfaceSprite( const refEntity_t *re );
+void CG_SurfaceRailRings( const refEntity_t *re );
+void CG_SurfaceRailCore( const refEntity_t *re );
+void CG_SurfaceLightningBolt( const refEntity_t *re );
+void CG_SurfaceBeam( const refEntity_t *re );
 
 //
 // cg_spawn.c
