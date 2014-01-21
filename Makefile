@@ -36,7 +36,7 @@ ifndef BUILD_MISSIONPACK
   BUILD_MISSIONPACK=0
 endif
 ifndef BUILD_RENDERER_OPENGL2
-  BUILD_RENDERER_OPENGL2=0
+  BUILD_RENDERER_OPENGL2=
 endif
 ifndef BUILD_FINAL
   BUILD_FINAL      =0
@@ -2371,6 +2371,7 @@ Q3CGOBJ = \
   $(B)/$(BASEGAME)/cgame/cg_servercmds.o \
   $(B)/$(BASEGAME)/cgame/cg_snapshot.o \
   $(B)/$(BASEGAME)/cgame/cg_spawn.o \
+  $(B)/$(BASEGAME)/cgame/cg_surface.o \
   $(B)/$(BASEGAME)/cgame/cg_syscalls.o \
   $(B)/$(BASEGAME)/cgame/cg_view.o \
   $(B)/$(BASEGAME)/cgame/cg_weapons.o \
@@ -2470,6 +2471,7 @@ MPCGOBJ = \
   $(B)/$(MISSIONPACK)/cgame/cg_servercmds.o \
   $(B)/$(MISSIONPACK)/cgame/cg_snapshot.o \
   $(B)/$(MISSIONPACK)/cgame/cg_spawn.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_surface.o \
   $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o \
   $(B)/$(MISSIONPACK)/cgame/cg_view.o \
   $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \

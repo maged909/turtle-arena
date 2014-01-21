@@ -84,6 +84,11 @@ typedef struct {
 	vec3_t		ambientLight;	// color normalized to 0-255
 	int			ambientLightInt;	// 32 bit rgba packed
 	vec3_t		directedLight;
+
+	// for RT_POLY entities
+	int			numPolys;
+	int			numVerts;
+	polyVert_t	*verts;
 } trRefEntity_t;
 
 
@@ -1102,10 +1107,6 @@ extern cvar_t	*r_flareFade;
 #define FLARE_STDCOEFF "150"
 extern cvar_t	*r_flareCoeff;
 
-extern cvar_t	*r_railWidth;
-extern cvar_t	*r_railCoreWidth;
-extern cvar_t	*r_railSegmentLength;
-
 extern cvar_t	*r_ignore;				// used for debugging anything
 extern cvar_t	*r_verbose;				// used for verbose debug spew
 extern cvar_t	*r_ignoreFastPath;		// allows us to ignore our Tess fast paths
@@ -1214,6 +1215,7 @@ void R_AddBeamSurfaces( trRefEntity_t *e );
 void R_AddRailSurfaces( trRefEntity_t *e, qboolean isUnderwater );
 void R_AddLightningBoltSurfaces( trRefEntity_t *e );
 
+int R_PolyFogNum( srfPoly_t *poly );
 void R_AddPolygonSurfaces( void );
 void R_AddPolygonBufferSurfaces( void );
 
@@ -1519,8 +1521,8 @@ void R_InitNextFrame( void );
 qhandle_t RE_AddSkinToFrame( int numSurfaces, const qhandle_t *surfaces );
 
 void RE_ClearScene( void );
-void RE_AddRefEntityToScene( const refEntity_t *ent );
-void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
+void RE_AddRefEntityToScene( const refEntity_t *ent, int numVerts, const polyVert_t *verts, int numPolys );
+void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts, int numPolys );
 void RE_AddPolyBufferToScene( polyBuffer_t* pPolyBuffer );
 void RE_AddLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float radius, float intensity, float r, float g, float b );
@@ -1729,7 +1731,8 @@ typedef enum {
 // the limits apply to the sum of all scenes in a frame --
 // the main view, all the 3D icons, etc
 #define	MAX_POLYS		600
-#define	MAX_POLYVERTS	3000
+#define	MAX_POLYVERTS	6000 // used for raw polys and RT_POLY entities
+#define	MAX_POLYBUFFERS	128
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t
@@ -1742,7 +1745,7 @@ typedef struct {
 	qhandle_t	skinSurfaces[MAX_SKINSURFACES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
-	srfPolyBuffer_t *polybuffers;//[MAX_POLYS];
+	srfPolyBuffer_t *polybuffers;//[MAX_POLYBUFFERS];
 	renderCommandList_t	commands;
 } backEndData_t;
 
