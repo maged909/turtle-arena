@@ -39,11 +39,9 @@ CG_AddCustomSurface
 */
 qboolean CG_AddCustomSurface( const refEntity_t *re ) {
 	switch ( re->reType ) {
-#if 0 // ZTM: sprites don't mirror correctly because they're one sided, also requires using cg.refdef in UI code for player sprites
 		case RT_SPRITE:
 			CG_SurfaceSprite( re );
 			return qtrue;
-#endif
 		case RT_RAIL_RINGS:
 			CG_SurfaceRailRings( re );
 			return qtrue;
@@ -73,12 +71,12 @@ void CG_SurfaceSprite( const refEntity_t *e ) {
 	int j;
 
 	re = *e;
-	re.reType = RT_POLY;
+	re.reType = RT_POLY_LOCAL;
+	re.renderfx |= RF_AUTOAXIS;
 
-	// FIXME: cg.refdef.viewaxis doesn't work in UI drawing!
 	if ( re.rotation == 0 ) {
-		VectorScale( cg.refdef.viewaxis[1], re.radius, left );
-		VectorScale( cg.refdef.viewaxis[2], re.radius, up );
+		VectorSet( left, 0, re.radius, 0 );
+		VectorSet( up, 0, 0, re.radius );
 	} else {
 		float	s, c;
 		float	ang;
@@ -87,29 +85,26 @@ void CG_SurfaceSprite( const refEntity_t *e ) {
 		s = sin( ang );
 		c = cos( ang );
 
-		VectorScale( cg.refdef.viewaxis[1], c * re.radius, left );
-		VectorMA( left, -s * re.radius, cg.refdef.viewaxis[2], left );
-
-		VectorScale( cg.refdef.viewaxis[2], c * re.radius, up );
-		VectorMA( up, s * re.radius, cg.refdef.viewaxis[1], up );
+		VectorSet( left, 0, c * re.radius, -s * re.radius );
+		VectorSet( up, 0, s * re.radius, c * re.radius );
 	}
 
 	//
-	verts[0].xyz[0] = re.origin[0] + left[0] + up[0];
-	verts[0].xyz[1] = re.origin[1] + left[1] + up[1];
-	verts[0].xyz[2] = re.origin[2] + left[2] + up[2];
+	verts[0].xyz[0] = vec3_origin[0] + left[0] + up[0];
+	verts[0].xyz[1] = vec3_origin[1] + left[1] + up[1];
+	verts[0].xyz[2] = vec3_origin[2] + left[2] + up[2];
 
-	verts[1].xyz[0] = re.origin[0] - left[0] + up[0];
-	verts[1].xyz[1] = re.origin[1] - left[1] + up[1];
-	verts[1].xyz[2] = re.origin[2] - left[2] + up[2];
+	verts[1].xyz[0] = vec3_origin[0] - left[0] + up[0];
+	verts[1].xyz[1] = vec3_origin[1] - left[1] + up[1];
+	verts[1].xyz[2] = vec3_origin[2] - left[2] + up[2];
 
-	verts[2].xyz[0] = re.origin[0] - left[0] - up[0];
-	verts[2].xyz[1] = re.origin[1] - left[1] - up[1];
-	verts[2].xyz[2] = re.origin[2] - left[2] - up[2];
+	verts[2].xyz[0] = vec3_origin[0] - left[0] - up[0];
+	verts[2].xyz[1] = vec3_origin[1] - left[1] - up[1];
+	verts[2].xyz[2] = vec3_origin[2] - left[2] - up[2];
 
-	verts[3].xyz[0] = re.origin[0] + left[0] - up[0];
-	verts[3].xyz[1] = re.origin[1] + left[1] - up[1];
-	verts[3].xyz[2] = re.origin[2] + left[2] - up[2];
+	verts[3].xyz[0] = vec3_origin[0] + left[0] - up[0];
+	verts[3].xyz[1] = vec3_origin[1] + left[1] - up[1];
+	verts[3].xyz[2] = vec3_origin[2] + left[2] - up[2];
 
 	// standard square texture coordinates
 	for ( j = 0; j < 4; j++ ) {
@@ -270,10 +265,10 @@ CG_SurfaceRailCore
 */
 void CG_SurfaceRailCore( const refEntity_t *originEnt ) {
 	int			len;
-	vec3_t		right;
+	vec3_t		forward = { 1, 0, 0 };
+	vec3_t		right = { 0, 0, 1 };
 	vec3_t		vec;
 	vec3_t		start, end;
-	vec3_t		v1, v2;
 #ifdef TA_WEAPSYS
 	float		spanWidth;
 #endif
@@ -281,7 +276,8 @@ void CG_SurfaceRailCore( const refEntity_t *originEnt ) {
 	refEntity_t re;
 
 	re = *originEnt;
-	re.reType = RT_POLY;
+	re.reType = RT_POLY_LOCAL;
+	re.renderfx |= RF_AUTOAXIS2;
 
 	VectorCopy( re.oldorigin, start );
 	VectorCopy( re.origin, end );
@@ -289,13 +285,9 @@ void CG_SurfaceRailCore( const refEntity_t *originEnt ) {
 	VectorSubtract( end, start, vec );
 	len = VectorNormalize( vec );
 
-	// compute side vector
-	VectorSubtract( start, cg.refdef.vieworg, v1 );
-	VectorNormalize( v1 );
-	VectorSubtract( end, cg.refdef.vieworg, v2 );
-	VectorNormalize( v2 );
-	CrossProduct( v1, v2, right );
-	VectorNormalize( right );
+	// setup start and end in local space
+	VectorMA( vec3_origin, -len/2.0f, forward, start );
+	VectorMA( start, len, forward, end );
 
 #ifdef TA_WEAPSYS // Allow entity to control lightning width
 	if ( re.radius ) {
@@ -319,10 +311,10 @@ CG_SurfaceLightningBolt
 */
 void CG_SurfaceLightningBolt( const refEntity_t *originEnt ) {
 	int			len;
-	vec3_t		right;
+	vec3_t		forward = { 1, 0, 0 };
+	vec3_t		right = { 0, 0, 1 };
 	vec3_t		vec;
 	vec3_t		start, end;
-	vec3_t		v1, v2;
 	int			i;
 #ifdef TA_WEAPSYS
 	float		spanWidth;
@@ -332,7 +324,8 @@ void CG_SurfaceLightningBolt( const refEntity_t *originEnt ) {
 	refEntity_t re;
 
 	re = *originEnt;
-	re.reType = RT_POLY;
+	re.reType = RT_POLY_LOCAL;
+	re.renderfx |= RF_AUTOAXIS2;
 
 	VectorCopy( re.oldorigin, end );
 	VectorCopy( re.origin, start );
@@ -341,13 +334,9 @@ void CG_SurfaceLightningBolt( const refEntity_t *originEnt ) {
 	VectorSubtract( end, start, vec );
 	len = VectorNormalize( vec );
 
-	// compute side vector
-	VectorSubtract( start, cg.refdef.vieworg, v1 );
-	VectorNormalize( v1 );
-	VectorSubtract( end, cg.refdef.vieworg, v2 );
-	VectorNormalize( v2 );
-	CrossProduct( v1, v2, right );
-	VectorNormalize( right );
+	// setup start and end in local space
+	VectorMA( vec3_origin, -len/2.0f, forward, start );
+	VectorMA( start, len, forward, end );
 
 #ifdef TA_WEAPSYS // Allow entity to control lightning width
 	if ( re.radius ) {
