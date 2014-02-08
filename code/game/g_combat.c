@@ -350,9 +350,9 @@ void TossClientGametypeItems(gentity_t *ent)
 					angle += 45;
 #endif
 					if ( ent->client->sess.sessionTeam == TEAM_RED ) {
-						drop->spawnflags = TEAM_BLUE;
+						drop->s.team = TEAM_BLUE;
 					} else {
-						drop->spawnflags = TEAM_RED;
+						drop->s.team = TEAM_RED;
 					}
 				}
 			}
@@ -413,7 +413,7 @@ void TossClientCubes( gentity_t *self ) {
 
 	drop->nextthink = level.time + g_cubeTimeout.integer * 1000;
 	drop->think = G_FreeEntity;
-	drop->spawnflags = self->client->sess.sessionTeam;
+	drop->s.team = self->client->sess.sessionTeam;
 }
 #endif
 
