@@ -471,11 +471,12 @@ static void StartArcade_Start( void ) {
 	trap_Cvar_SetValue( "g_gametype", gametype );
 
 	trap_Cvar_SetValue( "sv_maxclients", Com_Clamp( 0, 12, maxclients ) );
-	if (!s_arcade.multiplayer) {
-		trap_Cvar_SetValue( "ui_singlePlayerActive", 1 );
-	} else {
+	if( s_arcade.multiplayer ) {
 		trap_Cvar_SetValue( "ui_publicServer", Com_Clamp( 0, 1, publicserver ) );
 		trap_Cvar_SetValue( "sv_public", Com_Clamp( 0, 1, publicserver ) );
+	} else {
+		trap_Cvar_SetValue( "sv_public", 0 );
+		trap_Cvar_SetValue( "ui_singlePlayerActive", 1 );
 	}
 	trap_Cvar_SetValue( "dedicated", Com_Clamp( 0, 1, dedicated ) );
 	trap_Cvar_SetValue ("timelimit", Com_Clamp( 0, timelimit, timelimit ) );
@@ -2156,16 +2157,15 @@ static void ServerOptions_Start( void ) {
 	}
 
 	trap_Cvar_SetValue( "sv_maxclients", Com_Clamp( 0, 12, maxclients ) );
-#ifdef TA_SP
-	if (!s_serveroptions.multiplayer) {
-		// Aracde mode
-		trap_Cvar_SetValue( "ui_singlePlayerActive", 1 );
-	}
-	else
-#endif
-	{
+	if( s_serveroptions.multiplayer ) {
 		trap_Cvar_SetValue( "ui_publicServer", Com_Clamp( 0, 1, publicserver ) );
 		trap_Cvar_SetValue( "sv_public", Com_Clamp( 0, 1, publicserver ) );
+	} else {
+		trap_Cvar_SetValue( "sv_public", 0 );
+#ifdef TA_SP
+		// Aracde mode
+		trap_Cvar_SetValue( "ui_singlePlayerActive", 1 );
+#endif
 	}
 	trap_Cvar_SetValue( "dedicated", Com_Clamp( 0, 1, dedicated ) );
 	trap_Cvar_SetValue ("timelimit", Com_Clamp( 0, timelimit, timelimit ) );
