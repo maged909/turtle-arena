@@ -46,7 +46,7 @@ int redTeamNameModificationCount = -1;
 int blueTeamNameModificationCount = -1;
 #endif
 
-void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo );
+void CG_Init( connstate_t state, int maxSplitView, int playVideo );
 void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime );
@@ -80,7 +80,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_Shutdown();
 		return 0;
 	case CG_CONSOLE_COMMAND:
-		return CG_ConsoleCommand(arg0);
+		return CG_ConsoleCommand(arg0, arg1);
 	case CG_REFRESH:
 		CG_Refresh( arg0, arg1, arg2, arg3, arg4 );
 		return 0;
@@ -111,17 +111,12 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_JOYSTICK_EVENT:
 		CG_JoystickEvent(arg0, arg1, arg2);
 		return 0;
-	case CG_EVENT_HANDLING:
-		CG_EventHandling(arg0);
-		return 0;
 	case CG_CONSOLE_TEXT:
 		CG_AddNotifyText(arg0, arg1);
 		return 0;
 	case CG_CONSOLE_CLOSE:
 		CG_CloseConsole();
 		return 0;
-	case CG_WANTSBINDKEYS:
-		return UI_WantsBindKeys();
 	case CG_CREATE_USER_CMD:
 		return (intptr_t)CG_CreateUserCmd(arg0, arg1, arg2, IntAsFloat(arg3), IntAsFloat(arg4), arg5);
 	default:
@@ -2941,7 +2936,7 @@ CG_Init
 Called after every cgame load, such as main menu, level change, or subsystem restart
 =================
 */
-void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo ) {
+void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 
 	// clear everything
 	memset( &cgs, 0, sizeof( cgs ) );
@@ -2959,7 +2954,8 @@ void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo ) {
 	memset( cg_npcs, 0, sizeof(cg_npcs) );
 #endif
 
-	cg.connected = inGameLoad;
+	cg.connState = state;
+	cg.connected = ( cg.connState > CA_CONNECTED && cg.connState != CA_CINEMATIC );
 	cg.cinematicHandle = -1;
 
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
@@ -3041,7 +3037,7 @@ void CG_Init( qboolean inGameLoad, int maxSplitView, int playVideo ) {
 
 	CG_InitAudio();
 
-	UI_Init( inGameLoad, maxSplitView );
+	UI_Init( cg.connected, maxSplitView );
 }
 
 /*
@@ -3225,6 +3221,7 @@ Draw the frame
 */
 void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback, connstate_t state, int realTime ) {
 
+	cg.connState = state;
 	cg.realFrameTime = realTime - cg.realTime;
 	cg.realTime = realTime;
 
@@ -3400,6 +3397,34 @@ CG_DistributeKeyEvent
 */
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state ) {
 	int keyCatcher;
+	qboolean onlybinds = qfalse;
+
+	cg.connState = state;
+
+	switch ( key ) {
+		case K_KP_PGUP:
+		case K_KP_EQUALS:
+		case K_KP_5:
+		case K_KP_LEFTARROW:
+		case K_KP_UPARROW:
+		case K_KP_RIGHTARROW:
+		case K_KP_DOWNARROW:
+		case K_KP_END:
+		case K_KP_PGDN:
+		case K_KP_INS:
+		case K_KP_DEL:
+		case K_KP_HOME:
+			if ( trap_Key_IsDown( K_KP_NUMLOCK ) ) {
+				onlybinds = qtrue;
+			}
+			break;
+		default:
+			break;
+	}
+
+	if ( onlybinds && !UI_WantsBindKeys() ) {
+		return;
+	}
 
 	// console key is hardcoded, so the user can never unbind it
 	if( key == K_CONSOLE || ( key == K_ESCAPE && trap_Key_IsDown( K_SHIFT ) ) ) {

@@ -871,9 +871,6 @@ void CG_Cinematic_f( void ) {
 	char	s[6];
 	float	x, y, width, height;
 	int		bits = CIN_system;
-	uiClientState_t cls;
-
-	trap_GetClientState( &cls );
 
 	Com_DPrintf("CG_Cinematic_f\n");
 	CG_StopCinematic_f();
@@ -1128,12 +1125,14 @@ The string has been tokenized and can be retrieved with
 Cmd_Argc() / Cmd_Argv()
 =================
 */
-qboolean CG_ConsoleCommand( int realTime ) {
+qboolean CG_ConsoleCommand( connstate_t state, int realTime ) {
 	char		buffer[BIG_INFO_STRING];
 	const char	*cmd;
 	int		i;
 	int		localPlayerNum;
 	const char	*baseCmd;
+
+	cg.connState = state;
 
 	// update UI frame time
 	UI_ConsoleCommand( realTime );
