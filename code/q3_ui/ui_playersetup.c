@@ -613,7 +613,6 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 	int		leftOffset;
 	char	playerModel[MAX_QPATH];
 	char	*pdest;
-	uiClientState_t	cs;
 	qboolean inGame;
 
 	if (maxLocalClients > MAX_SPLITVIEW) {
@@ -627,8 +626,6 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 	leftOffset = (spacing - 128) / 2;
 
 	inGame = trap_Cvar_VariableValue( "cl_paused" );
-
-	trap_GetClientState( &cs );
 
 	memset( &s_playersetup, 0, sizeof(s_playersetup) );
 	s_playersetup.action = action;
@@ -732,7 +729,7 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 
 		if (i > 0) {
 			// Extra players default to disabled in main menu.
-			s_playersetup.default_clientEnabled[i-1] = (inGame && cs.clientNums[i] != -1);
+			s_playersetup.default_clientEnabled[i-1] = (inGame && cg.localClients[i].clientNum != -1);
 
 			if (!s_playersetup.default_clientEnabled[i-1]) {
 				s_playersetup.clientEnabled[i-1].curvalue = 0;

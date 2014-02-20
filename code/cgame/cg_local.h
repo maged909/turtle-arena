@@ -139,6 +139,14 @@ typedef enum {
 #endif
 } impactSound_t;
 
+// for CG_EventHandling
+enum {
+  CGAME_EVENT_NONE,
+  CGAME_EVENT_TEAMMENU,
+  CGAME_EVENT_SCOREBOARD,
+  CGAME_EVENT_EDITHUD
+};
+
 #ifdef TA_MISC // MATERIALS
 // Models Per Material type
 #define NUM_MATERIAL_MODELS		5
@@ -970,6 +978,7 @@ typedef struct {
 #define MAX_SPAWN_VARS_CHARS    2048
  
 typedef struct {
+	connstate_t	connState;
 	qboolean	connected;			// connected to a server
 	
 	int			clientFrame;		// incremented each frame
@@ -2438,7 +2447,7 @@ typedef struct {
 	int		flags;
 } consoleCommand_t;
 
-qboolean CG_ConsoleCommand( int realTime );
+qboolean CG_ConsoleCommand( connstate_t state, int realTime );
 void CG_InitConsoleCommands( void );
 
 void CG_StopCinematic_f( void );

@@ -137,11 +137,7 @@ UI_TogglePlayerIngame
 */
 void UI_TogglePlayerIngame(int localClientNum)
 {
-	uiClientState_t	cs;
-
-	trap_GetClientState( &cs );
-
-	if (cs.clientNums[localClientNum] == -1) {
+	if (cg.localClients[localClientNum].clientNum == -1) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropin")) );
 	} else {
 		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropout")) );
@@ -243,7 +239,6 @@ InGame_MenuInit
 */
 void InGame_MenuInit( void ) {
 	int		y;
-	uiClientState_t	cs;
 	char	info[MAX_INFO_STRING];
 	int		team;
 #ifdef TA_MISC // SMART_JOIN_MENU
@@ -289,12 +284,11 @@ void InGame_MenuInit( void ) {
 	y += INGAME_MENU_VERTICAL_SPACING;
 #endif
 #ifdef TA_MISC // SMART_JOIN_MENU
-	trap_GetClientState( &cs );
-	trap_GetConfigString( CS_PLAYERS + cs.clientNums[0], info, MAX_INFO_STRING );
-	numLocalClients = UI_NumLocalClients(&cs);
+	numLocalClients = UI_NumLocalClients();
 
 	// Force if more than one local client
-	if (numLocalClients > 1 || (trap_Cvar_VariableValue( "g_gametype" ) >= GT_TEAM) ) {
+	if (numLocalClients > 1 || (trap_Cvar_VariableValue( "g_gametype" ) >= GT_TEAM)
+		|| cg.localClients[0].clientNum == -1 ) {
 		s_ingame.team.generic.type			= MTYPE_PTEXT;
 		s_ingame.team.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 		s_ingame.team.generic.x				= 320;
@@ -309,6 +303,7 @@ void InGame_MenuInit( void ) {
 		s_ingame.team.style					= UI_CENTER|UI_SMALLFONT;
 	}
 	else {
+		trap_GetConfigString( CS_PLAYERS + cg.localClients[0].clientNum, info, MAX_INFO_STRING );
 		team = atoi( Info_ValueForKey( info, "t" ) );
 		if( team == TEAM_SPECTATOR ) {
 			s_ingame.team.generic.type			= MTYPE_PTEXT;
@@ -408,14 +403,12 @@ void InGame_MenuInit( void ) {
 #endif
 	s_ingame.teamorders.color				= text_big_color;
 	s_ingame.teamorders.style				= UI_CENTER|UI_SMALLFONT;
-	if( !(trap_Cvar_VariableValue( "g_gametype" ) >= GT_TEAM) ) {
+	if( !(trap_Cvar_VariableValue( "g_gametype" ) >= GT_TEAM)
+		|| cg.localClients[0].clientNum == -1 ) {
 		s_ingame.teamorders.generic.flags |= QMF_GRAYED;
 	}
 	else {
-#ifndef TA_MISC // SMART_JOIN_MENU
-		trap_GetClientState( &cs );
-		trap_GetConfigString( CS_PLAYERS + cs.clientNum, info, MAX_INFO_STRING );
-#endif
+		trap_GetConfigString( CS_PLAYERS + cg.localClients[0].clientNum, info, MAX_INFO_STRING );
 		team = atoi( Info_ValueForKey( info, "t" ) );
 		if( team == TEAM_SPECTATOR ) {
 			s_ingame.teamorders.generic.flags |= QMF_GRAYED;
