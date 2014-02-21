@@ -842,7 +842,10 @@ static void CG_OffsetMultiple2dModeView(qboolean everyone) {
 
 	// Find the center of all of the players and use that as the focus point.
 	// Calculate central X, Y, and Z
-	for (i = 0, numPlayers = 0; i < cg.snap->numPSs; i++) {
+	for (i = 0, numPlayers = 0; i < CG_MaxSplitView(); i++) {
+		if ( cg.localClients[i].clientNum == -1 ) {
+			continue;
+		}
 		if (cg.snap->pss[i].persistant[PERS_TEAM] == TEAM_SPECTATOR || cg.snap->pss[i].stats[STAT_HEALTH] <= 0) {
 			continue;
 		}
@@ -928,8 +931,10 @@ static void CG_OffsetMultiple2dModeView(qboolean everyone) {
 
 	// Calculate farthest players
 	farthestplayerX = farthestplayerZ = 0;
-	for (i = 0; i < cg.snap->numPSs; i++)
-	{
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if ( cg.localClients[i].clientNum == -1 ) {
+			continue;
+		}
 		if (cg.snap->pss[i].persistant[PERS_TEAM] == TEAM_SPECTATOR || cg.snap->pss[i].stats[STAT_HEALTH] <= 0)
 			continue;
 
@@ -1541,7 +1546,7 @@ void CG_AddAnnouncement(int announcement, int localClientNumber)
 		int i;
 
 		for (i = 0; i < MAX_SPLITVIEW; i++) {
-			if (cg.snap->lcIndex[i] != -1) {
+			if (cg.localClients[i].clientNum != -1) {
 				CG_AddAnnouncementEx(&cg.localClients[i], sfx, bufferedSfx, cg_announcementMessages[announcement]);
 			}
 		}
@@ -1719,7 +1724,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 #ifdef TURTLEARENA
 	// Use single camera/viewport at intermission
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION) {
+		if ( cg.localClients[i].clientNum != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION ) {
 			// client present and not at intermission, keep viewports separate.
 			break;
 		}
@@ -1730,27 +1735,27 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	twodMode = (cg_2dmode.integer && !(cg_2dmodeOverride.integer && cg_2dmode.integer != 2));
 
 	// Use single camera/viewport in 2d mode and (non-Coop) intermission.
-	cg.singleCamera = (cg.snap->numPSs > 1) && (twodMode || (cgs.gametype != GT_SINGLE_PLAYER && cg.allLocalClientsAtIntermission));
+	cg.singleCamera = (i > 1) && (twodMode || (cgs.gametype != GT_SINGLE_PLAYER && cg.allLocalClientsAtIntermission));
 #else
 	// Use single camera/viewport at intermission
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION) {
+		if ( cg.localClients[i].clientNum != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION ) {
 			// client present and not at intermission, keep viewports separate.
 			break;
 		}
 	}
-	cg.singleCamera = (cg.snap->numPSs > 1) && (i == CG_MaxSplitView());
+	cg.singleCamera = ( i > 1 && i == CG_MaxSplitView() );
 #endif
 
 	cg.numViewports = 0;
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.snap->lcIndex[i] == -1) {
+		if ( cg.localClients[i].clientNum == -1 ) {
 			renderClientViewport[i] = qfalse;
 			continue;
 		}
 		cg.cur_localClientNum = i;
 		cg.cur_lc = &cg.localClients[i];
-		cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+		cg.cur_ps = &cg.snap->pss[i];
 
 		// Check if viewport should be drawn.
 		if ( cg.singleCamera && cg.numViewports >= 1 ) {
@@ -1812,7 +1817,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		cg.viewport++;
 		cg.cur_localClientNum = i;
 		cg.cur_lc = &cg.localClients[i];
-		cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+		cg.cur_ps = &cg.snap->pss[i];
 
 		// decide on third person view
 #ifdef IOQ3ZTM // IOQ3BUGFIX: Third person fix, have spectator always be in first person.
@@ -1850,7 +1855,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			CG_AddTestModel();
 		}
 		cg.refdef.time = cg.time;
-		memcpy( cg.refdef.areamask, cg.snap->areamask[cg.snap->lcIndex[i]], sizeof( cg.refdef.areamask ) );
+		memcpy( cg.refdef.areamask, cg.snap->areamask[i], sizeof( cg.refdef.areamask ) );
 
 		// warning sounds when powerup is wearing off
 		CG_PowerupTimerSounds();
