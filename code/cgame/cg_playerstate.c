@@ -229,12 +229,18 @@ A respawn happened this snapshot
 */
 void CG_Respawn( int clientNum ) {
 	int i;
+	qboolean allClients;
 
 	// no error decay on player movement
 	cg.thisFrameTeleport = qtrue;
 
+	allClients = ( clientNum == -1 );
+
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (clientNum != -1 && (cg.snap->lcIndex[i] == -1 || cg.snap->pss[cg.snap->lcIndex[i]].clientNum != clientNum)) {
+		if ( cg.localClients[i].clientNum == -1 ) {
+			continue;
+		}
+		if ( !allClients && cg.snap->pss[i].clientNum != clientNum ) {
 			continue;
 		}
 
@@ -243,10 +249,10 @@ void CG_Respawn( int clientNum ) {
 		cg.localClients[i].weaponSelectTime = cg.time;
 
 		// select the weapon the server says we are using
-		cg.localClients[i].weaponSelect = cg.snap->pss[cg.snap->lcIndex[i]].weapon;
+		cg.localClients[i].weaponSelect = cg.snap->pss[i].weapon;
 #endif
 #ifdef TA_HOLDSYS/*2*/
-		cg.localClients[i].holdableSelect = cg.snap->pss[cg.snap->lcIndex[i]].holdableIndex;
+		cg.localClients[i].holdableSelect = cg.snap->pss[i].holdableIndex;
 #endif
 #ifdef IOQ3ZTM // NEW_CAM
 		cg.localClients[i].camZoomDir = 0;
@@ -515,7 +521,7 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 			(ps->powerups[PW_NEUTRALFLAG] != ops->powerups[PW_NEUTRALFLAG] && ps->powerups[PW_NEUTRALFLAG]) )
 		{
 #ifdef TA_DATA
-			if (cg.snap->numPSs > 1) {
+			if (CG_NumLocalClients() > 1) {
 				trap_S_StartLocalSound( cgs.media.playerHasFlagSound[cg.cur_localClientNum], CHAN_ANNOUNCER );
 			} else
 #endif

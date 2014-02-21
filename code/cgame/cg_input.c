@@ -314,11 +314,11 @@ void IN_Button14Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_butto
 void IN_CenterView( int localPlayerNum ) {
 	playerState_t *ps;
 
-	if ( localPlayerNum < 0 || localPlayerNum >= MAX_SPLITVIEW || !cg.snap || cg.snap->lcIndex[localPlayerNum] == -1 ) {
+	if ( !cg.snap || cg.snap->clientNums[localPlayerNum] == -1 ) {
 		return;
 	}
 
-	ps = &cg.snap->pss[ cg.snap->lcIndex[ localPlayerNum ] ];
+	ps = &cg.snap->pss[localPlayerNum];
 
 	cg.localClients[localPlayerNum].viewangles[PITCH] = -SHORT2ANGLE(ps->delta_angles[PITCH]);
 }
@@ -612,8 +612,8 @@ usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMs
 	ci = &cis[localClientNum];
 
 #ifdef TA_PATHSYS // 2DMODE
-	if ( cg.snap && cg.snap->lcIndex[ localClientNum ] != -1 ) {
-		ci->pathMode = cg.snap->pss[ cg.snap->lcIndex[ localClientNum ] ].pathMode;
+	if ( cg.snap && cg.snap->clientNums[ localClientNum ] != -1 ) {
+		ci->pathMode = cg.snap->pss[ localClientNum ].pathMode;
 	} else {
 		ci->pathMode = PATHMODE_NONE;
 	}

@@ -3373,7 +3373,7 @@ qboolean CG_AnyScoreboardShowing( void ) {
 	int i;
 
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
-		if ( cg.snap->lcIndex[i] != -1 && cg.localClients[i].scoreBoardShowing ) {
+		if ( cg.localClients[i].clientNum != -1 && cg.localClients[i].scoreBoardShowing ) {
 			return qtrue;
 		}
 	}

@@ -1981,7 +1981,7 @@ void CG_AddPacketEntities( void ) {
 
 	// generate and add the entity from the playerstate
 	for ( num = 0 ; num < CG_MaxSplitView() ; num++ ) {
-		if (cg.snap->lcIndex[num] == -1) {
+		if ( cg.localClients[num].clientNum == -1 ) {
 			continue;
 		}
 		ps = &cg.localClients[num].predictedPlayerState;
@@ -1989,7 +1989,7 @@ void CG_AddPacketEntities( void ) {
 		CG_AddCEntity( &cg.localClients[num].predictedPlayerEntity );
 
 		// lerp the non-predicted value for lightning gun origins
-		CG_CalcEntityLerpPositions( &cg_entities[ cg.snap->pss[cg.snap->lcIndex[num]].clientNum ] );
+		CG_CalcEntityLerpPositions( &cg_entities[ cg.snap->pss[num].clientNum ] );
 	}
 
 	// add each entity sent over by the server
