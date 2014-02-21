@@ -521,10 +521,9 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 			(ps->powerups[PW_NEUTRALFLAG] != ops->powerups[PW_NEUTRALFLAG] && ps->powerups[PW_NEUTRALFLAG]) )
 		{
 #ifdef TA_DATA
-			// ZTM: FIXME: numPSs was removed
-			//if (cg.snap->numPSs > 1) {
-			//	trap_S_StartLocalSound( cgs.media.playerHasFlagSound[cg.cur_localClientNum], CHAN_ANNOUNCER );
-			//} else
+			if (CG_NumLocalClients() > 1) {
+				trap_S_StartLocalSound( cgs.media.playerHasFlagSound[cg.cur_localClientNum], CHAN_ANNOUNCER );
+			} else
 #endif
 			trap_S_StartLocalSound( cgs.media.youHaveFlagSound, CHAN_ANNOUNCER );
 		}
