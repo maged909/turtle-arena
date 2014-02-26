@@ -1735,7 +1735,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	twodMode = (cg_2dmode.integer && !(cg_2dmodeOverride.integer && cg_2dmode.integer != 2));
 
 	// Use single camera/viewport in 2d mode and (non-Coop) intermission.
-	cg.singleCamera = (i > 1) && (twodMode || (cgs.gametype != GT_SINGLE_PLAYER && cg.allLocalClientsAtIntermission));
+	cg.singleCamera = (CG_NumLocalClients() > 1) && (twodMode || (cgs.gametype != GT_SINGLE_PLAYER && cg.allLocalClientsAtIntermission));
 #else
 	// Use single camera/viewport at intermission
 	for (i = 0; i < CG_MaxSplitView(); i++) {
@@ -1744,7 +1744,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			break;
 		}
 	}
-	cg.singleCamera = ( i > 1 && i == CG_MaxSplitView() );
+	cg.singleCamera = ( CG_NumLocalClients() > 1 && i == CG_MaxSplitView() );
 #endif
 
 	cg.numViewports = 0;
