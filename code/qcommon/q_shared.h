@@ -248,8 +248,6 @@ typedef int		clipHandle_t;
 
 #define	MAX_NAME_LENGTH		32		// max length of a client name
 
-#define	MAX_SAY_TEXT	150
-
 // paramters for command buffer stuffing
 typedef enum {
 	EXEC_NOW,			// don't return until completed, a VM should NEVER use this,
@@ -306,6 +304,7 @@ void *Hunk_Alloc( int size, ha_pref preference );
 
 #define Com_Memset memset
 #define Com_Memcpy memcpy
+void Com_Memcpy2( void *dst, int dstSize, const void *src, int srcSize );
 
 #define CIN_system	1
 #define CIN_loop	2
@@ -1026,6 +1025,7 @@ default values.
 #define CVAR_USERINFO2		0x4000 // userinfo for second local player
 #define CVAR_USERINFO3		0x8000 // userinfo for third local player
 #define CVAR_USERINFO4		0x10000 // userinfo for fourth local player
+#define CVAR_CUSTOM_RESET	0x20000 // uses a custom game-specific reset string
 // These flags are only returned by the Cvar_Flags() function
 #define CVAR_MODIFIED		0x40000000	// Cvar was modified
 #define CVAR_NONEXISTENT	0x80000000	// Cvar doesn't exist.
@@ -1039,6 +1039,7 @@ struct cvar_s {
 	char			*name;
 	char			*string;
 	char			*resetString;		// cvar_restart will reset to this value
+	char			*overriddenResetString;	// the reset string as defined by code, set when resetString is overridden by gameconfig.txt
 	char			*latchedString;		// for CVAR_LATCH vars
 	int				flags;
 	qboolean	explicitSet;		// cvar has been explicitly set
@@ -1425,10 +1426,6 @@ typedef enum {
 #define	MAX_OTHER_SERVERS					128
 #define MAX_PINGREQUESTS					32
 #define MAX_SERVERSTATUSREQUESTS	16
-
-#define SAY_ALL		0
-#define SAY_TEAM	1
-#define SAY_TELL	2
 
 #define LERP( a, b, w ) ( ( a ) * ( 1.0f - ( w ) ) + ( b ) * ( w ) )
 #define LUMA( red, green, blue ) ( 0.2126f * ( red ) + 0.7152f * ( green ) + 0.0722f * ( blue ) )
