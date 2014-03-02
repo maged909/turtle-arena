@@ -52,6 +52,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	MAX_PARTICLES_AREAS	1 // ZTM: FIXME: CS_MAX overflow if this is 64. It's not used, might want to just remove.
 #endif
 
+#define	MAX_SAY_TEXT	150
+
+#define	SAY_ALL			0
+#define	SAY_TEAM		1
+#define	SAY_TELL		2
+
 #define	MODELINDEX_BITS		10
 
 // these are networked using the modelindex and/or modelindex2 field, must fit in MODELINDEX_BITS
