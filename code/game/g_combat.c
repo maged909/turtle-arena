@@ -1214,7 +1214,7 @@ void G_BreakableDebris( gentity_t *targ, gentity_t *inflictor, gentity_t *attack
 
 /*
 ============
-T_Damage
+G_Damage
 
 targ		entity that is being damaged
 inflictor	entity that is causing the damage

@@ -639,7 +639,7 @@ static void CG_OffsetThirdPersonView( void ) {
 #else
 			view[2] += (1.0 - trace.fraction) * 32;
 			// try another trace to this position, because a tunnel may have the ceiling
-			// close enogh that this is poking out
+			// close enough that this is poking out
 
 			CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.clientNum, MASK_SOLID );
 			VectorCopy( trace.endpos, view );
@@ -1146,6 +1146,38 @@ static int CG_CalcFov( void ) {
 	return (cg.refdef.rdflags & RDF_UNDERWATER);
 }
 
+
+/*
+==============
+CG_DrawSkyBoxPortal
+==============
+*/
+void CG_DrawSkyBoxPortal( void ) {
+	refdef_t backuprefdef;
+
+	if ( !cg_skybox.integer || !cg.hasSkyPortal ) {
+		return;
+	}
+
+	backuprefdef = cg.refdef;
+
+	VectorCopy( cg.skyPortalOrigin, cg.refdef.vieworg );
+
+	if ( cg.skyPortalFogDepthForOpaque > 0 ) {
+		cg.refdef.fogType = FT_LINEAR;
+		cg.refdef.fogDensity = 1.0f;
+		cg.refdef.fogDepthForOpaque = cg.skyPortalFogDepthForOpaque;
+	}
+	VectorCopy( cg.skyPortalFogColor, cg.refdef.fogColor );
+
+	cg.refdef.time = cg.time;
+
+	// draw the skybox
+	trap_R_RenderScene( &cg.refdef );
+
+	cg.refdef = backuprefdef;
+	cg.refdef.rdflags |= RDF_NOSKY;
+}
 
 
 #ifndef NOBLOOD
@@ -1832,6 +1864,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		// build cg.refdef
 		inwater = CG_CalcViewValues();
 		CG_SetupFrustum();
+
+		CG_DrawSkyBoxPortal();
 
 #ifndef NOBLOOD
 		// first person blend blobs, done after AnglesToAxis

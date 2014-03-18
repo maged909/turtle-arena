@@ -64,6 +64,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define	RF_SHADOW_PLANE		0x0100		// use refEntity->shadowPlane
 #define	RF_WRAP_FRAMES		0x0200		// mod the model frames by the maxframes to allow continuous
+										// animation without needing to know the frame count
 
 #define RF_FORCE_ENT_ALPHA	0x0400		// override shader alpha value and take the one from the entity
 #define	RF_RGB_TINT			0x0800		// override shader color values and take the ones from the entity
@@ -76,6 +77,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define RDF_UNDERWATER		0x0002		// underwater
 #define RDF_HYPERSPACE		0x0004		// teleportation effect
 #define RDF_SUNLIGHT		0x0008		// render sunlight and shadows
+#define RDF_NOSKY			0x0010		// do not render sky. used when there is a separate skybox portal.
 
 // any change in the LIGHTMAP_* defines here MUST be reflected in
 // R_FindShader() in tr_bsp.c
