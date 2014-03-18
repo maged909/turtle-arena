@@ -276,6 +276,7 @@ vmCvar_t	cg_coronafardist;
 vmCvar_t	cg_coronas;
 vmCvar_t	cg_fovAspectAdjust;
 vmCvar_t	cg_fadeExplosions;
+vmCvar_t	cg_skybox;
 vmCvar_t	cg_introPlayed;
 vmCvar_t	ui_stretch;
 
@@ -549,6 +550,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE, RANGE_INT( 0, 3 ) },
 	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_skybox, "cg_skybox", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif

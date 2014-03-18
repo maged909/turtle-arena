@@ -242,6 +242,8 @@ void SP_target_setpath( gentity_t *ent );
 void SP_dlight( gentity_t *ent );
 void SP_corona( gentity_t *ent );
 
+void SP_props_skyportal( gentity_t *ent );
+
 spawn_t	spawns[] = {
 	// info entities don't do anything at all, but provide positional
 	// information for things controlled by other processes
@@ -347,6 +349,8 @@ spawn_t	spawns[] = {
 
 	{"dlight", SP_dlight},
 	{"corona", SP_corona},
+
+	{"props_skyportal", SP_props_skyportal},
 
 #ifdef TA_WEAPSYS
 	{"weapon_random", SP_weapon_random},

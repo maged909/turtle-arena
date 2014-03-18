@@ -1043,6 +1043,10 @@ typedef struct {
 	qboolean mapcoordsValid;
 
 	int			numMiscGameModels;
+	qboolean	hasSkyPortal;
+	vec3_t		skyPortalOrigin;
+	vec3_t		skyPortalFogColor;
+	int			skyPortalFogDepthForOpaque;
 
 	int			numViewports;
 	int			viewport;
@@ -1873,6 +1877,7 @@ extern	vmCvar_t		cg_coronafardist;
 extern	vmCvar_t		cg_coronas;
 extern	vmCvar_t		cg_fovAspectAdjust;
 extern	vmCvar_t		cg_fadeExplosions;
+extern	vmCvar_t		cg_skybox;
 extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
