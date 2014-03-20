@@ -693,6 +693,11 @@ void CG_RegisterUserCvars( void ) {
 		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "model"), modelNames[i], userInfo[i] | CVAR_ARCHIVE );
 		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "headmodel"), headModelNames[i], userInfo[i] | CVAR_ARCHIVE );
 
+#ifdef TA_SP
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "spmodel"), modelNames[i], userInfo[i] | CVAR_ROM );
+		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "spheadmodel"), headModelNames[i], userInfo[i] | CVAR_ROM );
+#endif
+
 #ifndef IOQ3ZTM_NO_TEAM_MODEL
 		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_model"), teamModelNames[i], userInfo[i] | CVAR_ARCHIVE );
 		trap_Cvar_Register( NULL, Com_LocalClientCvarName(i, "team_headmodel"), teamHeadModelNames[i], userInfo[i] | CVAR_ARCHIVE );
