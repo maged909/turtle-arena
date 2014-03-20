@@ -1709,8 +1709,8 @@ consoleCommand_t	ui_commands[] = {
 	{ "loadgame", UI_LoadGame_f, 0 },
 	{ "singleplayermenu", UI_SPMenu_f, 0 },
 	{ "arcade", UI_Arcade_f, 0 },
-	{ "sp_complete", UI_SPComplete_f, CMD_INGAME },
-	{ "sp_gameover", UI_SPGameOver_f, CMD_INGAME },
+	{ "sp_complete", UI_SPComplete_f, 0 },
+	{ "sp_gameover", UI_SPGameOver_f, 0 },
 #else
 	{ "levelselect", UI_SPLevelMenu_f, 0 },
 #endif
