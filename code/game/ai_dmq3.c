@@ -42,11 +42,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ai_char.h"
 #include "../botlib/be_ai_chat.h"
-#include "../botlib/be_ai_gen.h"
 //
+#include "ai_char.h"
 #include "ai_ea.h"
+#include "ai_gen.h"
 #include "ai_goal.h"
 #include "ai_move.h"
 #include "ai_weap.h"
@@ -5257,6 +5257,9 @@ open, which buttons to activate etc.
 ==================
 */
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
+#ifdef OBSTACLEDEBUG
+	char netname[MAX_NETNAME];
+#endif
 	int movetype, bspent;
 	vec3_t hordir, sideward, angles, up = {0, 0, 1};
 	//vec3_t start, end, mins, maxs;

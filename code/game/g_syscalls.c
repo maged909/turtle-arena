@@ -213,6 +213,14 @@ void trap_TraceCapsule( trace_t *results, const vec3_t start, const vec3_t mins,
 	syscall( G_TRACECAPSULE, results, start, mins, maxs, end, passEntityNum, contentmask );
 }
 
+void trap_ClipToEntities( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask ) {
+	syscall( G_CLIPTOENTITIES, results, start, mins, maxs, end, passEntityNum, contentmask );
+}
+
+void trap_ClipToEntitiesCapsule( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask ) {
+	syscall( G_CLIPTOENTITIESCAPSULE, results, start, mins, maxs, end, passEntityNum, contentmask );
+}
+
 int trap_PointContents( const vec3_t point, int passEntityNum ) {
 	return syscall( G_POINT_CONTENTS, point, passEntityNum );
 }
@@ -559,38 +567,6 @@ int trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs) {
 }
 
 
-int trap_BotLoadCharacter(char *charfile, float skill) {
-	return syscall( BOTLIB_AI_LOAD_CHARACTER, charfile, PASSFLOAT(skill));
-}
-
-void trap_BotFreeCharacter(int character) {
-	syscall( BOTLIB_AI_FREE_CHARACTER, character );
-}
-
-float trap_Characteristic_Float(int character, int index) {
-	floatint_t fi;
-	fi.i = syscall( BOTLIB_AI_CHARACTERISTIC_FLOAT, character, index );
-	return fi.f;
-}
-
-float trap_Characteristic_BFloat(int character, int index, float min, float max) {
-	floatint_t fi;
-	fi.i = syscall( BOTLIB_AI_CHARACTERISTIC_BFLOAT, character, index, PASSFLOAT(min), PASSFLOAT(max) );
-	return fi.f;
-}
-
-int trap_Characteristic_Integer(int character, int index) {
-	return syscall( BOTLIB_AI_CHARACTERISTIC_INTEGER, character, index );
-}
-
-int trap_Characteristic_BInteger(int character, int index, int min, int max) {
-	return syscall( BOTLIB_AI_CHARACTERISTIC_BINTEGER, character, index, min, max );
-}
-
-void trap_Characteristic_String(int character, int index, char *buf, int size) {
-	syscall( BOTLIB_AI_CHARACTERISTIC_STRING, character, index, buf, size );
-}
-
 int trap_BotAllocChatState(void) {
 	return syscall( BOTLIB_AI_ALLOC_CHAT_STATE );
 }
@@ -671,10 +647,6 @@ void trap_BotSetChatName(int chatstate, char *name, int client) {
 	syscall( BOTLIB_AI_SET_CHAT_NAME, chatstate, name, client );
 }
 
-
-int trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child) {
-	return syscall( BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION, numranks, ranks, parent1, parent2, child );
-}
 
 int trap_PC_AddGlobalDefine(char *string) {
 	return syscall( G_PC_ADD_GLOBAL_DEFINE, string );

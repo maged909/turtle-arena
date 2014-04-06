@@ -1248,11 +1248,13 @@ $(B)/$(MISSIONPACK)/vm/mint-cgame.qvm: $(MPCGVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3
 
 Q3GOBJ = \
   $(B)/$(BASEGAME)/game/g_main.o \
+  $(B)/$(BASEGAME)/game/ai_char.o \
   $(B)/$(BASEGAME)/game/ai_chat.o \
   $(B)/$(BASEGAME)/game/ai_cmd.o \
   $(B)/$(BASEGAME)/game/ai_dmnet.o \
   $(B)/$(BASEGAME)/game/ai_dmq3.o \
   $(B)/$(BASEGAME)/game/ai_ea.o \
+  $(B)/$(BASEGAME)/game/ai_gen.o \
   $(B)/$(BASEGAME)/game/ai_goal.o \
   $(B)/$(BASEGAME)/game/ai_main.o \
   $(B)/$(BASEGAME)/game/ai_move.o \
@@ -1310,11 +1312,13 @@ $(B)/$(BASEGAME)/vm/mint-game.qvm: $(Q3GVMOBJ) $(GDIR)/bg_syscalls.asm $(Q3ASM)
 
 MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/g_main.o \
+  $(B)/$(MISSIONPACK)/game/ai_char.o \
   $(B)/$(MISSIONPACK)/game/ai_chat.o \
   $(B)/$(MISSIONPACK)/game/ai_cmd.o \
   $(B)/$(MISSIONPACK)/game/ai_dmnet.o \
   $(B)/$(MISSIONPACK)/game/ai_dmq3.o \
   $(B)/$(MISSIONPACK)/game/ai_ea.o \
+  $(B)/$(MISSIONPACK)/game/ai_gen.o \
   $(B)/$(MISSIONPACK)/game/ai_goal.o \
   $(B)/$(MISSIONPACK)/game/ai_main.o \
   $(B)/$(MISSIONPACK)/game/ai_move.o \
