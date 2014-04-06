@@ -41,11 +41,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ai_char.h"
 #include "../botlib/be_ai_chat.h"
-#include "../botlib/be_ai_gen.h"
 //
+#include "ai_char.h"
 #include "ai_ea.h"
+#include "ai_gen.h"
 #include "ai_goal.h"
 #include "ai_move.h"
 #include "ai_weap.h"

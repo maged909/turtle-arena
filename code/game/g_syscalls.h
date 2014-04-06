@@ -52,6 +52,8 @@ void	trap_GetServerinfo( char *buffer, int bufferSize );
 void	trap_SetBrushModel( gentity_t *ent, const char *name );
 void	trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 void	trap_TraceCapsule( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+void	trap_ClipToEntities( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+void	trap_ClipToEntitiesCapsule( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 int		trap_PointContents( const vec3_t point, int passEntityNum );
 qboolean trap_InPVS( const vec3_t p1, const vec3_t p2 );
 qboolean trap_InPVSIgnorePortals( const vec3_t p1, const vec3_t p2 );
@@ -150,14 +152,6 @@ int		trap_AAS_AgainstLadder(vec3_t origin);
 int		trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity);
 int		trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs);
 
-int		trap_BotLoadCharacter(char *charfile, float skill);
-void	trap_BotFreeCharacter(int character);
-float	trap_Characteristic_Float(int character, int index);
-float	trap_Characteristic_BFloat(int character, int index, float min, float max);
-int		trap_Characteristic_Integer(int character, int index);
-int		trap_Characteristic_BInteger(int character, int index, int min, int max);
-void	trap_Characteristic_String(int character, int index, char *buf, int size);
-
 int		trap_BotAllocChatState(void);
 void	trap_BotFreeChatState(int handle);
 void	trap_BotQueueConsoleMessage(int chatstate, int type, char *message);
@@ -178,8 +172,6 @@ void	trap_BotReplaceSynonyms(char *string, unsigned long int context);
 int		trap_BotLoadChatFile(int chatstate, char *chatfile, char *chatname);
 void	trap_BotSetChatGender(int chatstate, int gender);
 void	trap_BotSetChatName(int chatstate, char *name, int client);
-
-int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child);
 
 #endif
 
