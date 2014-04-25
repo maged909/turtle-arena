@@ -5233,15 +5233,23 @@ BotRandomMove
 */
 void BotRandomMove(bot_state_t *bs, bot_moveresult_t *moveresult) {
 	vec3_t dir, angles;
+	int i;
 
 	angles[0] = 0;
 	angles[1] = random() * 360;
 	angles[2] = 0;
-	AngleVectors(angles, dir, NULL, NULL);
 
-	BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK);
+	for (i = 0; i < 8; i++) {
+		AngleVectors(angles, dir, NULL, NULL);
 
-	moveresult->failure = qfalse;
+		if (BotMoveInDirection(bs->ms, dir, 400, MOVE_WALK)) {
+			break;
+		}
+
+		angles[1] = ((int)angles[1] + 45) % 360;
+	}
+
+	moveresult->failure = (i == 8);
 	VectorCopy(dir, moveresult->movedir);
 }
 
@@ -5322,22 +5330,12 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	//if (moveresult->flags & MOVERESULT_ONTOPOFOBSTACLE) movetype = MOVE_JUMP;
 	//else
 	movetype = MOVE_WALK;
-	// if there's an obstacle at the bot's feet and head then
-	// the bot might be able to crouch through
-	//VectorCopy(bs->origin, start);
-	//start[2] += 18;
-	//VectorMA(start, 5, hordir, end);
-	//VectorSet(mins, -16, -16, -24);
-	//VectorSet(maxs, 16, 16, 4);
-	//
-	//bsptrace = AAS_Trace(start, mins, maxs, end, bs->entitynum, MASK_PLAYERSOLID);
-	//if (bsptrace.fraction >= 1) movetype = MOVE_CROUCH;
 	// get the sideward vector
 	CrossProduct(hordir, up, sideward);
 	//
 	if (bs->flags & BFL_AVOIDRIGHT) VectorNegate(sideward, sideward);
-	// try to crouch straight forward?
-	if (movetype != MOVE_CROUCH || !BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
+	//try to crouch or jump over barrier
+	if (!BotMoveInDirection(bs->ms, hordir, 400, movetype)) {
 		// perform the movement
 		if (!BotMoveInDirection(bs->ms, sideward, 400, movetype)) {
 			// flip the avoid direction flag

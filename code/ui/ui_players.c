@@ -1442,8 +1442,6 @@ static qboolean	UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, 
 	char		filename[MAX_QPATH];
 	qboolean	legsSkin, torsoSkin, headSkin;
 
-	legsSkin = torsoSkin = headSkin = qfalse;
-
 #ifdef IOQ3ZTM // BONES
 	// single model player has single skin
 	if (pi->playerModel) {
@@ -1478,6 +1476,8 @@ static qboolean	UI_RegisterClientSkin( playerInfo_t *pi, const char *modelName, 
 
 	if ( UI_FindClientHeadFile( filename, sizeof(filename), teamName, headModelName, headSkinName, "head", "skin" ) ) {
 		headSkin = CG_RegisterSkin( filename, &pi->modelSkin, qtrue );
+	} else {
+		headSkin = qfalse;
 	}
 
 	if ( !legsSkin || !torsoSkin || !headSkin ) {

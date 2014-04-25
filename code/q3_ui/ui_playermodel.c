@@ -116,7 +116,8 @@ typedef struct
 	char			modelnames[MAX_PLAYERMODELS][128];
 	int				modelpage;
 	int				numpages;
-	char			modelskin[64];
+	char			modelskin[MAX_QPATH];
+	char			headmodelskin[MAX_QPATH];
 	int				selectedmodel;
 	int				localClient;
 	char			bannerString[32];
@@ -201,7 +202,7 @@ static void PlayerModel_UpdateModel( void )
 	viewangles[ROLL]  = 0;
 	VectorClear( moveangles );
 
-	UI_PlayerInfo_SetModel( &s_playermodel.playerinfo, s_playermodel.modelskin );
+	UI_PlayerInfo_SetModel( &s_playermodel.playerinfo, s_playermodel.modelskin, s_playermodel.headmodelskin, NULL );
 #ifdef TA_WEAPSYS
 	UI_PlayerInfo_SetInfo( &s_playermodel.playerinfo,
 			BG_LegsStandForWeapon(&s_playermodel.playerinfo.playercfg, s_playermodel.playerinfo.weapon),
@@ -220,18 +221,10 @@ PlayerModel_SaveChanges
 static void PlayerModel_SaveChanges( void )
 {
 	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin );
-#ifdef IOQ3ZTM // BLANK_HEADMODEL
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), "" );
-#else
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.modelskin );
-#endif
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.headmodelskin );
 #ifndef IOQ3ZTM_NO_TEAM_MODEL
 	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_model"), s_playermodel.modelskin );
-#ifdef IOQ3ZTM // BLANK_HEADMODEL
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_headmodel"), "" );
-#else
-	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_headmodel"), s_playermodel.modelskin );
-#endif
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_headmodel"), s_playermodel.headmodelskin );
 #endif
 }
 
@@ -381,6 +374,13 @@ static void PlayerModel_PicEvent( void* ptr, int event )
 		Q_strncpyz(s_playermodel.modelskin,buffptr,pdest-buffptr+1);
 		strcat(s_playermodel.modelskin,pdest + 5);
 
+		//
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+		s_playermodel.headmodelskin[0] = '\0';
+#else
+		strcpy(s_playermodel.headmodelskin, s_playermodel.modelskin );
+#endif
+
 		// seperate the model name
 		maxlen = pdest-buffptr;
 		if (maxlen > 16)
@@ -513,7 +513,8 @@ static void PlayerModel_SetMenuItems( void )
 	Q_CleanStr( s_playermodel.playername.string );
 
 	// model
-	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin, 64 );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin, sizeof ( s_playermodel.modelskin ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.headmodelskin, sizeof ( s_playermodel.headmodelskin ) );
 	
 	// use default skin if none is set
 	if (!strchr(s_playermodel.modelskin, '/')) {
