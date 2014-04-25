@@ -356,6 +356,8 @@ void SP_worldspawn( void ) {
 
 	CG_SpawnString( "atmosphere", "", &s );
 	CG_EffectParse( s );
+
+	CG_SpawnFloat( "skyalpha", "1", &cg.skyAlpha );
 }
 
 /*

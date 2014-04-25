@@ -1118,6 +1118,41 @@ float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
+int BotCheckBarrierCrouch(bot_movestate_t *ms, vec3_t dir, float speed)
+{
+	vec3_t hordir, end;
+	aas_trace_t trace;
+
+	hordir[0] = dir[0];
+	hordir[1] = dir[1];
+	hordir[2] = 0;
+	VectorNormalize(hordir);
+	VectorMA(ms->origin, ms->thinktime * speed * 0.5, hordir, end);
+	//trace horizontally in the move direction
+	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
+	//this shouldn't happen... but we check anyway
+	if (trace.startsolid) return qfalse;
+	//if no obstacle at all
+	if (trace.fraction >= 1.0) return qfalse;
+	//trace horizontally in the move direction again
+	trap_AAS_TraceClientBBox(&trace, ms->origin, end, PRESENCE_CROUCH, ms->entitynum);
+	//again this shouldn't happen
+	if (trace.startsolid) return qfalse;
+	//if something is hit
+	if (trace.fraction < 1.0) return qfalse;
+
+	ms->presencetype = PRESENCE_CROUCH;
+	EA_Crouch(ms->client);
+	EA_Move(ms->client, hordir, speed);
+	//there is a barrier
+	return qtrue;
+} //end of the function BotCheckBarrierCrouch
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
 int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed)
 {
 	vec3_t start, hordir, end;
@@ -1222,9 +1257,8 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 		if (BotCheckBarrierJump(ms, dir, speed)) return qtrue;
 		//remove barrier jump flag
 		ms->moveflags &= ~MFL_BARRIERJUMP;
-		//get the presence type for the movement
-		if ((type & MOVE_CROUCH) && !(type & MOVE_JUMP)) presencetype = PRESENCE_CROUCH;
-		else presencetype = PRESENCE_NORMAL;
+		//if there is a barrier the bot can crouch through
+		if (BotCheckBarrierCrouch(ms, dir, speed)) return qtrue;
 		//horizontal direction
 		hordir[0] = dir[0];
 		hordir[1] = dir[1];
@@ -1236,6 +1270,9 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 			//if there is a gap, try to jump over it
 			if (BotGapDistance(ms->origin, hordir, ms->entitynum) > 0) type |= MOVE_JUMP;
 		} //end if
+		//get the presence type for the movement
+		if ((type & MOVE_CROUCH) && !(type & MOVE_JUMP)) presencetype = PRESENCE_CROUCH;
+		else presencetype = PRESENCE_NORMAL;
 		//get command movement
 		VectorScale(hordir, speed, cmdmove);
 		VectorCopy(ms->velocity, velocity);
@@ -1324,78 +1361,6 @@ int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int type)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type)
-{
-	bot_movestate_t *ms;
-#ifdef IOQ3ZTM // WALK_UNDERWATER
-	qboolean swimming;
-#endif
-
-	ms = BotMoveStateFromHandle(movestate);
-	if (!ms) return qfalse;
-#ifdef IOQ3ZTM // WALK_UNDERWATER
-	//check if swimming
-	swimming = trap_AAS_Swimming(ms->origin);
-	//player walks on ground underwater
-	if (swimming && !(dir[2] > 0))
-	{
-		if (trap_AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
-		//if the bot is on the ground
-		if (ms->moveflags & MFL_ONGROUND)
-		{
-			//walk underwater instead
-			swimming = qfalse;
-		}
-	}
-	//if in water and not on ground or want to swim up
-	if (swimming)
-#else
-	//if swimming
-	if (trap_AAS_Swimming(ms->origin))
-#endif
-	{
-		return BotSwimInDirection(ms, dir, speed, type);
-	} //end if
-	else
-	{
-		return BotWalkInDirection(ms, dir, speed, type);
-	} //end else
-} //end of the function BotMoveInDirection
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-int Intersection(vec2_t p1, vec2_t p2, vec2_t p3, vec2_t p4, vec2_t out)
-{
-   float x1, dx1, dy1, x2, dx2, dy2, d;
-
-   dx1 = p2[0] - p1[0];
-   dy1 = p2[1] - p1[1];
-   dx2 = p4[0] - p3[0];
-   dy2 = p4[1] - p3[1];
-
-   d = dy1 * dx2 - dx1 * dy2;
-   if (d != 0)
-   {
-      x1 = p1[1] * dx1 - p1[0] * dy1;
-      x2 = p3[1] * dx2 - p3[0] * dy2;
-      out[0] = (int) ((dx1 * x2 - dx2 * x1) / d);
-      out[1] = (int) ((dy1 * x2 - dy2 * x1) / d);
-		return qtrue;
-   } //end if
-   else
-   {
-      return qfalse;
-   } //end else
-} //end of the function Intersection
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
 void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_moveresult_t *result)
 {
 	vec3_t mins, maxs, end, up = {0, 0, 1};
@@ -1403,11 +1368,10 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 
 	//test for entities obstructing the bot's path
 	trap_AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
-	//
+	//if the bot can step on
 	if (fabs(DotProduct(dir, up)) < 0.7)
 	{
-		mins[2] += STEPSIZE; //if the bot can step on
-		maxs[2] -= 10; //a little lower to avoid low ceiling
+		mins[2] += STEPSIZE;
 	} //end if
 	VectorMA(ms->origin, 3, dir, end);
 	trap_ClipToEntities(&trace, ms->origin, mins, maxs, end, ms->entitynum, MASK_PLAYERSOLID);
@@ -1440,6 +1404,66 @@ void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bot_mover
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
+int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type)
+{
+	bot_movestate_t *ms;
+	qboolean success;
+#ifdef IOQ3ZTM // WALK_UNDERWATER
+	qboolean swimming;
+#endif
+
+	ms = BotMoveStateFromHandle(movestate);
+	if (!ms) return qfalse;
+#ifdef IOQ3ZTM // WALK_UNDERWATER
+	//check if swimming
+	swimming = trap_AAS_Swimming(ms->origin);
+	//player walks on ground underwater
+	if (swimming && !(dir[2] > 0))
+	{
+		if (trap_AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
+		//if the bot is on the ground
+		if (ms->moveflags & MFL_ONGROUND)
+		{
+			//walk underwater instead
+			swimming = qfalse;
+		}
+	}
+	//if in water and not on ground or want to swim up
+	if (swimming)
+#else
+	//if swimming
+	if (trap_AAS_Swimming(ms->origin))
+#endif
+	{
+		success = BotSwimInDirection(ms, dir, speed, type);
+	} //end if
+	else
+	{
+		success = BotWalkInDirection(ms, dir, speed, type);
+	} //end else
+	// check if blocked
+	if (success) {
+		bot_moveresult_t result;
+		bot_input_t		bi;
+
+		Com_Memset(&result, 0, sizeof (result));
+
+		EA_GetInput(ms->client, ms->thinktime, &bi);
+		BotCheckBlocked(ms, bi.dir, qfalse, &result);
+
+		if (result.blocked) {
+			success = qfalse;
+		}
+	}
+	//
+	return success;
+} //end of the function BotMoveInDirection
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
 bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
 {
 	float dist, speed;
@@ -1452,8 +1476,6 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
 	hordir[2] = 0;
 	dist = VectorNormalize(hordir);
 	//
-	BotCheckBlocked(ms, hordir, qtrue, &result);
-	//
 	if (dist < 10)
 	{
 		//walk straight to the reachability end
@@ -1462,6 +1484,8 @@ bot_moveresult_t BotTravel_Walk(bot_movestate_t *ms, aas_reachability_t *reach)
 		hordir[2] = 0;
 		dist = VectorNormalize(hordir);
 	} //end if
+	//
+	BotCheckBlocked(ms, hordir, qtrue, &result);
 	//if going towards a crouch area
 	if (!(BotAreaPresenceType(reach->areanum) & PRESENCE_NORMAL))
 	{
