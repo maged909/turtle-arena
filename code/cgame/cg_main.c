@@ -277,6 +277,7 @@ vmCvar_t	cg_coronas;
 vmCvar_t	cg_fovAspectAdjust;
 vmCvar_t	cg_fadeExplosions;
 vmCvar_t	cg_skybox;
+vmCvar_t	cg_drawScores;
 vmCvar_t	cg_introPlayed;
 vmCvar_t	ui_stretch;
 
@@ -323,6 +324,7 @@ vmCvar_t	cg_drawGun[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonHeight[MAX_SPLITVIEW];
 #ifdef IOQ3ZTM // ANALOG
 vmCvar_t	cg_thirdPersonAnalog[MAX_SPLITVIEW];
 #endif
@@ -551,6 +553,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_skybox, "cg_skybox", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_drawScores, "cg_drawScores", "1", 0, RANGE_BOOL },
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
@@ -594,6 +597,7 @@ static userCvarTable_t userCvarTable[] = {
 	{ cg_thirdPersonRange, "cg_thirdPersonRange", "40", CVAR_CHEAT, RANGE_ALL },
 	{ cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
 #endif
+	{ cg_thirdPersonHeight, "cg_thirdPersonHeight", "24", 0, RANGE_INT( 0, 32 ) },
 #ifdef IOQ3ZTM // ANALOG
 	{ cg_thirdPersonAnalog, "cg_thirdPersonAnalog", "0", 0, RANGE_BOOL },
 #endif
