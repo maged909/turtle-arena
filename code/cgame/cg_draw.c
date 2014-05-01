@@ -3020,6 +3020,7 @@ static void CG_DrawCrosshair3D(void)
 	float		f;
 	int			ca;
 
+	vec4_t hcolor;
 	trace_t trace;
 	vec3_t endpos;
 	float stereoSep, zProj, maxdist, xmax;
@@ -3036,6 +3037,13 @@ static void CG_DrawCrosshair3D(void)
 
 	if ( cg.cur_lc->renderingThirdPerson ) {
 		return;
+	}
+
+	// set color based on health
+	if ( cg_crosshairHealth.integer ) {
+		CG_ColorForHealth( hcolor );
+	} else {
+		hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1;
 	}
 
 	w = cg_crosshairSize.value;
@@ -3073,6 +3081,10 @@ static void CG_DrawCrosshair3D(void)
 	memset(&ent, 0, sizeof(ent));
 	ent.reType = RT_SPRITE;
 	ent.renderfx = RF_DEPTHHACK | RF_CROSSHAIR;
+	ent.shaderRGBA[0] = 255 * hcolor[0];
+	ent.shaderRGBA[1] = 255 * hcolor[1];
+	ent.shaderRGBA[2] = 255 * hcolor[2];
+	ent.shaderRGBA[3] = 255 * hcolor[3];
 	
 	VectorCopy(trace.endpos, ent.origin);
 	
@@ -3096,6 +3108,7 @@ static void CG_DrawThirdPersonCrosshair(void)
 	float		f;
 	int			ca;
 
+	vec4_t hcolor;
 	trace_t trace;
 	vec3_t endpos, distToScreen;
 	float maxdist, xmax;
@@ -3111,6 +3124,13 @@ static void CG_DrawThirdPersonCrosshair(void)
 
 	if ( !cg.cur_lc->renderingThirdPerson ) {
 		return;
+	}
+
+	// set color based on health
+	if ( cg_crosshairHealth.integer ) {
+		CG_ColorForHealth( hcolor );
+	} else {
+		hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1;
 	}
 
 	w = cg_crosshairSize.value;
@@ -3137,6 +3157,10 @@ static void CG_DrawThirdPersonCrosshair(void)
 	memset(&ent, 0, sizeof(ent));
 	ent.reType = RT_SPRITE;
 	ent.renderfx = RF_DEPTHHACK | RF_CROSSHAIR;
+	ent.shaderRGBA[0] = 255 * hcolor[0];
+	ent.shaderRGBA[1] = 255 * hcolor[1];
+	ent.shaderRGBA[2] = 255 * hcolor[2];
+	ent.shaderRGBA[3] = 255 * hcolor[3];
 
 	VectorCopy(trace.endpos, ent.origin);
 	VectorSubtract( cg.refdef.vieworg, ent.origin, distToScreen );
