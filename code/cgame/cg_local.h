@@ -1031,6 +1031,11 @@ typedef struct {
 	vec3_t		refdefViewAngles;		// will be converted to refdef.viewaxis
 	float		fov;					// either range checked cg_fov or forced value
 
+	// first person view pos, set even when rendering third person view
+	vec3_t		firstPersonViewOrg;
+	vec3_t		firstPersonViewAngles;
+	vec3_t		firstPersonViewAxis[3];
+
 	// spawn variables
 	qboolean spawning;                  // the CG_Spawn*() functions are valid
 	int numSpawnVars;
@@ -1880,6 +1885,7 @@ extern	vmCvar_t		cg_coronas;
 extern	vmCvar_t		cg_fovAspectAdjust;
 extern	vmCvar_t		cg_fadeExplosions;
 extern	vmCvar_t		cg_skybox;
+extern	vmCvar_t		cg_drawScores;
 extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
@@ -1921,12 +1927,13 @@ extern	vmCvar_t		cg_teampref[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_autoswitch[MAX_SPLITVIEW];
 #endif
 extern	vmCvar_t		cg_drawGun[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonAngle[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPersonHeight[MAX_SPLITVIEW];
 #ifdef IOQ3ZTM // ANALOG
 extern	vmCvar_t		cg_thirdPersonAnalog[MAX_SPLITVIEW];
 #endif
-extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
 
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_currentSelectedPlayer[MAX_SPLITVIEW];
@@ -1990,6 +1997,7 @@ void CG_ZoomUp_f( int localClient );
 void CG_ZoomDown_f( int localClient );
 #endif
 void CG_AddBufferedSound( sfxHandle_t sfx);
+void CG_StepOffset( vec3_t vieworg );
 
 #ifdef TA_MISC // COMIC_ANNOUNCER
 typedef enum

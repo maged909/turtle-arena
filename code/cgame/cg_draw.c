@@ -1816,6 +1816,10 @@ static float CG_DrawScores( float y ) {
 	bg_iteminfo_t	*item;
 	const int	FLAG_SIZE = 64;
 
+	if ( !cg_drawScores.integer ) {
+		return y;
+	}
+
 	s1 = cgs.scores1;
 	s2 = cgs.scores2;
 
@@ -3016,6 +3020,7 @@ static void CG_DrawCrosshair3D(void)
 	float		f;
 	int			ca;
 
+	vec4_t hcolor;
 	trace_t trace;
 	vec3_t endpos;
 	float stereoSep, zProj, maxdist, xmax;
@@ -3034,7 +3039,12 @@ static void CG_DrawCrosshair3D(void)
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	// set color based on health
+	if ( cg_crosshairHealth.integer ) {
+		CG_ColorForHealth( hcolor );
+	} else {
+		hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1;
+	}
 
 	w = cg_crosshairSize.value;
 
@@ -3071,11 +3081,92 @@ static void CG_DrawCrosshair3D(void)
 	memset(&ent, 0, sizeof(ent));
 	ent.reType = RT_SPRITE;
 	ent.renderfx = RF_DEPTHHACK | RF_CROSSHAIR;
+	ent.shaderRGBA[0] = 255 * hcolor[0];
+	ent.shaderRGBA[1] = 255 * hcolor[1];
+	ent.shaderRGBA[2] = 255 * hcolor[2];
+	ent.shaderRGBA[3] = 255 * hcolor[3];
 	
 	VectorCopy(trace.endpos, ent.origin);
 	
 	// scale the crosshair so it appears the same size for all distances
 	ent.radius = w / 640 * xmax * trace.fraction * maxdist / zProj;
+	ent.customShader = hShader;
+
+	trap_R_AddRefEntityToScene(&ent);
+}
+
+
+/*
+=================
+CG_DrawThirdPersonCrosshair
+=================
+*/
+static void CG_DrawThirdPersonCrosshair(void)
+{
+	float		w;
+	qhandle_t	hShader;
+	float		f;
+	int			ca;
+
+	vec4_t hcolor;
+	trace_t trace;
+	vec3_t endpos, distToScreen;
+	float maxdist, xmax;
+	refEntity_t ent;
+
+	if ( !cg_drawCrosshair.integer ) {
+		return;
+	}
+
+	if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_SPECTATOR) {
+		return;
+	}
+
+	if ( !cg.cur_lc->renderingThirdPerson ) {
+		return;
+	}
+
+	// set color based on health
+	if ( cg_crosshairHealth.integer ) {
+		CG_ColorForHealth( hcolor );
+	} else {
+		hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1;
+	}
+
+	w = cg_crosshairSize.value;
+
+	// pulse the size of the crosshair when picking up items
+	f = cg.time - cg.cur_lc->itemPickupBlendTime;
+	if ( f > 0 && f < ITEM_BLOB_TIME ) {
+		f /= ITEM_BLOB_TIME;
+		w *= ( 1 + f );
+	}
+
+	ca = cg_drawCrosshair.integer;
+	if (ca < 0) {
+		ca = 0;
+	}
+	hShader = cgs.media.crosshairShader[ ca % NUM_CROSSHAIRS ];
+
+	xmax = tan(cg.refdef.fov_x * M_PI / 360.0f);
+	// We are going to trace to the next shootable object and place the crosshair in front of it.
+	maxdist = cgs.glconfig.vidWidth / (2 * xmax);
+	VectorMA(cg.firstPersonViewOrg, maxdist, cg.firstPersonViewAxis[0], endpos);
+	CG_Trace(&trace, cg.firstPersonViewOrg, NULL, NULL, endpos, 0, MASK_SHOT);
+
+	memset(&ent, 0, sizeof(ent));
+	ent.reType = RT_SPRITE;
+	ent.renderfx = RF_DEPTHHACK | RF_CROSSHAIR;
+	ent.shaderRGBA[0] = 255 * hcolor[0];
+	ent.shaderRGBA[1] = 255 * hcolor[1];
+	ent.shaderRGBA[2] = 255 * hcolor[2];
+	ent.shaderRGBA[3] = 255 * hcolor[3];
+
+	VectorCopy(trace.endpos, ent.origin);
+	VectorSubtract( cg.refdef.vieworg, ent.origin, distToScreen );
+
+	// scale the crosshair so it appears the same size for all distances
+	ent.radius = w / 640 * xmax * VectorLength( distToScreen );
 	ent.customShader = hShader;
 
 	trap_R_AddRefEntityToScene(&ent);
@@ -4249,6 +4340,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	if(stereoView != STEREO_CENTER)
 		CG_DrawCrosshair3D();
+
+	CG_DrawThirdPersonCrosshair();
 
 	CG_PB_RenderPolyBuffers();
 
