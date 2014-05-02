@@ -432,7 +432,7 @@ static qboolean	CG_FindClientHeadFile( char *filename, int length, clientInfo_t 
 
 			if (Q_stricmpn(ext, "$image", 6) == 0) {
 				COM_StripExtension(filename, filename, length);
- 				if (trap_R_RegisterShaderNoMip(filename)) {
+				if (trap_R_RegisterShaderNoMip(filename)) {
 					return qtrue;
 				}
 			} else if ( CG_FileExists( filename ) ) {
@@ -458,7 +458,7 @@ static qboolean	CG_FindClientHeadFile( char *filename, int length, clientInfo_t 
 
 			if (Q_stricmpn(ext, "$image", 6) == 0) {
 				COM_StripExtension(filename, filename, length);
- 				if (trap_R_RegisterShaderNoMip(filename)) {
+				if (trap_R_RegisterShaderNoMip(filename)) {
 					return qtrue;
 				}
 			} else if ( CG_FileExists( filename ) ) {
@@ -683,9 +683,9 @@ CG_RegisterClientModelname
 ==========================
 */
 static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelName, const char *skinName, const char *headModelName, const char *headSkinName, const char *teamName ) {
-	char	filename[MAX_QPATH*2];
+	char	filename[MAX_QPATH];
 	const char		*headName;
-	char newTeamName[MAX_QPATH*2];
+	char newTeamName[MAX_QPATH];
 
 	if ( headModelName[0] == '\0' ) {
 		headName = modelName;
