@@ -758,29 +758,25 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		killer, self->s.number, meansOfDeath, killerName, 
 		self->client->pers.netname, obit );
 
-#ifdef IOQ3ZTM // SWITCH_TEAM
-	// Don't send death obituary when swiching teams.
+	// don't send death obituary when swiching teams
 	if (meansOfDeath != MOD_SUICIDE_TEAM_CHANGE) {
-#endif
-	// broadcast the death event to everyone
-	ent = G_TempEntity( self->r.currentOrigin, EV_OBITUARY );
-	ent->s.eventParm = meansOfDeath;
-	ent->s.otherEntityNum = self->s.number;
-	ent->s.otherEntityNum2 = killer;
+		// broadcast the death event to everyone
+		ent = G_TempEntity( self->r.currentOrigin, EV_OBITUARY );
+		ent->s.eventParm = meansOfDeath;
+		ent->s.otherEntityNum = self->s.number;
+		ent->s.otherEntityNum2 = killer;
 #ifdef TA_WEAPSYS
-	// projectile or weapon group number
-	if (meansOfDeath == MOD_PROJECTILE || meansOfDeath == MOD_PROJECTILE_EXPLOSION) {
-		ent->s.weapon = projectile;
-	} else if (meansOfDeath == MOD_WEAPON_PRIMARY || meansOfDeath == MOD_WEAPON_SECONDARY) {
-		ent->s.weapon = weaponGroup;
-	} else {
-		ent->s.weapon = 0;
-	}
+		// projectile or weapon group number
+		if (meansOfDeath == MOD_PROJECTILE || meansOfDeath == MOD_PROJECTILE_EXPLOSION) {
+			ent->s.weapon = projectile;
+		} else if (meansOfDeath == MOD_WEAPON_PRIMARY || meansOfDeath == MOD_WEAPON_SECONDARY) {
+			ent->s.weapon = weaponGroup;
+		} else {
+			ent->s.weapon = 0;
+		}
 #endif
-	ent->r.svFlags = SVF_BROADCAST;	// send to everyone
-#ifdef IOQ3ZTM // SWITCH_TEAM
+		ent->r.svFlags = SVF_BROADCAST;	// send to everyone
 	}
-#endif
 
 	self->enemy = attacker;
 
@@ -868,12 +864,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 #ifndef TA_MISC // DROP_FLAG
 	// if I committed suicide, the flag does not fall, it returns.
-	if (meansOfDeath == MOD_SUICIDE
-#ifdef IOQ3ZTM // SWITCH_TEAM
-		|| meansOfDeath == MOD_SUICIDE_TEAM_CHANGE
-#endif
-		)
-	{
+	if (meansOfDeath == MOD_SUICIDE || meansOfDeath == MOD_SUICIDE_TEAM_CHANGE) {
 		if ( self->client->ps.powerups[PW_NEUTRALFLAG] ) {		// only happens in One Flag CTF
 			Team_ReturnFlag( TEAM_FREE );
 			self->client->ps.powerups[PW_NEUTRALFLAG] = 0;

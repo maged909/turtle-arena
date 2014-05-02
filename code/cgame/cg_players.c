@@ -2172,16 +2172,6 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel )
 	vec3_t			angles;
 	vec3_t			axis[3];
 
-#ifdef IOQ3ZTM // FLAG // Don't draw CTF flag for the holder in third person, blocks view.
-	if (cent->currentState.clientNum == cg.cur_lc->predictedPlayerState.clientNum
-		&& cg_thirdPerson[cg.cur_localClientNum].integer)
-	{
-		// if its the current player and their in third person view,
-		//  don't draw the flag, it blocks their view.
-		return;
-	}
-#endif
-
 	VectorCopy( cent->lerpAngles, angles );
 	angles[PITCH] = 0;
 	angles[ROLL] = 0;
@@ -2192,6 +2182,13 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel )
 	ent.origin[2] += 16;
 	angles[YAW] += 90;
 	AnglesToAxis( angles, ent.axis );
+
+	if (cent->currentState.clientNum == cg.cur_lc->predictedPlayerState.clientNum
+		&& cg_thirdPerson[cg.cur_localClientNum].integer)
+	{
+		// flag blocks view in third person, so only draw in mirrors
+		ent.renderfx |= RF_ONLY_MIRROR;
+	}
 
 #ifdef IOQ3ZTM // FLAG
 	ent.hModel = cg_items[itemIndex].models[0];
@@ -2474,6 +2471,9 @@ static void CG_PlayerTokens( centity_t *cent, int renderfx ) {
 	refEntity_t	ent;
 	vec3_t		dir, origin;
 	skulltrail_t *trail;
+	if ( cent->currentState.number >= MAX_CLIENTS ) {
+		return;
+	}
 	trail = &cg.skulltrails[cent->currentState.number];
 	tokens = cent->currentState.tokens;
 	if ( !tokens ) {
@@ -2623,21 +2623,10 @@ Float a sprite over the player's head
 #ifdef IOQ3ZTM
 static void CG_PlayerFloatSprite( vec3_t origin, int rf, qhandle_t shader )
 #else
-static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader )
+static void CG_PlayerFloatSprite( centity_t *cent, int rf, qhandle_t shader )
 #endif
 {
-#ifndef IOQ3ZTM
-	int				rf;
-#endif
 	refEntity_t		ent;
-
-#ifndef IOQ3ZTM
-	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson ) {
-		rf = RF_ONLY_MIRROR;
-	} else {
-		rf = 0;
-	}
-#endif
 
 	memset( &ent, 0, sizeof( ent ) );
 #ifdef IOQ3ZTM
@@ -2672,9 +2661,9 @@ static void CG_PlayerSprites( centity_t *cent
 #endif
 	)
 {
+	int		friendFlags, awardFlags;
 	int		team;
 #ifdef IOQ3ZTM
-	int mirrorFlag;
 	vec3_t origin;
 
 	// Lets say the head is 8 units tall.
@@ -2682,22 +2671,27 @@ static void CG_PlayerSprites( centity_t *cent
 
 	// Place 16 units above top of head.
 	origin[2] += 16;
-
-	// Current client's team sprite should only be shown in mirrors.
-	if ( cent->currentState.number == cg.cur_ps->clientNum )
-	{
-		// IOQ3ZTM // RENDER_FLAGS
-		mirrorFlag = RF_ONLY_MIRROR;		// only show in mirrors
-	} else {
-		mirrorFlag = 0;
-	}
 #endif
+
+	if ( cent->currentState.number == cg.cur_ps->clientNum ) {
+		// current client's team sprite should only be shown in mirrors
+		friendFlags = RF_ONLY_MIRROR;
+
+		// if first person or drawing awards on HUD, only show your award sprites in mirrors
+		if ( !cg.cur_lc->renderingThirdPerson || cg_draw2D.integer ) {
+			awardFlags = RF_ONLY_MIRROR;
+		} else {
+			awardFlags = 0;
+		}
+	} else {
+		friendFlags = awardFlags = 0;
+	}
 
 	if ( cent->currentState.eFlags & EF_CONNECTION ) {
 #ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, 0, cgs.media.connectionShader );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.connectionShader );
+		CG_PlayerFloatSprite( cent, 0, cgs.media.connectionShader );
 #endif
 		return;
 	}
@@ -2706,41 +2700,35 @@ static void CG_PlayerSprites( centity_t *cent
 #ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, 0, cgs.media.balloonShader );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.balloonShader );
+		CG_PlayerFloatSprite( cent, 0, cgs.media.balloonShader );
 #endif
 		return;
 	}
 
-#ifdef IOQ3ZTM
-	// Don't draw award if they are drawn on the HUD.
-	if ( cent->currentState.number != cg.cur_ps->clientNum
-		|| cg_draw2D.integer == 0 )
-	{
-#endif
 #ifndef TURTLEARENA // AWARDS
 	if ( cent->currentState.eFlags & EF_AWARD_IMPRESSIVE ) {
 #ifdef IOQ3ZTM
-		CG_PlayerFloatSprite( origin, 0, cgs.media.medalImpressive );
+		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalImpressive );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.medalImpressive );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalImpressive );
 #endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_EXCELLENT ) {
 #ifdef IOQ3ZTM
-		CG_PlayerFloatSprite( origin, 0, cgs.media.medalExcellent );
+		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalExcellent );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.medalExcellent );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalExcellent );
 #endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_GAUNTLET ) {
 #ifdef IOQ3ZTM
-		CG_PlayerFloatSprite( origin, 0, cgs.media.medalGauntlet );
+		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalGauntlet );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.medalGauntlet );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalGauntlet );
 #endif
 		return;
 	}
@@ -2748,33 +2736,30 @@ static void CG_PlayerSprites( centity_t *cent
 
 	if ( cent->currentState.eFlags & EF_AWARD_DEFEND ) {
 #ifdef IOQ3ZTM
-		CG_PlayerFloatSprite( origin, 0, cgs.media.medalDefend );
+		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalDefend );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.medalDefend );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalDefend );
 #endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_ASSIST ) {
 #ifdef IOQ3ZTM
-		CG_PlayerFloatSprite( origin, 0, cgs.media.medalAssist );
+		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalAssist );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.medalAssist );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalAssist );
 #endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_CAP ) {
 #ifdef IOQ3ZTM
-		CG_PlayerFloatSprite( origin, 0, cgs.media.medalCapture );
+		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalCapture );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.medalCapture );
+		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalCapture );
 #endif
 		return;
 	}
-#ifdef IOQ3ZTM
-	}
-#endif
 
 #ifdef TURTLEARENA // LOCKON
 	// Show local client's target marker over this client
@@ -2784,7 +2769,7 @@ static void CG_PlayerSprites( centity_t *cent
 #ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, 0, cgs.media.targetShader );
 #else
-		CG_PlayerFloatSprite( cent, cgs.media.targetShader );
+		CG_PlayerFloatSprite( cent, 0, cgs.media.targetShader );
 #endif
 	}
 #endif
@@ -2803,14 +2788,14 @@ static void CG_PlayerSprites( centity_t *cent
 #ifdef IOQ3ZTM // SHOW_TEAM_FRIENDS
 			if (team == TEAM_BLUE && cgs.media.blueFriendShader)
 			{
-				CG_PlayerFloatSprite( origin, mirrorFlag, cgs.media.blueFriendShader );
+				CG_PlayerFloatSprite( origin, friendFlags, cgs.media.blueFriendShader );
 			}
 			else
 			{
-				CG_PlayerFloatSprite( origin, mirrorFlag, cgs.media.friendShader );
+				CG_PlayerFloatSprite( origin, friendFlags, cgs.media.friendShader );
 			}
 #else
-			CG_PlayerFloatSprite( cent, cgs.media.friendShader );
+			CG_PlayerFloatSprite( cent, friendFlags, cgs.media.friendShader );
 #endif
 		}
 		return;
