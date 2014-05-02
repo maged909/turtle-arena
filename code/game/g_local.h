@@ -59,9 +59,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifdef TURTLEARENA // DROWNING
 #define	FL_DROWNING_WARNING		0x00000001
 #endif
-#ifdef IOQ3ZTM
-#define	FL_FIRST_TIME			0x00000002
-#endif
+#define	FL_FIRST_BEGIN			0x00000008
 #define	FL_GODMODE				0x00000010
 #define	FL_NOTARGET				0x00000020
 #define	FL_TEAMSLAVE			0x00000400	// not the first on the team

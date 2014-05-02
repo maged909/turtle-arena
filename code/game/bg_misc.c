@@ -245,9 +245,6 @@ char	*modNames[MOD_MAX] = {
 	"MOD_TELEFRAG",
 	"MOD_FALLING",
 	"MOD_SUICIDE",
-#ifdef IOQ3ZTM // SWITCH_TEAM
-	"MOD_SUICIDE_TEAM_CHANGE",
-#endif
 	"MOD_TARGET_LASER",
 	"MOD_TRIGGER_HURT",
 #ifdef TA_ENTSYS
@@ -263,6 +260,7 @@ char	*modNames[MOD_MAX] = {
 #endif
 #endif
 	"MOD_GRAPPLE",
+	"MOD_SUICIDE_TEAM_CHANGE",
 #ifdef TA_WEAPSYS
 	"MOD_PROJECTILE",
 	"MOD_PROJECTILE_EXPLOSION",
@@ -782,12 +780,13 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		return qtrue;
 
 	case IT_POWERUP:
-#if defined IOQ3ZTM && defined MISSIONPACK // Scout overrides haste, so don't pick it up.
+#ifdef MISSIONPACK
+		// scout overrides haste
 		if (item->giTag == PW_HASTE && BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
 			return qfalse;
 		}
 #endif
-		return qtrue;	// powerups are always picked up
+		return qtrue;
 
 #ifdef MISSIONPACK
 	case IT_PERSISTANT_POWERUP:

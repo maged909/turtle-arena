@@ -812,9 +812,6 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	gentity_t	*player;
 	gclient_t	*cl = other->client;
 	int			enemy_flag;
-#ifdef IOQ3ZTM // FLAG_MESSAGES
-	int otherTeam;
-#endif
 
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_1FCTF ) {
@@ -854,22 +851,14 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 		return 0; // We don't have the flag
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_1FCTF ) {
-#ifdef IOQ3ZTM // FLAG_MESSAGES
-		PrintMsg( NULL, "[skipnotify]%s" S_COLOR_WHITE " captured the flag.\n", cl->pers.netname );
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ncaptured the flag.\n\"", cl->pers.netname) );
-#else
-		PrintMsg( NULL, "%s" S_COLOR_WHITE " captured the flag!\n", cl->pers.netname );
-#endif
+		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ncaptured the flag!\n\"", cl->pers.netname ));
 	}
 	else {
 #endif
 #ifdef IOQ3ZTM // FLAG_MESSAGES
-		otherTeam = OtherTeam(team);
-
-		PrintMsg( NULL, "[skipnotify]%s" S_COLOR_WHITE " captured the %s flag.\n", cl->pers.netname, TeamNameInColor(otherTeam));
-		trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ncaptured the %s flag.\n\"", cl->pers.netname, TeamNameInColor(otherTeam)) );
+	trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ncaptured the %s flag!\n\"", cl->pers.netname, TeamNameInColor(OtherTeam(team))));
 #else
-	PrintMsg( NULL, "%s" S_COLOR_WHITE " captured the %s flag!\n", cl->pers.netname, TeamName(OtherTeam(team)));
+	trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ncaptured the %s flag!\n\"", cl->pers.netname, TeamName(OtherTeam(team))));
 #endif
 #ifdef MISSIONPACK
 	}
@@ -1485,10 +1474,8 @@ static void ObeliskDie( gentity_t *self, gentity_t *inflictor, gentity_t *attack
 	teamgame.redObeliskAttackedTime = 0;
 	teamgame.blueObeliskAttackedTime = 0;
 
-#ifdef IOQ3ZTM
-	PrintMsg( NULL, "[skipnotify]%s" S_COLOR_WHITE " destroyed the %s obelisk.\n", attacker->client->pers.netname, TeamNameInColor(OtherTeam(attacker->client->sess.sessionTeam)));
-	trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ndestroyed the %s obelisk.\n\"", attacker->client->pers.netname, TeamNameInColor(OtherTeam(attacker->client->sess.sessionTeam))));
-#endif
+	trap_SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE "\ndestroyed the %s obelisk.\n\"",
+			attacker->client->pers.netname, TeamName(self->spawnflags)));
 }
 
 

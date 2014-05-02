@@ -1380,23 +1380,20 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 	ClientUserinfoChanged( clientNum );
 
 	// don't do the "xxx connected" messages if they were caried over from previous level
-	// or if they're an extra local player
-	if ( firstTime && firstConnectionPlayer ) {
+	if ( firstTime ) {
 #ifdef TA_SP
     	// If it's single player don't add message.
-		if (!g_singlePlayer.integer)
+		if (g_singlePlayer.integer) {
+		} else
 #endif
-		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " connected\n\"", client->pers.netname) );
+		if ( firstConnectionPlayer ) {
+			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " connected\n\"", client->pers.netname) );
+		} else {
+			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " dropped in\n\"", client->pers.netname) );
+		}
 
-#ifdef IOQ3ZTM
-		// show entered the game message
-		ent->flags |= FL_FIRST_TIME;
-#endif
-	}
-
-	if ( g_gametype.integer >= GT_TEAM &&
-		client->sess.sessionTeam != TEAM_SPECTATOR ) {
-		BroadcastTeamChange( client, -1 );
+		// show team change when finished connecting
+		ent->flags |= FL_FIRST_BEGIN;
 	}
 
 	// count current clients and rank for scoreboard
@@ -1423,20 +1420,15 @@ void ClientBegin( int clientNum ) {
 	gentity_t	*ent;
 	gclient_t	*client;
 	int			flags;
-#ifdef IOQ3ZTM
 	qboolean	firstTime;
-#endif
 
 	ent = g_entities + clientNum;
 
 	client = level.clients + clientNum;
 
-#ifdef IOQ3ZTM
-	// Check if first connect
-	firstTime = (ent->flags & FL_FIRST_TIME);
-
-	ent->flags &= FL_FIRST_TIME;
-#endif
+	// check if first connect
+	firstTime = (ent->flags & FL_FIRST_BEGIN);
+	ent->flags &= FL_FIRST_BEGIN;
 
 	if ( ent->r.linked ) {
 		trap_UnlinkEntity( ent );
@@ -1492,22 +1484,9 @@ void ClientBegin( int clientNum ) {
 	}
 #endif
 
-#ifdef IOQ3ZTM
-	// show entered the game message
-	if (firstTime && !g_singlePlayer.integer)
-#else
-	if ( client->sess.sessionTeam != TEAM_SPECTATOR )
-#endif
-	{
-#ifndef IOQ3ZTM
-		if ( g_gametype.integer != GT_TOURNAMENT  )
-#endif
-		{
-			if ( level.connections[client->pers.connectionNum].numLocalPlayers > 1 ) {
-				trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " dropped in\n\"", client->pers.netname) );
-			} else {
-				trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
-			}
+	if ( firstTime && !g_singlePlayer.integer ) {
+		if ( g_gametype.integer != GT_TOURNAMENT ) {
+			BroadcastTeamChange( client, -1 );
 		}
 	}
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
