@@ -59,7 +59,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #ifdef TURTLEARENA // DROWNING
 #define	FL_DROWNING_WARNING		0x00000001
 #endif
-#define	FL_FIRST_BEGIN			0x00000008
 #define	FL_GODMODE				0x00000010
 #define	FL_NOTARGET				0x00000020
 #define	FL_TEAMSLAVE			0x00000400	// not the first on the team
@@ -807,7 +806,7 @@ void CopyToBodyQue( gentity_t *ent );
 void ClientRespawn(gentity_t *ent);
 void BeginIntermission (void);
 void InitBodyQue (void);
-void ClientSpawn( gentity_t *ent, qboolean firstTime );
+void ClientSpawn( gentity_t *ent );
 void player_die (gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
 #ifdef TURTLEARENA // NIGHTS_ITEMS
 void AddScoreEx( gentity_t *ent, vec3_t origin, int score, int chain);

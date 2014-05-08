@@ -732,7 +732,7 @@ ClientRespawn
 */
 void ClientRespawn( gentity_t *ent ) {
 	CopyToBodyQue (ent);
-	ClientSpawn(ent, qfalse);
+	ClientSpawn(ent);
 }
 
 /*
@@ -1345,6 +1345,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 	memset( client, 0, sizeof(*client) );
 
 	client->pers.connected = CON_CONNECTING;
+	client->pers.initialSpawn = qtrue;
 
 	// update client connection info
 	level.connections[connectionNum].numLocalPlayers++;
@@ -1391,9 +1392,6 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot, int conn
 		} else {
 			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " dropped in\n\"", client->pers.netname) );
 		}
-
-		// show team change when finished connecting
-		ent->flags |= FL_FIRST_BEGIN;
 	}
 
 	// count current clients and rank for scoreboard
@@ -1420,15 +1418,10 @@ void ClientBegin( int clientNum ) {
 	gentity_t	*ent;
 	gclient_t	*client;
 	int			flags;
-	qboolean	firstTime;
 
 	ent = g_entities + clientNum;
 
 	client = level.clients + clientNum;
-
-	// check if first connect
-	firstTime = (ent->flags & FL_FIRST_BEGIN);
-	ent->flags &= FL_FIRST_BEGIN;
 
 	if ( ent->r.linked ) {
 		trap_UnlinkEntity( ent );
@@ -1471,7 +1464,7 @@ void ClientBegin( int clientNum ) {
 #endif
 
 	// locate ent at a spawn point
-	ClientSpawn( ent, firstTime );
+	ClientSpawn( ent );
 
 #ifdef TA_SP
 	G_ReadCoopSessionData( client );
@@ -1484,11 +1477,12 @@ void ClientBegin( int clientNum ) {
 	}
 #endif
 
-	if ( firstTime && !g_singlePlayer.integer ) {
+	if ( client->pers.initialSpawn && !g_singlePlayer.integer ) {
 		if ( g_gametype.integer != GT_TOURNAMENT ) {
 			BroadcastTeamChange( client, -1 );
 		}
 	}
+	client->pers.initialSpawn = qfalse;
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
 
 	// count current clients and rank for scoreboard
@@ -1504,7 +1498,7 @@ after the first ClientBegin, and after each respawn
 Initializes all non-persistant parts of playerState
 ============
 */
-void ClientSpawn(gentity_t *ent, qboolean firstTime) {
+void ClientSpawn(gentity_t *ent) {
 	int		index;
 	vec3_t	spawn_origin, spawn_angles;
 	gclient_t	*client;
@@ -1558,9 +1552,8 @@ void ClientSpawn(gentity_t *ent, qboolean firstTime) {
 	else
 	{
 		// the first spawn should be at a good looking spot
-		if ( !client->pers.initialSpawn && client->pers.localClient )
+		if ( client->pers.initialSpawn && client->pers.localClient )
 		{
-			client->pers.initialSpawn = qtrue;
 			spawnPoint = SelectInitialSpawnPoint(
 #ifdef TA_PLAYERSYS
 								ent,
