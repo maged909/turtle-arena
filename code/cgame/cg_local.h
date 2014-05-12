@@ -1057,6 +1057,13 @@ typedef struct {
 
 	int			numViewports;
 	int			viewport;
+
+	// Viewport coords in window-coords (don't use with CG_AdjustFrom640!)
+	int			viewportX;
+	int			viewportY;
+	int			viewportWidth;
+	int			viewportHeight;
+
 	qboolean	singleCamera; // Rending multiple clients using one viewport
 #ifdef TURTLEARENA
 	qboolean	allLocalClientsAtIntermission;
@@ -1966,6 +1973,7 @@ void CG_UpdateCvars( void );
 int CG_CrosshairPlayer( int localClientNum );
 int CG_LastAttacker( int localClientNum );
 void CG_LoadMenus(const char *menuFile);
+void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state );
 void CG_KeyEvent(int key, qboolean down);
 void CG_MouseEvent(int localClientNum, int x, int y);
 void CG_JoystickEvent( int localClientNum, int axis, int value );
@@ -2053,6 +2061,8 @@ void CG_AddAnnouncement(int announcement, int localClientNumber);
 void CG_AddAnnouncementEx(cglc_t *lc, qhandle_t sfx, qboolean bufferedSfx, const char *message);
 #endif
 
+void CG_CalcVrect( void );
+
 void CG_SetupFrustum( void );
 qboolean CG_CullPoint( vec3_t pt );
 qboolean CG_CullPointAndRadius( const vec3_t pt, vec_t radius );
@@ -2138,7 +2148,7 @@ void CG_GetColorForHealth( int health, int armor, vec4_t hcolor );
 void CG_DrawRect( float x, float y, float width, float height, float size, const float *color );
 void CG_DrawSides(float x, float y, float w, float h, float size);
 void CG_DrawTopBottom(float x, float y, float w, float h, float size);
-void CG_ClearScreen( void );
+void CG_ClearViewport( void );
 
 
 //
