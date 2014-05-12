@@ -186,7 +186,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 		trap_R_SetColor( NULL );
 		UI_DrawPicFullScreen( uis.menuBackShader );
 #else
-		CG_ClearScreen();
+		CG_ClearViewport();
 		CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, uis.menuBackShader );
 #endif
 	}

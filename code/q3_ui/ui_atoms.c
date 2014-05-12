@@ -1836,7 +1836,7 @@ void UI_Refresh( int realtime )
 				UI_DrawPicFullScreen( uis.menuBackShader );
 			}
 #else
-			CG_ClearScreen();
+			CG_ClearViewport();
 
 			// draw the background
 			if( uis.activemenu->showlogo ) {

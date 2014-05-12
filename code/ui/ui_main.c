@@ -582,7 +582,7 @@ void UI_Refresh( int realtime )
 	UI_UpdateCvars();
 
 	if ( UI_IsFullscreen() ) {
-		CG_ClearScreen();
+		CG_ClearViewport();
 	}
 
 	if (Menu_Count() > 0) {
@@ -5439,7 +5439,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 
 
 	if ( !overlay && menu ) {
-		CG_ClearScreen();
+		CG_ClearViewport();
 		Menu_Paint(menu, qtrue);
 	}
 
