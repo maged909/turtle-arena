@@ -67,17 +67,14 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 
 		le = CG_AllocLocalEntity();
 		le->leFlags = LEF_PUFF_DONT_SCALE;
-#ifdef IOQ3ZTM // BUBBLES
-		le->leType = LE_BUBBLE;
-#else
-		le->leType = LE_MOVE_SCALE_FADE;
-#endif
+		if ( cg_oldBubbles.integer ) {
+			le->leType = LE_MOVE_SCALE_FADE;
+			le->endTime = cg.time + 1000 + random() * 250;
+		} else {
+			le->leType = LE_BUBBLE;
+			le->endTime = cg.time + 8000 + random() * 250;
+		}
 		le->startTime = cg.time;
-#ifdef IOQ3ZTM // BUBBLES // try to make it to the water surface
-		le->endTime = cg.time + 8000 + random() * 250;
-#else
-		le->endTime = cg.time + 1000 + random() * 250;
-#endif
 		le->lifeRate = 1.0 / ( le->endTime - le->startTime );
 
 		re = &le->refEntity;
@@ -85,11 +82,11 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 
 		re->reType = RT_SPRITE;
 		re->rotation = 0;
-#ifdef IOQ3ZTM // BUBBLES
-		re->radius = 2 + random() * 2;
-#else
-		re->radius = 3;
-#endif
+		if ( cg_oldBubbles.integer ) {
+			re->radius = 3;
+		} else {
+			re->radius = 2 + random() * 2;
+		}
 		re->customShader = cgs.media.waterBubbleShader;
 		re->shaderRGBA[0] = 0xff;
 		re->shaderRGBA[1] = 0xff;
@@ -103,11 +100,13 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing ) {
 		VectorCopy( move, le->pos.trBase );
 		le->pos.trDelta[0] = crandom()*5;
 		le->pos.trDelta[1] = crandom()*5;
-#ifdef IOQ3ZTM // BUBBLES // Always move up.
-		le->pos.trDelta[2] = 8 + random()*5;
-#else
-		le->pos.trDelta[2] = crandom()*5 + 6;
-#endif
+		if ( cg_oldBubbles.integer ) {
+			le->pos.trDelta[2] = crandom()*5 + 6;
+		} else {
+			le->pos.trDelta[2] = 85 + random()*10;
+
+			VectorCopy( move, re->origin );
+		}
 
 		VectorAdd (move, vec, move);
 	}
@@ -157,6 +156,70 @@ qboolean CG_BulletBubbleTrail( vec3_t start, vec3_t end, int skipNum ) {
 	return qtrue;
 }
 #endif
+
+/*
+==================
+CG_SpawnBubbles
+==================
+*/
+void CG_SpawnBubbles( vec3_t origin, float baseSize, int numBubbles ) {
+	int			i;
+	float		rnd;
+	qboolean	spawnedLarge;
+
+	if ( cg_oldBubbles.integer ) {
+		return;
+	}
+
+	spawnedLarge = qfalse;
+
+	for ( i = 0; i < numBubbles; i++ ) {
+		localEntity_t	*le;
+		refEntity_t		*re;
+
+		le = CG_AllocLocalEntity();
+		le->leFlags = LEF_PUFF_DONT_SCALE;
+		le->leType = LE_BUBBLE;
+		le->endTime = cg.time + 8000 + random() * 250;
+		le->startTime = cg.time;
+		le->lifeRate = 1.0 / ( le->endTime - le->startTime );
+
+		re = &le->refEntity;
+		re->shaderTime = cg.time / 1000.0f;
+
+		re->reType = RT_SPRITE;
+		re->rotation = 0;
+
+		rnd = random();
+		if (rnd > 0.9f && !spawnedLarge) {
+			spawnedLarge = qtrue;
+			re->radius = baseSize * 3;
+		} else {
+			re->radius = baseSize + rnd * baseSize;
+		}
+
+		re->customShader = cgs.media.waterBubbleShader;
+		re->shaderRGBA[0] = 0xff;
+		re->shaderRGBA[1] = 0xff;
+		re->shaderRGBA[2] = 0xff;
+		re->shaderRGBA[3] = 0xff;
+
+		le->color[3] = 1.0;
+
+		le->pos.trType = TR_LINEAR;
+		le->pos.trTime = cg.time;
+
+		VectorCopy( origin, le->pos.trBase );
+		VectorCopy( origin, re->origin );
+		le->pos.trBase[0] += crandom() * baseSize;
+		le->pos.trBase[1] += crandom() * baseSize;
+		le->pos.trBase[2] += crandom() * baseSize;
+
+		le->pos.trDelta[0] = baseSize * crandom()*5;
+		le->pos.trDelta[1] = baseSize * crandom()*5;
+		le->pos.trDelta[2] = 85 + random()*10;
+	}
+}
 
 /*
 =====================
@@ -792,6 +855,10 @@ Generated a bunch of gibs launching out from the bodies location
 #define	GIB_JUMP		250
 void CG_GibPlayer( vec3_t playerOrigin ) {
 	vec3_t	origin, velocity;
+
+	if ( CG_PointContents( playerOrigin, -1 ) & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
+		CG_SpawnBubbles( playerOrigin, 3, 5 + random() * 5 );
+	}
 
 #ifdef IOQ3ZTM // ZTM: Have cg_gibs disable ALL gibs.
 	// allow gibs to be turned off

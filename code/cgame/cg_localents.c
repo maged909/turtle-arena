@@ -602,34 +602,6 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 #endif
 }
 
-#ifdef IOQ3ZTM // BUBBLES
-/*
-====================
-CG_BubbleThink
-====================
-*/
-void CG_BubbleThink( localEntity_t *le ) {
-	int contents;
-	vec3_t	newOrigin;
-	trace_t	trace;
-
-	CG_AddMoveScaleFade(le);
-
-	// calculate new position
-	BG_EvaluateTrajectory( &le->pos, cg.time, newOrigin );
-
-	// trace a line from previous position to new position
-	CG_Trace( &trace, le->refEntity.origin, NULL, NULL, newOrigin, -1, CONTENTS_SOLID );
-
-	contents = CG_PointContents( trace.endpos, 0 );
-	if ( !( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) ) {
-		// Bubble isn't in water (or slime/lava) anymore, remove it.
-		CG_FreeLocalEntity( le );
-		return;
-	}
-}
-#endif
-
 #ifdef MISSIONPACK
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 /*
@@ -914,6 +886,32 @@ void CG_AddScorePlum( localEntity_t *le ) {
 	}
 }
 
+/*
+====================
+CG_BubbleThink
+====================
+*/
+void CG_BubbleThink( localEntity_t *le ) {
+	int contents;
+	vec3_t	newOrigin;
+	trace_t	trace;
+
+	// calculate new position
+	BG_EvaluateTrajectory( &le->pos, cg.time, newOrigin );
+
+	// trace a line from previous position to new position
+	CG_Trace( &trace, le->refEntity.origin, NULL, NULL, newOrigin, -1, CONTENTS_SOLID );
+
+	contents = CG_PointContents( trace.endpos, -1 );
+	if ( !( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) ) {
+		// Bubble isn't in liquid anymore, remove it.
+		CG_FreeLocalEntity( le );
+		return;
+	}
+
+	CG_AddMoveScaleFade( le );
+}
+
 
 
 
@@ -1014,11 +1012,9 @@ void CG_AddLocalEntities( void ) {
 			CG_AddScorePlum( le );
 			break;
 
-#ifdef IOQ3ZTM // BUBBLES
 		case LE_BUBBLE:
 			CG_BubbleThink( le );
 			break;
-#endif
 
 #ifdef MISSIONPACK
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
