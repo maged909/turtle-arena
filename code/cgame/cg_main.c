@@ -137,9 +137,6 @@ weaponGroupInfo_t	cg_weapongroups[MAX_BG_WEAPON_GROUPS];
 weaponInfo_t		cg_weapons[MAX_WEAPONS];
 #endif
 itemInfo_t			cg_items[MAX_ITEMS];
-#ifdef TA_NPCSYS
-npcInfo_t			cg_npcs[MAX_NPCS];
-#endif
 
 vmCvar_t	con_conspeed;
 vmCvar_t	con_autochat;
@@ -1609,9 +1606,6 @@ static void CG_RegisterGraphics( void ) {
 	int			j;
 #endif
 	char		items[MAX_ITEMS+1];
-#ifdef TA_NPCSYS
-	char		npcs[MAX_NPCS+1];
-#endif
 #ifdef TA_MISC // MATERIALS
 	char		name[MAX_QPATH];
 #endif
@@ -2002,18 +1996,6 @@ static void CG_RegisterGraphics( void ) {
 			CG_RegisterItemVisuals( i );
 		}
 	}
-
-#ifdef TA_NPCSYS
-	// only register the NPCs that the server says we need
-	Q_strncpyz(npcs, CG_ConfigString( CS_NPCS), sizeof(npcs));
-
-	for ( i = 1 ; i < BG_NumNPCs() ; i++ )
-	{
-		if ( npcs[ i ] == '1' || cg_buildScript.integer ) {
-			CG_RegisterNPCVisuals( i );
-		}
-	}
-#endif
 
 	// wall marks
 	cgs.media.bulletMarkShader = trap_R_RegisterShader( "gfx/damage/bullet_mrk" );
@@ -2963,9 +2945,6 @@ void CG_ClearState( qboolean everything ) {
 	memset( cg_weapons, 0, sizeof(cg_weapons) );
 #endif
 	memset( cg_items, 0, sizeof(cg_items) );
-#ifdef TA_NPCSYS
-	memset( cg_npcs, 0, sizeof(cg_npcs) );
-#endif
 
 	cg.cinematicHandle = -1;
 
@@ -3147,12 +3126,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	CG_LoadingString( "objects" );
 
 	BG_InitObjectConfig();
-#endif
-
-#ifdef TA_NPCSYS
-	CG_LoadingString( "npcs" );
-
-	BG_InitNPCInfo();
 #endif
 
 	CG_LoadingString( "sounds" );

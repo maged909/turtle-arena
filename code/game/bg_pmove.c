@@ -32,12 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // takes a playerstate and a usercmd as input and returns a modifed playerstate
 
 #include "../qcommon/q_shared.h"
-#ifdef GAME // TA_NPCSYS
-#include "g_local.h"
-#else
-//#include ../cgame/cg_local.h"
 #include "bg_misc.h"
-#endif
 #include "bg_local.h"
 
 pmove_t		*pm;
@@ -81,11 +76,6 @@ PM_AddEvent
 ===============
 */
 void PM_AddEvent( int newEvent ) {
-#ifdef TA_NPCSYS // TDC_NPC
-	if (pm->npc) {
-		return;
-	}
-#endif
 	BG_AddPredictableEventToPlayerstate( newEvent, 0, pm->ps );
 }
 
@@ -293,15 +283,6 @@ static void PM_Friction( void ) {
 		}
 	}
 
-#ifdef TA_NPCSYS // TDC_NPC
-	// JPL - bat flying has "ground" friction
-	if (pm->npc && pm->ps->powerups[PW_FLIGHT])
-	{
-		control = speed < pm_stopspeed ? pm_stopspeed : speed;
-		drop += control*pm_friction*pml.frametime;
-	}
-#endif
-
 	// apply water friction even if just wading
 	if ( pm->waterlevel ) {
 #ifdef IOQ3ZTM // WALK_UNDERWATER
@@ -443,13 +424,6 @@ to the facing dir
 ================
 */
 static void PM_SetMovementDir( void ) {
-#ifdef TA_NPCSYS // TDC_NPC
-	if (pm->npc)
-	{
-		pm->ps->movementDir = 0;
-		return;
-	}
-#endif
 	if ( pm->cmd.forwardmove || pm->cmd.rightmove ) {
 		if ( pm->cmd.rightmove == 0 && pm->cmd.forwardmove > 0 ) {
 			pm->ps->movementDir = 0;
@@ -606,11 +580,6 @@ static qboolean PM_CheckJump( void ) {
 		}
 	}
 #endif
-#ifdef TA_NPCSYS // TDC_NPC
-	if (pm->npc) {
-		pm->ps->velocity[2] = pm->cmd.upmove*8;
-	} else
-#endif
 #ifdef TA_PLAYERSYS
 	pm->ps->velocity[2] = JUMP_VELOCITY * pm->playercfg->jumpMult;
 #else
@@ -623,19 +592,9 @@ static qboolean PM_CheckJump( void ) {
 			|| pm->ps->pathMode == PATHMODE_SIDE
 #endif
 	 ) {
-#ifdef TA_NPCSYS
-		if (pm->npc) {
-			PM_ForceLegsAnim( OBJECT_JUMP );
-		} else
-#endif
 		PM_ForceLegsAnim( LEGS_JUMP );
 		pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
 	} else {
-#ifdef TA_NPCSYS
-		if (pm->npc) {
-			PM_ForceLegsAnim( OBJECT_JUMP );
-		} else
-#endif
 #ifdef TURTLEARENA // PLAYERS
 		if (pm->ps && pm->ps->eFlags & EF_LOCKON) {
 			PM_ForceLegsAnim( LEGS_JUMPB_LOCKON );
@@ -870,13 +829,6 @@ static void PM_FlyMove( void ) {
 
 	PM_StepSlideMove( qfalse );
 
-#ifdef TA_NPCSYS
-	if (pm->npc) {
-		// Flying animation for flying NPCs
-		PM_ContinueLegsAnim( OBJECT_WALK );
-		return;
-	}
-#endif
 #ifdef TA_WEAPSYS
 	PM_ContinueLegsAnim( BG_LegsStandForPlayerState(pm->ps, pm->playercfg) );
 #elif defined IOQ3ZTM // Don't use whatever random leg animation the player was in
@@ -931,11 +883,6 @@ static void PM_AirMove( void ) {
 	wishspeed *= scale;
 
 	// not on ground, so little effect on velocity
-#ifdef TA_NPCSYS // TDC_NPC
-	if (pm->npc && cmd.upmove > 0)
-		PM_Accelerate (wishdir, wishspeed, pm_accelerate); // just jumped, do normal acceleration
-	else
-#endif
 	PM_Accelerate (wishdir, wishspeed, pm_airaccelerate);
 
 	// we may have a ground plane that is very steep, even
@@ -1257,28 +1204,13 @@ static void PM_CrashLand( void ) {
 
 #ifdef IOQ3ZTM
 	// ZTM: Don't land when swimming
-	if ( pm->waterlevel == 3
-#ifdef TA_NPCSYS // NPCs can't swim?
-		&& !pm->npc
-#endif
-		)
+	if ( pm->waterlevel == 3 )
 	{
 		return;
 	}
 #endif
 
 	// decide which landing animation to use
-#ifdef TA_NPCSYS
-	if (pm->npc)
-	{
-		PM_ForceLegsAnim( OBJECT_LAND );
-#if 0
-		pm->ps->legsTimer = BG_AnimationTime(&pm->npc->info->animations[OBJECT_LAND]);
-#else
-		pm->ps->legsTimer = TIMER_LAND;
-#endif
-	} else {
-#endif
 	if ( pm->ps->pm_flags & PMF_BACKWARDS_JUMP ) {
 		PM_ForceLegsAnim( LEGS_LANDB );
 #if 0 // #ifdef TA_PLAYERSYS // PLAYERCFG_ANIMATION_TIMES // Doesn't work correctly?
@@ -1292,9 +1224,6 @@ static void PM_CrashLand( void ) {
 	}
 #if 1 // #ifndef TA_PLAYERSYS // PLAYERCFG_ANIMATION_TIMES // Doesn't work correctly?
 	pm->ps->legsTimer = TIMER_LAND;
-#endif
-#ifdef TA_NPCSYS
-	}
 #endif
 
 	// calculate the exact velocity on landing
@@ -1450,19 +1379,9 @@ static void PM_GroundTraceMissed( void ) {
 			|| pm->ps->pathMode == PATHMODE_SIDE
 #endif
 			) {
-#ifdef TA_NPCSYS
-				if (pm->npc) {
-					PM_ForceLegsAnim( OBJECT_JUMP );
-				} else
-#endif
 				PM_ForceLegsAnim( LEGS_JUMP );
 				pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
 			} else {
-#ifdef TA_NPCSYS
-				if (pm->npc) {
-					PM_ForceLegsAnim( OBJECT_JUMP );
-				} else
-#endif
 #ifdef TURTLEARENA // PLAYERS
 				if (pm->ps && pm->ps->eFlags & EF_LOCKON) {
 					PM_ForceLegsAnim( LEGS_JUMPB_LOCKON );
@@ -1523,19 +1442,9 @@ static void PM_GroundTrace( void ) {
 			|| pm->ps->pathMode == PATHMODE_SIDE
 #endif
 		) {
-#ifdef TA_NPCSYS
-			if (pm->npc) {
-				PM_ForceLegsAnim( OBJECT_JUMP );
-			} else
-#endif
 			PM_ForceLegsAnim( LEGS_JUMP );
 			pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
 		} else {
-#ifdef TA_NPCSYS
-			if (pm->npc) {
-				PM_ForceLegsAnim( OBJECT_JUMP );
-			} else
-#endif
 #ifdef TURTLEARENA // PLAYERS
 			if (pm->ps && pm->ps->eFlags & EF_LOCKON) {
 				PM_ForceLegsAnim( LEGS_JUMPB_LOCKON );
@@ -1580,10 +1489,6 @@ static void PM_GroundTrace( void ) {
 			Com_Printf("%i:Land\n", c_pmove);
 		}
 		
-#ifdef TA_NPCSYS // TDC_NPC
-		// NPCs only land when jumping
-		if (!pm->npc || (pm->npc && (pm->ps->legsAnim & ~ANIM_TOGGLEBIT ) == OBJECT_JUMP))
-#endif
 		PM_CrashLand();
 
 		// don't do landing time if we were just going down a slope
@@ -1622,13 +1527,8 @@ static void PM_SetWaterLevel( void ) {
 
 	point[0] = pm->ps->origin[0];
 	point[1] = pm->ps->origin[1];
-#ifdef TA_NPCSYS
-	if (pm->npc) {
-		point[2] = pm->ps->origin[2] + pm->npc->info->mins[2] + 1;
-	} else
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
-		point[2] = pm->ps->origin[2] + pm->playercfg->bbmins[2] + 1;
+	point[2] = pm->ps->origin[2] + pm->playercfg->bbmins[2] + 1;
 #else
 	point[2] = pm->ps->origin[2] + MINS_Z + 1;	
 #endif
@@ -1636,13 +1536,8 @@ static void PM_SetWaterLevel( void ) {
 	cont = pm->pointcontents( point, pm->ps->clientNum );
 
 	if ( cont & MASK_WATER ) {
-#ifdef TA_NPCSYS
-		if (pm->npc) {
-			sample2 = pm->ps->viewheight - pm->npc->info->mins[2];
-		} else
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
-			sample2 = pm->ps->viewheight - pm->playercfg->bbmins[2];
+		sample2 = pm->ps->viewheight - pm->playercfg->bbmins[2];
 #else
 		sample2 = pm->ps->viewheight - MINS_Z;
 #endif
@@ -1650,26 +1545,16 @@ static void PM_SetWaterLevel( void ) {
 
 		pm->watertype = cont;
 		pm->waterlevel = 1;
-#ifdef TA_NPCSYS
-		if (pm->npc) {
-			point[2] = pm->ps->origin[2] + pm->npc->info->mins[2] + sample1;
-		} else
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
-			point[2] = pm->ps->origin[2] + pm->playercfg->bbmins[2] + sample1;
+		point[2] = pm->ps->origin[2] + pm->playercfg->bbmins[2] + sample1;
 #else
 		point[2] = pm->ps->origin[2] + MINS_Z + sample1;
 #endif
 		cont = pm->pointcontents (point, pm->ps->clientNum );
 		if ( cont & MASK_WATER ) {
 			pm->waterlevel = 2;
-#ifdef TA_NPCSYS
-			if (pm->npc) {
-				point[2] = pm->ps->origin[2] + pm->npc->info->mins[2] + sample2;
-			} else
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
-				point[2] = pm->ps->origin[2] + pm->playercfg->bbmins[2] + sample2;
+			point[2] = pm->ps->origin[2] + pm->playercfg->bbmins[2] + sample2;
 #else
 			point[2] = pm->ps->origin[2] + MINS_Z + sample2;
 #endif
@@ -1693,13 +1578,6 @@ static void PM_CheckDuck (void)
 {
 	trace_t	trace;
 
-#ifdef TA_NPCSYS // TDC_NPC
-	if (pm->npc)
-	{
-		return;
-	}
-#endif
-
 #ifndef TURTLEARENA // POWERS
 	if ( pm->ps->powerups[PW_INVULNERABILITY] ) {
 		if ( pm->ps->pm_flags & PMF_INVULEXPAND ) {
@@ -1708,21 +1586,12 @@ static void PM_CheckDuck (void)
 			VectorSet( pm->ps->maxs, 42, 42, 42 );
 		}
 		else {
-#ifdef TA_NPCSYS
-			if (pm->npc) {
-					VectorCopy( pm->npc->info->mins, pm->ps->mins );
-					VectorCopy( pm->npc->info->maxs, pm->ps->maxs );
-			} else {
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
-				VectorCopy( pm->playercfg->bbmins, pm->ps->mins );
-				VectorCopy( pm->playercfg->bbmaxs, pm->ps->maxs );
+			VectorCopy( pm->playercfg->bbmins, pm->ps->mins );
+			VectorCopy( pm->playercfg->bbmaxs, pm->ps->maxs );
 #else
 			VectorSet( pm->ps->mins, -15, -15, MINS_Z );
 			VectorSet( pm->ps->maxs, 15, 15, 16 );
-#endif
-#ifdef TA_NPCSYS
-			}
 #endif
 		}
 		pm->ps->pm_flags |= PMF_DUCKED;
@@ -1732,13 +1601,6 @@ static void PM_CheckDuck (void)
 	pm->ps->pm_flags &= ~PMF_INVULEXPAND;
 #endif
 
-#ifdef TA_NPCSYS
-	if (pm->npc) {
-		VectorCopy( pm->npc->info->mins, pm->ps->mins );
-		pm->ps->maxs[0] = pm->npc->info->maxs[0];
-		pm->ps->maxs[1] = pm->npc->info->maxs[1];
-	} else {
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
 		VectorCopy( pm->playercfg->bbmins, pm->ps->mins );
 
@@ -1753,17 +1615,9 @@ static void PM_CheckDuck (void)
 
 	pm->ps->mins[2] = MINS_Z;
 #endif
-#ifdef TA_NPCSYS
-	}
-#endif
 
 	if (pm->ps->pm_type == PM_DEAD)
 	{
-#ifdef TA_NPCSYS
-		if (pm->npc) {
-			pm->ps->maxs[2] = pm->npc->info->deadmax;
-		} else
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
 		pm->ps->maxs[2] = pm->playercfg->deadmax;
 #else
@@ -1785,13 +1639,8 @@ static void PM_CheckDuck (void)
 		if (pm->ps->pm_flags & PMF_DUCKED)
 		{
 			// try to stand up
-#ifdef TA_NPCSYS
-			if (pm->npc) {
-				pm->ps->maxs[2] = pm->npc->info->maxs[2];
-			} else
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
-				pm->ps->maxs[2] = pm->playercfg->bbmaxs[2];
+			pm->ps->maxs[2] = pm->playercfg->bbmaxs[2];
 #else
 			pm->ps->maxs[2] = 32;
 #endif
@@ -1803,13 +1652,8 @@ static void PM_CheckDuck (void)
 
 	if (pm->ps->pm_flags & PMF_DUCKED)
 	{
-#ifdef TA_NPCSYS
-		if (pm->npc) {
-			pm->ps->maxs[2] = pm->npc->info->maxs[2] / 2;
-		} else
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
-			pm->ps->maxs[2] = pm->playercfg->bbmaxs[2] / 2;
+		pm->ps->maxs[2] = pm->playercfg->bbmaxs[2] / 2;
 #else
 		pm->ps->maxs[2] = 16;
 #endif
@@ -1817,13 +1661,8 @@ static void PM_CheckDuck (void)
 	}
 	else
 	{
-#ifdef TA_NPCSYS
-		if (pm->npc) {
-			pm->ps->maxs[2] = pm->npc->info->maxs[2];
-		} else
-#endif
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
-			pm->ps->maxs[2] = pm->playercfg->bbmaxs[2];
+		pm->ps->maxs[2] = pm->playercfg->bbmaxs[2];
 #else
 		pm->ps->maxs[2] = 32;
 #endif
@@ -1886,13 +1725,6 @@ static void PM_Footsteps( void ) {
 	if ( !pm->cmd.forwardmove && !pm->cmd.rightmove ) {
 		if (  pm->xyspeed < 5 ) {
 			pm->ps->bobCycle = 0;	// start at beginning of cycle again
-#ifdef TA_NPCSYS
-			if ( pm->npc)
-			{
-				PM_ContinueLegsAnim( OBJECT_IDLE );
-			}
-			else
-#endif
 			if ( pm->ps->pm_flags & PMF_DUCKED ) {
 				PM_ContinueLegsAnim( LEGS_IDLECR );
 			} else {
@@ -1953,49 +1785,24 @@ static void PM_Footsteps( void ) {
 		} else {
 			bobmove = 0.3;
 		}
-#ifdef TA_NPCSYS
-		if (pm->npc)
-			PM_ContinueLegsAnim( OBJECT_BACKPEDAL );
-		else
-#endif
 		PM_ContinueLegsAnim( LEGS_BACK );
 	*/
 	} else {
 		if ( !( pm->cmd.buttons & BUTTON_WALKING ) ) {
 			bobmove = 0.4f;	// faster speeds bob faster
 			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
-#ifdef TA_NPCSYS
-				if (pm->npc)
-					PM_ContinueLegsAnim( OBJECT_BACKPEDAL );
-				else
-#endif
 				PM_ContinueLegsAnim( LEGS_BACK );
 			}
 			else {
-#ifdef TA_NPCSYS
-				if (pm->npc)
-					PM_ContinueLegsAnim( OBJECT_RUN );
-				else
-#endif
 				PM_ContinueLegsAnim( LEGS_RUN );
 			}
 			footstep = qtrue;
 		} else {
 			bobmove = 0.3f;	// walking bobs slow
 			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
-#ifdef TA_NPCSYS
-				if (pm->npc)
-					PM_ContinueLegsAnim( OBJECT_BACKPEDAL );
-				else
-#endif
 				PM_ContinueLegsAnim( LEGS_BACKWALK );
 			}
 			else {
-#ifdef TA_NPCSYS
-				if (pm->npc)
-					PM_ContinueLegsAnim( OBJECT_WALK );
-				else
-#endif
 				PM_ContinueLegsAnim( LEGS_WALK );
 			}
 		}
@@ -3171,11 +2978,6 @@ void CheckLadder( void )
 			pml.walking = qfalse;
 
 			pm->ps->groundEntityNum = ENTITYNUM_NONE;
-#ifdef TA_NPCSYS // TDC_NPC
-			if (pm->npc) {
-				pm->ps->velocity[2] = pm->cmd.upmove*8;
-			} else
-#endif
 #ifdef TA_PLAYERSYS
 			pm->ps->velocity[2] = (JUMP_VELOCITY * pm->playercfg->jumpMult) * 0.6f;
 #else
@@ -3183,11 +2985,6 @@ void CheckLadder( void )
 #endif
 			PM_AddEvent( EV_JUMP );
 
-#ifdef TA_NPCSYS
-			if (pm->npc) {
-				PM_ForceLegsAnim( OBJECT_JUMP );
-			} else
-#endif
 			PM_ForceLegsAnim( LEGS_JUMP );
 			pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
 		}
@@ -3211,11 +3008,6 @@ void CheckLadder( void )
 			pm->ps->pm_flags |= PMF_JUMP_HELD;
 
 			pm->ps->groundEntityNum = ENTITYNUM_NONE;
-#ifdef TA_NPCSYS // TDC_NPC
-			if (pm->npc) {
-				pm->ps->velocity[2] = pm->cmd.upmove*8;
-			} else
-#endif
 #ifdef TA_PLAYERSYS
 			pm->ps->velocity[2] = (JUMP_VELOCITY * pm->playercfg->jumpMult) * 0.6f;
 #else
@@ -3223,11 +3015,6 @@ void CheckLadder( void )
 #endif
 			PM_AddEvent( EV_JUMP );
 
-#ifdef TA_NPCSYS
-			if (pm->npc) {
-				PM_ForceLegsAnim( OBJECT_JUMP );
-			} else
-#endif
 			PM_ForceLegsAnim( LEGS_JUMP );
 			pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
 
@@ -3404,15 +3191,8 @@ void PmoveSingle (pmove_t *pmove) {
 
 	pml.frametime = pml.msec * 0.001;
 
-#ifdef TA_NPCSYS // TDC_NPC
-	if (!pm->npc)
-	{
-#endif
 	// update the viewangles
 	PM_UpdateViewAngles( pm->ps, &pm->cmd );
-#ifdef TA_NPCSYS
-	}
-#endif
 
 	AngleVectors (pm->ps->viewangles, pml.forward, pml.right, pml.up);
 
@@ -3567,31 +3347,17 @@ void PmoveSingle (pmove_t *pmove) {
 		PM_AirMove();
 	}
 
-#ifdef TA_NPCSYS // TDC_NPC
-	if (!pm->npc)
-	{
-#endif
 	PM_Animate();
-#ifdef TA_NPCSYS
-	}
-#endif
 
 	// set groundentity, watertype, and waterlevel
 	PM_GroundTrace();
 	PM_SetWaterLevel();
 
-#ifdef TA_NPCSYS // TDC_NPC
-	if (!pm->npc)
-	{
-#endif
 	// weapons
 	PM_Weapon();
 
 	// torso animation
 	PM_TorsoAnimation();
-#ifdef TA_NPCSYS
-	}
-#endif
 
 	// footstep events / legs animations
 	PM_Footsteps();

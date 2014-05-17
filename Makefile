@@ -78,7 +78,6 @@ endif
 # TA_PLAYERSYS			Allows player config to be used in "game", allowing for per-player settings.
 # TA_PATHSYS			General path system using entities like path_corner
 # TA_ENTSYS				Adds new entities and allows all ET_MOVER entities to be breakable.
-# TA_NPCSYS   			WIP NPC system, based on TDC_NPC system and code in Quake3
 # TA_ATMEFFECTS			TODO: Atmospheric effects.
 # TA_SUPPORTQ3			Support falling back to Quake3 player tags, shader names, and stuff...
 #							Currently required as my players use Q3 tag_weapon instead of Turtle Arena tag_hand_primary...
@@ -100,7 +99,7 @@ BUILD_DEFINES = -DNOTRATEDM -DNOBLOOD \
 					-DIOQ3ZTM -DIOQ3ZTM_NO_COMPAT -DIOQ3ZTM_NO_TEAM_MODEL \
 					-DTA_HOLDSYS \
 					-DTA_WEAPSYS -DTA_PLAYERSYS \
-					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_NPCSYS -DTA_PATHSYS\
+					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_PATHSYS\
 					-DTA_SPLITVIEW
 
 BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \
@@ -1343,8 +1342,7 @@ Q3GOBJ = \
 
 #ZTM: Files I added.
 Q3GOBJ += $(B)/$(BASEGAME)/game/g_save.o \
-  $(B)/$(BASEGAME)/game/g_paths.o \
-  $(B)/$(BASEGAME)/game/g_npcsys.o
+  $(B)/$(BASEGAME)/game/g_paths.o
 
 Q3GVMOBJ = $(Q3GOBJ:%.o=%.asm)
 
@@ -1407,8 +1405,7 @@ MPGOBJ = \
 
 #ZTM: Files I added.
 MPGOBJ += $(B)/$(MISSIONPACK)/game/g_save.o \
-  $(B)/$(MISSIONPACK)/game/g_paths.o \
-  $(B)/$(MISSIONPACK)/game/g_npcsys.o
+  $(B)/$(MISSIONPACK)/game/g_paths.o
 
 MPGVMOBJ = $(MPGOBJ:%.o=%.asm)
 

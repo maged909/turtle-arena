@@ -896,6 +896,11 @@ void DropPortalSource( gentity_t *player ) {
 }
 #endif
 #ifdef TA_ENTSYS // MISC_OBJECT
+void G_SetMiscAnim(gentity_t *ent, int anim)
+{
+	ent->s.legsAnim = ((ent->s.legsAnim & ANIM_TOGGLEBIT)^ANIM_TOGGLEBIT) | anim;
+}
+
 /*QUAKED misc_object (1 0 0) (-16 -16 -16) (16 16 16) suspended knockback unsoliddeath invisdeath no_bbox
 "model"		arbitrary .md3 file to display
 "config"	config filename (defaults to model with .cfg extension)

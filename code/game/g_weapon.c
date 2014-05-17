@@ -87,7 +87,7 @@ void G_AutoAim(gentity_t *ent, int projnum, vec3_t start, vec3_t forward, vec3_t
 	if (ent->client && !(ent->client->ps.eFlags & EF_LOCKON)) {
 		target = NULL;
 	} else {
-		// Client locked-on, NPC, misc_shooter, ...
+		// Client locked-on, misc_shooter, ...
 		target = ent->enemy;
 	}
 
@@ -101,7 +101,7 @@ void G_AutoAim(gentity_t *ent, int projnum, vec3_t start, vec3_t forward, vec3_t
 #ifdef TURTLEARENA // LOCKON
 		!ent->client &&
 #endif
-		!G_ValidTarget(ent, target, start, forward, range, angle, 2)) // && !NPC?
+		!G_ValidTarget(ent, target, start, forward, range, angle, 2))
 	{
 		// Search for a target
 		target = G_FindTarget(ent, start, forward, range, angle);
@@ -789,12 +789,7 @@ void Bullet_Fire (gentity_t *ent, float spread, int damage, int mod ) {
 		SnapVectorTowards( tr.endpos, muzzle );
 
 		// send bullet impact
-#ifdef TA_NPCSYS
-		if ( traceEnt->takedamage && (traceEnt->client || traceEnt->s.eType == ET_NPC))
-#else
-		if ( traceEnt->takedamage && traceEnt->client )
-#endif
-		{
+		if ( traceEnt->takedamage && traceEnt->client ) {
 			tent = G_TempEntity( tr.endpos, EV_BULLET_HIT_FLESH );
 			tent->s.eventParm = traceEnt->s.number;
 			if( LogAccuracyHit( traceEnt, ent ) ) {
@@ -1481,11 +1476,7 @@ qboolean LogAccuracyHit( gentity_t *target, gentity_t *attacker ) {
 		return qfalse;
 	}
 
-	if( !target->client
-#ifdef TA_NPCSYS // ZTM: When hit NPCs too
-		&& target->s.eType != ET_NPC
-#endif
-	) {
+	if( !target->client ) {
 		return qfalse;
 	}
 
@@ -1493,15 +1484,6 @@ qboolean LogAccuracyHit( gentity_t *target, gentity_t *attacker ) {
 		return qfalse;
 	}
 
-#ifdef TA_NPCSYS // ZTM: When hit NPCs too
-	if (!target->client)
-	{
-		if( target->health <= 0 ) {
-			return qfalse;
-		}
-	}
-	else
-#endif
 	if( target->client->ps.stats[STAT_HEALTH] <= 0 ) {
 		return qfalse;
 	}
@@ -1523,13 +1505,6 @@ set muzzle location relative to pivoting eye
 */
 void CalcMuzzlePoint ( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint ) {
 	VectorCopy( ent->s.pos.trBase, muzzlePoint );
-#ifdef TA_NPCSYS
-	if (ent->bgNPC.info)
-	{
-		muzzlePoint[2] += ent->bgNPC.npc_ps.viewheight;
-	}
-	else
-#endif
 	muzzlePoint[2] += ent->client->ps.viewheight;
 	VectorMA( muzzlePoint, 14, forward, muzzlePoint );
 	// snap to integer coordinates for more efficient network bandwidth usage
@@ -1933,43 +1908,5 @@ void G_StartKamikaze( gentity_t *ent ) {
 	te = G_TempEntity(snapped, EV_GLOBAL_TEAM_SOUND );
 	te->r.svFlags |= SVF_BROADCAST;
 	te->s.eventParm = GTS_KAMIKAZE;
-}
-#endif
-
-#ifdef TA_NPCSYS
-void NPC_FireWeapon(gentity_t *ent)
-{
-	int i;
-
-	// set aiming directions
-	AngleVectors (ent->bgNPC.npc_ps.viewangles, forward, right, up);
-
-	// Make sure ent->bgNPC.npc_ps.viewheight is set here.
-	CalcMuzzlePoint ( ent, forward, right, up, muzzle );
-
-	s_quadFactor=1;
-
-	for (i = 0; i < MAX_HANDS; i++)
-	{
-		if (bg_weapongroupinfo[ent->s.weapon].weapon[i]->weapontype == WT_GUN)
-		{
-			// set aiming directions
-			AngleVectors (ent->bgNPC.npc_ps.viewangles, forward, right, up);
-			CalcMuzzlePoint ( ent, forward, right, up, muzzle );
-			if (ent->bgNPC.info->handSide[i] == HS_RIGHT)
-				VectorMA (muzzle, 4, right, muzzle);
-			else if (ent->bgNPC.info->handSide[i] == HS_LEFT)
-				VectorMA (muzzle, -4, right, muzzle);
-
-#ifdef TURTLEARENA // LOCKON
-			G_AutoAim(ent, bg_weapongroupinfo[ent->s.weapon].weapon[i]->projnum,
-					muzzle, forward, right, up);
-#else
-			// NPC just shoots forward, not at target...
-#endif
-			fire_weapon(ent, muzzle, forward, right, up,
-					bg_weapongroupinfo[ent->s.weapon].weaponnum[i], s_quadFactor, ent->bgNPC.info->handSide[i]);
-		}
-	}
 }
 #endif

@@ -459,9 +459,6 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 #ifdef TA_ENTSYS // PUSHABLE
 			!(check->flags & FL_PUSHABLE) &&
 #endif
-#ifdef TA_NPCSYS
-			check->s.eType != ET_NPC &&
-#endif
 			!check->physicsObject ) {
 			continue;
 		}
@@ -1087,11 +1084,7 @@ qboolean G_PlayerPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t *
 		check = &g_entities[ entityList[ e ] ];
 
 		// only push the pushable objects
-		if (!(check->flags & FL_PUSHABLE) &&
-#ifdef TA_NPCSYS
-			check->s.eType != ET_NPC &&
-#endif
-			!check->physicsObject ) {
+		if (!(check->flags & FL_PUSHABLE) && !check->physicsObject ) {
 			continue;
 		}
 
@@ -1323,11 +1316,7 @@ Blocked_Door
 */
 void Blocked_Door( gentity_t *ent, gentity_t *other ) {
 	// remove anything other than a client
-	if ( !other->client
-#ifdef TA_NPCSYS
-		&& other->s.eType != ET_NPC
-#endif
-	) {
+	if ( !other->client ) {
 		// except CTF flags!!!!
 		if( other->s.eType == ET_ITEM && other->item->giType == IT_TEAM ) {
 			Team_DroppedFlagThink( other );

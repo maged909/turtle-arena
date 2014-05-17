@@ -219,9 +219,6 @@ struct gentity_s {
 #ifdef TA_ENTSYS // MISC_OBJECT
 	bg_objectcfg_t	*objectcfg;
 #endif
-#ifdef TA_NPCSYS
-	bg_npc_t	bgNPC;
-#endif
 #ifdef TA_WEAPSYS
 	int			mustcut; // Only takes damage from WIF_CUTS weapons
 #endif
@@ -839,17 +836,6 @@ qboolean G_FilterPacket (char *from);
 void FireWeapon( gentity_t *ent );
 #if defined MISSIONPACK && !defined TURTLEARENA // NO_KAMIKAZE_ITEM
 void G_StartKamikaze( gentity_t *ent );
-#endif
-
-#ifdef TA_NPCSYS
-//
-// g_npcsys.c
-//
-void ClearRegisteredNPCs( void );
-void RegisterNPC( bg_npcinfo_t *npc );
-void SaveRegisteredNPCs( void );
-void G_SpawnNPC( gentity_t *ent, bg_npcinfo_t *npc );
-void G_RunNPC( gentity_t *ent );
 #endif
 
 #ifdef TA_ENTSYS

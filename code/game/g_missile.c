@@ -500,11 +500,7 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 				if ( !(tr.surfaceFlags & SURF_NOIMPACT) )
 				{
 					// send bullet impact
-					if ( traceEnt->takedamage && (traceEnt->client
-#ifdef TA_NPCSYS
-						|| traceEnt->s.eType == ET_NPC
-#endif
-						))
+					if ( traceEnt->takedamage && traceEnt->client )
 					{
 #if 1 // lightning
 						tent = G_TempEntity( tr.endpos, EV_MISSILE_HIT );
@@ -688,18 +684,6 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 						}
 					}
 				}
-#ifdef TA_NPCSYS
-				else if (self->bgNPC.info)
-				{
-					for (i = 0; i < MAX_HANDS; i++)
-					{
-						if (self->bgNPC.info->handSide[i] == handSide) {
-							tent->s.weaponHands = i;
-							break;
-						}
-					}
-				}
-#endif
 
 				VectorCopy( start, tent->s.origin2 );
 				// move origin a bit to come closer to the drawn gun muzzle
