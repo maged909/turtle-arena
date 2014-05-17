@@ -380,7 +380,7 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, cgSkin
 	trap_R_RenderScene( &refdef );
 }
 
-#if defined IOQ3ZTM || defined IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+#ifdef IOQ3ZTM
 /*
 ================
 CG_Draw3DHeadModel
@@ -474,7 +474,7 @@ void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t head
 		VectorAdd( origin, ci->headOffset, origin );
 #endif
 
-#if defined IOQ3ZTM || defined IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+#ifdef IOQ3ZTM
 		CG_Draw3DHeadModel( clientNum, x, y, w, h, origin, headAngles );
 #else
 		CG_Draw3DModel( x, y, w, h, ci->headModel, &ci->modelSkin, origin, headAngles );

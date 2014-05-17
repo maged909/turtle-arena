@@ -55,11 +55,6 @@ endif
 # Turtle Arena "general" defines
 #####
 # IOQ3ZTM				ZTurtleMan's misc changes and fixes to ioquake3 (might be q3 mod compatible)
-# IOQ3ZTM_NO_COMPAT		Changes that are not compatible with quake3 mods
-#
-#   DAMAGE_SKINS; Allows player skins to have shaders to use when damaged.
-#       Adds a new var "skinFraction" to entityState_t and refEntity_t
-#
 # IOQ3ZTM_NO_TEAM_MODEL	Removes team_model and team_headmodel cvars. (Could break Quake III: Team Arena and other mods?)
 #####
 # NOTRATEDM				Disable stuff in Quake3 engine that made it rated M. (default blood to off, remove gibs,
@@ -78,11 +73,8 @@ endif
 # TA_PLAYERSYS			Allows player config to be used in "game", allowing for per-player settings.
 # TA_PATHSYS			General path system using entities like path_corner
 # TA_ENTSYS				Adds new entities and allows all ET_MOVER entities to be breakable.
-# TA_ATMEFFECTS			TODO: Atmospheric effects.
 # TA_SUPPORTQ3			Support falling back to Quake3 player tags, shader names, and stuff...
 #							Currently required as my players use Q3 tag_weapon instead of Turtle Arena tag_hand_primary...
-# TA_SPLITVIEW			Allow a single game client to connect and play using multiple local clients, commonly called splitscreen.
-#						TODO: Split view system for viewing multiple network clients at once.
 
 
 # Turtle Arena specific defines
@@ -96,11 +88,10 @@ endif
 # NIGHTSMODE			Hardly started NiGHTS into Dreams mode.
 
 BUILD_DEFINES = -DNOTRATEDM -DNOBLOOD \
-					-DIOQ3ZTM -DIOQ3ZTM_NO_COMPAT -DIOQ3ZTM_NO_TEAM_MODEL \
+					-DIOQ3ZTM -DIOQ3ZTM_NO_TEAM_MODEL \
 					-DTA_HOLDSYS \
 					-DTA_WEAPSYS -DTA_PLAYERSYS \
-					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_PATHSYS\
-					-DTA_SPLITVIEW
+					-DTA_SUPPORTQ3 -DTA_ENTSYS -DTA_PATHSYS
 
 BUILD_DEFINES += -DTURTLEARENA -DTA_MISC -DTA_SP \
 					-DTA_WEAPSYS_EX -DTA_DATA \
