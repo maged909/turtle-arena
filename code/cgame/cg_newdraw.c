@@ -679,7 +679,7 @@ static void CG_DrawSelectedPlayerPowerup( rectDef_t *rect, qboolean draw2D ) {
 
 		for (j = 0; j < PW_NUM_POWERUPS; j++) {
 			if (ci->powerups & (1 << j)) {
-				bg_iteminfo_t	*item;
+				gitem_t	*item;
 				item = BG_FindItemForPowerup( j );
 				if (item) {
 					CG_DrawPic( x, y, rect->w, rect->h, trap_R_RegisterShader( item->icon ) );
@@ -832,7 +832,7 @@ static void CG_DrawBlueFlagStatus(rectDef_t *rect, qhandle_t shader) {
   if (shader) {
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
   } else {
-	  bg_iteminfo_t *item = BG_FindItemForPowerup( PW_BLUEFLAG );
+	  gitem_t *item = BG_FindItemForPowerup( PW_BLUEFLAG );
     if (item) {
 		  vec4_t color = {0, 0, 1, 1};
 		  trap_R_SetColor(color);
@@ -884,7 +884,7 @@ static void CG_DrawRedFlagStatus(rectDef_t *rect, qhandle_t shader) {
   if (shader) {
 		CG_DrawPic( rect->x, rect->y, rect->w, rect->h, shader );
   } else {
-	  bg_iteminfo_t *item = BG_FindItemForPowerup( PW_REDFLAG );
+	  gitem_t *item = BG_FindItemForPowerup( PW_REDFLAG );
     if (item) {
 		  vec4_t color = {1, 0, 0, 1};
 		  trap_R_SetColor(color);
@@ -959,7 +959,7 @@ static void CG_OneFlagStatus(rectDef_t *rect) {
 	if (cgs.gametype != GT_1FCTF) {
 		return;
 	} else {
-		bg_iteminfo_t *item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
+		gitem_t *item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
 		if (item) {
 			if( cgs.flagStatus >= 0 && cgs.flagStatus <= 4 ) {
 				vec4_t color = {1, 1, 1, 1};
@@ -1008,7 +1008,7 @@ static void CG_DrawAreaPowerUp(rectDef_t *rect, int align, float special, float 
 	int		active;
 	playerState_t	*ps;
 	int		t;
-	bg_iteminfo_t	*item;
+	gitem_t	*item;
 	float	f;
 	rectDef_t r2;
 	float *inc;
@@ -1465,7 +1465,7 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 	vec4_t		hcolor;
 	float pwidth, lwidth, maxx, leftOver;
 	clientInfo_t *ci;
-	bg_iteminfo_t	*item;
+	gitem_t	*item;
 	qhandle_t h;
 	int team;
 

@@ -304,9 +304,6 @@ vmCvar_t	cg_drawMeleeWeaponTrails;
 #ifdef TA_MISC // MATERIALS 
 vmCvar_t	cg_impactDebris;
 #endif
-#ifdef IOQ3ZTM // LASERTAG
-vmCvar_t	cg_laserTag;
-#endif
 #ifdef TA_PATHSYS // 2DMODE
 vmCvar_t	cg_2dmode;
 vmCvar_t	cg_2dmodeOverride;
@@ -564,9 +561,6 @@ static cvarTable_t cgameCvarTable[] = {
 #endif
 #ifdef TA_MISC // MATERIALS
 	{ &cg_impactDebris, "cg_impactDebris", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0, 10 ) },
-#endif
-#ifdef IOQ3ZTM // LASERTAG
-	{ &cg_laserTag, "g_laserTag", "0", CVAR_SERVERINFO, RANGE_BOOL },
 #endif
 #ifdef TA_PATHSYS // 2DMODE
 	{ &cg_2dmode, "g_2dmode", "0", CVAR_SERVERINFO, RANGE_ALL },
@@ -1209,12 +1203,12 @@ The server says this item is used on this level
 =================
 */
 static void CG_RegisterItemSounds( int itemNum ) {
-	bg_iteminfo_t	*item;
-	char			data[MAX_QPATH];
-	char			*s, *start;
-	int				len;
+	gitem_t	*item;
+	char	data[MAX_QPATH];
+	char	*s, *start;
+	int		len;
 
-	item = BG_ItemForItemNum(itemNum);
+	item = BG_ItemForItemNum( itemNum );
 
 	if( item->pickup_sound[0] ) {
 		cgs.media.itemPickupSounds[ itemNum ] = trap_S_RegisterSound( item->pickup_sound, qfalse );
@@ -2673,7 +2667,7 @@ static clientInfo_t * CG_InfoFromScoreIndex(int index, int team, int *scoreIndex
 }
 
 static const char *CG_FeederItemText(float feederID, int index, int column, qhandle_t *handle) {
-	bg_iteminfo_t *item;
+	gitem_t *item;
 	int scoreIndex = 0;
 	clientInfo_t *info = NULL;
 	int team = -1;
@@ -2695,13 +2689,13 @@ static const char *CG_FeederItemText(float feederID, int index, int column, qhan
 			case 0:
 				if ( info->powerups & ( 1 << PW_NEUTRALFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
-					*handle = cg_items[ BG_ItemNumForItem(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem( item ) ].icon;
 				} else if ( info->powerups & ( 1 << PW_REDFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_REDFLAG );
-					*handle = cg_items[ BG_ItemNumForItem(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem( item ) ].icon;
 				} else if ( info->powerups & ( 1 << PW_BLUEFLAG ) ) {
 					item = BG_FindItemForPowerup( PW_BLUEFLAG );
-					*handle = cg_items[ BG_ItemNumForItem(item) ].icon;
+					*handle = cg_items[ BG_ItemNumForItem( item ) ].icon;
 				} else {
 					if ( info->botSkill > 0 && info->botSkill <= 5 ) {
 						*handle = cgs.media.botSkillShaders[ info->botSkill - 1 ];
@@ -3205,13 +3199,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	trap_S_ClearLoopingSounds( qtrue );
 
 	CG_RestoreSnapshot();
-
-#if defined IOQ3ZTM && defined TURTLEARENA // THIRD_PERSON LASERTAG
-	if (cg_laserTag.integer)
-		trap_Cvar_Set("cg_thirdPerson", "0");
-	else
-		trap_Cvar_Set("cg_thirdPerson", "1");
-#endif
 }
 
 /*

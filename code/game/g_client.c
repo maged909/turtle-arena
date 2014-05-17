@@ -1631,16 +1631,8 @@ void ClientSpawn(gentity_t *ent) {
 #ifdef TA_HOLDSYS
 #ifdef TURTLEARENA // HOLDABLE
 		// Start with 10 shurikens!
-#ifdef IOQ3ZTM // LASERTAG
-		if (g_laserTag.integer) {
-			client->ps.holdableIndex = HI_NONE;
-		} else {
-#endif
 		client->ps.holdable[HI_SHURIKEN] = 10;
 		client->ps.holdableIndex = HI_SHURIKEN;
-#ifdef IOQ3ZTM // LASERTAG
-		}
-#endif
 #else
 		client->ps.holdableIndex = HI_NONE;
 #endif
@@ -1687,7 +1679,7 @@ void ClientSpawn(gentity_t *ent) {
 	{
 		// ZTM: Start with default weapon.
 #ifndef TA_WEAPSYS_EX
-		bg_iteminfo_t *item = NULL;
+		gitem_t *item = NULL;
 #endif
 		weapon_t weapon;
 
@@ -1725,15 +1717,6 @@ void ClientSpawn(gentity_t *ent) {
 #endif
 	}
 #else
-#ifdef IOQ3ZTM // LASERTAG
-	if (g_laserTag.integer)
-	{
-		client->ps.stats[STAT_WEAPONS] = ( 1 << WP_RAILGUN );
-		client->ps.ammo[WP_RAILGUN] = -1;
-	}
-	else
-	{
-#endif
 	client->ps.stats[STAT_WEAPONS] = ( 1 << WP_MACHINEGUN );
 	if ( g_gametype.integer == GT_TEAM ) {
 		client->ps.ammo[WP_MACHINEGUN] = 50;
@@ -1744,9 +1727,6 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );
 	client->ps.ammo[WP_GAUNTLET] = -1;
 	client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
-#ifdef IOQ3ZTM // LASERTAG
-	}
-#endif
 #endif
 
 #ifdef TURTLEARENA // no health countdown
@@ -1793,11 +1773,6 @@ void ClientSpawn(gentity_t *ent) {
 			client->ps.weapon = client->ps.stats[STAT_DEFAULTWEAPON];
 			client->ps.weaponHands = BG_WeaponHandsForWeaponNum(client->ps.stats[STAT_DEFAULTWEAPON]);
 #else
-#ifdef IOQ3ZTM // LASERTAG
-			if (g_laserTag.integer)
-				client->ps.weapon = WP_RAILGUN;
-			else
-#endif
 			client->ps.weapon = WP_MACHINEGUN;
 #endif
 			client->ps.weaponstate = WEAPON_READY;
@@ -2163,7 +2138,7 @@ void Drone_Touch(gentity_t *self, gentity_t *other, trace_t *trace )
 // Ideya Drone
 void SP_nights_start( gentity_t *ent )
 {
-	bg_iteminfo_t *item;
+	gitem_t *item;
 
 	// Touch this to go into NiGHTS mode
 	//    and go to current mare.
@@ -2227,7 +2202,7 @@ void Capture_Touch(gentity_t *self, gentity_t *other, trace_t *trace )
 // Touch to use collected Spheres to damage Ideya Capture
 void SP_nights_target( gentity_t *ent )
 {
-	bg_iteminfo_t *item;
+	gitem_t *item;
 
 	VectorSet( ent->s.mins, -15, -15, -15 );
 	VectorSet( ent->s.maxs, 15, 15, 15 );

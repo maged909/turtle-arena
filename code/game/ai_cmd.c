@@ -1518,50 +1518,13 @@ BotMatch_WhereAreYou
 */
 void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 	float dist, bestdist;
-	int i, bestitem, redtt, bluett, client;
+	int i, redtt, bluett, client;
+	char *bestitemname;
 	bot_goal_t goal;
+	gitem_t *it;
 	char netname[MAX_MESSAGE_SIZE];
 	char *nearbyitems[] = {
-#ifndef TA_WEAPSYS
-		"Shotgun",
-		"Grenade Launcher",
-		"Rocket Launcher",
-		"Plasmagun",
-		"Railgun",
-		"Lightning Gun",
-		"BFG10K",
-#endif
-#ifdef TURTLEARENA // POWERS, NOARMOR
-		"Strength",
-		"Regeneration",
-		"Defense",
-		"Speed",
-		"Invisibility",
-		"Flight",
-		"Invulnerability",
-#else
-		"Quad Damage",
-		"Regeneration",
-		"Battle Suit",
-		"Speed",
-		"Invisibility",
-		"Flight",
-		"Armor",
-		"Heavy Armor",
-#endif
-		"Red Flag",
-		"Blue Flag",
 #ifdef MISSIONPACK
-#ifndef TA_WEAPSYS
-		"Nailgun",
-		"Prox Launcher",
-		"Chaingun",
-#endif
-		"Scout",
-		"Guard",
-		"Doubler",
-		"Ammo Regen",
-		"Neutral Flag",
 		"Red Obelisk",
 		"Blue Obelisk",
 #ifdef MISSIONPACK_HARVESTER
@@ -1577,26 +1540,43 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 	if (!BotAddressedToBot(bs, match))
 		return;
 
-	bestitem = -1;
+	bestitemname = NULL;
 	bestdist = 999999;
+	for (i = 1; i < BG_NumItems(); i++) {
+		it = BG_ItemForItemNum( i );
+
+		if ( !it->classname || !*it->classname ) {
+			continue;
+		}
+
+		//ignore health, ammo, holdables, small armor, and Red Cube and Blue Cube
+		if ( it->giType == IT_HEALTH
+			|| it->giType == IT_AMMO
+			|| it->giType == IT_HOLDABLE
+#ifndef TURTLEARENA // NOARMOR
+			|| ( it->giType == IT_ARMOR && it->quantity < 50 )
+#endif
+#ifdef MISSIONPACK
+			|| ( it->giType == IT_TEAM && it->giTag == 0 )
+#endif
+			) {
+			continue;
+		}
+
+		dist = BotNearestVisibleItem(bs, it->pickup_name, &goal);
+		if (dist < bestdist) {
+			bestdist = dist;
+			bestitemname = it->pickup_name;
+		}
+	}
 	for (i = 0; nearbyitems[i]; i++) {
 		dist = BotNearestVisibleItem(bs, nearbyitems[i], &goal);
 		if (dist < bestdist) {
 			bestdist = dist;
-			bestitem = i;
+			bestitemname = nearbyitems[i];
 		}
 	}
-#ifdef TA_WEAPSYS
-	// Check weapons
-	for (i = 1; i < BG_NumWeaponGroups(); i++) {
-		dist = BotNearestVisibleItem(bs, bg_weapongroupinfo[i].item->pickup_name, &goal);
-		if (dist < bestdist) {
-			bestdist = dist;
-			bestitem = i;
-		}
-	}
-#endif
-	if (bestitem != -1) {
+	if (bestitemname) {
 		if (gametype == GT_CTF
 #ifdef MISSIONPACK
 			|| gametype == GT_1FCTF
@@ -1605,13 +1585,13 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 			redtt = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, ctf_redflag.areanum, TFL_DEFAULT);
 			bluett = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, ctf_blueflag.areanum, TFL_DEFAULT);
 			if (redtt < (redtt + bluett) * 0.4) {
-				BotAI_BotInitialChat(bs, "teamlocation", nearbyitems[bestitem], "red", NULL);
+				BotAI_BotInitialChat(bs, "teamlocation", bestitemname, "red", NULL);
 			}
 			else if (bluett < (redtt + bluett) * 0.4) {
-				BotAI_BotInitialChat(bs, "teamlocation", nearbyitems[bestitem], "blue", NULL);
+				BotAI_BotInitialChat(bs, "teamlocation", bestitemname, "blue", NULL);
 			}
 			else {
-				BotAI_BotInitialChat(bs, "location", nearbyitems[bestitem], NULL);
+				BotAI_BotInitialChat(bs, "location", bestitemname, NULL);
 			}
 		}
 #ifdef MISSIONPACK
@@ -1623,18 +1603,18 @@ void BotMatch_WhereAreYou(bot_state_t *bs, bot_match_t *match) {
 			redtt = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, redobelisk.areanum, TFL_DEFAULT);
 			bluett = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, blueobelisk.areanum, TFL_DEFAULT);
 			if (redtt < (redtt + bluett) * 0.4) {
-				BotAI_BotInitialChat(bs, "teamlocation", nearbyitems[bestitem], "red", NULL);
+				BotAI_BotInitialChat(bs, "teamlocation", bestitemname, "red", NULL);
 			}
 			else if (bluett < (redtt + bluett) * 0.4) {
-				BotAI_BotInitialChat(bs, "teamlocation", nearbyitems[bestitem], "blue", NULL);
+				BotAI_BotInitialChat(bs, "teamlocation", bestitemname, "blue", NULL);
 			}
 			else {
-				BotAI_BotInitialChat(bs, "location", nearbyitems[bestitem], NULL);
+				BotAI_BotInitialChat(bs, "location", bestitemname, NULL);
 			}
 		}
 #endif
 		else {
-			BotAI_BotInitialChat(bs, "location", nearbyitems[bestitem], NULL);
+			BotAI_BotInitialChat(bs, "location", bestitemname, NULL);
 		}
 		trap_BotMatchVariable(match, NETNAME, netname, sizeof(netname));
 		client = ClientFromName(netname);

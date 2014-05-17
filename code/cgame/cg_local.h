@@ -686,7 +686,7 @@ typedef struct weaponGroupInfo_s {
 // weapon and its effects
 typedef struct weaponInfo_s {
 	qboolean		registered;
-	bg_iteminfo_t	*item;
+	gitem_t			*item;
 
 	qhandle_t		handsModel;			// the hands don't actually draw, they just position the weapon
 	qhandle_t		weaponModel;
@@ -1915,9 +1915,6 @@ extern	vmCvar_t		cg_drawMeleeWeaponTrails;
 #endif
 #ifdef TA_MISC // MATERIALS 
 extern	vmCvar_t		cg_impactDebris;
-#endif
-#ifdef IOQ3ZTM // LASERTAG
-extern	vmCvar_t		cg_laserTag;
 #endif
 #ifdef TA_PATHSYS // 2DMODE
 extern vmCvar_t			cg_2dmode;

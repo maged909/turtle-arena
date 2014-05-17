@@ -2148,7 +2148,7 @@ static void CG_PlayerFlag( centity_t *cent, const cgSkin_t *skin, refEntity_t *p
 	qboolean	trailItem;
 #endif
 #ifdef IOQ3ZTM // FLAG
-	bg_iteminfo_t	*item;
+	gitem_t			*item;
 	int				itemIndex;
 #ifndef TA_DATA // FLAG_MODEL
 	qhandle_t		hSkin = 0;

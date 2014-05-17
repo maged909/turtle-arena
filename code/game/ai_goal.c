@@ -606,7 +606,7 @@ void BotInitLevelItems(void)
 	levelitem_t *li;
 	trace_t trace;
 	int bgNum;
-	bg_iteminfo_t *bgItem;
+	gitem_t *bgItem;
 	iteminfo_t *botItem;
 
 	//initialize the map locations and camp spots

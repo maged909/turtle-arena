@@ -498,7 +498,7 @@ Used for both the status bar and the scoreboard
 */
 void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean force2D ) {
 #ifdef TA_DATA // FLAG_MODEL
-	bg_iteminfo_t *item;
+	gitem_t *item;
 	int itemIndex;
 
 	if( team == TEAM_RED ) {
@@ -588,7 +588,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		}
 		CG_Draw3DModel( x, y, w, h, handle, NULL, origin, angles );
 	} else if ( cg_drawIcons.integer ) {
-		bg_iteminfo_t *item;
+		gitem_t *item;
 
 		if( team == TEAM_RED ) {
 			item = BG_FindItemForPowerup( PW_REDFLAG );
@@ -600,7 +600,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 			return;
 		}
 		if (item) {
-		  CG_DrawPic( x, y, w, h, cg_items[ BG_ItemNumForItem(item) ].icon );
+		  CG_DrawPic( x, y, w, h, cg_items[ BG_ItemNumForItem( item ) ].icon );
 		}
 	}
 #endif
@@ -987,27 +987,6 @@ static void CG_DrawStatusBar( void ) {
 	if ( cg_drawStatus.integer == 0 ) {
 		return;
 	}
-
-#ifdef IOQ3ZTM // LASERTAG
-	if (cg_laserTag.integer)
-	{
-		cent = &cg_entities[cg.cur_ps->clientNum];
-		ps = cg.cur_ps;
-
-		// Health
-		if (cg_laserTag.integer == 1)
-		{
-			// unlimited
-			CG_DrawSmallString( 100, 320, "Unlimited Health", 1.0F );
-		}
-		else
-		{
-			value = (int)((ps->stats[STAT_HEALTH])/40)+1; // wp_lasergun damage
-			CG_DrawSmallString( 100, 320, va("Health: %d hits", value), 1.0F );
-		}
-		return;
-	}
-#endif
 
 #ifdef TURTLEARENA
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
@@ -1542,7 +1521,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	int plyrs;
 	char st[16];
 	clientInfo_t *ci;
-	bg_iteminfo_t	*item;
+	gitem_t	*item;
 	int ret_y, count;
 	int team;
 
@@ -1813,7 +1792,7 @@ static float CG_DrawScores( float y ) {
 	int			h;
 	vec4_t		color;
 	float		y1;
-	bg_iteminfo_t	*item;
+	gitem_t		*item;
 	const int	FLAG_SIZE = 64;
 
 	if ( !cg_drawScores.integer ) {
@@ -2028,7 +2007,7 @@ static float CG_DrawPowerups( float y ) {
 	int		active;
 	playerState_t	*ps;
 	int		t;
-	bg_iteminfo_t	*item;
+	gitem_t	*item;
 	int		x;
 	int		color;
 	float	size;
@@ -2161,9 +2140,9 @@ CG_DrawPickupItem
 */
 #ifndef MISSIONPACK_HUD
 static int CG_DrawPickupItem( int y ) {
-	int				value;
-	float			*fadeColor;
-	bg_iteminfo_t	*item;
+	int		value;
+	float	*fadeColor;
+	gitem_t	*item;
 
 	if ( cg.cur_ps->stats[STAT_HEALTH] <= 0 ) {
 		return y;
@@ -2172,7 +2151,7 @@ static int CG_DrawPickupItem( int y ) {
 	y -= ICON_SIZE;
 
 	value = cg.cur_lc->itemPickup;
-	item = BG_ItemForItemNum(value);
+	item = BG_ItemForItemNum( value );
 
 #ifdef TA_WEAPSYS
 	if (item && item->giType == IT_WEAPON

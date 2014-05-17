@@ -443,7 +443,7 @@ CG_UseItem
 static void CG_UseItem( centity_t *cent ) {
 	clientInfo_t	*ci;
 	int				itemNum, clientNum;
-	bg_iteminfo_t	*item;
+	gitem_t			*item;
 	entityState_t	*es;
 	int				i;
 
@@ -534,11 +534,8 @@ A new item was picked up this frame
 ================
 */
 static void CG_ItemPickup( int localClientNum, int itemNum ) {
-	cglc_t			*lc;
-	bg_iteminfo_t	*item;
-
-	lc = &cg.localClients[localClientNum];
-	item = BG_ItemForItemNum(itemNum);
+	cglc_t *lc = &cg.localClients[localClientNum];
+	gitem_t *item = BG_ItemForItemNum( itemNum );
 
 #ifdef TURTLEARENA // NIGTHS_ITEMS
 	if (item->giType == IT_SCORE) {
@@ -1029,9 +1026,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_ITEM_PICKUP");
 		{
 #ifndef TURTLEARENA // POWERS
-			bg_iteminfo_t	*item;
+			gitem_t	*item;
 #endif
-			int				index;
+			int		index;
 
 			index = es->eventParm;		// player predicted
 
@@ -1042,7 +1039,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 #ifdef TURTLEARENA // POWERS
 			trap_S_StartSound (NULL, es->number, CHAN_AUTO,	cgs.media.itemPickupSounds[ index ] );
 #else
-			item = BG_ItemForItemNum(index);
+			item = BG_ItemForItemNum( index );
 
 			// powerups and team items will have a separate global sound, this one
 			// will be played at prediction time

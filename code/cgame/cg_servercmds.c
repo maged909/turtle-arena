@@ -599,11 +599,6 @@ static void CG_MapRestart( void ) {
 		cg.localClients[lc].rewardStack = 0;
 
 #ifdef TURTLEARENA // THIRD_PERSON
-#ifdef IOQ3ZTM // LASERTAG
-		if (cg_laserTag.integer)
-			trap_Cvar_SetValue( Com_LocalClientCvarName(lc, "cg_thirdPerson"), 0 );
-		else
-#endif
 		trap_Cvar_SetValue( Com_LocalClientCvarName(lc, "cg_thirdPerson"), 1 );
 #else
 		trap_Cvar_SetValue( Com_LocalClientCvarName(lc, "cg_thirdPerson"), 0 );

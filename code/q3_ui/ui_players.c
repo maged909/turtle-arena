@@ -76,11 +76,11 @@ UI_PlayerInfo_SetWeapon
 ===============
 */
 static void UI_PlayerInfo_SetWeapon( playerInfo_t *pi, weapon_t weaponNum ) {
-	int			i;
+	int		i;
 #ifndef TA_WEAPSYS
-	bg_iteminfo_t *item;
+	gitem_t	*item;
 #endif
-	char		path[MAX_QPATH];
+	char	path[MAX_QPATH];
 
 	pi->currentWeapon = weaponNum;
 #ifndef TA_WEAPSYS
@@ -126,21 +126,12 @@ tryagain:
 		VectorCopy(bg_weapongroupinfo[weaponNum].weapon[i]->flashColor, pi->flashDlightColor[i]);
 	}
 #else
-	item = BG_ItemForItemNum(0);
-	for (i = BG_NumItems()-1; i > 0; i--) {
-		item = BG_ItemForItemNum(i);
-
-		if ( item->giType != IT_WEAPON ) {
-			continue;
-		}
-		if ( item->giTag == weaponNum ) {
-			break;
-		}
+	item = BG_FindItemForWeapon( weaponNum );
+	if ( !item ) {
+		goto tryagain;
 	}
 
-	if ( item->classname ) {
-		pi->weaponModel = trap_R_RegisterModel( item->world_model[0] );
-	}
+	pi->weaponModel = trap_R_RegisterModel( item->world_model[0] );
 
 	if( pi->weaponModel == 0 ) {
 		if( weaponNum == WP_MACHINEGUN ) {

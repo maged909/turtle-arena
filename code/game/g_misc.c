@@ -783,7 +783,7 @@ void DropPortalDestination( gentity_t *player ) {
 	player->client->ps.holdableIndex = HI_PORTAL;
 	player->client->ps.holdable[HI_PORTAL]++;
 #else
-	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemIndexForName( "Portal" ) );
+	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_ItemNumForItem( BG_FindItem( "Portal" ) );
 #endif
 }
 

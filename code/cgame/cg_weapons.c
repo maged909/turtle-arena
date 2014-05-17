@@ -470,12 +470,7 @@ void CG_RailTrail (clientInfo_t *ci, vec3_t start, vec3_t end)
 
 	AxisClear( re->axis );
  
-	if (cg_oldRail.integer
-#ifdef IOQ3ZTM // LASERTAG
-		|| cg_laserTag.integer
-#endif
-		)
-	{
+	if (cg_oldRail.integer) {
 #ifndef IOQ3ZTM
 		// nudge down a bit so it isn't exactly in center
 		re->origin[2] -= 8;
@@ -1288,9 +1283,9 @@ void CG_RegisterWeapon( int weaponNum )
 	weaponInfo_t	*weaponInfo;
 #endif
 #ifdef TURTLEARENA // WEAPONS
-	bg_iteminfo_t	*item;
+	gitem_t			*item;
 #else
-	bg_iteminfo_t	*item, *ammo;
+	gitem_t			*item, *ammo;
 #endif
 	char			path[MAX_QPATH];
 	vec3_t			mins, maxs;
@@ -1319,16 +1314,14 @@ void CG_RegisterWeapon( int weaponNum )
 	memset( weaponInfo, 0, sizeof( *weaponInfo ) );
 	weaponInfo->registered = qtrue;
 
-	item = BG_ItemForItemNum(0);
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
-		item = BG_ItemForItemNum(i);
-		if (!item->classname)
-			continue;
-		if ( item->giType == IT_WEAPON && item->giTag == weaponNum ) {
-			break;
-		}
+#ifndef TA_WEAPSYS_EX
+	weaponInfo->item = /*item on next line */
+#endif
+	item = BG_FindItemForWeapon( weaponNum );
+	if ( !item ) {
+		CG_Error( "Couldn't find weapon %i", weaponNum );
 	}
+	CG_RegisterItemVisuals( BG_ItemNumForItem( item ) );
 
 	// load cmodel before model so filecache works
 #ifdef TA_WEAPSYS
@@ -1379,18 +1372,8 @@ void CG_RegisterWeapon( int weaponNum )
 #ifndef TURTLEARENA // WEAPONS
 	weaponInfo->ammoIcon = trap_R_RegisterShader( item->icon );
 
-	ammo = NULL;
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
-		ammo = BG_ItemForItemNum(i);
-		if (!ammo->classname)
-			continue;
-		if ( ammo->giType == IT_AMMO && ammo->giTag == weaponNum ) {
-			break;
-		}
-	}
-
-	if ( ammo && ammo->classname && ammo->world_model[0] ) {
+	ammo = BG_FindItemForAmmo( weaponNum );
+	if ( ammo && ammo->world_model[0] ) {
 		weaponInfo->ammoModel = trap_R_RegisterModel( ammo->world_model[0] );
 	}
 #endif
@@ -1596,8 +1579,8 @@ The server says this item is used on this level
 =================
 */
 void CG_RegisterItemVisuals( int itemNum ) {
-	itemInfo_t		*itemInfo;
-	bg_iteminfo_t	*item;
+	itemInfo_t	*itemInfo;
+	gitem_t		*item;
 
 	if ( itemNum < 0 || itemNum >= BG_NumItems() ) {
 		CG_Error( "CG_RegisterItemVisuals: itemNum %d out of range [0-%d]", itemNum, BG_NumItems()-1 );
@@ -1608,7 +1591,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
 		return;
 	}
 
-	item = BG_ItemForItemNum(itemNum);
+	item = BG_ItemForItemNum( itemNum );
 
 	memset( itemInfo, 0, sizeof( &itemInfo ) );
 	itemInfo->registered = qtrue;
@@ -3894,12 +3877,6 @@ void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFla
 		return;
 	}
 
-#ifdef IOQ3ZTM // LASERTAG
-	if ( cg_laserTag.integer ) {
-		return;
-	}
-#endif
-
 	if (dir && VectorLength(dir))
 	{
 		// Move away from surface
@@ -4021,13 +3998,6 @@ void CG_MissileExplode( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 	int exp_add;
 	qboolean instantLightningBeam;
 	qboolean instantLightningImpact;
-#endif
-
-#ifdef IOQ3ZTM // LASERTAG
-	if (cg_laserTag.integer)
-	{
-		return;
-	}
 #endif
 
 	mark = 0;
@@ -4599,13 +4569,6 @@ void CG_WeaponImpact( int weaponGroup, int hand, int clientNum, vec3_t origin, v
 	int				exp_base;
 	int				exp_add;
 	int				weaponnum;
-
-#ifdef IOQ3ZTM // LASERTAG
-	if (cg_laserTag.integer)
-	{
-		return;
-	}
-#endif
 
 	weaponnum = bg_weapongroupinfo[weaponGroup].weaponnum[hand];
 

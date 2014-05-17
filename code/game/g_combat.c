@@ -141,7 +141,7 @@ Toss the weapon and powerups for the killed player
 =================
 */
 void TossClientItems( gentity_t *self ) {
-	bg_iteminfo_t	*item;
+	gitem_t			*item;
 	int				weapon;
 	float			angle;
 	int				i;
@@ -303,7 +303,7 @@ Drop Flag in CTF, other gametypes could drop gametype specific items as well.
 void TossClientGametypeItems(gentity_t *ent)
 {
 	int j;
-	bg_iteminfo_t *item;
+	gitem_t *item;
 	gentity_t *drop;
 	int angle = 0;
 
@@ -373,7 +373,7 @@ extern gentity_t	*neutralObelisk;
 
 #ifdef MISSIONPACK_HARVESTER
 void TossClientCubes( gentity_t *self ) {
-	bg_iteminfo_t		*item;
+	gitem_t		*item;
 	gentity_t	*drop;
 	vec3_t		velocity;
 	vec3_t		angles;
@@ -1313,7 +1313,7 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( attacker->client && attacker != targ ) {
 		max = attacker->client->ps.stats[STAT_MAX_HEALTH];
 #ifdef MISSIONPACK
-		if( BG_ItemForItemNum(attacker->client->ps.stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
+		if( BG_ItemForItemNum( attacker->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
 			max /= 2;
 		}
 #endif
@@ -1355,11 +1355,6 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( dflags & DAMAGE_NO_KNOCKBACK ) {
 		knockback = 0;
 	}
-#ifdef IOQ3ZTM // LASERTAG
-	if (g_laserTag.integer) {
-		knockback = 0;
-	}
-#endif
 
 	// figure momentum add, even if the damage won't be taken
 	if ( knockback && targ->client ) {
@@ -1593,12 +1588,6 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			targ->client->lasthurt_weapon = attacker->s.weapon;
 		else
 			targ->client->lasthurt_weapon = 0;
-#endif
-#ifdef IOQ3ZTM // LASERTAG
-		if (g_laserTag.integer == 1) {
-			take = 0;
-			AddScore(attacker, targ->r.currentOrigin, 5);
-		}
 #endif
 	}
 

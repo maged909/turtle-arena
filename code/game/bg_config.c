@@ -215,7 +215,7 @@ strAnimationDef_t playerAnimationDefs[] = {
 
 bg_commonInfo_t *bg_common = NULL;
 
-int BG_ItemNumForItem( bg_iteminfo_t *item )
+int BG_ItemNumForItem( gitem_t *item )
 {
 	if (!item)
 	{
@@ -236,7 +236,7 @@ int BG_ItemNumForItem( bg_iteminfo_t *item )
 	return 0;
 }
 
-bg_iteminfo_t *BG_ItemForItemNum( int itemnum )
+gitem_t *BG_ItemForItemNum( int itemnum )
 {
 	if (itemnum >= 0 && itemnum < bg_numitems)
 		return &bg_iteminfo[itemnum];
@@ -720,7 +720,7 @@ const char *powerup_names[PW_NUM_POWERUPS+1] =
 
 static qboolean ItemInfo_Parse(char **p) {
 	char *token;
-	bg_iteminfo_t item;
+	gitem_t item;
 	int i;
 	int num;
 
@@ -1372,7 +1372,7 @@ static qboolean WeaponGroupAnims_Parse(char **p, bg_weapongroup_anims_t *anims) 
 	return qfalse;
 }
 
-static void BG_SetupWeaponGroup(bg_weapongroupinfo_t *weaponGroup, bg_iteminfo_t *weaponItem, const char *name, int num)
+static void BG_SetupWeaponGroup(bg_weapongroupinfo_t *weaponGroup, gitem_t *weaponItem, const char *name, int num)
 {
 	if (weaponGroup) {
 		// Set name
@@ -1409,7 +1409,7 @@ static void BG_SetupWeaponGroup(bg_weapongroupinfo_t *weaponGroup, bg_iteminfo_t
 static qboolean WeaponGroup_Parse(char **p) {
 	char *token;
 	bg_weapongroupinfo_t weaponGroup;
-	bg_iteminfo_t weaponItem;
+	gitem_t weaponItem;
 
 	token = COM_ParseExt(p, qtrue);
 	if ( !*token ) {
@@ -4181,19 +4181,6 @@ qboolean BG_LoadPlayerCFGFile(bg_playercfg_t *playercfg, const char *model, cons
 			}
 		}
 	}
-
-#if defined IOQ3ZTM && defined TA_WEAPSYS && (defined GAME || defined CGAME) // LASERTAG
-	{
-#ifdef GAME
-		extern vmCvar_t g_laserTag;
-		if (g_laserTag.integer)
-#else //if defined CGAME
-		extern vmCvar_t cg_laserTag;
-		if (cg_laserTag.integer)
-#endif
-			playercfg->default_weapon = BG_WeaponGroupIndexForName("wp_lasergun");
-	}
-#endif
 
 	return qtrue;
 }

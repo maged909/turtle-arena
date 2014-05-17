@@ -378,9 +378,9 @@ returning qfalse if not found
 ===============
 */
 qboolean G_CallSpawn( gentity_t *ent ) {
-	spawn_t			*s;
-	bg_iteminfo_t	*item;
-	int				i;
+	spawn_t	*s;
+	gitem_t	*item;
+	int		i;
 
 	if ( !ent->classname ) {
 		G_Printf ("G_CallSpawn: NULL classname\n");
@@ -398,17 +398,10 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 	}
 #endif
 
-#ifdef IOQ3ZTM // LASERTAG
-	if (g_laserTag.integer) {
-		if ( !strcmp("weapon_random", ent->classname) ) {
-			return qfalse;
-		}
-	} else {
-#endif
 	// check item spawn functions
 	for ( i = 1; i < BG_NumItems(); i++ ) {
-		item = &bg_iteminfo[i];
-		if ( item->classname[0] == '\0' ) {
+		item = BG_ItemForItemNum( i );
+		if ( !item->classname || !*item->classname ) {
 			continue;
 		}
 		if ( !strcmp(item->classname, ent->classname) ) {
@@ -416,9 +409,6 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 			return qtrue;
 		}
 	}
-#ifdef IOQ3ZTM // LASERTAG
-	}
-#endif
 
 	// check normal spawn functions
 	for ( s=spawns ; s->name ; s++ ) {

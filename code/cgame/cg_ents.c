@@ -679,7 +679,7 @@ CG_Item
 static void CG_Item( centity_t *cent ) {
 	refEntity_t		ent;
 	entityState_t	*es;
-	bg_iteminfo_t	*item;
+	gitem_t			*item;
 	int				msec;
 	float			frac;
 	float			scale;
@@ -702,7 +702,7 @@ static void CG_Item( centity_t *cent ) {
 		return;
 	}
 
-	item = BG_ItemForItemNum(es->modelindex);
+	item = BG_ItemForItemNum( es->modelindex );
 
 #ifdef IOQ3ZTM // move icons as well as models.
 #ifdef TURTLEARENA
