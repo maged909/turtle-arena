@@ -554,6 +554,27 @@ gitem_t	*BG_FindItemForWeapon( weapon_t weapon ) {
 	return NULL;
 }
 
+#ifndef TURTLEARENA // WEAPONS
+/*
+===============
+BG_FindItemForAmmo
+
+===============
+*/
+gitem_t	*BG_FindItemForAmmo( weapon_t weapon ) {
+	gitem_t	*it;
+	
+	for ( it = bg_itemlist + 1 ; it->classname ; it++) {
+		if ( it->giType == IT_AMMO && it->giTag == weapon ) {
+			return it;
+		}
+	}
+
+	Com_Error( ERR_DROP, "Couldn't find item for ammo %i", weapon);
+	return NULL;
+}
+#endif
+
 /*
 ===============
 BG_FindItem
@@ -643,7 +664,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: index out of range" );
 	}
 
-	item = BG_ItemForItemNum(ent->modelindex);
+	item = BG_ItemForItemNum( ent->modelindex );
 
 #ifdef IOQ3ZTM // DROP_ITEM_FIX
 	// If it was dropped by this player and is still in their Bounding Box
@@ -726,12 +747,12 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 #ifndef TURTLEARENA // NOARMOR
 	case IT_ARMOR:
 #ifdef MISSIONPACK
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
+		if( BG_ItemForItemNum( ps->stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_SCOUT ) {
 			return qfalse;
 		}
 
 		// we also clamp armor to the maxhealth for handicapping
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
+		if( BG_ItemForItemNum( ps->stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
 			upperBound = ps->stats[STAT_MAX_HEALTH];
 		}
 		else {
@@ -753,7 +774,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		// small and mega healths will go over the max, otherwise
 		// don't pick up if already at max
 #ifdef MISSIONPACK
-		if( BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_GUARD ) {
+		if( BG_ItemForItemNum( ps->stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
 			upperBound = ps->stats[STAT_MAX_HEALTH];
 		}
 		else
@@ -776,7 +797,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 	case IT_POWERUP:
 #ifdef MISSIONPACK
 		// scout overrides haste
-		if (item->giTag == PW_HASTE && BG_ItemForItemNum(ps->stats[STAT_PERSISTANT_POWERUP])->giTag == PW_SCOUT ) {
+		if (item->giTag == PW_HASTE && BG_ItemForItemNum( ps->stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_SCOUT ) {
 			return qfalse;
 		}
 #endif

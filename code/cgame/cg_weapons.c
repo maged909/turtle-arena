@@ -1314,16 +1314,14 @@ void CG_RegisterWeapon( int weaponNum )
 	memset( weaponInfo, 0, sizeof( *weaponInfo ) );
 	weaponInfo->registered = qtrue;
 
-	item = BG_ItemForItemNum(0);
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
-		item = BG_ItemForItemNum(i);
-		if (!item->classname)
-			continue;
-		if ( item->giType == IT_WEAPON && item->giTag == weaponNum ) {
-			break;
-		}
+#ifndef TA_WEAPSYS_EX
+	weaponInfo->item = /*item on next line */
+#endif
+	item = BG_FindItemForWeapon( weaponNum );
+	if ( !item ) {
+		CG_Error( "Couldn't find weapon %i", weaponNum );
 	}
+	CG_RegisterItemVisuals( BG_ItemNumForItem( item ) );
 
 	// load cmodel before model so filecache works
 #ifdef TA_WEAPSYS
@@ -1374,18 +1372,8 @@ void CG_RegisterWeapon( int weaponNum )
 #ifndef TURTLEARENA // WEAPONS
 	weaponInfo->ammoIcon = trap_R_RegisterShader( item->icon );
 
-	ammo = NULL;
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
-		ammo = BG_ItemForItemNum(i);
-		if (!ammo->classname)
-			continue;
-		if ( ammo->giType == IT_AMMO && ammo->giTag == weaponNum ) {
-			break;
-		}
-	}
-
-	if ( ammo && ammo->classname && ammo->world_model[0] ) {
+	ammo = BG_FindItemForAmmo( weaponNum );
+	if ( ammo && ammo->world_model[0] ) {
 		weaponInfo->ammoModel = trap_R_RegisterModel( ammo->world_model[0] );
 	}
 #endif
@@ -1603,7 +1591,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
 		return;
 	}
 
-	item = BG_ItemForItemNum(itemNum);
+	item = BG_ItemForItemNum( itemNum );
 
 	memset( itemInfo, 0, sizeof( &itemInfo ) );
 	itemInfo->registered = qtrue;

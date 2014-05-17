@@ -2288,6 +2288,9 @@ extern int modNamesSize;
 
 gitem_t	*BG_FindItem( const char *pickupName );
 gitem_t	*BG_FindItemForWeapon( weapon_t weapon );
+#ifndef TURTLEARENA // WEAPONS
+gitem_t	*BG_FindItemForAmmo( weapon_t weapon );
+#endif
 gitem_t	*BG_FindItemForPowerup( powerup_t pw );
 gitem_t	*BG_FindItemForHoldable( holdable_t pw );
 #ifdef IOQ3ZTM

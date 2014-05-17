@@ -600,7 +600,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 			return;
 		}
 		if (item) {
-		  CG_DrawPic( x, y, w, h, cg_items[ BG_ItemNumForItem(item) ].icon );
+		  CG_DrawPic( x, y, w, h, cg_items[ BG_ItemNumForItem( item ) ].icon );
 		}
 	}
 #endif
@@ -2151,7 +2151,7 @@ static int CG_DrawPickupItem( int y ) {
 	y -= ICON_SIZE;
 
 	value = cg.cur_lc->itemPickup;
-	item = BG_ItemForItemNum(value);
+	item = BG_ItemForItemNum( value );
 
 #ifdef TA_WEAPSYS
 	if (item && item->giType == IT_WEAPON

@@ -702,7 +702,7 @@ static void CG_Item( centity_t *cent ) {
 		return;
 	}
 
-	item = BG_ItemForItemNum(es->modelindex);
+	item = BG_ItemForItemNum( es->modelindex );
 
 #ifdef IOQ3ZTM // move icons as well as models.
 #ifdef TURTLEARENA

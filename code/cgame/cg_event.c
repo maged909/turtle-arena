@@ -534,11 +534,8 @@ A new item was picked up this frame
 ================
 */
 static void CG_ItemPickup( int localClientNum, int itemNum ) {
-	cglc_t	*lc;
-	gitem_t	*item;
-
-	lc = &cg.localClients[localClientNum];
-	item = BG_ItemForItemNum(itemNum);
+	cglc_t *lc = &cg.localClients[localClientNum];
+	gitem_t *item = BG_ItemForItemNum( itemNum );
 
 #ifdef TURTLEARENA // NIGTHS_ITEMS
 	if (item->giType == IT_SCORE) {
@@ -1042,7 +1039,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 #ifdef TURTLEARENA // POWERS
 			trap_S_StartSound (NULL, es->number, CHAN_AUTO,	cgs.media.itemPickupSounds[ index ] );
 #else
-			item = BG_ItemForItemNum(index);
+			item = BG_ItemForItemNum( index );
 
 			// powerups and team items will have a separate global sound, this one
 			// will be played at prediction time

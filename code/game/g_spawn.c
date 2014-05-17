@@ -400,8 +400,8 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 
 	// check item spawn functions
 	for ( i = 1; i < BG_NumItems(); i++ ) {
-		item = &bg_iteminfo[i];
-		if ( item->classname[0] == '\0' ) {
+		item = BG_ItemForItemNum( i );
+		if ( !item->classname || !*item->classname ) {
 			continue;
 		}
 		if ( !strcmp(item->classname, ent->classname) ) {
