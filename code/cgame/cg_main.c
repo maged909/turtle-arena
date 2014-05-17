@@ -554,7 +554,11 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_skybox, "cg_skybox", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawScores, "cg_drawScores", "1", 0, RANGE_BOOL },
+#ifdef TURTLEARENA // enable new bubble effects by default
+	{ &cg_oldBubbles, "cg_oldBubbles", "0", CVAR_ARCHIVE, RANGE_BOOL },
+#else
 	{ &cg_oldBubbles, "cg_oldBubbles", "1", CVAR_ARCHIVE, RANGE_BOOL },
+#endif
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
