@@ -1180,7 +1180,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 
 			// make a dlight for the flash
 			if ( *flashDlightColor[0] || *flashDlightColor[1] || *flashDlightColor[2] ) {
-				trap_R_AddLightToScene( flash.origin, 200 + (rand()&31), *flashDlightColor[0],
+				trap_R_AddLightToScene( flash.origin, 200 + (rand()&31), 1.0f, *flashDlightColor[0],
 					*flashDlightColor[1], *flashDlightColor[2] );
 			}
 		}
