@@ -2572,11 +2572,7 @@ static void PM_Weapon( void ) {
 		&& ((pm->cmd.buttons & BUTTON_DROP_WEAPON)
 		|| (pm->ps->stats[STAT_AMMO] == 0
 #ifdef MISSIONPACK // ZTM: Don't auto drop if have ammo regen!
-#ifdef TA_WEAPSYS
-		&& BG_ItemForItemNum(pm->ps->stats[STAT_PERSISTANT_POWERUP])->giTag != PW_AMMOREGEN
-#else
-		&& bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag != PW_AMMOREGEN
-#endif
+		&& BG_ItemForItemNum( pm->ps->stats[STAT_PERSISTANT_POWERUP] )->giTag != PW_AMMOREGEN
 #endif
 		))
 		&& pm->ps->weapon != pm->ps->stats[STAT_DEFAULTWEAPON])
