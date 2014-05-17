@@ -358,6 +358,7 @@ typedef enum {
 	LE_FADE_RGB,
 	LE_SCALE_FADE,
 	LE_SCOREPLUM,
+	LE_BUBBLE,
 #ifdef TURTLEARENA // NIGHTS_ITEMS
 	LE_CHAINPLUM,
 #endif
@@ -1890,6 +1891,7 @@ extern	vmCvar_t		cg_fovAspectAdjust;
 extern	vmCvar_t		cg_fadeExplosions;
 extern	vmCvar_t		cg_skybox;
 extern	vmCvar_t		cg_drawScores;
+extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
@@ -2360,6 +2362,7 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing );
 #ifdef TA_WEAPSYS
 qboolean CG_BulletBubbleTrail( vec3_t start, vec3_t end, int skipNum );
 #endif
+void CG_SpawnBubbles( vec3_t origin, float baseSize, int numBubbles );
 void CG_SpawnEffect( vec3_t org );
 #ifdef MISSIONPACK
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM

@@ -277,6 +277,7 @@ vmCvar_t	cg_fovAspectAdjust;
 vmCvar_t	cg_fadeExplosions;
 vmCvar_t	cg_skybox;
 vmCvar_t	cg_drawScores;
+vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_introPlayed;
 vmCvar_t	ui_stretch;
 
@@ -553,6 +554,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_skybox, "cg_skybox", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawScores, "cg_drawScores", "1", 0, RANGE_BOOL },
+	{ &cg_oldBubbles, "cg_oldBubbles", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
