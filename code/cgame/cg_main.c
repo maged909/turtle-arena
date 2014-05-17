@@ -304,9 +304,6 @@ vmCvar_t	cg_drawMeleeWeaponTrails;
 #ifdef TA_MISC // MATERIALS 
 vmCvar_t	cg_impactDebris;
 #endif
-#ifdef IOQ3ZTM // LASERTAG
-vmCvar_t	cg_laserTag;
-#endif
 #ifdef TA_PATHSYS // 2DMODE
 vmCvar_t	cg_2dmode;
 vmCvar_t	cg_2dmodeOverride;
@@ -564,9 +561,6 @@ static cvarTable_t cgameCvarTable[] = {
 #endif
 #ifdef TA_MISC // MATERIALS
 	{ &cg_impactDebris, "cg_impactDebris", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0, 10 ) },
-#endif
-#ifdef IOQ3ZTM // LASERTAG
-	{ &cg_laserTag, "g_laserTag", "0", CVAR_SERVERINFO, RANGE_BOOL },
 #endif
 #ifdef TA_PATHSYS // 2DMODE
 	{ &cg_2dmode, "g_2dmode", "0", CVAR_SERVERINFO, RANGE_ALL },
@@ -3205,13 +3199,6 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	trap_S_ClearLoopingSounds( qtrue );
 
 	CG_RestoreSnapshot();
-
-#if defined IOQ3ZTM && defined TURTLEARENA // THIRD_PERSON LASERTAG
-	if (cg_laserTag.integer)
-		trap_Cvar_Set("cg_thirdPerson", "0");
-	else
-		trap_Cvar_Set("cg_thirdPerson", "1");
-#endif
 }
 
 /*

@@ -1084,9 +1084,6 @@ extern	vmCvar_t	g_proxMineTimeout;
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
 extern	vmCvar_t	g_teleportFluxTime;
 #endif
-#ifdef IOQ3ZTM // LASERTAG
-extern	vmCvar_t	g_laserTag;
-#endif
 #ifdef TA_PATHSYS // 2DMODE
 extern	vmCvar_t	g_2dmode;
 #endif

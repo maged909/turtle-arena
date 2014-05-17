@@ -47,12 +47,6 @@ void P_DamageFeedback( gentity_t *player ) {
 	float	count;
 	vec3_t	angles;
 
-#ifdef IOQ3ZTM // LASERTAG
-	if (g_laserTag.integer) {
-		return;
-	}
-#endif
-
 	client = player->client;
 	if ( client->ps.pm_type == PM_DEAD ) {
 		return;

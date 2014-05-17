@@ -1916,9 +1916,6 @@ extern	vmCvar_t		cg_drawMeleeWeaponTrails;
 #ifdef TA_MISC // MATERIALS 
 extern	vmCvar_t		cg_impactDebris;
 #endif
-#ifdef IOQ3ZTM // LASERTAG
-extern	vmCvar_t		cg_laserTag;
-#endif
 #ifdef TA_PATHSYS // 2DMODE
 extern vmCvar_t			cg_2dmode;
 extern vmCvar_t			cg_2dmodeOverride;

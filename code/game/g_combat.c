@@ -1355,11 +1355,6 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( dflags & DAMAGE_NO_KNOCKBACK ) {
 		knockback = 0;
 	}
-#ifdef IOQ3ZTM // LASERTAG
-	if (g_laserTag.integer) {
-		knockback = 0;
-	}
-#endif
 
 	// figure momentum add, even if the damage won't be taken
 	if ( knockback && targ->client ) {
@@ -1593,12 +1588,6 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			targ->client->lasthurt_weapon = attacker->s.weapon;
 		else
 			targ->client->lasthurt_weapon = 0;
-#endif
-#ifdef IOQ3ZTM // LASERTAG
-		if (g_laserTag.integer == 1) {
-			take = 0;
-			AddScore(attacker, targ->r.currentOrigin, 5);
-		}
 #endif
 	}
 

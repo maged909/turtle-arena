@@ -398,13 +398,6 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 	}
 #endif
 
-#ifdef IOQ3ZTM // LASERTAG
-	if (g_laserTag.integer) {
-		if ( !strcmp("weapon_random", ent->classname) ) {
-			return qfalse;
-		}
-	} else {
-#endif
 	// check item spawn functions
 	for ( i = 1; i < BG_NumItems(); i++ ) {
 		item = &bg_iteminfo[i];
@@ -416,9 +409,6 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 			return qtrue;
 		}
 	}
-#ifdef IOQ3ZTM // LASERTAG
-	}
-#endif
 
 	// check normal spawn functions
 	for ( s=spawns ; s->name ; s++ ) {

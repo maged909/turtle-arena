@@ -134,9 +134,6 @@ vmCvar_t	g_saveMapname;
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
 vmCvar_t	g_teleportFluxTime;
 #endif
-#ifdef IOQ3ZTM // LASERTAG
-vmCvar_t	g_laserTag;
-#endif
 #ifdef TA_PATHSYS // 2DMODE
 vmCvar_t	g_2dmode;
 #endif
@@ -259,9 +256,6 @@ static cvarTable_t		gameCvarTable[] = {
 #endif
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
 	{ &g_teleportFluxTime, "g_teleportFluxTime", "5", 0, 0, RANGE_ALL },
-#endif
-#ifdef IOQ3ZTM // LASERTAG
-	{ &g_laserTag, "g_laserTag", "0", CVAR_SERVERINFO, 0, RANGE_ALL },
 #endif
 #ifdef TA_PATHSYS // 2DMODE
 	{ &g_2dmode, "g_2dmode", "0", CVAR_SERVERINFO, 0, RANGE_ALL },

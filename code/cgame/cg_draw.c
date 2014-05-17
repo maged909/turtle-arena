@@ -988,27 +988,6 @@ static void CG_DrawStatusBar( void ) {
 		return;
 	}
 
-#ifdef IOQ3ZTM // LASERTAG
-	if (cg_laserTag.integer)
-	{
-		cent = &cg_entities[cg.cur_ps->clientNum];
-		ps = cg.cur_ps;
-
-		// Health
-		if (cg_laserTag.integer == 1)
-		{
-			// unlimited
-			CG_DrawSmallString( 100, 320, "Unlimited Health", 1.0F );
-		}
-		else
-		{
-			value = (int)((ps->stats[STAT_HEALTH])/40)+1; // wp_lasergun damage
-			CG_DrawSmallString( 100, 320, va("Health: %d hits", value), 1.0F );
-		}
-		return;
-	}
-#endif
-
 #ifdef TURTLEARENA
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
 

@@ -470,12 +470,7 @@ void CG_RailTrail (clientInfo_t *ci, vec3_t start, vec3_t end)
 
 	AxisClear( re->axis );
  
-	if (cg_oldRail.integer
-#ifdef IOQ3ZTM // LASERTAG
-		|| cg_laserTag.integer
-#endif
-		)
-	{
+	if (cg_oldRail.integer) {
 #ifndef IOQ3ZTM
 		// nudge down a bit so it isn't exactly in center
 		re->origin[2] -= 8;
@@ -3894,12 +3889,6 @@ void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFla
 		return;
 	}
 
-#ifdef IOQ3ZTM // LASERTAG
-	if ( cg_laserTag.integer ) {
-		return;
-	}
-#endif
-
 	if (dir && VectorLength(dir))
 	{
 		// Move away from surface
@@ -4021,13 +4010,6 @@ void CG_MissileExplode( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 	int exp_add;
 	qboolean instantLightningBeam;
 	qboolean instantLightningImpact;
-#endif
-
-#ifdef IOQ3ZTM // LASERTAG
-	if (cg_laserTag.integer)
-	{
-		return;
-	}
 #endif
 
 	mark = 0;
@@ -4599,13 +4581,6 @@ void CG_WeaponImpact( int weaponGroup, int hand, int clientNum, vec3_t origin, v
 	int				exp_base;
 	int				exp_add;
 	int				weaponnum;
-
-#ifdef IOQ3ZTM // LASERTAG
-	if (cg_laserTag.integer)
-	{
-		return;
-	}
-#endif
 
 	weaponnum = bg_weapongroupinfo[weaponGroup].weaponnum[hand];
 
