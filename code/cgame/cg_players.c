@@ -1979,77 +1979,6 @@ static void CG_HasteTrail( centity_t *cent ) {
 }
 
 #ifdef MISSIONPACK
-#ifdef IOQ3ZTM // BUBBLES
-/*
-==================
-CG_SpawnBreathBubbles
-
-Based on CG_BubbleTrail
-==================
-*/
-void CG_SpawnBreathBubbles( vec3_t origin ) {
-	int			i;
-	int			numBubbles;
-	float		rnd;
-	qboolean	spawnedLarge; // Only one large bubble.
-
-	spawnedLarge = qfalse;
-	numBubbles = (int)(3 + random()*5);
-
-	for ( i = 0; i < numBubbles; i++ ) {
-		localEntity_t	*le;
-		refEntity_t		*re;
-
-		le = CG_AllocLocalEntity();
-		le->leFlags = LEF_PUFF_DONT_SCALE;
-		le->leType = LE_BUBBLE; // LE_MOVE_SCALE_FADE;
-		le->startTime = cg.time;
-
-		// Bubbles should make it to the surface
-		le->endTime = cg.time + 8000 + random() * 250;
-
-		le->lifeRate = 1.0 / ( le->endTime - le->startTime );
-
-		re = &le->refEntity;
-		re->shaderTime = cg.time / 1000.0f;
-
-		re->reType = RT_SPRITE;
-		re->rotation = 0;
-
-		rnd = random();
-		if (rnd > 0.9f && !spawnedLarge)
-		{
-			spawnedLarge = qtrue;
-			re->radius = 6;
-		}
-		else
-		{
-			re->radius = 1 + rnd * 2;
-		}
-
-		re->customShader = cgs.media.waterBubbleShader;
-		re->shaderRGBA[0] = 0xff;
-		re->shaderRGBA[1] = 0xff;
-		re->shaderRGBA[2] = 0xff;
-		re->shaderRGBA[3] = 0xff;
-
-		le->color[3] = 1.0;
-
-		le->pos.trType = TR_LINEAR;
-		le->pos.trTime = cg.time;
-
-		VectorCopy( origin, le->pos.trBase );
-		le->pos.trBase[0] += crandom();
-		le->pos.trBase[1] += crandom();
-		le->pos.trBase[2] += crandom();
-
-		le->pos.trDelta[0] = crandom()*5;
-		le->pos.trDelta[1] = crandom()*5;
-		le->pos.trDelta[2] = 8 + random()*5;
-	}
-}
-#endif
-
 /*
 ===============
 CG_BreathPuffs
@@ -2062,11 +1991,9 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 
 	ci = &cgs.clientinfo[ cent->currentState.number ];
 
-#ifndef IOQ3ZTM // BUBBLES
 	if (!cg_enableBreath.integer) {
 		return;
 	}
-#endif
 	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson) {
 		return;
 	}
@@ -2074,11 +2001,9 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 		return;
 	}
 	contents = CG_PointContents( head->origin, 0 );
-#ifndef IOQ3ZTM // BUBBLES
 	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
 		return;
 	}
-#endif
 	if ( ci->breathPuffTime > cg.time ) {
 		return;
 	}
@@ -2086,19 +2011,7 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 	VectorSet( up, 0, 0, 8 );
 	VectorMA(head->origin, 8, head->axis[0], origin);
 	VectorMA(origin, -4, head->axis[2], origin);
-#ifdef IOQ3ZTM // BUBBLES // ZTM: Bubbles under water! (and slime/lava?)
-	if ( contents & ( CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA ) ) {
-		CG_SpawnBreathBubbles(origin);
-	}
-	else //if (player is cold...)
-	{
-		if (cg_enableBreath.integer) {
-#endif
 	CG_SmokePuff( origin, up, 16, 1, 1, 1, 0.66f, 1500, cg.time, cg.time + 400, LEF_PUFF_DONT_SCALE, cgs.media.shotgunSmokePuffShader );
-#ifdef IOQ3ZTM // BUBBLES
-		}
-	}
-#endif
 	ci->breathPuffTime = cg.time + 2000;
 }
 
