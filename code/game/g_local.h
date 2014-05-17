@@ -214,7 +214,7 @@ struct gentity_s {
 	float		wait;
 	float		random;
 
-	bg_iteminfo_t	*item;			// for bonus items
+	gitem_t		*item;			// for bonus items
 
 #ifdef TA_ENTSYS // MISC_OBJECT
 	bg_objectcfg_t	*objectcfg;
@@ -599,11 +599,11 @@ void G_RunItem( gentity_t *ent );
 void RespawnItem( gentity_t *ent );
 
 void UseHoldableItem( gentity_t *ent );
-void PrecacheItem (bg_iteminfo_t *it);
-gentity_t *Drop_Item( gentity_t *ent, bg_iteminfo_t *item, float angle );
-gentity_t *LaunchItem( bg_iteminfo_t *item, vec3_t origin, vec3_t velocity );
+void PrecacheItem (gitem_t *it);
+gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle );
+gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity );
 void SetRespawn (gentity_t *ent, float delay);
-void G_SpawnItem (gentity_t *ent, bg_iteminfo_t *item);
+void G_SpawnItem (gentity_t *ent, gitem_t *item);
 void FinishSpawningItem( gentity_t *ent );
 void Think_Weapon (gentity_t *ent);
 int ArmorIndex (gentity_t *ent);
@@ -611,11 +611,11 @@ void	Add_Ammo (gentity_t *ent, int weapon, int count);
 void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace);
 
 void ClearRegisteredItems( void );
-void RegisterItem( bg_iteminfo_t *item );
+void RegisterItem( gitem_t *item );
 void SaveRegisteredItems( void );
 
 #ifdef TA_WEAPSYS // weapon_random
-bg_iteminfo_t *G_RandomWeaponItem( gentity_t *ent, int flags );
+gitem_t *G_RandomWeaponItem( gentity_t *ent, int flags );
 #endif
 
 //

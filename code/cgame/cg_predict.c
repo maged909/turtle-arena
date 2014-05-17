@@ -351,7 +351,7 @@ CG_TouchItem
 ===================
 */
 static void CG_TouchItem( centity_t *cent ) {
-	bg_iteminfo_t	*item;
+	gitem_t	*item;
 
 	if ( !cg_predictItems.integer ) {
 		return;

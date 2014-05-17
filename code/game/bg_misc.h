@@ -832,7 +832,7 @@ typedef enum {
 } weapon_t;
 #endif
 
-// bg_iteminfo_t->type
+// gitem_t->type
 typedef enum {
 	IT_BAD,
 	IT_WEAPON,				// EFX: rotate + upscale + minlight
@@ -875,12 +875,12 @@ typedef struct bg_iteminfo_s {
 	//char		precaches[MAX_STRING_CHARS];		// string of all models and images this item will use
 
 	char		sounds[MAX_STRING_CHARS];		// string of all sounds this item will use
-} bg_iteminfo_t;
+} gitem_t;
 
-extern bg_iteminfo_t bg_iteminfo[MAX_ITEMS];
+extern gitem_t bg_iteminfo[MAX_ITEMS];
 
-int BG_ItemNumForItem( bg_iteminfo_t *item );
-bg_iteminfo_t *BG_ItemForItemNum( int itemNum );
+int BG_ItemNumForItem( gitem_t *item );
+gitem_t *BG_ItemForItemNum( int itemNum );
 int BG_ItemIndexForName(const char *classname);
 int BG_NumItems(void);
 int BG_NumHoldableItems(void);
@@ -1136,7 +1136,7 @@ typedef struct
 	qboolean randomSpawn; // If qtrue (default) spawn in weapon_random
 
 	// Item info
-	bg_iteminfo_t *item;
+	gitem_t *item;
 
 	// Models
 	char handsModelName[MAX_QPATH]; // Model's tags are used to position weapons in first person
@@ -1209,7 +1209,7 @@ typedef struct
 {
 	qboolean				initialized;
 
-	bg_iteminfo_t			iteminfo[MAX_ITEMS];
+	gitem_t					iteminfo[MAX_ITEMS];
 
 #ifdef TA_WEAPSYS
 	bg_projectileinfo_t		projectileinfo[MAX_BG_PROJ];
@@ -2286,12 +2286,12 @@ extern int modNamesSize;
 
 //---------------------------------------------------------
 
-bg_iteminfo_t	*BG_FindItem( const char *pickupName );
-bg_iteminfo_t	*BG_FindItemForWeapon( weapon_t weapon );
-bg_iteminfo_t	*BG_FindItemForPowerup( powerup_t pw );
-bg_iteminfo_t	*BG_FindItemForHoldable( holdable_t pw );
+gitem_t	*BG_FindItem( const char *pickupName );
+gitem_t	*BG_FindItemForWeapon( weapon_t weapon );
+gitem_t	*BG_FindItemForPowerup( powerup_t pw );
+gitem_t	*BG_FindItemForHoldable( holdable_t pw );
 #ifdef IOQ3ZTM
-bg_iteminfo_t	*BG_FindItemForClassname( const char *classname );
+gitem_t	*BG_FindItemForClassname( const char *classname );
 #endif
 
 qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps );

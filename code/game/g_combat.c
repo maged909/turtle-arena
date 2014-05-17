@@ -141,7 +141,7 @@ Toss the weapon and powerups for the killed player
 =================
 */
 void TossClientItems( gentity_t *self ) {
-	bg_iteminfo_t	*item;
+	gitem_t			*item;
 	int				weapon;
 	float			angle;
 	int				i;
@@ -303,7 +303,7 @@ Drop Flag in CTF, other gametypes could drop gametype specific items as well.
 void TossClientGametypeItems(gentity_t *ent)
 {
 	int j;
-	bg_iteminfo_t *item;
+	gitem_t *item;
 	gentity_t *drop;
 	int angle = 0;
 
@@ -373,7 +373,7 @@ extern gentity_t	*neutralObelisk;
 
 #ifdef MISSIONPACK_HARVESTER
 void TossClientCubes( gentity_t *self ) {
-	bg_iteminfo_t		*item;
+	gitem_t		*item;
 	gentity_t	*drop;
 	vec3_t		velocity;
 	vec3_t		angles;

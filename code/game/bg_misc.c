@@ -467,11 +467,10 @@ Returns 0 if not found.
 */
 int BG_ItemNumForHoldableNum(holdable_t holdablenum)
 {
-	bg_iteminfo_t	*it;
-	int i;
+	gitem_t	*it;
+	int	i;
 
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
+	for ( i = 1; i < BG_NumItems(); i++ ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
@@ -490,12 +489,11 @@ int BG_ItemNumForHoldableNum(holdable_t holdablenum)
 BG_FindItemForPowerup
 ==============
 */
-bg_iteminfo_t	*BG_FindItemForPowerup( powerup_t pw ) {
-	bg_iteminfo_t	*it;
+gitem_t	*BG_FindItemForPowerup( powerup_t pw ) {
+	gitem_t	*it;
 	int i;
 
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
+	for ( i = 1; i < BG_NumItems(); i++ ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
@@ -517,12 +515,11 @@ bg_iteminfo_t	*BG_FindItemForPowerup( powerup_t pw ) {
 BG_FindItemForHoldable
 ==============
 */
-bg_iteminfo_t	*BG_FindItemForHoldable( holdable_t pw ) {
-	bg_iteminfo_t	*it;
+gitem_t	*BG_FindItemForHoldable( holdable_t pw ) {
+	gitem_t	*it;
 	int i;
 
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
+	for ( i = 1; i < BG_NumItems(); i++ ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
@@ -541,12 +538,11 @@ BG_FindItemForWeapon
 
 ===============
 */
-bg_iteminfo_t	*BG_FindItemForWeapon( weapon_t weapon ) {
-	bg_iteminfo_t	*it;
+gitem_t	*BG_FindItemForWeapon( weapon_t weapon ) {
+	gitem_t	*it;
 	int i;
 
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
+	for ( i = 1; i < BG_NumItems(); i++ ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
@@ -564,12 +560,11 @@ BG_FindItem
 
 ===============
 */
-bg_iteminfo_t	*BG_FindItem( const char *pickupName ) {
-	bg_iteminfo_t	*it;
+gitem_t	*BG_FindItem( const char *pickupName ) {
+	gitem_t	*it;
 	int i;
 
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
+	for ( i = 1; i < BG_NumItems(); i++ ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
@@ -586,12 +581,11 @@ bg_iteminfo_t	*BG_FindItem( const char *pickupName ) {
 BG_FindItemForClassname
 ===============
 */
-bg_iteminfo_t	*BG_FindItemForClassname( const char *classname ) {
-	bg_iteminfo_t	*it;
+gitem_t	*BG_FindItemForClassname( const char *classname ) {
+	gitem_t	*it;
 	int i;
 
-	for (i = BG_NumItems()-1; i > 0; i--)
-	{
+	for ( i = 1; i < BG_NumItems(); i++ ) {
 		it = BG_ItemForItemNum(i);
 		if (!it->classname[0])
 			continue;
@@ -640,7 +634,7 @@ This needs to be the same for client side prediction and server use.
 ================
 */
 qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps ) {
-	bg_iteminfo_t	*item;
+	gitem_t	*item;
 #if defined MISSIONPACK || defined TA_HOLDSYS
 	int		upperBound;
 #endif

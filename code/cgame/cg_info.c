@@ -89,7 +89,7 @@ CG_LoadingItem
 ===================
 */
 void CG_LoadingItem( int itemNum ) {
-	bg_iteminfo_t	*item;
+	gitem_t	*item;
 
 	item = BG_ItemForItemNum(itemNum);
 	

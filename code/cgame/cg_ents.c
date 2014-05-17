@@ -679,7 +679,7 @@ CG_Item
 static void CG_Item( centity_t *cent ) {
 	refEntity_t		ent;
 	entityState_t	*es;
-	bg_iteminfo_t	*item;
+	gitem_t			*item;
 	int				msec;
 	float			frac;
 	float			scale;

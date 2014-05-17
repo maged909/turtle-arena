@@ -76,11 +76,11 @@ UI_PlayerInfo_SetWeapon
 ===============
 */
 static void UI_PlayerInfo_SetWeapon( playerInfo_t *pi, weapon_t weaponNum ) {
-	int			i;
+	int		i;
 #ifndef TA_WEAPSYS
-	bg_iteminfo_t *item;
+	gitem_t	*item;
 #endif
-	char		path[MAX_QPATH];
+	char	path[MAX_QPATH];
 
 	pi->currentWeapon = weaponNum;
 #ifndef TA_WEAPSYS

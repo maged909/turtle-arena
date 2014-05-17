@@ -540,7 +540,7 @@ void RespawnItem( gentity_t *ent ) {
 	// weapon_random: Change item!
 	if (ent->item->giType == IT_WEAPON && ent->s.eFlags & EF_VOTED)
 	{
-		bg_iteminfo_t *item;
+		gitem_t *item;
 
 		item = G_RandomWeaponItem(ent, ent->spawnflags>>1);
 		if (item) {
@@ -763,7 +763,7 @@ LaunchItem
 Spawns an item and tosses it forward
 ================
 */
-gentity_t *LaunchItem( bg_iteminfo_t *item, vec3_t origin, vec3_t velocity ) {
+gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	gentity_t	*dropped;
 
 	dropped = G_Spawn();
@@ -822,7 +822,7 @@ Drop_Item
 Spawns an item and tosses it forward
 ================
 */
-gentity_t *Drop_Item( gentity_t *ent, bg_iteminfo_t *item, float angle ) {
+gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle ) {
 	vec3_t	velocity;
 	vec3_t	angles;
 	gentity_t *drop;
@@ -977,7 +977,7 @@ void G_CheckTeamItems( void ) {
 	Team_InitGame();
 
 	if( g_gametype.integer == GT_CTF ) {
-		bg_iteminfo_t	*item;
+		gitem_t	*item;
 
 		// check for the two flags
 		item = BG_FindItem( "Red Flag" );
@@ -991,7 +991,7 @@ void G_CheckTeamItems( void ) {
 	}
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_1FCTF ) {
-		bg_iteminfo_t	*item;
+		gitem_t	*item;
 
 		// check for all three flags
 		item = BG_FindItem( "Red Flag" );
@@ -1084,7 +1084,7 @@ RegisterItem
 The item will be added to the precache list
 ===============
 */
-void RegisterItem( bg_iteminfo_t *item ) {
+void RegisterItem( gitem_t *item ) {
 #ifdef TA_WEAPSYS
 	int itemNum;
 #endif
@@ -1138,7 +1138,7 @@ void SaveRegisteredItems( void ) {
 G_ItemDisabled
 ============
 */
-int G_ItemDisabled( bg_iteminfo_t *item ) {
+int G_ItemDisabled( gitem_t *item ) {
 
 	char name[128];
 
@@ -1156,7 +1156,7 @@ Items can't be immediately dropped to floor, because they might
 be on an entity that hasn't spawned yet.
 ============
 */
-void G_SpawnItem (gentity_t *ent, bg_iteminfo_t *item) {
+void G_SpawnItem (gentity_t *ent, gitem_t *item) {
 #ifdef IOQ3ZTM // RENDERFLAGS
 	int mirrorType;
 #endif
@@ -1210,7 +1210,7 @@ void G_SpawnItem (gentity_t *ent, bg_iteminfo_t *item) {
 G_RandomWeaponItem
 ============
 */
-bg_iteminfo_t *G_RandomWeaponItem( gentity_t *ent, int flags ) {
+gitem_t *G_RandomWeaponItem( gentity_t *ent, int flags ) {
 	int validWeapons[MAX_BG_WEAPON_GROUPS];
 	int numweapons;
 	int i;
@@ -1262,9 +1262,9 @@ Spawns a random weapon.
 "random" Respawn Delay Variance
 */
 void SP_weapon_random( gentity_t *ent ) {
-	bg_iteminfo_t	*item;
+	gitem_t	*item;
 #ifdef IOQ3ZTM // RENDERFLAGS
-	int				mirrorType;
+	int		mirrorType;
 #endif
 
 	// Default to melee and guns

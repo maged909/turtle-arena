@@ -858,8 +858,8 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 #endif
 //	qboolean	fired;
 #ifdef TA_WEAPSYS_EX
-	bg_iteminfo_t	*item;
-	gentity_t		*drop;
+	gitem_t		*item;
+	gentity_t	*drop;
 #endif
 #ifdef TA_HOLDSYS
 	int itemNum;
