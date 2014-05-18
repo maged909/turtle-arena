@@ -205,10 +205,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_debugMove, "g_debugMove", "0", 0, 0, RANGE_BOOL },
 	{ &g_debugDamage, "g_debugDamage", "0", 0, 0, RANGE_BOOL },
 	{ &g_motd, "g_motd", "", 0, 0, RANGE_ALL },
-#ifndef NOBLOOD
 #ifndef NOTRATEDM
 	{ &g_blood, "com_blood", "1", CVAR_ARCHIVE, 0, RANGE_ALL },
-#endif
 #endif
 
 	{ &g_podiumDist, "g_podiumDist", "80", 0, 0, RANGE_ALL },
@@ -681,16 +679,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 #ifdef TA_ENTSYS // MISC_OBJECT
 	BG_InitObjectConfig();
 #endif
-#ifdef TA_NPCSYS
-	BG_InitNPCInfo();
-#endif
 #ifdef IOQ3ZTM // MAP_ROTATION
 	G_LoadArenas();
 #endif
 	ClearRegisteredItems();
-#ifdef TA_NPCSYS
-	ClearRegisteredNPCs();
-#endif
 
 	// parse the key/value pairs and spawn gentities
 	G_SpawnEntitiesFromString();
@@ -704,9 +696,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	}
 
 	SaveRegisteredItems();
-#ifdef TA_NPCSYS
-	SaveRegisteredNPCs();
-#endif
 
 	G_DPrintf ("-----------------------------------\n");
 
@@ -2348,12 +2337,6 @@ void G_RunFrame( int levelTime ) {
 			VectorCopy( angles, ent->r.currentAngles );
 #endif
 			G_RunItem( ent );
-			continue;
-		}
-#endif
-#ifdef TA_NPCSYS
-		if ( ent->s.eType == ET_NPC ) {
-			G_RunNPC( ent );
 			continue;
 		}
 #endif

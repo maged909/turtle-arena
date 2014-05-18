@@ -355,9 +355,6 @@ spawn_t	spawns[] = {
 #ifdef TA_WEAPSYS
 	{"weapon_random", SP_weapon_random},
 #endif
-#if defined TA_NPCSYS && !defined TA_PATHSYS
-	{"npcpath", SP_npcpath},
-#endif
 #ifdef NIGHTSMODE
 	{"nights_start", SP_nights_start},
 	{"nights_target", SP_nights_target},
@@ -387,16 +384,6 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 		return qfalse;
 	}
 
-
-#ifdef TA_NPCSYS
-	// check NPC spawn functions
-	for ( i = 1; i < BG_NumNPCs(); i++ ) {
-		if ( !strcmp(bg_npcinfo[i].classname, ent->classname) ) {
-			G_SpawnNPC( ent, &bg_npcinfo[i] );
-			return qtrue;
-		}
-	}
-#endif
 
 	// check item spawn functions
 	for ( i = 1; i < BG_NumItems(); i++ ) {

@@ -830,14 +830,11 @@ qboolean G_ValidTarget(gentity_t *source, gentity_t *target,
 	if (target->flags & FL_NOTARGET)
 		return qfalse;
 
-	// ZTM: Target players, overload base, and NPCs.
+	// ZTM: Target players and overload base
 	if (!target->client// && !target->takedamage
 #ifdef MISSIONPACK
 		&& !(source->client && target->pain == ObeliskPain
 			&& target->spawnflags != source->client->sess.sessionTeam)
-#endif
-#ifdef TA_NPCSYS
-		&& !(source->client && target->s.eType == ET_NPC)
 #endif
 	)
 		return qfalse;

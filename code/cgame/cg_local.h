@@ -259,7 +259,7 @@ typedef struct {
 
 
 #ifdef TA_ENTSYS // MISC_OBJECT
-// misc_object/NPC data
+// misc_object data
 enum
 {
 	MOF_SETUP			= 1, // true if did one time setup.
@@ -303,7 +303,7 @@ typedef struct centity_s {
 	playerEntity_t	pe;
 #ifdef TA_ENTSYS // MISC_OBJECT
 	bg_objectcfg_t	*objectcfg;
-	objectEntity_t	oe; // misc_object/NPC data
+	objectEntity_t	oe; // misc_object data
 #endif
 
 	int				errorTime;		// decay the error from this time
@@ -732,15 +732,6 @@ typedef struct {
 	cgSkin_t		skin;
 #endif
 } itemInfo_t;
-
-#ifdef TA_NPCSYS
-typedef struct {
-	qboolean		registered;
-
-	qhandle_t		model;
-	cgSkin_t		skin;
-} npcInfo_t;
-#endif
 
 typedef struct {
 	int				itemNum;
@@ -1756,9 +1747,6 @@ extern	weaponGroupInfo_t	cg_weapongroups[MAX_BG_WEAPON_GROUPS];
 extern	weaponInfo_t	cg_weapons[MAX_WEAPONS];
 #endif
 extern	itemInfo_t		cg_items[MAX_ITEMS];
-#ifdef TA_NPCSYS
-extern	npcInfo_t		cg_npcs[MAX_NPCS];
-#endif
 extern	markPoly_t		cg_markPolys[MAX_MARK_POLYS];
 
 extern	vmCvar_t		con_conspeed;
@@ -2189,7 +2177,7 @@ void CG_GetTeamColor(vec4_t *color);
 const char *CG_GetGameStatusText( void );
 const char *CG_GetKillerText( void );
 void CG_Draw3DModel(float x, float y, float w, float h, qhandle_t model, cgSkin_t *skin, vec3_t origin, vec3_t angles);
-#if defined IOQ3ZTM || defined IOQ3ZTM_NO_COMPAT // DAMAGE_SKINS
+#ifdef IOQ3ZTM
 void CG_Draw3DHeadModel( int clientNum, float x, float y, float w, float h, vec3_t origin, vec3_t angles );
 #endif
 #ifndef IOQ3ZTM // FONT_REWRITE
@@ -2497,14 +2485,6 @@ void CG_Respawn( int clientNum );
 void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops );
 void CG_CheckChangedPredictableEvents( playerState_t *ps );
 void CG_CheckGameSounds( void );
-
-#ifdef TA_NPCSYS
-//
-// cg_npcs.c
-//
-void CG_NPC( centity_t *cent );
-void CG_RegisterNPCVisuals( int npcNum );
-#endif
 
 //
 // cg_atmospheric.c

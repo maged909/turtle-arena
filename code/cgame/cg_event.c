@@ -1456,8 +1456,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 #endif
 
 #ifdef TA_WEAPSYS
-#ifdef TA_NPCSYS // ZTM: TODO: Support attaching rail trail to NPCs
-#endif
 		if (es->clientNum < MAX_CLIENTS && es->weaponHands < MAX_HANDS) {
 			VectorCopy(cg_entities[es->clientNum].pe.flashOrigin[es->weaponHands], es->origin2);
 			es->origin2[2] += 4;

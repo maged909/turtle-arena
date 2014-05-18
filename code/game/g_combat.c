@@ -718,11 +718,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 			projectile = inflictor->s.weapon;
 		}
 		// Check for instant damage guns
-		else if (attacker && attacker == inflictor && (attacker->client
-#ifdef TA_NPCSYS
-			|| attacker->s.eType == ET_NPC
-#endif
-			) && bg_weapongroupinfo[attacker->s.weapon].weapon[0]->proj->instantDamage)
+		else if (attacker && attacker == inflictor && attacker->client
+			&& bg_weapongroupinfo[attacker->s.weapon].weapon[0]->proj->instantDamage)
 		{
 			projectile = bg_weapongroupinfo[attacker->s.weapon].weapon[0]->projnum;
 		}
@@ -734,12 +731,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 			obit = va("%s <unknown-projectile>", modNames[meansOfDeath]);
 		}
 	} else if (meansOfDeath == MOD_WEAPON_PRIMARY || meansOfDeath == MOD_WEAPON_SECONDARY) {
-		if (attacker && (attacker->client
-#ifdef TA_NPCSYS
-			|| attacker->s.eType == ET_NPC
-#endif
-			))
-		{
+		if (attacker && attacker->client) {
 			weaponGroup = attacker->s.weapon;
 		}
 
@@ -1495,9 +1487,6 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( attacker->client && client
 			&& targ != attacker && targ->health > 0
 			&& targ->s.eType != ET_MISSILE
-#ifdef TA_NPCSYS
-			&& targ->s.eType != ET_NPC
-#endif
 			&& targ->s.eType != ET_GENERAL) {
 		if ( OnSameTeam( targ, attacker ) ) {
 			attacker->client->ps.persistant[PERS_HITS]--;

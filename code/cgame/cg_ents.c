@@ -360,7 +360,7 @@ void CG_MiscObjectAnimate( centity_t *cent, int *oldframe, int *frame, float *ba
 		// Check for animation change
 		if (s1->legsAnim != cent->oe.anim)
 		{
-#if 0 // DEBUG: Debug misc_object/NPC
+#if 0 // DEBUG: Debug misc_object
 			int from = (cent->oe.anim & ~ANIM_TOGGLEBIT);
 			int to = (s1->legsAnim & ~ANIM_TOGGLEBIT);
 			if (to == from) // reset anim
@@ -434,23 +434,9 @@ void CG_MiscObjectAnimate( centity_t *cent, int *oldframe, int *frame, float *ba
 static void CG_MiscObject( centity_t *cent ) {
 	refEntity_t			ent;
 	entityState_t		*s1;
-#ifdef TA_NPCSYS
-	qboolean		isNPC;
-#endif
 	float			scale;
 
 	s1 = &cent->currentState;
-
-#ifdef TA_NPCSYS
-	isNPC = (s1->eType == ET_NPC);
-	if (isNPC)
-	{
-		if ( s1->modelindex >= BG_NumNPCs() )
-		{
-			CG_Error( "Bad NPC index %i on entity", s1->modelindex );
-		}
-	}
-#endif
 
 	// if set to invisible, skip
 	if ( !s1->modelindex || ( s1->eFlags & EF_NODRAW ) ) {
@@ -473,14 +459,7 @@ static void CG_MiscObject( centity_t *cent ) {
 			Q_strncpyz(filename, CG_ConfigString( CS_STRINGS + s1->modelindex2 - 1 ), MAX_QPATH);
 		} else {
 			// Use modelName with .cfg extension
-#ifdef TA_NPCSYS
-			if (isNPC) {
-				modelName = bg_npcinfo[s1->modelindex].model;
-			} else
-#endif
-			{
-				modelName = CG_ConfigString( CS_MODELS + s1->modelindex );
-			}
+			modelName = CG_ConfigString( CS_MODELS + s1->modelindex );
 
 			Q_strncpyz(filename, modelName, MAX_QPATH);
 			COM_SetExtension(filename, sizeof (filename), ".cfg");
@@ -497,26 +476,18 @@ static void CG_MiscObject( centity_t *cent ) {
 			cent->objectcfg = BG_DefaultObjectCFG();
 		}
 
-#ifdef TA_NPCSYS
-		if (isNPC) {
-			cent->oe.model = cg_npcs[ s1->modelindex ].model;
-			cent->oe.skin = cg_npcs[ s1->modelindex ].skin;
-		} else
-#endif
-		{
-			cent->oe.model = cgs.gameModels[s1->modelindex];
-			cent->oe.skin.numSurfaces = 0;
+		cent->oe.model = cgs.gameModels[s1->modelindex];
+		cent->oe.skin.numSurfaces = 0;
 
-			// Check for skin set in entity
-			if (s1->time2 > 0) {
-				const char *skin = CG_ConfigString( CS_STRINGS + s1->time2 - 1 );
-				CG_RegisterSkin( skin, &cent->oe.skin, qfalse );
-			}
+		// Check for skin set in entity
+		if (s1->time2 > 0) {
+			const char *skin = CG_ConfigString( CS_STRINGS + s1->time2 - 1 );
+			CG_RegisterSkin( skin, &cent->oe.skin, qfalse );
+		}
 
-			// Check for default skin
-			if (!cent->oe.skin.numSurfaces && *cent->objectcfg->skin) {
-				CG_RegisterSkin( cent->objectcfg->skin, &cent->oe.skin, qfalse );
-			}
+		// Check for default skin
+		if (!cent->oe.skin.numSurfaces && *cent->objectcfg->skin) {
+			CG_RegisterSkin( cent->objectcfg->skin, &cent->oe.skin, qfalse );
 		}
 	}
 
@@ -572,79 +543,6 @@ static void CG_MiscObject( centity_t *cent ) {
 
 	// add to refresh list
 	CG_AddRefEntityWithMinLight (&ent);
-
-#ifdef TA_NPCSYS
-	// Add NPC's weapon
-	// ZTM: TODO: Reuse the player weapon drawing code?
-	// ZTM: TODO: Support secondary weapon model.
-	if (isNPC && s1->weapon > WP_NONE && s1->weapon < BG_NumWeaponGroups())
-	{
-		refEntity_t	weapon;
-
-		memset( &weapon, 0, sizeof( weapon ) );
-
-		weapon.hModel = cg_weapons[bg_weapongroupinfo[s1->weapon].weaponnum[0]].weaponModel;
-		weapon.customSkin = 0;
-
-		VectorCopy( ent.lightingOrigin, weapon.lightingOrigin );
-		weapon.shadowPlane = ent.shadowPlane;
-		weapon.renderfx = ent.renderfx;
-
-		CG_PositionRotatedEntityOnTag( &weapon, &ent, weapon.hModel, "tag_weapon" );
-
-		AxisCopy( ent.axis, weapon.axis );
-		weapon.nonNormalizedAxes = ent.nonNormalizedAxes;
-
-		CG_AddRefEntityWithMinLight( &weapon );
-
-		// Add barrel
-		if (cg_weapons[bg_weapongroupinfo[s1->weapon].weaponnum[0]].barrelModel)
-		{
-			refEntity_t	barrel;
-
-			memset( &barrel, 0, sizeof( barrel ) );
-
-			barrel.hModel = cg_weapons[bg_weapongroupinfo[s1->weapon].weaponnum[0]].barrelModel;
-			barrel.customSkin = weapon.customSkin;
-
-			VectorCopy( weapon.lightingOrigin, barrel.lightingOrigin );
-			barrel.shadowPlane = weapon.shadowPlane;
-			barrel.renderfx = weapon.renderfx;
-
-			CG_PositionRotatedEntityOnTag( &barrel, &weapon, weapon.hModel, "tag_barrel" );
-
-			AxisCopy( weapon.axis, barrel.axis );
-			barrel.nonNormalizedAxes = weapon.nonNormalizedAxes;
-
-			CG_AddRefEntityWithMinLight( &barrel );
-		}
-	}
-#endif
-}
-#endif
-
-#ifdef TA_NPCSYS
-/*
-=================
-CG_RegisterNPCVisuals
-=================
-*/
-void CG_RegisterNPCVisuals( int npcNum ) {
-	bg_npcinfo_t	*npc;
-	npcInfo_t		*npcInfo;
-
-	npcInfo = &cg_npcs[npcNum];
-	if ( npcInfo->registered ) {
-		return;
-	}
-
-	npc = &bg_npcinfo[npcNum];
-
-	memset( npcInfo, 0, sizeof( &npcInfo ) );
-	npcInfo->registered = qtrue;
-
-	npcInfo->model = trap_R_RegisterModel( npc->model );
-	//npcInfo->skin //todo
 }
 #endif
 
@@ -1932,9 +1830,6 @@ static void CG_AddCEntity( centity_t *cent ) {
 		break;
 #ifdef TA_ENTSYS // MISC_OBJECT
 	case ET_MISCOBJECT:
-#ifdef TA_NPCSYS
-	case ET_NPC:
-#endif
 		CG_MiscObject( cent );
 		break;
 #endif

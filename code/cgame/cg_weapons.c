@@ -4789,11 +4789,7 @@ static void CG_ShotgunPellet( vec3_t start, vec3_t end, int skipNum ) {
 		return;
 	}
 
-	if ( cg_entities[tr.entityNum].currentState.eType == ET_PLAYER
-#ifdef TA_NPCSYS
-		|| cg_entities[tr.entityNum].currentState.eType == ET_NPC
-#endif
-	) {
+	if ( cg_entities[tr.entityNum].currentState.eType == ET_PLAYER ) {
 		CG_MissileHitPlayer( WP_SHOTGUN, tr.endpos, tr.plane.normal, tr.entityNum );
 	} else {
 		if ( tr.surfaceFlags & SURF_NOIMPACT ) {

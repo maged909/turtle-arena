@@ -128,9 +128,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CS_SHADERSTATE			24
 
 #define	CS_ITEMS				27		// string of 0's and 1's that tell which items are present
-#ifdef TA_NPCSYS
-#define	CS_NPCS					28
-#endif
 
 #define	CS_MODELS				32
 #define	CS_SOUNDS				(CS_MODELS+MAX_MODELS)
@@ -1645,18 +1642,15 @@ extern materialInfo_t materialInfo[NUM_MATERIAL_TYPES];
 #endif
 
 #ifdef TA_ENTSYS // MISC_OBJECT
-// TA_NPCSYS: Have Misc_Objects and NPCs use the same animations
 // Keep in sycn with bg_misc's objectAnimationDefs
 typedef enum
 {
 	OBJECT_NONE = -1, // Just one frame, 0.
 
-	// Misc_object: Undamaged.
-	// NPC: Standing; Unaware of player(s)
+	// Undamaged.
 	OBJECT_IDLE,
 
-	// Misc_object: Damage levels and random dead animation
-	// NPC: Death and dead.
+	// Damage levels and random dead animation
 	OBJECT_DEATH1,
 	OBJECT_DEATH2,
 	OBJECT_DEATH3,
@@ -1666,18 +1660,6 @@ typedef enum
 
 	OBJECT_LAND, // ZTM: TODO: misc_object hit ground.
 	OBJECT_PAIN, // ZTM: TODO: "Pain" animation of misc_object with no health (Dead).
-
-#ifdef TA_NPCSYS
-	// Animations only used by NPCs
-	OBJECT_TAUNT,
-	OBJECT_ATTACK_FAR,
-	OBJECT_ATTACK_MELEE,
-	OBJECT_STANDING_ACTIVE,
-	OBJECT_WALK,
-	OBJECT_RUN,
-	OBJECT_BACKPEDAL,
-	OBJECT_JUMP,
-#endif
 
 	MAX_MISC_OBJECT_ANIMATIONS
 } miscObjectAnim_t;
@@ -2044,81 +2026,6 @@ typedef enum {
 #endif
 } weaponstate_t;
 
-#ifdef TA_NPCSYS
-// ZTM: Flags for general NPC effects.
-typedef enum
-{
-	NPCF_NODROPWEAPON	= 1, // Don't drop weapon when killed.
-	NPCF_ALLY			= 2, // Not a baddy, NPC on the same side don't attack each other.
-
-#if 1 //
-	NPCF_WALKANDFLY		= 4, // Can't run, but can fly
-	NPCF_FLYONLY		= 8, // Can't walk or run, only fly -fast and slow
-#endif
-
-	NPCF_LAST // dummy flag
-
-} npcflag_e;
-
-// ZTM: General death types.
-typedef enum
-{
-	NPCD_NONE, // Stays there doing nothing. Forever.
-	NPCD_SINK, // Sink into the ground and removes the ent.
-	NPCD_EXPLODE, // Starts explotion and removes the ent. For robots.
-	NPCD_SMOKE, // Starts smoke and removes the ent.
-
-	NPCD_MAX
-} npcDeath_e;
-
-#define MAX_NPCNAME 32
-typedef struct
-{
-	char classname[MAX_NPCNAME];
-	char model[MAX_QPATH];
-	int weaponGroup; // ZTM: weapon group to hold/use
-	int flags; // see npcflag_e
-	int deathType; // see npcDeath_e
-	int health;
-	int viewheight;
-	vec3_t mins, maxs;
-	int deadmax; // Use deathmax instead of max[2] when dead
-	animation_t animations[MAX_MISC_OBJECT_ANIMATIONS];
-	int handSide[MAX_HANDS];
-
-} bg_npcinfo_t;
-
-#define MAX_NPCS 64 // max npc infos
-extern bg_npcinfo_t bg_npcinfo[MAX_NPCS];
-int BG_NPCIndexForName(const char *name);
-int BG_NumNPCs(void);
-void BG_InitNPCInfo(void);
-
-typedef enum
-{
-	NACT_IDLE,
-	NACT_FOLLOW, // Follow friend or enimy
-	NACT_ATTACK,
-	NACT_GO_TO,
-	NACT_MAX
-
-	//NACT_WAIT,
-	//NACT_SEARCH,
-
-} npcAction_e;
-
-typedef struct
-{
-	bg_npcinfo_t *info;
-	playerState_t npc_ps;
-
-	npcAction_e action; // Current action
-	int			actionTime; // Time action started.
-	vec3_t		actionPos; // Position used by action
-
-} bg_npc_t;
-#endif
-
 // pmove->pm_flags
 #define	PMF_DUCKED			1
 #define	PMF_JUMP_HELD		2
@@ -2148,9 +2055,6 @@ typedef struct {
 	playerState_t	*ps;
 #ifdef TA_PLAYERSYS
 	bg_playercfg_t	*playercfg;
-#endif
-#ifdef TA_NPCSYS
-	bg_npc_t		*npc;
 #endif
 
 	// command (in)
@@ -2343,9 +2247,6 @@ typedef enum {
 	ET_CORONA,
 #ifdef TA_ENTSYS // MISC_OBJECT
 	ET_MISCOBJECT,
-#endif
-#ifdef TA_NPCSYS
-	ET_NPC,
 #endif
 
 	ET_EVENTS				// any of the EV_* events can be added freestanding
