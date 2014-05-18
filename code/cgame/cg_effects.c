@@ -860,17 +860,9 @@ void CG_GibPlayer( vec3_t playerOrigin ) {
 		CG_SpawnBubbles( playerOrigin, 3, 5 + random() * 5 );
 	}
 
-#ifdef IOQ3ZTM // ZTM: Have cg_gibs disable ALL gibs.
-	// allow gibs to be turned off
 	if ( !cg_blood.integer || !cg_gibs.integer ) {
-		// ZTM: TODO: Have a smoke explosion (so body isn't just gone)?
 		return;
 	}
-#else
-	if ( !cg_blood.integer ) {
-		return;
-	}
-#endif
 
 	VectorCopy( playerOrigin, origin );
 	velocity[0] = crandom()*GIB_VELOCITY;
@@ -881,13 +873,6 @@ void CG_GibPlayer( vec3_t playerOrigin ) {
 	} else {
 		CG_LaunchGib( origin, velocity, cgs.media.gibBrain );
 	}
-
-#ifndef IOQ3ZTM
-	// allow gibs to be turned off for speed
-	if ( !cg_gibs.integer ) {
-		return;
-	}
-#endif
 
 	VectorCopy( playerOrigin, origin );
 	velocity[0] = crandom()*GIB_VELOCITY;
@@ -980,16 +965,10 @@ void CG_LaunchExplode( vec3_t origin, vec3_t velocity, qhandle_t hModel ) {
 /*
 ===================
 CG_BigExplode
-
-Generated a bunch of gibs launching out from the bodies location
 ===================
 */
 void CG_BigExplode( vec3_t playerOrigin ) {
 	vec3_t	origin, velocity;
-
-	if ( !cg_blood.integer ) {
-		return;
-	}
 
 	VectorCopy( playerOrigin, origin );
 	velocity[0] = crandom()*EXP_VELOCITY;

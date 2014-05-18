@@ -674,7 +674,6 @@ void CopyToBodyQue( gentity_t *ent ) {
 	VectorCopy (ent->r.absmax, body->r.absmax);
 
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;
-	body->s.contents = CONTENTS_CORPSE;
 	body->r.ownerNum = ent->s.number;
 
 #ifdef TURTLEARENA // POWERS
@@ -691,8 +690,11 @@ void CopyToBodyQue( gentity_t *ent ) {
 #else
 	// don't take more damage if already gibbed
 	if ( ent->health <= GIB_HEALTH ) {
+		body->s.eFlags |= EF_GIBBED;
+		body->s.contents = 0;
 		body->takedamage = qfalse;
 	} else {
+		body->s.contents = CONTENTS_CORPSE;
 		body->takedamage = qtrue;
 	}
 #endif

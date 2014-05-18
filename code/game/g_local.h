@@ -1028,9 +1028,6 @@ extern	vmCvar_t	g_synchronousClients;
 extern	vmCvar_t	g_motd;
 extern	vmCvar_t	g_warmup;
 extern	vmCvar_t	g_doWarmup;
-#ifndef NOTRATEDM
-extern	vmCvar_t	g_blood;
-#endif
 extern	vmCvar_t	g_allowVote;
 extern	vmCvar_t	g_teamAutoJoin;
 extern	vmCvar_t	g_teamForceBalance;

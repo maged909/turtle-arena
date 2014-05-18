@@ -570,7 +570,6 @@ gitem_t	*BG_FindItemForAmmo( weapon_t weapon ) {
 		}
 	}
 
-	Com_Error( ERR_DROP, "Couldn't find item for ammo %i", weapon);
 	return NULL;
 }
 #endif
@@ -1093,9 +1092,6 @@ char *eventnames[] = {
 	"EV_POWERUP_INVUL",
 #endif
 
-#ifndef NOTRATEDM // No gibs.
-	"EV_GIB_PLAYER",			// gib a previously living player
-#endif
 	"EV_SCOREPLUM",			// score plum
 #ifdef TURTLEARENA // NIGHTS_ITEMS
 	"EV_CHAINPLUM",
@@ -1220,10 +1216,6 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 
 	if ( !ps->linked ) {
 		s->eType = ET_INVISIBLE;
-#ifndef NOTRATEDM // No gibs.
-	} else if ( ps->stats[STAT_HEALTH] <= GIB_HEALTH ) {
-		s->eType = ET_INVISIBLE;
-#endif
 	} else {
 		s->eType = ET_PLAYER;
 	}
@@ -1318,10 +1310,6 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 	if ( !ps->linked ) {
 		s->eType = ET_INVISIBLE;
-#ifndef NOTRATEDM // No gibs.
-	} else if ( ps->stats[STAT_HEALTH] <= GIB_HEALTH ) {
-		s->eType = ET_INVISIBLE;
-#endif
 	} else {
 		s->eType = ET_PLAYER;
 	}

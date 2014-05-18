@@ -37,7 +37,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // because games can change separately from the main system version, we need a
 // second version that must match between game and cgame
 
-#define	GAME_VERSION		MODDIR "-1"
+#define	GAME_VERSION		MODDIR "-2"
 
 #define	DEFAULT_GRAVITY		800
 #ifndef NOTRATEDM // No gibs.
@@ -655,6 +655,9 @@ typedef enum {
 #define	EF_PRIMARY_HAND		0x00040000		// player flag for primary hand only
 #endif
 #define EF_TEAMVOTED		0x00080000		// already cast a team vote
+#ifndef NOTRATEDM // No gibs.
+#define EF_GIBBED			0x00100000		// player has been gibbed, client only renders player if com_blood or cg_gibs is 0
+#endif
 #ifdef TA_SP
 #define EF_FINISHED			0x00100000		// Finished level
 #endif
@@ -1372,9 +1375,6 @@ typedef enum {
 	EV_POWERUP_INVUL,
 #endif
 
-#ifndef NOTRATEDM // No gibs.
-	EV_GIB_PLAYER,			// gib a previously living player
-#endif
 	EV_SCOREPLUM,			// score plum
 #ifdef TURTLEARENA // NIGHTS_ITEMS
 	EV_CHAINPLUM,
