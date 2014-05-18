@@ -473,13 +473,18 @@ void LookAtKiller( gentity_t *self, gentity_t *inflictor, gentity_t *attacker ) 
 GibEntity
 ==================
 */
-void GibEntity( gentity_t *self, int killer ) {
+void GibEntity( gentity_t *self ) {
 	gentity_t *ent;
 	int i;
 
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
 	//if this entity still has kamikaze
 	if (self->s.eFlags & EF_KAMIKAZE) {
+		self->s.eFlags &= ~EF_KAMIKAZE;
+		if (self->client) {
+			self->client->ps.eFlags &= ~EF_KAMIKAZE;
+		}
+
 		// check if there is a kamikaze timer around for this owner
 		for (i = 0; i < level.num_entities; i++) {
 			ent = &g_entities[i];
@@ -494,12 +499,12 @@ void GibEntity( gentity_t *self, int killer ) {
 		}
 	}
 #endif
-	G_AddEvent( self, EV_GIB_PLAYER, killer );
 	self->takedamage = qfalse;
-	self->s.eType = ET_INVISIBLE;
+	self->s.eFlags |= EF_GIBBED;
 	self->s.contents = 0;
 
 	if (self->client) {
+		self->client->ps.eFlags |= EF_GIBBED;
 		self->client->ps.contents = 0;
 	}
 }
@@ -515,12 +520,11 @@ void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 	if ( self->health > GIB_HEALTH ) {
 		return;
 	}
-	if ( !g_blood.integer ) {
-		self->health = GIB_HEALTH+1;
-		return;
-	}
 
-	GibEntity( self, 0 );
+	GibEntity( self );
+
+	// add corpse gibbed event
+	G_AddEvent( self, EV_DEATH1, 2 );
 #endif
 }
 
@@ -647,6 +651,7 @@ player_die
 ==================
 */
 void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
+	static int	rndAnim;
 	gentity_t	*ent;
 	int			anim;
 #ifndef NOTRATEDM // No gibs.
@@ -655,6 +660,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	int			killer;
 	int			i;
 	char		*killerName, *obit;
+	qboolean	gibPlayer;
 #ifdef TA_WEAPSYS
 	int			weaponGroup = 0;
 	int			projectile = 0;
@@ -934,57 +940,22 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	// remove powerups
 	memset( self->client->ps.powerups, 0, sizeof(self->client->ps.powerups) );
 
+#ifdef NOTRATEDM // No gibs.
+	gibPlayer = qfalse;
+#else
 	// never gib in a nodrop
-#ifndef NOTRATEDM // No gibs.
 	contents = trap_PointContents( self->r.currentOrigin, -1 );
 
-	if ( (self->health <= GIB_HEALTH && !(contents & CONTENTS_NODROP) && g_blood.integer) || meansOfDeath == MOD_SUICIDE) {
+	gibPlayer = ( (self->health <= GIB_HEALTH && !(contents & CONTENTS_NODROP)) || meansOfDeath == MOD_SUICIDE );
+
+	if ( gibPlayer ) {
 		// gib death
-		GibEntity( self, killer );
-	} else
-#endif
-	{
-		// normal death
-		static int i;
+		GibEntity( self );
 
-		switch ( i ) {
-		case 0:
-			anim = BOTH_DEATH1;
-			break;
-		case 1:
-			anim = BOTH_DEATH2;
-			break;
-		case 2:
-		default:
-			anim = BOTH_DEATH3;
-			break;
-		}
-
-#ifdef TA_PLAYERSYS
-		// Wait for death animation to end before respawning
-		self->client->respawnTime = level.time + BG_AnimationTime(&self->client->pers.playercfg.animations[anim]);
-#endif
-
-#ifndef NOTRATEDM // No gibs.
-		// for the no-blood option, we need to prevent the health
-		// from going to gib level
-		if ( self->health <= GIB_HEALTH ) {
-			self->health = GIB_HEALTH+1;
-		}
-#endif
-
-		self->client->ps.legsAnim = 
-			( ( self->client->ps.legsAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
-		self->client->ps.torsoAnim = 
-			( ( self->client->ps.torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
-
-		G_AddEvent( self, EV_DEATH1 + i, killer );
-
+		// do normal death for clients with gibs disable
+	} else {
 		// the body can still be gibbed
 		self->die = body_die;
-
-		// globally cycle through the different death animations
-		i = ( i + 1 ) % 3;
 
 #if defined MISSIONPACK && !defined TURTLEARENA // NO_KAMIKAZE_ITEM
 		if (self->s.eFlags & EF_KAMIKAZE) {
@@ -992,6 +963,36 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		}
 #endif
 	}
+#endif
+
+	// normal death
+	switch ( rndAnim ) {
+	case 0:
+		anim = BOTH_DEATH1;
+		break;
+	case 1:
+		anim = BOTH_DEATH2;
+		break;
+	case 2:
+	default:
+		anim = BOTH_DEATH3;
+		break;
+	}
+
+#ifdef TA_PLAYERSYS
+	// Wait for death animation to end before respawning
+	self->client->respawnTime = level.time + BG_AnimationTime(&self->client->pers.playercfg.animations[anim]);
+#endif
+
+	self->client->ps.legsAnim = 
+		( ( self->client->ps.legsAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
+	self->client->ps.torsoAnim = 
+		( ( self->client->ps.torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
+
+	G_AddEvent( self, EV_DEATH1 + rndAnim, gibPlayer );
+
+	// globally cycle through the different death animations
+	rndAnim = ( rndAnim + 1 ) % 3;
 
 	trap_LinkEntity (self);
 
