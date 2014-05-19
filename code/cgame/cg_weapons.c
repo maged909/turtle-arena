@@ -2609,8 +2609,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 #endif
 	char *originalTagNames[3] = { "tag_weapon", "tag_flag", NULL };
 	int originalTagInfo[3] = {TI_TAG_WEAPON, TI_TAG_FLAG, 0};
-
-	ci = &cgs.clientinfo[ cent->currentState.clientNum ];
 #else
 	orientation_t	lerped;
 	clientInfo_t *ci;

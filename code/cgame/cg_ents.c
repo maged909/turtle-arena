@@ -713,21 +713,18 @@ static void CG_Item( centity_t *cent ) {
 		cent->lerpOrigin[2] += 8;	// an extra height boost
 	}
 	
-#ifdef TA_WEAPSYS
 	if( item->giType == IT_WEAPON ) {
 		clientInfo_t *ci = &cgs.clientinfo[cg.cur_ps->clientNum];
+#ifdef TA_WEAPSYS
 		if (BG_WeaponHasMelee(item->giTag)) {
 			Byte4Copy( ci->c1RGBA, ent.shaderRGBA );
 		} else {
 			Byte4Copy( ci->c2RGBA, ent.shaderRGBA );
 		}
-	}
 #else
-	if( item->giType == IT_WEAPON ) {
-		clientInfo_t *ci = &cgs.clientinfo[cg.cur_ps->clientNum];
 		Byte4Copy( ci->c1RGBA, ent.shaderRGBA );
-	}
 #endif
+	}
 #ifdef IOQ3ZTM // Have non-weapons use white
 	else {
 		ent.shaderRGBA[0] = 255;
