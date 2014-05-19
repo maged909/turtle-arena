@@ -337,7 +337,7 @@ typedef struct
 	vec3_t				playerMoveangles;
 	int					playerLegs;
 	int					playerTorso;
-	int					playerWeapon;
+	weapon_t			playerWeapon;
 	qboolean			playerChat;
 
 	menubitmap_s		back;
@@ -1001,7 +1001,7 @@ static void Controls_UpdateModel( int anim ) {
 	s_controls.playerLegs		     = LEGS_IDLE;
 	s_controls.playerTorso			 = TORSO_STAND;
 #endif
-	s_controls.playerWeapon			 = -1;
+	s_controls.playerWeapon			 = WP_NUM_WEAPONS;
 	s_controls.playerChat			 = qfalse;
 
 	switch( anim ) {
