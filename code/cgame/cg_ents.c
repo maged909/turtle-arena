@@ -723,7 +723,7 @@ static void CG_Item( centity_t *cent ) {
 		}
 	}
 #else
-	if( item->giType == IT_WEAPON && item->giTag == WP_RAILGUN ) {
+	if( item->giType == IT_WEAPON ) {
 		clientInfo_t *ci = &cgs.clientinfo[cg.cur_ps->clientNum];
 		Byte4Copy( ci->c1RGBA, ent.shaderRGBA );
 	}

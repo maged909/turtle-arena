@@ -2602,6 +2602,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	clientInfo_t		*ci;
 	qboolean			foundModel;
 	vec3_t				flashColor;
+
 #ifdef TURTLEARENA // PLAYERS
 	char *newTagNames[3] = { "tag_hand_primary", "tag_hand_secondary", NULL };
 	int newTagInfo[3] = {TI_TAG_HAND_PRIMARY, TI_TAG_HAND_SECONDARY, 0};
@@ -2612,6 +2613,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	ci = &cgs.clientinfo[ cent->currentState.clientNum ];
 #else
 	orientation_t	lerped;
+	clientInfo_t *ci;
 #endif
 
 	weaponNum = cent->currentState.weapon;
@@ -2636,6 +2638,8 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 #endif
 
+	ci = &cgs.clientinfo[cent->currentState.clientNum];
+
 	// add the weapon
 	memset( &gun, 0, sizeof( gun ) );
 
@@ -2645,19 +2649,16 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	gun.renderfx = parent->renderfx;
 
 	// set custom shading for railgun refire rate
-	if( weaponNum == WP_RAILGUN ) {
-		clientInfo_t *ci = &cgs.clientinfo[cent->currentState.clientNum];
-		if( cent->pe.railFireTime + 1500 > cg.time ) {
-			int scale = 255 * ( cg.time - cent->pe.railFireTime ) / 1500;
-			gun.shaderRGBA[0] = ( ci->c1RGBA[0] * scale ) >> 8;
-			gun.shaderRGBA[1] = ( ci->c1RGBA[1] * scale ) >> 8;
-			gun.shaderRGBA[2] = ( ci->c1RGBA[2] * scale ) >> 8;
-			gun.shaderRGBA[3] = 255;
-		}
-		else {
-			Byte4Copy( ci->c1RGBA, gun.shaderRGBA );
-		}
- 	}
+	if( weaponNum == WP_RAILGUN && cent->pe.railFireTime + 1500 > cg.time ) {
+		int scale = 255 * ( cg.time - cent->pe.railFireTime ) / 1500;
+		gun.shaderRGBA[0] = ( ci->c1RGBA[0] * scale ) >> 8;
+		gun.shaderRGBA[1] = ( ci->c1RGBA[1] * scale ) >> 8;
+		gun.shaderRGBA[2] = ( ci->c1RGBA[2] * scale ) >> 8;
+		gun.shaderRGBA[3] = 255;
+	}
+	else {
+		Byte4Copy( ci->c1RGBA, gun.shaderRGBA );
+	}
 #endif
 
 #ifdef IOQ3ZTM
@@ -3017,15 +3018,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		flash.shaderRGBA[2] = 255 * flashColor[2];
 #else
 		// colorize the railgun blast
-		if ( weaponNum == WP_RAILGUN )
-		{
-			clientInfo_t	*ci;
-
-			ci = &cgs.clientinfo[ cent->currentState.clientNum ];
-			flash.shaderRGBA[0] = 255 * ci->color1[0];
-			flash.shaderRGBA[1] = 255 * ci->color1[1];
-			flash.shaderRGBA[2] = 255 * ci->color1[2];
-		}
+		Byte4Copy( ci->c1RGBA, flash.shaderRGBA );
 #endif
 
 
@@ -4345,17 +4338,12 @@ void CG_MissileExplode( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 							   duration, isSprite );
 		le->light = light;
 		VectorCopy( lightColor, le->lightColor );
-#ifndef TA_WEAPSYS // ZTM: Do it for all weapons
-		if ( weapon == WP_RAILGUN )
-#endif
-		{
-			// colorize with client color
-			VectorCopy( cgs.clientinfo[clientNum].color1, le->color );
-			le->refEntity.shaderRGBA[0] = le->color[0] * 0xff;
-			le->refEntity.shaderRGBA[1] = le->color[1] * 0xff;
-			le->refEntity.shaderRGBA[2] = le->color[2] * 0xff;
-			le->refEntity.shaderRGBA[3] = 0xff;
-		}
+		// colorize with client color
+		VectorCopy( cgs.clientinfo[clientNum].color1, le->color );
+		le->refEntity.shaderRGBA[0] = le->color[0] * 0xff;
+		le->refEntity.shaderRGBA[1] = le->color[1] * 0xff;
+		le->refEntity.shaderRGBA[2] = le->color[2] * 0xff;
+		le->refEntity.shaderRGBA[3] = 0xff;
 #ifdef TA_WEAPSYS // SPR_EXP_SCALE
 		le->radius = exp_base;
 		le->refEntity.radius = exp_add;
