@@ -659,7 +659,11 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 	int		upperBound;
 #endif
 
+#ifdef TURTLEARENA // ZTM: NOTE: New item system allows item index 0 to be valid I guess?
 	if ( ent->modelindex < 0 || ent->modelindex >= BG_NumItems() ) {
+#else
+	if ( ent->modelindex < 1 || ent->modelindex >= BG_NumItems() ) {
+#endif
 		Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: index out of range" );
 	}
 

@@ -592,7 +592,7 @@ static void CG_Item( centity_t *cent ) {
 
 	es = &cent->currentState;
 	if ( es->modelindex >= BG_NumItems() ) {
-		CG_Error( "Bad item index %i on entity (max is %i)", es->modelindex, BG_NumItems() );
+		CG_Error( "Bad item index %i on entity", es->modelindex );
 	}
 
 	// if set to invisible, skip
