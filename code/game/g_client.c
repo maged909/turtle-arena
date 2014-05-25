@@ -560,30 +560,14 @@ void InitBodyQue (void) {
 
 /*
 =============
-BodySink
+BodyQueFree
 
-After sitting around for five seconds, fall into the ground and dissapear
+The body ques are never actually freed, they are just unlinked
 =============
 */
-void BodySink( gentity_t *ent ) {
-	if ( level.time - ent->timestamp > 6500 ) {
-		// the body ques are never actually freed, they are just unlinked
-		trap_UnlinkEntity( ent );
-		ent->physicsObject = qfalse;
-		return;	
-	}
-	ent->nextthink = level.time + 100;
-#ifdef TURTLEARENA // POWERS
-	ent->s.powerups |= (1 << PW_FLASHING);
-
-	// Set Alpha value
-	ent->s.otherEntityNum2 = (1.0f - (((float)level.time - (float)ent->timestamp)/6500.0f))*128;
-
-	if (ent->s.otherEntityNum2 < 1)
-		ent->s.otherEntityNum2 = 1;
-#else
-	ent->s.pos.trBase[2] -= 1;
-#endif
+void BodyQueFree( gentity_t *ent ) {
+	trap_UnlinkEntity( ent );
+	ent->physicsObject = qfalse;
 }
 
 /*
@@ -642,11 +626,11 @@ void CopyToBodyQue( gentity_t *ent ) {
 	body->physicsBounce = 0;		// don't bounce
 	if ( body->s.groundEntityNum == ENTITYNUM_NONE ) {
 		body->s.pos.trType = TR_GRAVITY;
-		body->s.pos.trTime = level.time;
 		VectorCopy( ent->client->ps.velocity, body->s.pos.trDelta );
 	} else {
 		body->s.pos.trType = TR_STATIONARY;
 	}
+	body->s.pos.trTime = level.time;
 	body->s.event = 0;
 
 	// change the animation to the last-frame only, so the sequence
@@ -676,12 +660,8 @@ void CopyToBodyQue( gentity_t *ent ) {
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;
 	body->r.ownerNum = ent->s.number;
 
-#ifdef TURTLEARENA // POWERS
-	body->nextthink = level.time + 200;
-#else
-	body->nextthink = level.time + 5000;
-#endif
-	body->think = BodySink;
+	body->nextthink = level.time + BODY_SINK_DELAY + BODY_SINK_TIME;
+	body->think = BodyQueFree;
 
 	body->die = body_die;
 
@@ -1600,7 +1580,7 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 	client->ps.eFlags = flags;
 	client->ps.contents = CONTENTS_BODY;
-	client->ps.capsule = ( g_playerCapsule.integer == 1 ) ? qtrue : qfalse;
+	client->ps.collisionType = ( g_playerCapsule.integer == 1 ) ? CT_CAPSULE : CT_AABB;
 
 	ent->s.groundEntityNum = ENTITYNUM_NONE;
 	ent->client = &level.clients[index];
