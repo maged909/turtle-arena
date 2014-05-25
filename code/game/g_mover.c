@@ -58,14 +58,14 @@ G_TestEntityPosition
 */
 gentity_t	*G_TestEntityPosition( gentity_t *ent ) {
 	trace_t	tr;
-	qboolean	capsule;
+	collisionType_t	collisionType;
 	vec3_t	origin;
 	int		mask;
 
 #ifdef IOQ3ZTM
 	// shrink bounds so it is not coplanar,
 	// otherwise may result in startsolid when it should not.
-	if (ent->s.bmodel) {
+	if (ent->s.collisionType == CT_SUBMODEL) {
 		ent->s.mins[0] += 2;
 		ent->s.mins[1] += 2;
 		ent->s.mins[2] += 2;
@@ -77,10 +77,10 @@ gentity_t	*G_TestEntityPosition( gentity_t *ent ) {
 
 	if ( ent->client ) {
 		VectorCopy( ent->client->ps.origin, origin );
-		capsule = ent->client->ps.capsule;
+		collisionType = ent->client->ps.collisionType;
 	} else {
 		VectorCopy( ent->s.pos.trBase, origin );
-		capsule = ent->s.capsule;
+		collisionType = ent->s.collisionType;
 	}
 
 	if ( ent->clipmask ) {
@@ -93,14 +93,14 @@ gentity_t	*G_TestEntityPosition( gentity_t *ent ) {
 #endif
 	}
 
-	if ( capsule ) {
+	if ( collisionType == CT_CAPSULE ) {
 		trap_TraceCapsule( &tr, origin, ent->s.mins, ent->s.maxs, origin, ent->s.number, mask );
 	} else {
 		trap_Trace( &tr, origin, ent->s.mins, ent->s.maxs, origin, ent->s.number, mask );
 	}
 	
 #ifdef IOQ3ZTM
-	if (ent->s.bmodel) {
+	if (ent->s.collisionType == CT_SUBMODEL) {
 		ent->s.mins[0] -= 2;
 		ent->s.mins[1] -= 2;
 		ent->s.mins[2] -= 2;

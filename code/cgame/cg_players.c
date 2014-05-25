@@ -2546,21 +2546,11 @@ CG_PlayerFloatSprite
 Float a sprite over the player's head
 ===============
 */
-#ifdef IOQ3ZTM
-static void CG_PlayerFloatSprite( vec3_t origin, int rf, qhandle_t shader )
-#else
-static void CG_PlayerFloatSprite( centity_t *cent, int rf, qhandle_t shader )
-#endif
-{
+static void CG_PlayerFloatSprite( vec3_t origin, int rf, qhandle_t shader ) {
 	refEntity_t		ent;
 
 	memset( &ent, 0, sizeof( ent ) );
-#ifdef IOQ3ZTM
 	VectorCopy( origin, ent.origin );
-#else
-	VectorCopy( cent->lerpOrigin, ent.origin );
-	ent.origin[2] += 48;
-#endif
 	ent.reType = RT_SPRITE;
 	ent.customShader = shader;
 	ent.radius = 10;
@@ -2581,27 +2571,23 @@ CG_PlayerSprites
 Float sprites over the player's head
 ===============
 */
-static void CG_PlayerSprites( centity_t *cent
-#ifdef IOQ3ZTM
-	, refEntity_t *head
-#endif
-	)
-{
-	int		friendFlags, awardFlags;
+static void CG_PlayerSprites( centity_t *cent, const refEntity_t *parent ) {
+	int		friendFlags, awardFlags, thirdPersonFlags;
 	int		team;
-#ifdef IOQ3ZTM
-	vec3_t origin;
+	vec3_t	origin;
 
-	// Lets say the head is 8 units tall.
-	VectorMA(head->origin, 8, head->axis[2], origin);
-
-	// Place 16 units above top of head.
-	origin[2] += 16;
-#endif
+	VectorCopy( parent->origin, origin );
+	origin[2] += 42;
 
 	if ( cent->currentState.number == cg.cur_ps->clientNum ) {
 		// current client's team sprite should only be shown in mirrors
 		friendFlags = RF_ONLY_MIRROR;
+
+		if ( !cg.cur_lc->renderingThirdPerson ) {
+			thirdPersonFlags = RF_ONLY_MIRROR;
+		} else {
+			thirdPersonFlags = 0;
+		}
 
 		// if first person or drawing awards on HUD, only show your award sprites in mirrors
 		if ( !cg.cur_lc->renderingThirdPerson || cg_draw2D.integer ) {
@@ -2610,80 +2596,48 @@ static void CG_PlayerSprites( centity_t *cent
 			awardFlags = 0;
 		}
 	} else {
-		friendFlags = awardFlags = 0;
+		friendFlags = awardFlags = thirdPersonFlags = 0;
 	}
 
 	if ( cent->currentState.eFlags & EF_CONNECTION ) {
-#ifdef IOQ3ZTM
-		CG_PlayerFloatSprite( origin, 0, cgs.media.connectionShader );
-#else
-		CG_PlayerFloatSprite( cent, 0, cgs.media.connectionShader );
-#endif
+		CG_PlayerFloatSprite( origin, thirdPersonFlags, cgs.media.connectionShader );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_TALK ) {
-#ifdef IOQ3ZTM
-		CG_PlayerFloatSprite( origin, 0, cgs.media.balloonShader );
-#else
-		CG_PlayerFloatSprite( cent, 0, cgs.media.balloonShader );
-#endif
+		CG_PlayerFloatSprite( origin, thirdPersonFlags, cgs.media.balloonShader );
 		return;
 	}
 
 #ifndef TURTLEARENA // AWARDS
 	if ( cent->currentState.eFlags & EF_AWARD_IMPRESSIVE ) {
-#ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalImpressive );
-#else
-		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalImpressive );
-#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_EXCELLENT ) {
-#ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalExcellent );
-#else
-		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalExcellent );
-#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_GAUNTLET ) {
-#ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalGauntlet );
-#else
-		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalGauntlet );
-#endif
 		return;
 	}
 #endif
 
 	if ( cent->currentState.eFlags & EF_AWARD_DEFEND ) {
-#ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalDefend );
-#else
-		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalDefend );
-#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_ASSIST ) {
-#ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalAssist );
-#else
-		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalAssist );
-#endif
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_CAP ) {
-#ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, awardFlags, cgs.media.medalCapture );
-#else
-		CG_PlayerFloatSprite( cent, awardFlags, cgs.media.medalCapture );
-#endif
 		return;
 	}
 
@@ -2692,11 +2646,7 @@ static void CG_PlayerSprites( centity_t *cent
 #ifdef IOQ3ZTM
 	if (cg.cur_ps->enemyEnt == cent->currentState.number)
 	{
-#ifdef IOQ3ZTM
 		CG_PlayerFloatSprite( origin, 0, cgs.media.targetShader );
-#else
-		CG_PlayerFloatSprite( cent, 0, cgs.media.targetShader );
-#endif
 	}
 #endif
 #endif
@@ -2721,7 +2671,7 @@ static void CG_PlayerSprites( centity_t *cent
 				CG_PlayerFloatSprite( origin, friendFlags, cgs.media.friendShader );
 			}
 #else
-			CG_PlayerFloatSprite( cent, friendFlags, cgs.media.friendShader );
+			CG_PlayerFloatSprite( origin, friendFlags, cgs.media.friendShader );
 #endif
 		}
 		return;
@@ -2738,7 +2688,7 @@ Returns the Z component of the surface being shadowed
 ===============
 */
 #define	SHADOW_DISTANCE		128
-static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float *shadowPlane ) {
+static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float alphaMult, float *shadowPlane ) {
 	vec3_t		end, mins = {-8, -8, 0}, maxs = {8, 8, 2};
 	trace_t		trace;
 	float		alpha;
@@ -2772,14 +2722,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float *shadowPla
 	}
 
 	// fade the shadow out with height
-	alpha = 1.0 - trace.fraction;
-
-#ifdef TURTLEARENA // POWERS
-	if ( (cent->currentState.powerups & ( 1 << PW_FLASHING )) && cent->currentState.otherEntityNum2 > 0) {
-		// Fade out shadow when dead body is fading out.
-		alpha *= (float)cent->currentState.otherEntityNum2 / 128.0f;
-	}
-#endif
+	alpha = ( 1.0 - trace.fraction ) * alphaMult;
 
 	// hack / FPE - bogus planes?
 	//assert( DotProduct( trace.plane.normal, trace.plane.normal ) != 0.0f ) 
@@ -2995,6 +2938,44 @@ int CG_LightVerts( vec3_t normal, int numVerts, polyVert_t *verts )
 
 /*
 ===============
+CG_Corpse
+===============
+*/
+#define BODY_SINK_DIST 15
+void CG_Corpse( centity_t *cent, int clientNum, float *bodySinkOffset, float *shadowAlpha ) {
+	float offset;
+
+	// After sitting around for five seconds, fall into the ground and dissapear.
+	if ( cg.time - cent->currentState.pos.trTime > BODY_SINK_DELAY ) {
+		if ( cg_smoothBodySink.integer ) {
+			float sinkFrac;
+
+			sinkFrac = ( cg.time - cent->currentState.pos.trTime - BODY_SINK_DELAY ) / (float)BODY_SINK_TIME;
+			offset = sinkFrac * BODY_SINK_DIST;
+
+			*shadowAlpha = 1.0f - sinkFrac;
+#ifdef TURTLEARENA // POWERS
+			cent->currentState.powerups |= ( 1 << PW_FLASHING );
+			cent->currentState.otherEntityNum2 = Com_Clamp( 1, 128, ( 1.0f - sinkFrac ) * 128 );
+
+			// no body sink
+			offset = 0;
+#endif
+		} else {
+			// snap time to move in ( BODY_SINK_TIME / BODY_SINK_DIST ) msec jumps
+			offset = ( cg.time - cent->currentState.pos.trTime - BODY_SINK_DELAY ) / (int)( (float)BODY_SINK_TIME / BODY_SINK_DIST );
+			*shadowAlpha = 1;
+		}
+	} else {
+		offset = 0;
+		*shadowAlpha = 1;
+	}
+
+	*bodySinkOffset = offset;
+}
+
+/*
+===============
 CG_Player
 ===============
 */
@@ -3009,6 +2990,8 @@ void CG_Player( centity_t *cent ) {
 	float			shadowPlane;
 	refEntity_t		shadowRef;
 	vec3_t			shadowOrigin;
+	float			shadowAlpha;
+	float			bodySinkOffset;
 #ifdef TURTLEARENA // POWERS
 	refEntity_t		powerup;
 #endif
@@ -3087,10 +3070,12 @@ void CG_Player( centity_t *cent ) {
 	CG_PlayerAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 		 &torso.oldframe, &torso.frame, &torso.backlerp );
 
-#ifndef IOQ3ZTM
-	// add the talk baloon or disconnect icon
-	CG_PlayerSprites( cent );
-#endif
+	if ( cent->currentState.number != clientNum ) {
+		CG_Corpse( cent, clientNum, &bodySinkOffset, &shadowAlpha );
+	} else {
+		bodySinkOffset = 0;
+		shadowAlpha = 1;
+	}
 
 	// cast shadow from torso origin
 	memcpy(&shadowRef, &torso, sizeof(shadowRef));
@@ -3105,7 +3090,10 @@ void CG_Player( centity_t *cent ) {
 	}
 
 	// add the shadow
-	shadow = CG_PlayerShadow( cent, shadowOrigin, &shadowPlane );
+	shadow = CG_PlayerShadow( cent, shadowOrigin, shadowAlpha, &shadowPlane );
+
+	// have corpse sink after shadow, so shadow doesn't disappear when origin goes into ground
+	cent->lerpOrigin[2] -= bodySinkOffset;
 
 	// add a water splash if partially in and out of water
 	CG_PlayerSplash( cent );
@@ -3158,6 +3146,9 @@ void CG_Player( centity_t *cent ) {
 	torso.renderfx = renderfx;
 
 	CG_AddRefEntityWithPowerups( &torso, &cent->currentState );
+
+	// add the talk baloon or disconnect icon
+	CG_PlayerSprites( cent, &torso );
 
 #ifdef MISSIONPACK
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
@@ -3390,11 +3381,6 @@ void CG_Player( centity_t *cent ) {
 	head.renderfx = renderfx;
 
 	CG_AddRefEntityWithPowerups( &head, &cent->currentState );
-
-#ifdef IOQ3ZTM
-	// add the talk baloon or disconnect icon
-	CG_PlayerSprites( cent, &head );
-#endif
 
 	CG_BreathPuffs(cent, &head);
 
