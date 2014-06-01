@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // bg_misc.c -- both games misc functions, all completely stateless
 
 #include "../qcommon/q_shared.h"
-#include "bg_misc.h"
+#include "bg_public.h"
 
 // entityState_t fields
 #define	NETF(x) (size_t)&((entityState_t*)0)->x, 1

@@ -3536,7 +3536,7 @@ static void CG_DrawSPIntermission( void ) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
-	if (cg_singlePlayerActive.integer) {
+	if (cg_singlePlayer.integer) {
 		if (cgs.clientinfo[ cg.cur_ps->clientNum ].headModelName[0] == '*') {
 			Q_strncpyz(name, cgs.clientinfo[ cg.cur_ps->clientNum ].headModelName+1, sizeof (name));
 		} else {

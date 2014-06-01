@@ -217,6 +217,7 @@ vmCvar_t	cg_splitviewVertical;
 vmCvar_t	cg_lagometer;
 vmCvar_t	cg_drawAttacker;
 vmCvar_t	cg_synchronousClients;
+vmCvar_t	cg_singlePlayer;
 vmCvar_t 	cg_teamChatTime;
 vmCvar_t 	cg_teamChatHeight;
 vmCvar_t 	cg_stats;
@@ -289,12 +290,8 @@ vmCvar_t 	cg_blueTeamName;
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
 vmCvar_t 	cg_blueTeamName;
-#ifndef IOQ3ZTM
-vmCvar_t	cg_singlePlayer;
-#endif
 vmCvar_t	cg_enableDust;
 vmCvar_t	cg_enableBreath;
-vmCvar_t	cg_singlePlayerActive;
 vmCvar_t	cg_recordSPDemo;
 vmCvar_t	cg_recordSPDemoName;
 vmCvar_t	cg_obeliskRespawnDelay;
@@ -494,17 +491,14 @@ static cvarTable_t cgameCvarTable[] = {
 #endif
 	{ NULL,  "g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH, RANGE_INT(0, GT_MAX_GAME_TYPE-1) },
 	{ &cg_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
+	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM, RANGE_ALL },
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
 #endif
 #ifdef MISSIONPACK
-#ifndef IOQ3ZTM
-	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM, RANGE_ALL },
-#endif
 	{ &cg_enableDust, "g_enableDust", "0", CVAR_SERVERINFO, RANGE_BOOL },
 	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO, RANGE_BOOL },
-	{ &cg_singlePlayerActive, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM, RANGE_ALL },
 	{ &cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO, RANGE_ALL },
