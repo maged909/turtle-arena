@@ -30,7 +30,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //
 #include "../qcommon/q_shared.h"
 #include "../renderercommon/tr_types.h"
-#include "../game/bg_misc.h"
+#include "../game/bg_public.h"
 #include "../client/keycodes.h"
 #include "cg_public.h"
 #include "cg_syscalls.h"
@@ -116,7 +116,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define TEAM_OVERLAY_MAXNAME_WIDTH	12
 #define TEAM_OVERLAY_MAXLOCATION_WIDTH	16
 
-#ifndef TA_PLAYERSYS // Moved to bg_misc.h
+#ifndef TA_PLAYERSYS // Moved to bg_public.h
 typedef enum {
 	FOOTSTEP_NORMAL,
 	FOOTSTEP_BOOT,
@@ -1826,6 +1826,7 @@ extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_lagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
+extern	vmCvar_t		cg_singlePlayer;
 extern	vmCvar_t		cg_teamChatTime;
 extern	vmCvar_t		cg_teamChatHeight;
 extern	vmCvar_t		cg_stats;
@@ -1892,12 +1893,8 @@ extern	vmCvar_t		cg_blueTeamName;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
-#ifndef IOQ3ZTM
-extern	vmCvar_t		cg_singlePlayer;
-#endif
 extern	vmCvar_t		cg_enableDust;
 extern	vmCvar_t		cg_enableBreath;
-extern	vmCvar_t		cg_singlePlayerActive;
 extern  vmCvar_t		cg_recordSPDemo;
 extern  vmCvar_t		cg_recordSPDemoName;
 extern	vmCvar_t		cg_obeliskRespawnDelay;

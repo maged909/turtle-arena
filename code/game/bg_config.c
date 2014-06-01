@@ -32,7 +32,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // a few general player and animation functions
 
 #include "../qcommon/q_shared.h"
-#include "bg_misc.h"
+#include "bg_public.h"
 
 #if defined TA_WEAPSYS || defined TA_PLAYERSYS || defined TA_ENTSYS
 typedef struct

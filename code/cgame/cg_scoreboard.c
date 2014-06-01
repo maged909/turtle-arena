@@ -112,8 +112,8 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	headx = SB_HEAD_X + (SB_RATING_WIDTH / 2);
 
 #ifdef TA_SP // SP_SCOREBOARD
-	scorex = cg_singlePlayerActive.integer ? SP_SB_SCORE_X : SB_SCORE_X;
-	namex = cg_singlePlayerActive.integer ? SP_SB_NAME_X : SB_NAME_X;
+	scorex = cg_singlePlayer.integer ? SP_SB_SCORE_X : SB_SCORE_X;
+	namex = cg_singlePlayer.integer ? SP_SB_NAME_X : SB_NAME_X;
 #endif
 
 	// draw the handicap or bot skill marker (unless player has flag)
@@ -267,7 +267,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 
 	if ( score->ping != -1
 #ifdef TA_SP // SP_SCOREBOARD
-		&& !cg_singlePlayerActive.integer
+		&& !cg_singlePlayer.integer
 #endif
 		)
 	{
@@ -438,7 +438,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 	y = SB_HEADER;
 
 #ifdef TA_SP // SP_SCOREBOARD
-	if (cg_singlePlayerActive.integer)
+	if (cg_singlePlayer.integer)
 	{
 		// Only draw score and name, centered.
 		CG_DrawPic( SP_SB_SCORE_X + (SB_RATING_WIDTH / 2), y, 64, 32, cgs.media.scoreboardScore );

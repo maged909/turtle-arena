@@ -237,7 +237,7 @@ void CG_ParseEntityFromSpawnVars( void ) {
 
 	spawnInfo.gametype = cgs.gametype;
 #ifdef TA_SP
-	spawnInfo.singlePlayerActive = cg_singlePlayerActive.integer;
+	spawnInfo.singlePlayerActive = cg_singlePlayer.integer;
 #endif
 	spawnInfo.spawnInt = CG_SpawnInt;
 	spawnInfo.spawnString = CG_SpawnString;
