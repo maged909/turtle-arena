@@ -1526,7 +1526,8 @@ float Com_FontCharWidth( const font_t *font, int ch, float scale )
 	} else if (font) {
 		width = font->shaderCharWidth;
     } else {
-    	width = SMALLCHAR_WIDTH;
+    	//width = SMALLCHAR_WIDTH;
+		Com_Error( ERR_DROP, "Font code is busted" );
 	}
 
 	if (font) {
@@ -1560,7 +1561,8 @@ float Com_FontCharHeight( const font_t *font, float scale )
 	} else if (font) {
 		height = font->pointSize;
     } else {
-		height = SMALLCHAR_HEIGHT;
+		//height = SMALLCHAR_HEIGHT;
+		Com_Error( ERR_DROP, "Font code is busted" );
 	}
 
     return height * Com_FontScale( font, scale );
@@ -1745,7 +1747,7 @@ void Com_ClientListParse( clientList_t *list, const char *s )
 		return;
 	if( strlen( s ) != 16 )
 		return;
-	sscanf( s, "%x%x", &list->hi, &list->lo );
+	sscanf( s, "%08x%08x", &list->hi, &list->lo );
 }
 
 /*

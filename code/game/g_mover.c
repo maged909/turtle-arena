@@ -1501,7 +1501,7 @@ void SP_func_door (gentity_t *ent) {
 	VectorCopy( ent->s.origin, ent->pos1 );
 
 	// calculate second position
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 	G_SetMovedir (ent->s.angles, ent->movedir);
 	abs_movedir[0] = fabs(ent->movedir[0]);
 	abs_movedir[1] = fabs(ent->movedir[1]);
@@ -1671,7 +1671,7 @@ void SP_func_plat (gentity_t *ent) {
 	ent->wait = 1000;
 
 	// create second position
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 
 	if ( !G_SpawnFloat( "height", "0", &height ) ) {
 		height = (ent->s.maxs[2] - ent->s.mins[2]) - lip;
@@ -1772,7 +1772,7 @@ void SP_func_button( gentity_t *ent ) {
 	VectorCopy( ent->s.origin, ent->pos1 );
 
 	// calculate second position
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 
 	G_SpawnFloat( "lip", "4", &lip );
 
@@ -2013,7 +2013,7 @@ void SP_func_train (gentity_t *self) {
 		return;
 	}
 
-	trap_SetBrushModel( self, self->model );
+	G_SetBrushModel( self, self->model );
 	InitMover( self );
 
 	self->reached = Reached_Train;
@@ -2040,7 +2040,7 @@ A bmodel that just sits there, doing nothing.  Can be used for conditional walls
 "light"		constantLight radius
 */
 void SP_func_static( gentity_t *ent ) {
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 #ifdef IOQ3ZTM // BREAKABLE
 	VectorCopy( ent->s.origin, ent->pos1);
 	VectorCopy( ent->s.origin, ent->pos2);
@@ -2084,7 +2084,7 @@ It's like func_static, except that bots will attack it.
 "light"		constantLight radius
 */
 void SP_func_breakable( gentity_t *ent ) {
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 	VectorCopy( ent->s.origin, ent->pos1);
 	VectorCopy( ent->s.origin, ent->pos2);
 
@@ -2134,7 +2134,7 @@ void SP_func_rotating (gentity_t *ent) {
 		ent->damage = 2;
 	}
 
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 	InitMover( ent );
 
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );
@@ -2173,7 +2173,7 @@ void SP_func_bobbing (gentity_t *ent) {
 	G_SpawnInt( "dmg", "2", &ent->damage );
 	G_SpawnFloat( "phase", "0", &phase );
 
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 	InitMover( ent );
 
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );
@@ -2223,7 +2223,7 @@ void SP_func_pendulum(gentity_t *ent) {
 	G_SpawnInt( "dmg", "2", &ent->damage );
 	G_SpawnFloat( "phase", "0", &phase );
 
-	trap_SetBrushModel( ent, ent->model );
+	G_SetBrushModel( ent, ent->model );
 
 	// find pendulum length
 	length = fabs( ent->s.mins[2] );
@@ -2282,8 +2282,8 @@ void SP_func_use( gentity_t *ent ) {
 		G_Printf( "func_use has random >= wait\n" );
 	}
 
-	trap_SetBrushModel( ent, ent->model );
-	ent->s.contents = CONTENTS_SOLID;		// replaces the -1 from trap_SetBrushModel
+	G_SetBrushModel( ent, ent->model );
+	ent->s.contents = CONTENTS_SOLID;		// replaces the -1 from G_SetBrushModel
 	InitMover( ent );
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );
 	VectorCopy( ent->s.origin, ent->r.currentOrigin );
@@ -2536,8 +2536,8 @@ void SP_func_voodoo( gentity_t *ent ) {
 		G_Printf("func_voodoo: target not set!\n");
 	}
 
-	trap_SetBrushModel( ent, ent->model );
-	ent->s.contents = CONTENTS_SOLID;		// replaces the -1 from trap_SetBrushModel
+	G_SetBrushModel( ent, ent->model );
+	ent->s.contents = CONTENTS_SOLID;		// replaces the -1 from G_SetBrushModel
 	ent->health = 10000; // Give health to force setup of breakable in InitMover
 	InitMover( ent );
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );

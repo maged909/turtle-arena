@@ -42,9 +42,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ai_chat.h"
 //
 #include "ai_char.h"
+#include "ai_chat_sys.h"
 #include "ai_ea.h"
 #include "ai_gen.h"
 #include "ai_goal.h"
@@ -82,7 +82,6 @@ bot_waypoint_t *botai_freewaypoints;
 
 //NOTE: not using a cvars which can be updated because the game should be reloaded anyway
 int gametype;		//game type
-int maxclients;		//maximum number of clients
 
 vmCvar_t bot_grapple;
 #ifndef TURTLEARENA // NO_ROCKET_JUMPING
@@ -90,6 +89,7 @@ vmCvar_t bot_rocketjump;
 #endif
 vmCvar_t bot_fastchat;
 vmCvar_t bot_nochat;
+vmCvar_t bot_testichat;
 vmCvar_t bot_testrchat;
 vmCvar_t bot_challenge;
 vmCvar_t bot_predictobstacles;
@@ -1470,11 +1470,8 @@ ClientFromName
 int ClientFromName(char *name) {
 	int i;
 	char buf[MAX_INFO_STRING];
-	static int maxclients;
 
-	if (!maxclients)
-		maxclients = trap_Cvar_VariableIntegerValue("sv_maxclients");
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		trap_GetConfigstring(CS_PLAYERS+i, buf, sizeof(buf));
 		Q_CleanStr( buf );
 		if (!Q_stricmp(Info_ValueForKey(buf, "n"), name)) return i;
@@ -1490,11 +1487,8 @@ ClientOnSameTeamFromName
 int ClientOnSameTeamFromName(bot_state_t *bs, char *name) {
 	int i;
 	char buf[MAX_INFO_STRING];
-	static int maxclients;
 
-	if (!maxclients)
-		maxclients = trap_Cvar_VariableIntegerValue("sv_maxclients");
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (!BotSameTeam(bs, i))
 			continue;
 		trap_GetConfigstring(CS_PLAYERS+i, buf, sizeof(buf));
@@ -1839,7 +1833,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 					// tell the leader we want to be on offence
 					BotVoiceChat(bs, leader, VOICECHAT_WANTONOFFENSE);
 					//BotAI_BotInitialChat(bs, "wantoffence", NULL);
-					//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
+					//BotEnterChat(bs->cs, leader, CHAT_TELL);
 				}
 				else if (g_spSkill.integer <= 3) {
 					if ( bs->ltgtype != LTG_GETFLAG &&
@@ -1854,7 +1848,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 							// tell the leader we want to be on offence
 							BotVoiceChat(bs, leader, VOICECHAT_WANTONOFFENSE);
 							//BotAI_BotInitialChat(bs, "wantoffence", NULL);
-							//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
+							//BotEnterChat(bs->cs, leader, CHAT_TELL);
 						}
 					}
 				}
@@ -1869,7 +1863,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 					// tell the leader we want to be on defense
 					BotVoiceChat(bs, -1, VOICECHAT_WANTONDEFENSE);
 					//BotAI_BotInitialChat(bs, "wantdefence", NULL);
-					//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
+					//BotEnterChat(bs->cs, leader, CHAT_TELL);
 				}
 				else if (g_spSkill.integer <= 3) {
 					if ( bs->ltgtype != LTG_DEFENDKEYAREA ) {
@@ -1879,7 +1873,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 							// tell the leader we want to be on defense
 							BotVoiceChat(bs, -1, VOICECHAT_WANTONDEFENSE);
 							//BotAI_BotInitialChat(bs, "wantdefence", NULL);
-							//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
+							//BotEnterChat(bs->cs, leader, CHAT_TELL);
 						}
 					}
 				}
@@ -2948,7 +2942,7 @@ int BotCanAndWantsToRocketJump(bot_state_t *bs) {
 		//if the bot has insufficient armor
 		if (bs->inventory[INVENTORY_ARMOR] < 40) return qfalse;
 	}
-	rocketjumper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_WEAPONJUMPING, 0, 1);
+	rocketjumper = Characteristic_BFloat(bs->character, CHARACTERISTIC_WEAPONJUMPING, 0, 1);
 	if (rocketjumper < 0.5) return qfalse;
 	return qtrue;
 }
@@ -3052,7 +3046,7 @@ void BotGoCamp(bot_state_t *bs, bot_goal_t *goal) {
 	//set the team goal
 	memcpy(&bs->teamgoal, goal, sizeof(bot_goal_t));
 	//get the team goal time
-	camper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CAMPER, 0, 1);
+	camper = Characteristic_BFloat(bs->character, CHARACTERISTIC_CAMPER, 0, 1);
 	if (camper > 0.99) bs->teamgoal_time = FloatTime() + 99999;
 	else bs->teamgoal_time = FloatTime() + 120 + 180 * camper + random() * 15;
 	//set the last time the bot started camping
@@ -3076,7 +3070,7 @@ int BotWantsToCamp(bot_state_t *bs) {
 	int i;
 #endif
 
-	camper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CAMPER, 0, 1);
+	camper = Characteristic_BFloat(bs->character, CHARACTERISTIC_CAMPER, 0, 1);
 	if (camper < 0.1) return qfalse;
 	//if the bot has a team goal
 	if (bs->ltgtype == LTG_TEAMHELP ||
@@ -3239,9 +3233,9 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 	//
 	memset(&moveresult, 0, sizeof(bot_moveresult_t));
 	//
-	attack_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
-	jumper = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_JUMPER, 0, 1);
-	croucher = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
+	attack_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_ATTACK_SKILL, 0, 1);
+	jumper = Characteristic_BFloat(bs->character, CHARACTERISTIC_JUMPER, 0, 1);
+	croucher = Characteristic_BFloat(bs->character, CHARACTERISTIC_CROUCHER, 0, 1);
 	//if the bot is really stupid
 	if (attack_skill < 0.2) return moveresult;
 	//initialize the movement state
@@ -3539,8 +3533,8 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	aas_entityinfo_t entinfo, curenemyinfo, curbotinfo;
 	vec3_t dir, angles;
 
-	alertness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
-	easyfragger = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
+	alertness = Characteristic_BFloat(bs->character, CHARACTERISTIC_ALERTNESS, 0, 1);
+	easyfragger = Characteristic_BFloat(bs->character, CHARACTERISTIC_EASY_FRAGGER, 0, 1);
 	//check if the health decreased
 	healthdecrease = bs->lasthealth > bs->inventory[INVENTORY_HEALTH];
 	//remember the current health value
@@ -3597,7 +3591,7 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 	}
 #endif
 	//
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 
 		if (i == bs->client) continue;
 		//if it's the current enemy
@@ -3694,7 +3688,7 @@ int BotTeamFlagCarrierVisible(bot_state_t *bs) {
 	float vis;
 	aas_entityinfo_t entinfo;
 
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client)
 			continue;
 		//
@@ -3727,7 +3721,7 @@ int BotTeamFlagCarrier(bot_state_t *bs) {
 	int i;
 	aas_entityinfo_t entinfo;
 
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client)
 			continue;
 		//
@@ -3757,7 +3751,7 @@ int BotEnemyFlagCarrierVisible(bot_state_t *bs) {
 	float vis;
 	aas_entityinfo_t entinfo;
 
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client)
 			continue;
 		//
@@ -3796,7 +3790,7 @@ void BotVisibleTeamMatesAndEnemies(bot_state_t *bs, int *teammates, int *enemies
 		*teammates = 0;
 	if (enemies)
 		*enemies = 0;
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client)
 			continue;
 		//
@@ -3838,7 +3832,7 @@ int BotTeamCubeCarrierVisible(bot_state_t *bs) {
 	float vis;
 	aas_entityinfo_t entinfo;
 
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client) continue;
 		//
 		BotEntityInfo(i, &entinfo);
@@ -3867,7 +3861,7 @@ int BotEnemyCubeCarrierVisible(bot_state_t *bs) {
 	float vis;
 	aas_entityinfo_t entinfo;
 
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		if (i == bs->client)
 			continue;
 		//
@@ -3938,12 +3932,12 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	//
 	//BotAI_Print(PRT_MESSAGE, "client %d: aiming at client %d\n", bs->entitynum, bs->enemy);
 	//
-	aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
-	aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
+	aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
+	aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 	//
 	if (aim_skill > 0.95) {
 		//don't aim too early
-		reactiontime = 0.5 * trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+		reactiontime = 0.5 * Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
 		if (bs->enemysight_time > FloatTime() - reactiontime) return;
 		if (bs->teleport_time > FloatTime() - reactiontime) return;
 	}
@@ -3958,32 +3952,32 @@ void BotAimAtEnemy(bot_state_t *bs) {
 #ifndef TA_WEAPSYS // ZTM: WONTFIX: Fix support for per-weapon aim_accuracy/aim_skill?
 	//get the weapon specific aim accuracy and or aim skill
 	if (wi.number == WP_MACHINEGUN) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_MACHINEGUN, 0, 1);
 	}
 	else if (wi.number == WP_SHOTGUN) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_SHOTGUN, 0, 1);
 	}
 	else if (wi.number == WP_GRENADE_LAUNCHER) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
-		aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_GRENADELAUNCHER, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_GRENADELAUNCHER, 0, 1);
+		aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_GRENADELAUNCHER, 0, 1);
 	}
 	else if (wi.number == WP_ROCKET_LAUNCHER) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
-		aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_ROCKETLAUNCHER, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_ROCKETLAUNCHER, 0, 1);
+		aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_ROCKETLAUNCHER, 0, 1);
 	}
 	else if (wi.number == WP_LIGHTNING) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_LIGHTNING, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_LIGHTNING, 0, 1);
 	}
 	else if (wi.number == WP_RAILGUN) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_RAILGUN, 0, 1);
 	}
 	else if (wi.number == WP_PLASMAGUN) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
-		aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_PLASMAGUN, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_PLASMAGUN, 0, 1);
+		aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_PLASMAGUN, 0, 1);
 	}
 	else if (wi.number == WP_BFG) {
-		aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
-		aim_skill = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_BFG10K, 0, 1);
+		aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY_BFG10K, 0, 1);
+		aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL_BFG10K, 0, 1);
 	}
 #endif
 #endif
@@ -4283,14 +4277,14 @@ void BotCheckAttack(bot_state_t *bs) {
 #endif
 	}
 	//
-	reactiontime = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+	reactiontime = Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
 	if (bs->enemysight_time > FloatTime() - reactiontime) return;
 	if (bs->teleport_time > FloatTime() - reactiontime) return;
 	//if changing weapons
 	if (bs->weaponchange_time > FloatTime() - 0.1) return;
 	//check fire throttle characteristic
 	if (bs->firethrottlewait_time > FloatTime()) return;
-	firethrottle = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
+	firethrottle = Characteristic_BFloat(bs->character, CHARACTERISTIC_FIRETHROTTLE, 0, 1);
 	if (bs->firethrottleshoot_time < FloatTime()) {
 		if (random() > firethrottle) {
 			bs->firethrottlewait_time = FloatTime() + firethrottle;
@@ -4500,7 +4494,7 @@ void BotMapScripts(bot_state_t *bs) {
 		}
 		shootbutton = qfalse;
 		//if an enemy is below this bounding box then shoot the button
-		for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+		for (i = 0; i < level.maxclients; i++) {
 
 			if (i == bs->client) continue;
 			//
@@ -4529,7 +4523,7 @@ void BotMapScripts(bot_state_t *bs) {
 			bs->flags |= BFL_IDEALVIEWSET;
 			VectorSubtract(buttonorg, bs->eye, dir);
 			vectoangles(dir, bs->ideal_viewangles);
-			aim_accuracy = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
+			aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
 			bs->ideal_viewangles[PITCH] += 8 * crandom() * (1 - aim_accuracy);
 			bs->ideal_viewangles[PITCH] = AngleMod(bs->ideal_viewangles[PITCH]);
 			bs->ideal_viewangles[YAW] += 8 * crandom() * (1 - aim_accuracy);
@@ -5461,9 +5455,9 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 	//the name of this bot
 	ClientName(bs->client, botname, sizeof(botname));
 	//
-	while((handle = trap_BotNextConsoleMessage(bs->cs, &m)) != 0) {
+	while((handle = BotNextConsoleMessage(bs->cs, &m)) != 0) {
 		//if the chat state is flooded with messages the bot will read them quickly
-		if (trap_BotNumConsoleMessages(bs->cs) < 10) {
+		if (BotNumConsoleMessages(bs->cs) < 10) {
 			//if it is a chat message the bot needs some time to read it
 			if (m.type == CMS_CHAT && m.time > FloatTime() - (1 + random())) break;
 		}
@@ -5473,46 +5467,44 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 		//replace synonyms in the netname
 		if (m.type == CMS_CHAT) {
 			//
-			if (trap_BotFindMatch(m.message, &match, MTCONTEXT_REPLYCHAT)) {
+			if (BotFindMatch(m.message, &match, MTCONTEXT_REPLYCHAT)) {
 				ptr = m.message + match.variables[MESSAGE].offset;
 			}
 		}
 		//unify the white spaces in the message
-		trap_UnifyWhiteSpaces(ptr);
+		UnifyWhiteSpaces(ptr);
 		//replace synonyms in the right context
 		context = BotSynonymContext(bs);
-		trap_BotReplaceSynonyms(ptr, context);
+		BotReplaceSynonyms(ptr, context);
 		//if there's no match
 		if (!BotMatchMessage(bs, m.message)) {
 			//if it is a chat message
 			if (m.type == CMS_CHAT && !bot_nochat.integer) {
 				//
-				if (!trap_BotFindMatch(m.message, &match, MTCONTEXT_REPLYCHAT)) {
-					trap_BotRemoveConsoleMessage(bs->cs, handle);
+				if (!BotFindMatch(m.message, &match, MTCONTEXT_REPLYCHAT)) {
+					BotRemoveConsoleMessage(bs->cs, handle);
 					continue;
 				}
 				//don't use eliza chats with team messages
 				if (match.subtype & ST_TEAM) {
-					trap_BotRemoveConsoleMessage(bs->cs, handle);
+					BotRemoveConsoleMessage(bs->cs, handle);
 					continue;
 				}
 				//
-				trap_BotMatchVariable(&match, NETNAME, netname, sizeof(netname));
-				trap_BotMatchVariable(&match, MESSAGE, message, sizeof(message));
+				BotMatchVariable(&match, NETNAME, netname, sizeof(netname));
+				BotMatchVariable(&match, MESSAGE, message, sizeof(message));
 				//if this is a message from the bot self
 				if (bs->client == ClientFromName(netname)) {
-					trap_BotRemoveConsoleMessage(bs->cs, handle);
+					BotRemoveConsoleMessage(bs->cs, handle);
 					continue;
 				}
 				//unify the message
-				trap_UnifyWhiteSpaces(message);
+				UnifyWhiteSpaces(message);
 				//
 				trap_Cvar_Update(&bot_testrchat);
 				if (bot_testrchat.integer) {
-					//
-					trap_BotLibVarSet("bot_testrchat", "1");
 					//if bot replies with a chat message
-					if (trap_BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
+					if (BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
 															NULL, NULL,
 															NULL, NULL,
 															NULL, NULL,
@@ -5525,16 +5517,16 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 				}
 				//if at a valid chat position and not chatting already and not in teamplay
 				else if (bs->ainode != AINode_Stand && BotValidChatPosition(bs) && !TeamPlayIsOn()) {
-					chat_reply = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_CHAT_REPLY, 0, 1);
+					chat_reply = Characteristic_BFloat(bs->character, CHARACTERISTIC_CHAT_REPLY, 0, 1);
 					if (random() < 1.5 / (NumBots()+1) && random() < chat_reply) {
 						//if bot replies with a chat message
-						if (trap_BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
+						if (BotReplyChat(bs->cs, message, context, CONTEXT_REPLY,
 																NULL, NULL,
 																NULL, NULL,
 																NULL, NULL,
 																botname, netname)) {
 							//remove the console message
-							trap_BotRemoveConsoleMessage(bs->cs, handle);
+							BotRemoveConsoleMessage(bs->cs, handle);
 							bs->stand_time = FloatTime() + BotChatTime(bs);
 							AIEnter_Stand(bs, "BotCheckConsoleMessages: reply chat");
 							//EA_Say(bs->client, bs->cs.chatmessage);
@@ -5545,7 +5537,7 @@ void BotCheckConsoleMessages(bot_state_t *bs) {
 			}
 		}
 		//remove the console message
-		trap_BotRemoveConsoleMessage(bs->cs, handle);
+		BotRemoveConsoleMessage(bs->cs, handle);
 	}
 }
 
@@ -5690,7 +5682,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 			if (level.numPlayingClients < 3) {
 				getRevenge = qfalse;
 			} else {
-				vengefulness = trap_Characteristic_BFloat(bs->character, CHARACTERISTIC_VENGEFULNESS, 0, 1);
+				vengefulness = Characteristic_BFloat(bs->character, CHARACTERISTIC_VENGEFULNESS, 0, 1);
 				getRevenge = (random() < vengefulness);
 			}
 
@@ -6195,14 +6187,14 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 		bs->setupcount--;
 		if (bs->setupcount > 0) return;
 		//get the gender characteristic
-		trap_Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, sizeof(gender));
+		Characteristic_String(bs->character, CHARACTERISTIC_GENDER, gender, sizeof(gender));
 		//set the chat gender
-		if (gender[0] == 'm') trap_BotSetChatGender(bs->cs, CHAT_GENDERMALE);
-		else if (gender[0] == 'f')  trap_BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
-		else  trap_BotSetChatGender(bs->cs, CHAT_GENDERLESS);
+		if (gender[0] == 'm') BotSetChatGender(bs->cs, CHAT_GENDERMALE);
+		else if (gender[0] == 'f')  BotSetChatGender(bs->cs, CHAT_GENDERFEMALE);
+		else  BotSetChatGender(bs->cs, CHAT_GENDERLESS);
 		//set the chat name
 		ClientName(bs->client, name, sizeof(name));
-		trap_BotSetChatName(bs->cs, name, bs->client);
+		BotSetChatName(bs->cs, name, bs->client);
 		//
 		bs->lastframe_health = bs->inventory[INVENTORY_HEALTH];
 		bs->lasthitcount = bs->cur_ps.persistant[PERS_HITS];
@@ -6366,7 +6358,6 @@ void BotSetupDeathmatchAI(void) {
 	char model[128];
 
 	gametype = trap_Cvar_VariableIntegerValue("g_gametype");
-	maxclients = trap_Cvar_VariableIntegerValue("sv_maxclients");
 
 #ifndef TURTLEARENA // NO_ROCKET_JUMPING
 	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
@@ -6378,6 +6369,7 @@ void BotSetupDeathmatchAI(void) {
 #endif
 	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
 	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
+	trap_Cvar_Register(&bot_testichat, "bot_testichat", "0", 0);
 	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
 	trap_Cvar_Register(&bot_challenge, "bot_challenge", "0", 0);
 	trap_Cvar_Register(&bot_predictobstacles, "bot_predictobstacles", "1", 0);

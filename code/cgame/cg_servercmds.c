@@ -439,6 +439,9 @@ static void CG_ConfigStringModified( void ) {
 	else if ( num == CS_SHADERSTATE ) {
 		CG_ShaderStateChanged();
 	}
+	else if ( num == CS_PLAYERS_READY ) {
+		Com_ClientListParse( &cg.readyPlayers, str );
+	}
 #ifdef IOQ3ZTM // Particles
 	else if (num >= CS_PARTICLES && num < CS_PARTICLES+MAX_PARTICLES_AREAS)
 	{
@@ -446,7 +449,6 @@ static void CG_ConfigStringModified( void ) {
 		CG_NewParticleArea(num);
 	}
 #endif
-		
 }
 
 

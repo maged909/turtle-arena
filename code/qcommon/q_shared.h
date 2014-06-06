@@ -364,23 +364,6 @@ typedef	int	fixed16_t;
 #define NUMVERTEXNORMALS	162
 extern	vec3_t	bytedirs[NUMVERTEXNORMALS];
 
-// all drawing is done to a 640*480 virtual screen size
-// and will be automatically scaled to the real resolution
-#define	SCREEN_WIDTH		640
-#define	SCREEN_HEIGHT		480
-
-#define TINYCHAR_WIDTH		(SMALLCHAR_WIDTH)
-#define TINYCHAR_HEIGHT		(SMALLCHAR_HEIGHT/2)
-
-#define SMALLCHAR_WIDTH		8
-#define SMALLCHAR_HEIGHT	16
-
-#define BIGCHAR_WIDTH		16
-#define BIGCHAR_HEIGHT		16
-
-#define	GIANTCHAR_WIDTH		32
-#define	GIANTCHAR_HEIGHT	48
-
 extern	vec4_t		colorBlack;
 extern	vec4_t		colorRed;
 extern	vec4_t		colorGreen;
@@ -1314,7 +1297,7 @@ typedef struct sharedEntityState_s {
 	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
 							// a non-solid entity should set to 0
 
-	collisionType_t	collisionType;	// if CT_SUBMODEL, modelindex is an inline model number. only set by trap_SetBrushModel
+	collisionType_t	collisionType;	// if CT_SUBMODEL, modelindex is an inline model number
 									// if CT_CAPSULE, use capsule instead of bbox for clipping against this ent
 									// else (CT_AABB), assume an explicit mins / maxs bounding box
 

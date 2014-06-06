@@ -164,9 +164,10 @@ void trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_
 	syscall( G_LOCATE_GAME_DATA, gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGClient );
 }
 
-void trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
-						int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
-	syscall( G_SET_NET_FIELDS, entityStateSize, entityStateFields, numEntityStateFields, playerStateSize, playerStateFields, numPlayerStateFields );
+void trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+						int playerStateSize, int playerNetworkSize, vmNetField_t *playerStateFields, int numPlayerStateFields ) {
+	syscall( G_SET_NET_FIELDS,  entityStateSize, entityNetworkSize, entityStateFields, numEntityStateFields,
+								playerStateSize, playerNetworkSize, playerStateFields, numPlayerStateFields );
 }
 
 void trap_DropClient( int clientNum, const char *reason ) {
@@ -201,8 +202,8 @@ void trap_GetServerinfo( char *buffer, int bufferSize ) {
 	syscall( G_GET_SERVERINFO, buffer, bufferSize );
 }
 
-void trap_SetBrushModel( gentity_t *ent, const char *name ) {
-	syscall( G_SET_BRUSH_MODEL, ent, name );
+void trap_GetBrushBounds( int modelindex, vec3_t mins, vec3_t maxs ) {
+	syscall( G_GET_BRUSH_BOUNDS, modelindex, mins, maxs );
 }
 
 void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask ) {
@@ -564,87 +565,6 @@ int trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, flo
 }
 int trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask) {
 	return syscall( BOTLIB_AAS_DROP_TO_FLOOR, origin, mins, maxs, passent, contentmask );
-}
-
-
-int trap_BotAllocChatState(void) {
-	return syscall( BOTLIB_AI_ALLOC_CHAT_STATE );
-}
-
-void trap_BotFreeChatState(int handle) {
-	syscall( BOTLIB_AI_FREE_CHAT_STATE, handle );
-}
-
-void trap_BotQueueConsoleMessage(int chatstate, int type, char *message) {
-	syscall( BOTLIB_AI_QUEUE_CONSOLE_MESSAGE, chatstate, type, message );
-}
-
-void trap_BotRemoveConsoleMessage(int chatstate, int handle) {
-	syscall( BOTLIB_AI_REMOVE_CONSOLE_MESSAGE, chatstate, handle );
-}
-
-int trap_BotNextConsoleMessage(int chatstate, void /* struct bot_consolemessage_s */ *cm) {
-	return syscall( BOTLIB_AI_NEXT_CONSOLE_MESSAGE, chatstate, cm );
-}
-
-int trap_BotNumConsoleMessages(int chatstate) {
-	return syscall( BOTLIB_AI_NUM_CONSOLE_MESSAGE, chatstate );
-}
-
-void trap_BotInitialChat(int chatstate, char *type, int mcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7 ) {
-	syscall( BOTLIB_AI_INITIAL_CHAT, chatstate, type, mcontext, var0, var1, var2, var3, var4, var5, var6, var7 );
-}
-
-int	trap_BotNumInitialChats(int chatstate, char *type) {
-	return syscall( BOTLIB_AI_NUM_INITIAL_CHATS, chatstate, type );
-}
-
-int trap_BotReplyChat(int chatstate, char *message, int mcontext, int vcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7 ) {
-	return syscall( BOTLIB_AI_REPLY_CHAT, chatstate, message, mcontext, vcontext, var0, var1, var2, var3, var4, var5, var6, var7 );
-}
-
-int trap_BotChatLength(int chatstate) {
-	return syscall( BOTLIB_AI_CHAT_LENGTH, chatstate );
-}
-
-void trap_BotEnterChat(int chatstate, int client, int sendto) {
-	syscall( BOTLIB_AI_ENTER_CHAT, chatstate, client, sendto );
-}
-
-void trap_BotGetChatMessage(int chatstate, char *buf, int size) {
-	syscall( BOTLIB_AI_GET_CHAT_MESSAGE, chatstate, buf, size);
-}
-
-int trap_StringContains(char *str1, char *str2, int casesensitive) {
-	return syscall( BOTLIB_AI_STRING_CONTAINS, str1, str2, casesensitive );
-}
-
-int trap_BotFindMatch(char *str, void /* struct bot_match_s */ *match, unsigned long int context) {
-	return syscall( BOTLIB_AI_FIND_MATCH, str, match, context );
-}
-
-void trap_BotMatchVariable(void /* struct bot_match_s */ *match, int variable, char *buf, int size) {
-	syscall( BOTLIB_AI_MATCH_VARIABLE, match, variable, buf, size );
-}
-
-void trap_UnifyWhiteSpaces(char *string) {
-	syscall( BOTLIB_AI_UNIFY_WHITE_SPACES, string );
-}
-
-void trap_BotReplaceSynonyms(char *string, unsigned long int context) {
-	syscall( BOTLIB_AI_REPLACE_SYNONYMS, string, context );
-}
-
-int trap_BotLoadChatFile(int chatstate, char *chatfile, char *chatname) {
-	return syscall( BOTLIB_AI_LOAD_CHAT_FILE, chatstate, chatfile, chatname );
-}
-
-void trap_BotSetChatGender(int chatstate, int gender) {
-	syscall( BOTLIB_AI_SET_CHAT_GENDER, chatstate, gender );
-}
-
-void trap_BotSetChatName(int chatstate, char *name, int client) {
-	syscall( BOTLIB_AI_SET_CHAT_NAME, chatstate, name, client );
 }
 
 

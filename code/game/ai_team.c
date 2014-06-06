@@ -41,9 +41,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "g_local.h"
 #include "../botlib/botlib.h"
 #include "../botlib/be_aas.h"
-#include "../botlib/be_ai_chat.h"
 //
 #include "ai_char.h"
+#include "ai_chat_sys.h"
 #include "ai_ea.h"
 #include "ai_gen.h"
 #include "ai_goal.h"
@@ -96,13 +96,9 @@ BotNumTeamMates
 int BotNumTeamMates(bot_state_t *bs) {
 	int i, numplayers;
 	char buf[MAX_INFO_STRING];
-	static int maxclients;
-
-	if (!maxclients)
-		maxclients = trap_Cvar_VariableIntegerValue("sv_maxclients");
 
 	numplayers = 0;
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		trap_GetConfigstring(CS_PLAYERS+i, buf, sizeof(buf));
 		//if no config string or no name
 		if (!strlen(buf) || !strlen(Info_ValueForKey(buf, "n"))) continue;
@@ -144,7 +140,6 @@ int BotSortTeamMatesByBaseTravelTime(bot_state_t *bs, int *teammates, int maxtea
 
 	int i, j, k, numteammates, traveltime;
 	char buf[MAX_INFO_STRING];
-	static int maxclients;
 	int traveltimes[MAX_CLIENTS];
 	bot_goal_t *goal = NULL;
 
@@ -167,11 +162,9 @@ int BotSortTeamMatesByBaseTravelTime(bot_state_t *bs, int *teammates, int maxtea
 			goal = &blueobelisk;
 	}
 #endif
-	if (!maxclients)
-		maxclients = trap_Cvar_VariableIntegerValue("sv_maxclients");
 
 	numteammates = 0;
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		trap_GetConfigstring(CS_PLAYERS+i, buf, sizeof(buf));
 		//if no config string or no name
 		if (!strlen(buf) || !strlen(Info_ValueForKey(buf, "n"))) continue;
@@ -278,13 +271,13 @@ void BotSayTeamOrderAlways(bot_state_t *bs, int toclient) {
 	//if the bot is talking to itself
 	if (bs->client == toclient) {
 		//don't show the message just put it in the console message queue
-		trap_BotGetChatMessage(bs->cs, buf, sizeof(buf));
+		BotGetChatMessage(bs->cs, buf, sizeof(buf));
 		ClientName(bs->client, name, sizeof(name));
 		Com_sprintf(teamchat, sizeof(teamchat), EC"(%s"EC")"EC": %s", name, buf);
-		trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, teamchat);
+		BotQueueConsoleMessage(bs->cs, CMS_CHAT, teamchat);
 	}
 	else {
-		trap_BotEnterChat(bs->cs, toclient, CHAT_TELL);
+		BotEnterChat(bs->cs, toclient, CHAT_TELL);
 	}
 }
 
@@ -298,7 +291,7 @@ void BotSayTeamOrder(bot_state_t *bs, int toclient) {
 	// voice chats only
 	char buf[MAX_MESSAGE_SIZE];
 
-	trap_BotGetChatMessage(bs->cs, buf, sizeof(buf));
+	BotGetChatMessage(bs->cs, buf, sizeof(buf));
 #else
 	BotSayTeamOrderAlways(bs, toclient);
 #endif
@@ -902,13 +895,9 @@ void BotTeamOrders(bot_state_t *bs) {
 	int teammates[MAX_CLIENTS];
 	int numteammates, i;
 	char buf[MAX_INFO_STRING];
-	static int maxclients;
-
-	if (!maxclients)
-		maxclients = trap_Cvar_VariableIntegerValue("sv_maxclients");
 
 	numteammates = 0;
-	for (i = 0; i < maxclients && i < MAX_CLIENTS; i++) {
+	for (i = 0; i < level.maxclients; i++) {
 		trap_GetConfigstring(CS_PLAYERS+i, buf, sizeof(buf));
 		//if no config string or no name
 		if (!strlen(buf) || !strlen(Info_ValueForKey(buf, "n"))) continue;
@@ -1994,13 +1983,13 @@ void BotTeamAI(bot_state_t *bs) {
 			if (bs->askteamleader_time && bs->askteamleader_time < FloatTime()) {
 				// if asked for a team leader and no response
 				BotAI_BotInitialChat(bs, "whoisteamleader", NULL);
-				trap_BotEnterChat(bs->cs, 0, CHAT_TEAM);
+				BotEnterChat(bs->cs, 0, CHAT_TEAM);
 				bs->askteamleader_time = 0;
 				bs->becometeamleader_time = FloatTime() + 8 + random() * 10;
 			}
 			if (bs->becometeamleader_time && bs->becometeamleader_time < FloatTime()) {
 				BotAI_BotInitialChat(bs, "iamteamleader", NULL);
-				trap_BotEnterChat(bs->cs, 0, CHAT_TEAM);
+				BotEnterChat(bs->cs, 0, CHAT_TEAM);
 				BotSayVoiceTeamOrder(bs, -1, VOICECHAT_STARTLEADER);
 				ClientName(bs->client, netname, sizeof(netname));
 				strncpy(bs->teamleader, netname, sizeof(bs->teamleader));
