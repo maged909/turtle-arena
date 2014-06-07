@@ -37,7 +37,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // because games can change separately from the main system version, we need a
 // second version that must match between game and cgame
 
-#define	GAME_VERSION		MODDIR "-3"
+#define	GAME_VERSION		MODDIR "-4"
 
 #define	DEFAULT_GRAVITY		800
 #ifndef NOTRATEDM // No gibs.
@@ -134,6 +134,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	CS_INTERMISSION			22		// when 1, fraglimit/timelimit has been hit and intermission will start in a second or two
 #define CS_FLAGSTATUS			23		// string indicating flag status in CTF
 #define CS_SHADERSTATE			24
+#define	CS_PLAYERS_READY		25		// players wishing to exit the intermission
 
 #define	CS_ITEMS				27		// string of 0's and 1's that tell which items are present
 
@@ -563,7 +564,6 @@ typedef enum {
 	STAT_SPHERES,
 #endif
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
-	STAT_CLIENTS_READY,				// bit mask of clients wishing to exit the intermission (FIXME: configstring?)
 	STAT_MAX_HEALTH					// health / armor limit, changable by handicap
 } statIndex_t;
 

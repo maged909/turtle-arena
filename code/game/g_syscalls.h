@@ -39,8 +39,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 // Additional shared traps in bg_public.h
 
 void	trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *gameClients, int sizeofGameClient );
-void	trap_SetNetFields( int entityStateSize, vmNetField_t *entityStateFields, int numEntityStateFields,
-						   int playerStateSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
+void	trap_SetNetFields( int entityStateSize, int entityNetworkSize, vmNetField_t *entityStateFields, int numEntityStateFields,
+						   int playerStateSize, int playerNetworkSize, vmNetField_t *playerStateFields, int numPlayerStateFields );
 void	trap_DropClient( int clientNum, const char *reason );
 void	trap_SendServerCommandEx( int connectionNum, int localPlayerNum, const char *text );
 void	trap_SetConfigstring( int num, const char *string );
@@ -49,7 +49,7 @@ void	trap_SetConfigstringRestrictions( int num, const clientList_t *clientList )
 void	trap_GetUserinfo( int num, char *buffer, int bufferSize );
 void	trap_SetUserinfo( int num, const char *buffer );
 void	trap_GetServerinfo( char *buffer, int bufferSize );
-void	trap_SetBrushModel( gentity_t *ent, const char *name );
+void	trap_GetBrushBounds( int modelindex, vec3_t mins, vec3_t maxs );
 void	trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 void	trap_TraceCapsule( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
 void	trap_ClipToEntities( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
@@ -151,27 +151,6 @@ void	trap_AAS_JumpReachRunStart(void /* struct aas_reachability_s */ *reach, vec
 int		trap_AAS_AgainstLadder(vec3_t origin);
 int		trap_AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity);
 int		trap_AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs, int passent, int contentmask);
-
-int		trap_BotAllocChatState(void);
-void	trap_BotFreeChatState(int handle);
-void	trap_BotQueueConsoleMessage(int chatstate, int type, char *message);
-void	trap_BotRemoveConsoleMessage(int chatstate, int handle);
-int		trap_BotNextConsoleMessage(int chatstate, void /* struct bot_consolemessage_s */ *cm);
-int		trap_BotNumConsoleMessages(int chatstate);
-void	trap_BotInitialChat(int chatstate, char *type, int mcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7 );
-int		trap_BotNumInitialChats(int chatstate, char *type);
-int		trap_BotReplyChat(int chatstate, char *message, int mcontext, int vcontext, char *var0, char *var1, char *var2, char *var3, char *var4, char *var5, char *var6, char *var7 );
-int		trap_BotChatLength(int chatstate);
-void	trap_BotEnterChat(int chatstate, int client, int sendto);
-void	trap_BotGetChatMessage(int chatstate, char *buf, int size);
-int		trap_StringContains(char *str1, char *str2, int casesensitive);
-int		trap_BotFindMatch(char *str, void /* struct bot_match_s */ *match, unsigned long int context);
-void	trap_BotMatchVariable(void /* struct bot_match_s */ *match, int variable, char *buf, int size);
-void	trap_UnifyWhiteSpaces(char *string);
-void	trap_BotReplaceSynonyms(char *string, unsigned long int context);
-int		trap_BotLoadChatFile(int chatstate, char *chatfile, char *chatname);
-void	trap_BotSetChatGender(int chatstate, int gender);
-void	trap_BotSetChatName(int chatstate, char *name, int client);
 
 #endif
 

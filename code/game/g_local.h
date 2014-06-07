@@ -634,6 +634,7 @@ void	G_UseTargets (gentity_t *ent, gentity_t *activator);
 #ifdef TA_ENTSYS
 void	G_UseTargets2(gentity_t *ent, gentity_t *activator, const char *target);
 #endif
+void	G_SetBrushModel( gentity_t *ent, const char *name );
 void	G_SetMovedir ( vec3_t angles, vec3_t movedir);
 
 void	G_InitGentity( gentity_t *e );
