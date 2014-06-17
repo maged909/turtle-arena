@@ -190,7 +190,6 @@ void UI_LoadBestScores(const char *map, int game)
 	fileHandle_t f;
 	static char *gametypeNames[] = {"ffa", "tourney", "single", "team", "ctf", "oneflag", "overload", "harvester"};
 	qboolean	validData;
-	int protocol, protocolLegacy;
 	int i;
 	
 	// compose file name
@@ -228,31 +227,12 @@ void UI_LoadBestScores(const char *map, int game)
 		}
 	}
 
-	s_arcade.viewreplay.generic.flags |= QMF_GRAYED;
-
-	protocolLegacy = trap_Cvar_VariableValue("com_legacyprotocol");
-	protocol = trap_Cvar_VariableValue("com_protocol");
-
-	if(!protocol)
-		protocol = trap_Cvar_VariableValue("protocol");
-	if(protocolLegacy == protocol)
-		protocolLegacy = 0;
-
-	Com_sprintf(fileName, MAX_QPATH, "demos/%s_%d.%s%d", map, game, DEMOEXT, protocol);
-	if(trap_FS_FOpenFile(fileName, &f, FS_READ) >= 0)
-	{
+	Com_sprintf(fileName, MAX_QPATH, "%s_%d", map, game);
+	if ( trap_GetDemoFileInfo( fileName, NULL, NULL, NULL, NULL, NULL ) ) {
 		s_arcade.viewreplay.generic.flags &= ~QMF_GRAYED;
-		trap_FS_FCloseFile(f);
+	} else {
+		s_arcade.viewreplay.generic.flags |= QMF_GRAYED;
 	}
-	else if(protocolLegacy > 0)
-	{
-		Com_sprintf(fileName, MAX_QPATH, "demos/%s_%d.%s%d", map, game, DEMOEXT, protocolLegacy);
-		if (trap_FS_FOpenFile(fileName, &f, FS_READ) >= 0)
-		{
-			s_arcade.viewreplay.generic.flags &= ~QMF_GRAYED;
-			trap_FS_FCloseFile(f);
-		}
-	} 
 }
 
 /*
