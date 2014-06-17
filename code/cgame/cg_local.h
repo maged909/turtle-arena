@@ -35,6 +35,33 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_public.h"
 #include "cg_syscalls.h"
 
+#ifdef IOQ3ZTM // FONT_REWRITE
+// General font structure to easily support bitmap fonts and true type fonts
+typedef struct
+{
+	// True Type Fonts
+	fontInfo_t	fontInfo;	// true type font data
+	int			pointSize;	// point-size / height
+	float		kerning;	// add extra space between characters
+
+	// Bitmap Fonts
+	qhandle_t	fontShader;	// font shader/image
+	int			shaderCharWidth; // point size for width, only used by fontShader
+} font_t;
+
+// Drawing functions must be in each specific module
+float Com_FontScale( const font_t *font, float scale );
+
+float Com_FontCharWidth( const font_t *font, int ch, float scale );
+float Com_FontCharLeftOffset( const font_t *font, int ch, float scale );
+float Com_FontCharHeight( const font_t *font, float scale );
+
+float Com_FontStringWidthExt( const font_t *font, const char *s, float scale, int limit, qboolean skipColors );
+float Com_FontStringWidth( const font_t *font, const char *s, float scale );
+float Com_FontStringHeightExt( const font_t *font, const char *s, float scale, int limit, qboolean skipColors );
+float Com_FontStringHeight( const font_t *font, const char *s, float scale );
+#endif
+
 // The entire cgame module is unloaded and reloaded on each level change,
 // so there is NO persistant data between levels on the client side.
 // If you absolutely need something stored, it can either be kept
