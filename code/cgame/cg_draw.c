@@ -4178,8 +4178,6 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 #endif
 		CG_DrawCenterString();
 	}
-
-	CG_DrawNotify();
 }
 
 
@@ -4335,6 +4333,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	// draw status bar and other floating elements
  	CG_Draw2D(stereoView);
+
+	CG_DrawNotify();
 }
 
 /*

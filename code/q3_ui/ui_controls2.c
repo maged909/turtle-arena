@@ -75,6 +75,9 @@ typedef struct
 #define C_MISC			3
 #ifdef IOQ3ZTM // NEW_CAM
 #define C_CAMERA		4
+#define	C_JOYSTICK		5
+#else
+#define	C_JOYSTICK		4
 #endif
 
 #define ID_MOVEMENT		100
@@ -85,8 +88,9 @@ typedef struct
 #define ID_BACK			105
 #define ID_SAVEANDEXIT	106
 #define ID_EXIT			107
+#define ID_JOYSTICK		108
 #ifdef IOQ3ZTM // NEW_CAM
-#define ID_CAMERA		108
+#define ID_CAMERA		109
 #endif
 
 enum {
@@ -177,6 +181,7 @@ enum {
 #endif
 	ID_MOUSESPEED,
 	ID_SELECTJOY,
+	ID_JOYANALOG,
 	ID_JOYTHRESHOLD,
 	ID_SMOOTHMOUSE
 };
@@ -235,6 +240,7 @@ typedef struct
 #ifdef IOQ3ZTM // NEW_CAM
 	menutext_s			camera;
 #endif
+	menutext_s			joystick;
 #ifdef IOQ3ZTM
 	menutext_s			defaults;
 #endif
@@ -329,6 +335,7 @@ typedef struct
 #endif
 
 	menutext_s			selectjoy;
+	menuradiobutton_s	joyanalog;
 	menuslider_s		joythreshold;
 	int					section;
 	char				playerModel[MAX_QPATH];
@@ -722,6 +729,10 @@ static configcvar_t g_configcvars[] =
 	{"4cg_autoswitch",	0,					0},
 #endif
 	{"sensitivity",		0,					0},
+	{"in_joystickUseAnalog",	0,			0},
+	{"2in_joystickUseAnalog",	0,			0},
+	{"3in_joystickUseAnalog",	0,			0},
+	{"4in_joystickUseAnalog",	0,			0},
 	{"in_joystickThreshold",	0,			0},
 	{"2in_joystickThreshold",	0,			0},
 	{"3in_joystickThreshold",	0,			0},
@@ -802,8 +813,6 @@ static menucommon_s *g_looking_controls[] = {
 #ifndef TURTLEARENA // NOZOOM
 	(menucommon_s *)&s_controls.zoomview,
 #endif
-	(menucommon_s *)&s_controls.selectjoy,
-	(menucommon_s *)&s_controls.joythreshold,
 	NULL,
 };
 
@@ -839,6 +848,13 @@ static menucommon_s *g_camera_controls[] = {
 };
 #endif
 
+static menucommon_s *g_joystick_controls[] = {
+	(menucommon_s *)&s_controls.selectjoy,
+	(menucommon_s *)&s_controls.joythreshold,
+	(menucommon_s *)&s_controls.joyanalog,
+	NULL,
+};
+
 static menucommon_s **g_controls[] = {
 	g_movement_controls,
 	g_looking_controls,
@@ -847,6 +863,7 @@ static menucommon_s **g_controls[] = {
 #ifdef IOQ3ZTM // NEW_CAMERA
 	g_camera_controls,
 #endif
+	g_joystick_controls,
 	NULL
 };
 
@@ -857,8 +874,6 @@ static menucommon_s *g_looking_mini_controls[] = {
 #ifndef TURTLEARENA // NOZOOM
 	(menucommon_s *)&s_controls.zoomview,
 #endif
-	(menucommon_s *)&s_controls.selectjoy,
-	(menucommon_s *)&s_controls.joythreshold,
 	NULL,
 };
 
@@ -903,6 +918,7 @@ static menucommon_s **g_mini_controls[] = {
 #ifdef IOQ3ZTM // NEW_CAMERA
 	g_camera_controls,
 #endif
+	g_joystick_controls,
 	g_unused_controls, // dummy controls that are not used but are disabled so they are not seen.
 	NULL
 };
@@ -1490,6 +1506,7 @@ static void Controls_GetConfig( void )
 #ifndef TA_WEAPSYS_EX
 	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
 #endif
+	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ) ) );
 	s_controls.joythreshold.curvalue = Com_Clamp( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
 }
 
@@ -1531,6 +1548,7 @@ static void Controls_SetConfig( void )
 #ifndef TA_WEAPSYS_EX
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
 #endif
+		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
 		return;
 	}
@@ -1548,6 +1566,7 @@ static void Controls_SetConfig( void )
 	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
 #endif
 	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
+	trap_Cvar_SetValue( "in_joystickUseAnalog", s_controls.joyanalog.curvalue );
 	trap_Cvar_SetValue( "in_joystickThreshold", s_controls.joythreshold.curvalue );
 	trap_Cvar_SetValue( "cl_freelook", s_controls.freelook.curvalue );
 }
@@ -1594,6 +1613,7 @@ static void Controls_SetDefaults( void )
 #endif
 		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystick"), 0);
 		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystickNo"), 0);
+		s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "in_joystickUseAnalog" ) );
 		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) );
 		return;
 	}
@@ -1609,6 +1629,7 @@ static void Controls_SetDefaults( void )
 	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
 	trap_Cvar_SetValue("in_joystick", 0);
 	trap_Cvar_SetValue("in_joystickNo", 0);
+	s_controls.joyanalog.curvalue    = Controls_GetCvarDefault( "in_joystickUseAnalog" );
 	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( "in_joystickThreshold" );
 	s_controls.freelook.curvalue     = Controls_GetCvarDefault( "cl_freelook" );
 }
@@ -1809,6 +1830,7 @@ static void Controls_MenuEvent( void* ptr, int event )
 			}
 			break;
 
+
 #ifdef IOQ3ZTM // NEW_CAM
 		case ID_CAMERA:
 			if (event == QM_ACTIVATED)
@@ -1818,6 +1840,14 @@ static void Controls_MenuEvent( void* ptr, int event )
 			}
 			break;
 #endif
+
+		case ID_JOYSTICK:
+			if (event == QM_ACTIVATED)
+			{
+				s_controls.section = C_JOYSTICK; 
+				Controls_Update();
+			}
+			break;
 
 		case ID_DEFAULTS:
 			if (event == QM_ACTIVATED)
@@ -1860,6 +1890,7 @@ static void Controls_MenuEvent( void* ptr, int event )
 #ifndef TA_WEAPSYS_EX
 		case ID_AUTOSWITCH:
 #endif
+		case ID_JOYANALOG:
 		case ID_JOYTHRESHOLD:
 			if (event == QM_ACTIVATED)
 			{
@@ -2032,8 +2063,8 @@ static void Controls_MenuInit( int localClient )
 	s_controls.framer.width  	    = 256;
 	s_controls.framer.height  	    = 334;
 
-#ifdef IOQ3ZTM // NEW_CAM
-	y = 240 - 2.5f * PROP_HEIGHT;
+#ifdef IOQ3ZTM // NEW_CAM // DEFAULTS
+	y = 240 - 3.5f * PROP_HEIGHT;
 #else
 	y = 240 - 2 * PROP_HEIGHT;
 #endif
@@ -2097,6 +2128,17 @@ static void Controls_MenuInit( int localClient )
 	s_controls.camera.style				= UI_RIGHT;
 	s_controls.camera.color				= text_big_color;
 #endif
+
+	y += PROP_HEIGHT;
+	s_controls.joystick.generic.type	 = MTYPE_PTEXT;
+	s_controls.joystick.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_controls.joystick.generic.id	     = ID_JOYSTICK;
+	s_controls.joystick.generic.callback = Controls_MenuEvent;
+	s_controls.joystick.generic.x		 = 152;
+	s_controls.joystick.generic.y		 = y;
+	s_controls.joystick.string			= "JOY";
+	s_controls.joystick.style			= UI_RIGHT;
+	s_controls.joystick.color			= text_big_color;
 
 #ifdef IOQ3ZTM
 	y += PROP_HEIGHT;
@@ -2534,6 +2576,14 @@ static void Controls_MenuInit( int localClient )
 	s_controls.selectjoy.color				= text_color_normal;
 	s_controls.selectjoy.style				= UI_RIGHT|UI_SMALLFONT;
 
+	s_controls.joyanalog.generic.type      = MTYPE_RADIOBUTTON;
+	s_controls.joyanalog.generic.flags	   = QMF_SMALLFONT;
+	s_controls.joyanalog.generic.x	       = SCREEN_WIDTH/2;
+	s_controls.joyanalog.generic.name	   = "analog input";
+	s_controls.joyanalog.generic.id        = ID_JOYANALOG;
+	s_controls.joyanalog.generic.callback  = Controls_MenuEvent;
+	s_controls.joyanalog.generic.statusbar = Controls_StatusBar;
+
 	s_controls.joythreshold.generic.type	  = MTYPE_SLIDER;
 	s_controls.joythreshold.generic.x		  = SCREEN_WIDTH/2;
 	s_controls.joythreshold.generic.flags	  = QMF_SMALLFONT;
@@ -2569,6 +2619,7 @@ static void Controls_MenuInit( int localClient )
 #ifdef IOQ3ZTM // NEW_CAM
 	Menu_AddItem( &s_controls.menu, &s_controls.camera );
 #endif
+	Menu_AddItem( &s_controls.menu, &s_controls.joystick );
 #ifdef IOQ3ZTM
 	Menu_AddItem( &s_controls.menu, &s_controls.defaults );
 #endif
@@ -2588,6 +2639,7 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.zoomview );
 #endif
 	Menu_AddItem( &s_controls.menu, &s_controls.selectjoy );
+	Menu_AddItem( &s_controls.menu, &s_controls.joyanalog );
 	Menu_AddItem( &s_controls.menu, &s_controls.joythreshold );
 
 #ifndef TURTLEARENA // ALWAYS_RUN
