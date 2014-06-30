@@ -51,16 +51,7 @@ vmCvar_t	cg_anglespeedkey[MAX_SPLITVIEW];
 vmCvar_t	cg_run[MAX_SPLITVIEW];
 #endif
 
-vmCvar_t	j_pitch[MAX_SPLITVIEW];
-vmCvar_t	j_yaw[MAX_SPLITVIEW];
-vmCvar_t	j_forward[MAX_SPLITVIEW];
-vmCvar_t	j_side[MAX_SPLITVIEW];
-vmCvar_t	j_up[MAX_SPLITVIEW];
-vmCvar_t	j_pitch_axis[MAX_SPLITVIEW];
-vmCvar_t	j_yaw_axis[MAX_SPLITVIEW];
-vmCvar_t	j_forward_axis[MAX_SPLITVIEW];
-vmCvar_t	j_side_axis[MAX_SPLITVIEW];
-vmCvar_t	j_up_axis[MAX_SPLITVIEW];
+vmCvar_t	cg_joystickUseAnalog[MAX_SPLITVIEW];
 
 /*
 ===============================================================================
@@ -84,10 +75,12 @@ at the same time.
 
 typedef struct {
 	int			down[2];		// key nums holding it down
+	int			axisNum[2];		// analog joystick axis + 1 (possible negated for negative axis)
 	unsigned	downtime;		// msec timestamp
 	unsigned	msec;			// msec down this frame if both a down and up happened
 	qboolean	active;			// current state
 	qboolean	wasPressed;		// set when down, not cleared when up
+	float		lastFraction;	// last analog fraction
 } kbutton_t;
 
 typedef struct
@@ -127,8 +120,10 @@ void IN_MLookUp( int localPlayerNum ) {
 	}
 }
 
+// arg1 keynum, arg2 frametime, arg3 analog joystick axis number
 void IN_KeyDown( kbutton_t *b ) {
 	int		k;
+	int		axisNum;
 	char	c[20];
 	
 	trap_Argv( 1, c, sizeof (c) );
@@ -142,10 +137,15 @@ void IN_KeyDown( kbutton_t *b ) {
 		return;		// repeating key
 	}
 	
+	trap_Argv( 3, c, sizeof (c) );
+	axisNum = atoi( c );
+
 	if ( !b->down[0] ) {
 		b->down[0] = k;
+		b->axisNum[0] = axisNum;
 	} else if ( !b->down[1] ) {
 		b->down[1] = k;
+		b->axisNum[1] = axisNum;
 	} else {
 		Com_Printf ("Three keys down for a button!\n");
 		return;
@@ -161,6 +161,8 @@ void IN_KeyDown( kbutton_t *b ) {
 
 	b->active = qtrue;
 	b->wasPressed = qtrue;
+
+	b->lastFraction = 1;
 }
 
 void IN_KeyUp( kbutton_t *b ) {
@@ -207,14 +209,49 @@ void IN_KeyUp( kbutton_t *b ) {
 
 /*
 ===============
+CL_AxisFraction
+
+Returns the fraction of the axis press
+===============
+*/
+float CL_AxisFraction( cglc_t *lc, int axisNum ) {
+	float fraction;
+	int axis;
+
+	// non-analog keystate
+	if ( axisNum == 0 ) {
+		return 1;
+	}
+
+	if ( axisNum < 0 ) {
+		axis = -axisNum - 1;
+	} else {
+		axis = axisNum - 1;
+	}
+
+	// sign flip shouldn't ever happen, key should be released first
+	if ( !!( axisNum < 0 ) != !!( lc->joystickAxis[ axis ] < 0 ) ) {
+		fraction = 0;
+		CG_Printf("WARNING: Axis (%d) fraction 0, but still input system think it's pressed\n", axisNum);
+	} else {
+		fraction = ( (float)abs( lc->joystickAxis[ axis ] ) ) / 32767.0f;
+	}
+
+	return fraction;
+}
+
+/*
+===============
 CL_KeyState
 
 Returns the fraction of the frame that the key was down
 ===============
 */
-float CL_KeyState( kbutton_t *key ) {
+float CL_KeyState( cglc_t *lc, kbutton_t *key ) {
 	float		val;
 	int			msec;
+	float		fraction;
+	int			lcNum;
 
 	msec = key->msec;
 	key->msec = 0;
@@ -227,6 +264,30 @@ float CL_KeyState( kbutton_t *key ) {
 			msec += in_frameTime - key->downtime;
 		}
 		key->downtime = in_frameTime;
+
+		lcNum = lc - cg.localClients;
+		if ( cg_joystickUseAnalog[lcNum].integer ) {
+			fraction = 0;
+
+			if ( key->down[0] ) {
+				fraction += CL_AxisFraction( lc, key->axisNum[0] );
+			}
+
+			if ( key->down[1] ) {
+				fraction += CL_AxisFraction( lc, key->axisNum[1] );
+			}
+
+			if ( fraction > 1 ) {
+				fraction = 1;
+			}
+		} else {
+			fraction = 1;
+		}
+
+		key->lastFraction = fraction;
+	} else {
+		// use fraction from last frame to avoid boost frame after releasing joystick axis
+		fraction = key->lastFraction;
 	}
 
 #if 0
@@ -235,7 +296,7 @@ float CL_KeyState( kbutton_t *key ) {
 	}
 #endif
 
-	val = (float)msec / in_frameMsec;
+	val = (float)msec / in_frameMsec * fraction;
 	if ( val < 0 ) {
 		val = 0;
 	}
@@ -353,12 +414,12 @@ void CG_AdjustAngles( cglc_t *lc, clientInput_t *ci ) {
 #endif
 		)
 	{
-		lc->viewangles[YAW] -= speed*cg_yawspeed[lcNum].value*CL_KeyState (&ci->in_right);
-		lc->viewangles[YAW] += speed*cg_yawspeed[lcNum].value*CL_KeyState (&ci->in_left);
+		lc->viewangles[YAW] -= speed*cg_yawspeed[lcNum].value*CL_KeyState (lc, &ci->in_right);
+		lc->viewangles[YAW] += speed*cg_yawspeed[lcNum].value*CL_KeyState (lc, &ci->in_left);
 	}
 
-	lc->viewangles[PITCH] -= speed*cg_pitchspeed[lcNum].value * CL_KeyState (&ci->in_lookup);
-	lc->viewangles[PITCH] += speed*cg_pitchspeed[lcNum].value * CL_KeyState (&ci->in_lookdown);
+	lc->viewangles[PITCH] -= speed*cg_pitchspeed[lcNum].value * CL_KeyState (lc, &ci->in_lookup);
+	lc->viewangles[PITCH] += speed*cg_pitchspeed[lcNum].value * CL_KeyState (lc, &ci->in_lookdown);
 }
 
 /*
@@ -368,7 +429,7 @@ CG_KeyMove
 Sets the usercmd_t based on key states
 ================
 */
-void CG_KeyMove( clientInput_t *ci, usercmd_t *cmd ) {
+void CG_KeyMove( cglc_t *lc, clientInput_t *ci, usercmd_t *cmd ) {
 	int		movespeed;
 	int		forward, side, up;
 
@@ -399,78 +460,25 @@ void CG_KeyMove( clientInput_t *ci, usercmd_t *cmd ) {
 #endif
 		)
 	{
-		side += movespeed * CL_KeyState (&ci->in_right);
-		side -= movespeed * CL_KeyState (&ci->in_left);
+		side += movespeed * CL_KeyState (lc, &ci->in_right);
+		side -= movespeed * CL_KeyState (lc, &ci->in_left);
 	}
 
-	side += movespeed * CL_KeyState (&ci->in_moveright);
-	side -= movespeed * CL_KeyState (&ci->in_moveleft);
+	side += movespeed * CL_KeyState (lc, &ci->in_moveright);
+	side -= movespeed * CL_KeyState (lc, &ci->in_moveleft);
 
 
-	up += movespeed * CL_KeyState (&ci->in_up);
-	up -= movespeed * CL_KeyState (&ci->in_down);
+	up += movespeed * CL_KeyState (lc, &ci->in_up);
+	up -= movespeed * CL_KeyState (lc, &ci->in_down);
 
-	forward += movespeed * CL_KeyState (&ci->in_forward);
-	forward -= movespeed * CL_KeyState (&ci->in_back);
+	forward += movespeed * CL_KeyState (lc, &ci->in_forward);
+	forward -= movespeed * CL_KeyState (lc, &ci->in_back);
 
 	cmd->forwardmove = ClampChar( forward );
 	cmd->rightmove = ClampChar( side );
 	cmd->upmove = ClampChar( up );
 }
 
-
-/*
-=================
-CG_JoystickMove
-=================
-*/
-void CG_JoystickMove( cglc_t *lc, clientInput_t *ci, usercmd_t *cmd ) {
-	float	anglespeed;
-	int		lcNum = lc - cg.localClients;
-
-#ifdef TURTLEARENA // LOCKON // ALWAYS_RUN // NO_SPEED_KEY
-	if (ci->in_lockon.active)
-#else
-	if ( !(ci->in_speed.active ^ cl_run[lcNum]->integer) )
-#endif
-	{
-		cmd->buttons |= BUTTON_WALKING;
-	}
-
-#ifdef TURTLEARENA // LOCKON // NO_SPEED_KEY
-	if ( !ci->in_lockon.active )
-#else
-	if ( ci->in_speed.active )
-#endif
-	{
-		anglespeed = 0.001 * cg.frametime * cg_anglespeedkey[lcNum].value;
-	} else {
-		anglespeed = 0.001 * cg.frametime;
-	}
-
-	if ( !ci->in_strafe.active
-#ifdef TA_PATHSYS // 2DMODE
-		&& ci->pathMode != PATHMODE_SIDE && ci->pathMode != PATHMODE_BACK
-#endif
-		)
-	{
-		lc->viewangles[YAW] += anglespeed * j_yaw[lcNum].value * lc->joystickAxis[j_yaw_axis[lcNum].integer];
-		cmd->rightmove = ClampChar( cmd->rightmove + (int) (j_side[lcNum].value * lc->joystickAxis[j_side_axis[lcNum].integer]) );
-	} else {
-		lc->viewangles[YAW] += anglespeed * j_side[lcNum].value * lc->joystickAxis[j_side_axis[lcNum].integer];
-		cmd->rightmove = ClampChar( cmd->rightmove + (int) (j_yaw[lcNum].value * lc->joystickAxis[j_yaw_axis[lcNum].integer]) );
-	}
-
-	if ( ci->in_mlooking ) {
-		lc->viewangles[PITCH] += anglespeed * j_forward[lcNum].value * lc->joystickAxis[j_forward_axis[lcNum].integer];
-		cmd->forwardmove = ClampChar( cmd->forwardmove + (int) (j_pitch[lcNum].value * lc->joystickAxis[j_pitch_axis[lcNum].integer]) );
-	} else {
-		lc->viewangles[PITCH] += anglespeed * j_pitch[lcNum].value * lc->joystickAxis[j_pitch_axis[lcNum].integer];
-		cmd->forwardmove = ClampChar( cmd->forwardmove + (int) (j_forward[lcNum].value * lc->joystickAxis[j_forward_axis[lcNum].integer]) );
-	}
-
-	cmd->upmove = ClampChar( cmd->upmove + (int) (j_up[lcNum].value * lc->joystickAxis[j_up_axis[lcNum].integer]) );
-}
 
 /*
 =================
@@ -629,13 +637,10 @@ usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMs
 	CG_CmdButtons( ci, &cmd, anykeydown );
 
 	// get basic movement from keyboard
-	CG_KeyMove( ci, &cmd );
+	CG_KeyMove( lc, ci, &cmd );
 
 	// get basic movement from mouse
 	CG_MouseMove( lc, ci, &cmd, mx, my );
-
-	// get basic movement from joystick
-	CG_JoystickMove( lc, ci, &cmd );
 
 	// check to make sure the angles haven't wrapped
 	if ( lc->viewangles[PITCH] - oldAngles[PITCH] > 90 ) {
@@ -672,24 +677,7 @@ void CG_RegisterInputCvars( void ) {
 #ifndef TURTLEARENA // ALWAYS_RUN
 		trap_Cvar_Register( &cg_run[i], Com_LocalClientCvarName(i, "cl_run"), "1", CVAR_ARCHIVE ); // ZTM: NOTE: changing name breaks team arena menu scripts
 #endif
-
-		trap_Cvar_Register( &j_pitch[i],	Com_LocalClientCvarName(i, "j_pitch"),        "0.022",	CVAR_ARCHIVE );
-		trap_Cvar_Register( &j_yaw[i],		Com_LocalClientCvarName(i, "j_yaw"),          "-0.022",	CVAR_ARCHIVE );
-		trap_Cvar_Register( &j_forward[i],	Com_LocalClientCvarName(i, "j_forward"),      "-0.25",	CVAR_ARCHIVE );
-		trap_Cvar_Register( &j_side[i],		Com_LocalClientCvarName(i, "j_side"),         "0.25",	CVAR_ARCHIVE );
-		trap_Cvar_Register( &j_up[i],		Com_LocalClientCvarName(i, "j_up"),           "1",		CVAR_ARCHIVE );
-
-		trap_Cvar_Register( &j_pitch_axis[i],	Com_LocalClientCvarName(i, "j_pitch_axis"),   "3", CVAR_ARCHIVE );
-		trap_Cvar_Register( &j_yaw_axis[i],		Com_LocalClientCvarName(i, "j_yaw_axis"),     "4", CVAR_ARCHIVE );
-		trap_Cvar_Register( &j_forward_axis[i],	Com_LocalClientCvarName(i, "j_forward_axis"), "1", CVAR_ARCHIVE );
-		trap_Cvar_Register( &j_side_axis[i],	Com_LocalClientCvarName(i, "j_side_axis"),    "0", CVAR_ARCHIVE );
-		trap_Cvar_Register( &j_up_axis[i],		Com_LocalClientCvarName(i, "j_up_axis"),      "2", CVAR_ARCHIVE );
-
-		trap_Cvar_CheckRange( Com_LocalClientCvarName(i, "j_pitch_axis"), 0, MAX_JOYSTICK_AXIS-1, qtrue );
-		trap_Cvar_CheckRange( Com_LocalClientCvarName(i, "j_yaw_axis"), 0, MAX_JOYSTICK_AXIS-1, qtrue );
-		trap_Cvar_CheckRange( Com_LocalClientCvarName(i, "j_forward_axis"), 0, MAX_JOYSTICK_AXIS-1, qtrue );
-		trap_Cvar_CheckRange( Com_LocalClientCvarName(i, "j_side_axis"), 0, MAX_JOYSTICK_AXIS-1, qtrue );
-		trap_Cvar_CheckRange( Com_LocalClientCvarName(i, "j_up_axis"), 0, MAX_JOYSTICK_AXIS-1, qtrue );
+		trap_Cvar_Register( &cg_joystickUseAnalog[i], Com_LocalClientCvarName(i, "in_joystickUseAnalog"), "1", CVAR_ARCHIVE );
 	}
 }
 
@@ -715,18 +703,7 @@ void CG_UpdateInputCvars( void ) {
 #ifndef TURTLEARENA // ALWAYS_RUN
 		trap_Cvar_Update( &cg_run[i] );
 #endif
-
-		trap_Cvar_Update( &j_pitch[i] );
-		trap_Cvar_Update( &j_yaw[i] );
-		trap_Cvar_Update( &j_forward[i] );
-		trap_Cvar_Update( &j_side[i] );
-		trap_Cvar_Update( &j_up[i] );
-
-		trap_Cvar_Update( &j_pitch_axis[i] );
-		trap_Cvar_Update( &j_yaw_axis[i] );
-		trap_Cvar_Update( &j_forward_axis[i] );
-		trap_Cvar_Update( &j_side_axis[i] );
-		trap_Cvar_Update( &j_up_axis[i] );
+		trap_Cvar_Update( &cg_joystickUseAnalog[i] );
 	}
 }
 

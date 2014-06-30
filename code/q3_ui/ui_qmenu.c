@@ -540,22 +540,26 @@ static sfxHandle_t RadioButton_Key( menuradiobutton_s *rb, int key )
 			if (!(rb->generic.flags & QMF_HASMOUSEFOCUS))
 				break;
 
-		case K_JOY1:
-		case K_JOY2:
-		case K_JOY3:
-		case K_JOY4:
-		case K_2JOY1:
-		case K_2JOY2:
-		case K_2JOY3:
-		case K_2JOY4:
-		case K_3JOY1:
-		case K_3JOY2:
-		case K_3JOY3:
-		case K_3JOY4:
-		case K_4JOY1:
-		case K_4JOY2:
-		case K_4JOY3:
-		case K_4JOY4:
+		case K_JOY_A:
+		case K_JOY_DPAD_LEFT:
+		case K_JOY_DPAD_RIGHT:
+		case K_JOY_LEFTSTICK_LEFT:
+		case K_JOY_LEFTSTICK_RIGHT:
+		case K_2JOY_A:
+		case K_2JOY_DPAD_LEFT:
+		case K_2JOY_DPAD_RIGHT:
+		case K_2JOY_LEFTSTICK_LEFT:
+		case K_2JOY_LEFTSTICK_RIGHT:
+		case K_3JOY_A:
+		case K_3JOY_DPAD_LEFT:
+		case K_3JOY_DPAD_RIGHT:
+		case K_3JOY_LEFTSTICK_LEFT:
+		case K_3JOY_LEFTSTICK_RIGHT:
+		case K_4JOY_A:
+		case K_4JOY_DPAD_LEFT:
+		case K_4JOY_DPAD_RIGHT:
+		case K_4JOY_LEFTSTICK_LEFT:
+		case K_4JOY_LEFTSTICK_RIGHT:
 		case K_ENTER:
 		case K_KP_ENTER:
 		case K_KP_LEFTARROW:
@@ -945,6 +949,14 @@ static sfxHandle_t SpinControl_Key( menulist_s *s, int key )
 	sound = 0;
 	switch (key)
 	{
+		case K_JOY_DPAD_RIGHT:
+		case K_JOY_LEFTSTICK_RIGHT:
+		case K_2JOY_DPAD_RIGHT:
+		case K_2JOY_LEFTSTICK_RIGHT:
+		case K_3JOY_DPAD_RIGHT:
+		case K_3JOY_LEFTSTICK_RIGHT:
+		case K_4JOY_DPAD_RIGHT:
+		case K_4JOY_LEFTSTICK_RIGHT:
 		case K_KP_RIGHTARROW:
 		case K_RIGHTARROW:
 		case K_MOUSE1:
@@ -969,6 +981,14 @@ static sfxHandle_t SpinControl_Key( menulist_s *s, int key )
 			sound = menu_move_sound;
 			break;
 		
+		case K_JOY_DPAD_LEFT:
+		case K_JOY_LEFTSTICK_LEFT:
+		case K_2JOY_DPAD_LEFT:
+		case K_2JOY_LEFTSTICK_LEFT:
+		case K_3JOY_DPAD_LEFT:
+		case K_3JOY_LEFTSTICK_LEFT:
+		case K_4JOY_DPAD_LEFT:
+		case K_4JOY_LEFTSTICK_LEFT:
 		case K_KP_LEFTARROW:
 		case K_LEFTARROW:
 #ifdef TA_MISC // MENU: Right Mouse button = left arrow
@@ -1777,6 +1797,10 @@ sfxHandle_t Menu_DefaultKey( menuframework_s *m, int key )
 	// menu system keys
 	switch ( key )
 	{
+		case K_JOY_B:
+		case K_2JOY_B:
+		case K_3JOY_B:
+		case K_4JOY_B:
 #ifndef TA_MISC // MENU: Right Mouse button = left arrow
 		case K_MOUSE2:
 #endif
@@ -1845,6 +1869,14 @@ sfxHandle_t Menu_DefaultKey( menuframework_s *m, int key )
 			trap_Cmd_ExecuteText(EXEC_APPEND, "screenshot\n");
 			break;
 #endif
+		case K_JOY_DPAD_UP:
+		case K_JOY_LEFTSTICK_UP:
+		case K_2JOY_DPAD_UP:
+		case K_2JOY_LEFTSTICK_UP:
+		case K_3JOY_DPAD_UP:
+		case K_3JOY_LEFTSTICK_UP:
+		case K_4JOY_DPAD_UP:
+		case K_4JOY_LEFTSTICK_UP:
 		case K_KP_UPARROW:
 		case K_UPARROW:
 			cursor_prev    = m->cursor;
@@ -1858,6 +1890,14 @@ sfxHandle_t Menu_DefaultKey( menuframework_s *m, int key )
 			break;
 
 		case K_TAB:
+		case K_JOY_DPAD_DOWN:
+		case K_JOY_LEFTSTICK_DOWN:
+		case K_2JOY_DPAD_DOWN:
+		case K_2JOY_LEFTSTICK_DOWN:
+		case K_3JOY_DPAD_DOWN:
+		case K_3JOY_LEFTSTICK_DOWN:
+		case K_4JOY_DPAD_DOWN:
+		case K_4JOY_LEFTSTICK_DOWN:
 		case K_KP_DOWNARROW:
 		case K_DOWNARROW:
 			cursor_prev    = m->cursor;
@@ -1877,22 +1917,10 @@ sfxHandle_t Menu_DefaultKey( menuframework_s *m, int key )
 					return (Menu_ActivateItem( m, item ));
 			break;
 
-		case K_JOY1:
-		case K_JOY2:
-		case K_JOY3:
-		case K_JOY4:
-		case K_2JOY1:
-		case K_2JOY2:
-		case K_2JOY3:
-		case K_2JOY4:
-		case K_3JOY1:
-		case K_3JOY2:
-		case K_3JOY3:
-		case K_3JOY4:
-		case K_4JOY1:
-		case K_4JOY2:
-		case K_4JOY3:
-		case K_4JOY4:
+		case K_JOY_A:
+		case K_2JOY_A:
+		case K_3JOY_A:
+		case K_4JOY_A:
 		case K_AUX1:
 		case K_AUX2:
 		case K_AUX3:

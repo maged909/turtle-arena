@@ -517,6 +517,7 @@ static void PlayerSettings_MenuInit( int localClient )
 		s_playersettings.banner.generic.type  = MTYPE_PTEXT;
 	}
 #endif
+	s_playersettings.banner.generic.flags = QMF_INACTIVE;
 	s_playersettings.banner.generic.x     = 320;
 	s_playersettings.banner.generic.y     = 16;
 	s_playersettings.banner.string = s_playersettings.bannerString;
