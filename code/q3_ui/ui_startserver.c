@@ -426,7 +426,7 @@ static void StartArcade_Start( void ) {
 	friendlyfire = s_arcade.friendlyfire.curvalue;
 	pure		 = s_arcade.pure.curvalue;
 	skill		 = 3;
-	localClients = trap_Cvar_VariableValue( "cl_localClients" );
+	localClients = trap_Cvar_VariableValue( "cl_localPlayers" );
 
 	for( n = 0, numLocalClients = 0; n < MAX_SPLITVIEW; ++n ) {
 		if (localClients & (1<<n)) {

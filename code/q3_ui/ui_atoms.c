@@ -1622,7 +1622,7 @@ static void UI_LoadGame_f(void) {
 	trap_FS_FCloseFile( f );
 
 	trap_Cvar_SetValue( "sv_maxclients", maxclients );
-	trap_Cvar_SetValue( "cl_localClients", localClients );
+	trap_Cvar_SetValue( "cl_localPlayers", localClients );
 
 	// Set filename for game
 	trap_Cvar_SetValue( "savegame_loading", 1 );
