@@ -221,9 +221,9 @@ void	MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 // player entities need to track more information
 // than any other type of entity.
 
-// note that not every player entity is a client entity,
+// note that not every ET_PLAYER entity is a player,
 // because corpses after respawn are outside the normal
-// client numbering range
+// player numbering range
 
 #ifndef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
 // when changing animation, set animationTime to frameTime + lerping time
@@ -473,14 +473,14 @@ typedef struct localEntity_s {
 
 	int				firstPersonEntity; // don't render in firstPersonEntity's first person view
 
-	int				localClients; // 0 means all, else check if localClients & (1<<lc)
+	int				localPlayerBits; // 0 means all, else check if localPlayerBits & (1<<localPlayerNum)
 } localEntity_t;
 
 //======================================================================
 
 
 typedef struct {
-	int				client;
+	int				playerNum;
 	int				score;
 	int				ping;
 	int				time;
@@ -499,10 +499,10 @@ typedef struct {
 	int				team;
 } score_t;
 
-// each client has an associated clientInfo_t
+// each player has an associated playerInfo_t
 // that contains media references necessary to present the
-// client model and other color coded effects
-// this is regenerated each time a client's configstring changes,
+// player model and other color coded effects
+// this is regenerated each time a player's configstring changes,
 // usually as a result of a userinfo (name, model, etc) change
 #define	MAX_CUSTOM_SOUNDS	32
 
@@ -591,7 +591,7 @@ typedef struct {
 
 	int				breathPuffTime;
 
-	// when clientinfo is changed, the loading of models/skins/sounds
+	// when playerinfo is changed, the loading of models/skins/sounds
 	// can be deferred until you are dead, to prevent hitches in
 	// gameplay
 	char			modelName[MAX_QPATH];
@@ -633,7 +633,7 @@ typedef struct {
 #endif
 
 	sfxHandle_t		sounds[MAX_CUSTOM_SOUNDS];
-} clientInfo_t;
+} playerInfo_t;
 
 
 #ifdef TA_WEAPSYS
@@ -779,10 +779,6 @@ typedef struct {
 #endif
 } itemInfo_t;
 
-typedef struct {
-	int				itemNum;
-} powerupInfo_t;
-
 
 #ifdef MISSIONPACK_HARVESTER
 #define MAX_SKULLTRAIL		10
@@ -801,7 +797,7 @@ typedef enum {
 	LEAD_TIED,
 	LEAD_TAKEN,
 
-	LEAD_IGNORE // a client played a reward sound, so no lead change sfx this frame.
+	LEAD_IGNORE // a player played a reward sound, so no lead change sfx this frame.
 } leadChange_t;
 
 
@@ -826,7 +822,7 @@ typedef struct
  
 typedef struct {
 
-	int			clientNum;
+	int			playerNum;
 
 	// prediction state
 	qboolean	hyperspace;				// true if prediction has hit a trigger_teleport
@@ -887,9 +883,9 @@ typedef struct {
 	int			lowAmmoWarning;		// 1 = low, 2 = empty
 #endif
 
-	// crosshair client ID
-	int			crosshairClientNum;
-	int			crosshairClientTime;
+	// crosshair player ID
+	int			crosshairPlayerNum;
+	int			crosshairPlayerTime;
 
 	// powerup active flashing
 	int			powerupActive;
@@ -898,7 +894,7 @@ typedef struct {
 	// attacking player
 	int			attackerTime;
 	int			voiceTime;
-	int			currentVoiceClient;
+	int			currentVoicePlayerNum;
 
 	// orders
 	int			currentOrder;
@@ -1010,7 +1006,7 @@ typedef struct {
 	consoleLine_t	consoleLines[ MAX_CONSOLE_LINES ];
 	int				numConsoleLines;
 
-} cglc_t;
+} localPlayer_t;
  
 #define MAX_SPAWN_VARS          64
 #define MAX_SPAWN_VARS_CHARS    2048
@@ -1102,7 +1098,7 @@ typedef struct {
 	int			viewportWidth;
 	int			viewportHeight;
 
-	qboolean	singleCamera; // Rending multiple clients using one viewport
+	qboolean	singleCamera; // Rending multiple players using one viewport
 #ifdef TURTLEARENA
 	qboolean	allLocalClientsAtIntermission;
 #endif
@@ -1174,11 +1170,11 @@ typedef struct {
 	char			testModelName[MAX_QPATH];
 	qboolean		testGun;
 
-	// Local client data, from events and such
-	cglc_t			*cur_lc;	// Current local client data we are working with
+	// Local player data, from events and such
+	localPlayer_t	*cur_lc;	// Current local player data we are working with
 	playerState_t	*cur_ps; // Like cur_lc, but for player state
-	int				cur_localClientNum;
-	cglc_t			localClients[MAX_SPLITVIEW];
+	int				cur_localPlayerNum;
+	localPlayer_t	localPlayers[MAX_SPLITVIEW];
 
 } cg_t;
 
@@ -1197,8 +1193,8 @@ typedef enum
 
 // all of the model, shader, and sound references that are
 // loaded at gamestate time are stored in cgMedia_t
-// Other media that can be tied to clients, weapons, or items are
-// stored in the clientInfo_t, itemInfo_t, weaponInfo_t, and powerupInfo_t
+// Other media that can be tied to players, weapons, or items are
+// stored in the playerInfo_t, weaponInfo_t, or itemInfo_t
 typedef struct {
 #ifdef IOQ3ZTM // FONT_REWRITE
 	font_t		fontConsole;
@@ -1722,7 +1718,7 @@ typedef struct {
 	int				fraglimit;
 	int				capturelimit;
 	int				timelimit;
-	int				maxclients;
+	int				maxplayers;
 	char			mapname[MAX_QPATH];
 
 	int				voteTime;
@@ -1755,7 +1751,7 @@ typedef struct {
 	qhandle_t		inlineDrawModel[MAX_SUBMODELS];
 	vec3_t			inlineModelMidpoints[MAX_SUBMODELS];
 
-	clientInfo_t	clientinfo[MAX_CLIENTS];
+	playerInfo_t	playerinfo[MAX_CLIENTS];
 
 	// teamchat width is *3 because of embedded color codes
 	char			teamChatMsgs[TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
@@ -1993,32 +1989,32 @@ void QDECL CG_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1,
 void QDECL CG_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void QDECL CG_Error( const char *msg, ... ) __attribute__ ((noreturn, format (printf, 1, 2)));
 
-void QDECL CG_NotifyPrintf( int localClientNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
-void QDECL CG_NotifyBitsPrintf( int localClientNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
+void QDECL CG_NotifyPrintf( int localPlayerNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
+void QDECL CG_NotifyBitsPrintf( int localPlayerNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
 
-void CG_LocalClientAdded(int localClientNum, int clientNum);
-void CG_LocalClientRemoved(int localClientNum);
+void CG_LocalPlayerAdded(int localPlayerNum, int playerNum);
+void CG_LocalPlayerRemoved(int localPlayerNum);
 
 void CG_StartMusic( void );
 
 void CG_UpdateCvars( void );
 
-int CG_CrosshairPlayer( int localClientNum );
-int CG_LastAttacker( int localClientNum );
+int CG_CrosshairPlayer( int localPlayerNum );
+int CG_LastAttacker( int localPlayerNum );
 void CG_LoadMenus(const char *menuFile);
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum );
 void CG_KeyEvent(int key, qboolean down);
-void CG_MouseEvent(int localClientNum, int x, int y);
-void CG_JoystickAxisEvent( int localClientNum, int axis, int value, unsigned time, connstate_t state );
-void CG_JoystickButtonEvent( int localClientNum, int button, qboolean down, unsigned time, connstate_t state );
-void CG_JoystickHatEvent( int localClientNum, int hat, int value, unsigned time, connstate_t state );
+void CG_MouseEvent(int localPlayerNum, int x, int y);
+void CG_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time, connstate_t state );
+void CG_JoystickButtonEvent( int localPlayerNum, int button, qboolean down, unsigned time, connstate_t state );
+void CG_JoystickHatEvent( int localPlayerNum, int hat, int value, unsigned time, connstate_t state );
 void CG_EventHandling(int type);
 void CG_RankRunFrame( void );
 void CG_SetScoreSelection(void *menu);
 score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 
-void CG_RemoveNotifyLine( cglc_t *localClient );
+void CG_RemoveNotifyLine( localPlayer_t *player );
 void CG_AddNotifyText( int realTime, qboolean restoredText );
 
 void CG_SetupDlightstyles( void );
@@ -2048,8 +2044,8 @@ void CG_TestModelPrevFrame_f (void);
 void CG_TestModelNextSkin_f (void);
 void CG_TestModelPrevSkin_f (void);
 #ifndef TURTLEARENA // NOZOOM
-void CG_ZoomUp_f( int localClient );
-void CG_ZoomDown_f( int localClient );
+void CG_ZoomUp_f( int localPlayerNum );
+void CG_ZoomDown_f( int localPlayerNum );
 #endif
 void CG_AddBufferedSound( sfxHandle_t sfx);
 void CG_StepOffset( vec3_t vieworg );
@@ -2104,8 +2100,8 @@ typedef enum
 	ANNOUNCE_MAX
 } announcement_e;
 
-void CG_AddAnnouncement(int announcement, int localClientNumber);
-void CG_AddAnnouncementEx(cglc_t *lc, qhandle_t sfx, qboolean bufferedSfx, const char *message);
+void CG_AddAnnouncement(int announcement, int localPlayerNum);
+void CG_AddAnnouncementEx(localPlayer_t *player, qhandle_t sfx, qboolean bufferedSfx, const char *message);
 #endif
 
 void CG_CalcVrect( void );
@@ -2217,9 +2213,9 @@ extern  char teamChat2[256];
 
 void CG_AddLagometerFrameInfo( void );
 void CG_AddLagometerSnapshotInfo( snapshot_t *snap );
-void CG_CenterPrint( int localClientNum, const char *str, int y, float charScale );
+void CG_CenterPrint( int localPlayerNum, const char *str, int y, float charScale );
 void CG_GlobalCenterPrint( const char *str, int y, float charScale );
-void CG_DrawHead( float x, float y, float w, float h, int clientNum, vec3_t headAngles );
+void CG_DrawHead( float x, float y, float w, float h, int playerNum, vec3_t headAngles );
 void CG_DrawActive( stereoFrame_t stereoView );
 void CG_DrawScreen2D( stereoFrame_t stereoView );
 void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean force2D );
@@ -2263,8 +2259,8 @@ void CG_ResetPlayerEntity( centity_t *cent );
 void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state );
 qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin );
 qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append );
-void CG_NewClientInfo( int clientNum );
-sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName );
+void CG_NewPlayerInfo( int playerNum );
+sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName );
 
 //
 // cg_predict.c
@@ -2306,15 +2302,15 @@ qboolean CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *
 // cg_weapons.c
 //
 #ifdef TA_HOLDSYS/*2*/
-void CG_NextHoldable_f( int localClient );
-void CG_PrevHoldable_f( int localClient );
-void CG_Holdable_f( int localClient );
+void CG_NextHoldable_f( int localPlayerNum );
+void CG_PrevHoldable_f( int localPlayerNum );
+void CG_Holdable_f( int localPlayerNum );
 #endif
 
 #ifndef TA_WEAPSYS_EX
-void CG_NextWeapon_f( int localClient );
-void CG_PrevWeapon_f( int localClient );
-void CG_Weapon_f( int localClient );
+void CG_NextWeapon_f( int localPlayerNum );
+void CG_PrevWeapon_f( int localPlayerNum );
+void CG_Weapon_f( int localPlayerNum );
 #endif
 
 #ifdef TURTLEARENA // HOLD_SHURIKEN
@@ -2333,7 +2329,7 @@ void CG_FireWeapon( centity_t *cent );
 #ifdef TA_MISC // MATERIALS
 void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFlags, int skipNum );
 #endif
-void CG_MissileExplode( int weapon, int clientNum, vec3_t origin, vec3_t dir, impactSound_t soundType );
+void CG_MissileExplode( int weapon, int playerNum, vec3_t origin, vec3_t dir, impactSound_t soundType );
 void CG_MissileHitPlayer( int weapon, vec3_t origin, vec3_t dir, int entityNum );
 #ifdef TA_WEAPSYS
 void CG_MissileImpact( int projnum, int clientNum, vec3_t origin, vec3_t dir, impactSound_t soundType );
@@ -2349,10 +2345,10 @@ void CG_Bullet( vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, 
 #endif
 
 #ifdef TA_WEAPSYS
-void CG_RailTrail( clientInfo_t *ci, const projectileInfo_t *wi, vec3_t start, vec3_t end );
+void CG_RailTrail( playerInfo_t *pi, const projectileInfo_t *wi, vec3_t start, vec3_t end );
 void CG_GrappleTrail( centity_t *ent, const projectileInfo_t *wi );
 #else
-void CG_RailTrail( clientInfo_t *ci, vec3_t start, vec3_t end );
+void CG_RailTrail( playerInfo_t *pi, vec3_t start, vec3_t end );
 void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi );
 #endif
 void CG_AddViewWeapon (playerState_t *ps);
@@ -2360,7 +2356,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 #ifndef TA_WEAPSYS_EX
 void CG_DrawWeaponSelect( void );
 
-void CG_OutOfAmmoChange( int localClientNum );	// should this be in pmove?
+void CG_OutOfAmmoChange( int localPlayerNum );	// should this be in pmove?
 #endif
 #ifdef IOQ3ZTM // GHOST
 void CG_GhostRefEntity(refEntity_t *refEnt, ghostRefData_t *refs, int num, int *ghostTime);
@@ -2428,9 +2424,9 @@ void CG_LightningBoltBeam( vec3_t start, vec3_t end );
 #endif
 #endif
 #endif
-void CG_ScorePlum( int client, vec3_t org, int score );
+void CG_ScorePlum( int playerNum, vec3_t org, int score );
 #ifdef TURTLEARENA // NIGHTS_ITEMS
-void CG_ChainPlum( int client, vec3_t org, int score, int chain, qboolean bonus );
+void CG_ChainPlum( int playerNum, vec3_t org, int score, int chain, qboolean bonus );
 #endif
 
 #ifndef NOTRATEDM // No gibs.
@@ -2460,8 +2456,8 @@ void CG_DrawLetterbox(void);
 //
 void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
-playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
-int CG_NumLocalClients( void );
+playerState_t *CG_LocalPlayerState( int playerNum );
+int CG_NumLocalPlayers( void );
 
 
 //
@@ -2490,7 +2486,7 @@ void        CG_ParseEntitiesFromString( void );
 void CG_LoadingString( const char *s );
 #ifndef TURTLEARENA // NO_LOADING_ICONS
 void CG_LoadingItem( int itemNum );
-void CG_LoadingClient( int clientNum );
+void CG_LoadingPlayer( int playerNum );
 #endif
 void CG_DrawInformation( void );
 
@@ -2537,14 +2533,14 @@ void CG_SetConfigValues( void );
 void CG_ShaderStateChanged(void);
 #ifdef MISSIONPACK
 void CG_LoadVoiceChats( void );
-void CG_VoiceChatLocal( int localClientBits, int mode, qboolean voiceOnly, int clientNum, int color, const char *cmd );
+void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int playerNum, int color, const char *cmd );
 void CG_PlayBufferedVoiceChats( void );
 #endif
 
 //
 // cg_playerstate.c
 //
-void CG_Respawn( int clientNum );
+void CG_Respawn( int playerNum );
 void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops );
 void CG_CheckChangedPredictableEvents( playerState_t *ps );
 void CG_CheckGameSounds( void );
@@ -2584,7 +2580,7 @@ int CG_NewParticleArea ( int num );
 //
 void CG_RegisterInputCvars( void );
 void CG_UpdateInputCvars( void );
-usercmd_t *CG_CreateUserCmd( int localClientNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown );
+usercmd_t *CG_CreateUserCmd( int localPlayerNum, int frameTime, unsigned frameMsec, float mx, float my, qboolean anykeydown );
 
 void IN_CenterView( int localPlayerNum );
 

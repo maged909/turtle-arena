@@ -262,8 +262,8 @@ static void UI_SPPlayerMenu_SaveChanges( void ) {
 
 	// Set characters in cvars.
 	for (i = 0; i < MAX_SPLITVIEW; ++i) {
-		trap_Cvar_Set( Com_LocalClientCvarName(i, "spmodel"), spCharacterNames[playerMenuInfo.selectedCharacter[i]] );
-		trap_Cvar_Set( Com_LocalClientCvarName(i, "spheadmodel"), "" );
+		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "spmodel"), spCharacterNames[playerMenuInfo.selectedCharacter[i]] );
+		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "spheadmodel"), "" );
 	}
 }
 
@@ -517,7 +517,7 @@ static void UI_SPPlayerMenu_Init( int maxLocalClients ) {
 
 	// Select previously selected characters
 	for (i = 0; i < MAX_SPLITVIEW; ++i) {
-		trap_Cvar_VariableStringBuffer(Com_LocalClientCvarName(i, "spmodel"), playerModel, sizeof(playerModel));
+		trap_Cvar_VariableStringBuffer(Com_LocalPlayerCvarName(i, "spmodel"), playerModel, sizeof(playerModel));
 
 		for (j = 0; j < NUM_SP_CHARACTERS; ++j) {
 			if (Q_stricmp(spCharacterNames[j], playerModel) == 0) {

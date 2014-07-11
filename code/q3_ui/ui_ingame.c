@@ -135,12 +135,12 @@ static void InGame_QuitAction( qboolean result ) {
 UI_TogglePlayerIngame
 =================
 */
-void UI_TogglePlayerIngame(int localClientNum)
+void UI_TogglePlayerIngame( int localPlayerNum )
 {
-	if (cg.localClients[localClientNum].clientNum == -1) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropin")) );
+	if (cg.localPlayers[localPlayerNum].playerNum == -1) {
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalPlayerCvarName(localPlayerNum, "dropin")) );
 	} else {
-		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropout")) );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalPlayerCvarName(localPlayerNum, "dropout")) );
 	}
 
 	UI_ForceMenuOff ();
@@ -242,7 +242,7 @@ void InGame_MenuInit( void ) {
 	char	info[MAX_INFO_STRING];
 	int		team;
 #ifdef TA_MISC // SMART_JOIN_MENU
-	int		numLocalClients;
+	int		numLocalPlayers;
 #endif
 
 	memset( &s_ingame, 0 ,sizeof(ingamemenu_t) );
@@ -284,18 +284,18 @@ void InGame_MenuInit( void ) {
 	y += INGAME_MENU_VERTICAL_SPACING;
 #endif
 #ifdef TA_MISC // SMART_JOIN_MENU
-	numLocalClients = UI_NumLocalClients();
+	numLocalPlayers = CG_NumLocalPlayers();
 
 	// Force if more than one local client
-	if (numLocalClients > 1 || (trap_Cvar_VariableValue( "g_gametype" ) >= GT_TEAM)
-		|| cg.localClients[0].clientNum == -1 ) {
+	if (numLocalPlayers > 1 || (trap_Cvar_VariableValue( "g_gametype" ) >= GT_TEAM)
+		|| cg.localPlayers[0].playerNum == -1 ) {
 		s_ingame.team.generic.type			= MTYPE_PTEXT;
 		s_ingame.team.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 		s_ingame.team.generic.x				= 320;
 		s_ingame.team.generic.y				= y;
 		s_ingame.team.generic.id			= ID_TEAM;
 		s_ingame.team.generic.callback		= InGame_Event;
-		if (numLocalClients > 1)
+		if (numLocalPlayers > 1)
 			s_ingame.team.string			= "Change Teams";
 		else
 			s_ingame.team.string			= "Change Team";
@@ -303,7 +303,7 @@ void InGame_MenuInit( void ) {
 		s_ingame.team.style					= UI_CENTER|UI_SMALLFONT;
 	}
 	else {
-		trap_GetConfigString( CS_PLAYERS + cg.localClients[0].clientNum, info, MAX_INFO_STRING );
+		trap_GetConfigString( CS_PLAYERS + cg.localPlayers[0].playerNum, info, MAX_INFO_STRING );
 		team = atoi( Info_ValueForKey( info, "t" ) );
 		if( team == TEAM_SPECTATOR ) {
 			s_ingame.team.generic.type			= MTYPE_PTEXT;
@@ -404,11 +404,11 @@ void InGame_MenuInit( void ) {
 	s_ingame.teamorders.color				= text_big_color;
 	s_ingame.teamorders.style				= UI_CENTER|UI_SMALLFONT;
 	if( !(trap_Cvar_VariableValue( "g_gametype" ) >= GT_TEAM)
-		|| cg.localClients[0].clientNum == -1 ) {
+		|| cg.localPlayers[0].playerNum == -1 ) {
 		s_ingame.teamorders.generic.flags |= QMF_GRAYED;
 	}
 	else {
-		trap_GetConfigString( CS_PLAYERS + cg.localClients[0].clientNum, info, MAX_INFO_STRING );
+		trap_GetConfigString( CS_PLAYERS + cg.localPlayers[0].playerNum, info, MAX_INFO_STRING );
 		team = atoi( Info_ValueForKey( info, "t" ) );
 		if( team == TEAM_SPECTATOR ) {
 			s_ingame.teamorders.generic.flags |= QMF_GRAYED;

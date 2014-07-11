@@ -43,26 +43,26 @@ and tournament restarts.
 
 /*
 ================
-G_WriteClientSessionData
+G_WritePlayerSessionData
 
 Called on game shutdown
 ================
 */
-void G_WriteClientSessionData( gclient_t *client ) {
+void G_WritePlayerSessionData( gplayer_t *player ) {
 	const char	*s;
 	const char	*var;
 
 	s = va("%i %i %i %i %i %i %i", 
-		client->sess.sessionTeam,
-		client->sess.spectatorNum,
-		client->sess.spectatorState,
-		client->sess.spectatorClient,
-		client->sess.wins,
-		client->sess.losses,
-		client->sess.teamLeader
+		player->sess.sessionTeam,
+		player->sess.spectatorNum,
+		player->sess.spectatorState,
+		player->sess.spectatorPlayer,
+		player->sess.wins,
+		player->sess.losses,
+		player->sess.teamLeader
 		);
 
-	var = va( "session%i", (int)(client - level.clients) );
+	var = va( "session%i", (int)(player - level.players) );
 
 	trap_Cvar_Set( var, s );
 }
@@ -74,29 +74,29 @@ G_ReadSessionData
 Called on a reconnect
 ================
 */
-void G_ReadSessionData( gclient_t *client ) {
+void G_ReadSessionData( gplayer_t *player ) {
 	char	s[MAX_STRING_CHARS];
 	const char	*var;
 	int teamLeader;
 	int spectatorState;
 	int sessionTeam;
 
-	var = va( "session%i", (int)(client - level.clients) );
+	var = va( "session%i", (int)(player - level.players) );
 	trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
 
 	sscanf( s, "%i %i %i %i %i %i %i",
 		&sessionTeam,
-		&client->sess.spectatorNum,
+		&player->sess.spectatorNum,
 		&spectatorState,
-		&client->sess.spectatorClient,
-		&client->sess.wins,
-		&client->sess.losses,
+		&player->sess.spectatorPlayer,
+		&player->sess.wins,
+		&player->sess.losses,
 		&teamLeader
 		);
 
-	client->sess.sessionTeam = (team_t)sessionTeam;
-	client->sess.spectatorState = (spectatorState_t)spectatorState;
-	client->sess.teamLeader = (qboolean)teamLeader;
+	player->sess.sessionTeam = (team_t)sessionTeam;
+	player->sess.spectatorState = (spectatorState_t)spectatorState;
+	player->sess.teamLeader = (qboolean)teamLeader;
 }
 
 
@@ -107,11 +107,11 @@ G_InitSessionData
 Called on a first-time connect
 ================
 */
-void G_InitSessionData( gclient_t *client, char *userinfo ) {
-	clientSession_t	*sess;
+void G_InitSessionData( gplayer_t *player, char *userinfo ) {
+	playerSession_t	*sess;
 	const char		*value;
 
-	sess = &client->sess;
+	sess = &player->sess;
 
 	// initial team determination
 	if ( g_gametype.integer >= GT_TEAM ) {
@@ -123,7 +123,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 		value = Info_ValueForKey( userinfo, "teampref" );
 
 		if ( value[0] || g_teamAutoJoin.integer ) {
-			SetTeam( &g_entities[client - level.clients], value );
+			SetTeam( &g_entities[player - level.players], value );
 		}
 	} else {
 		value = Info_ValueForKey( userinfo, "teampref" );
@@ -135,8 +135,8 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 			default:
 			case GT_FFA:
 			case GT_SINGLE_PLAYER:
-				if ( g_maxGameClients.integer > 0 && 
-					level.numNonSpectatorClients >= g_maxGameClients.integer ) {
+				if ( g_maxGamePlayers.integer > 0 && 
+					level.numNonSpectatorPlayers >= g_maxGamePlayers.integer ) {
 					sess->sessionTeam = TEAM_SPECTATOR;
 #ifdef TA_SP // SP_BOSS
 				} else if (g_gametype.integer == GT_SINGLE_PLAYER && value[0] == 'r') {
@@ -148,7 +148,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 				break;
 			case GT_TOURNAMENT:
 				// if the game is full, go into a waiting mode
-				if ( level.numNonSpectatorClients >= 2 ) {
+				if ( level.numNonSpectatorPlayers >= 2 ) {
 					sess->sessionTeam = TEAM_SPECTATOR;
 				} else {
 					sess->sessionTeam = TEAM_FREE;
@@ -160,9 +160,9 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 		sess->spectatorState = SPECTATOR_FREE;
 	}
 
-	AddTournamentQueue(client);
+	AddTournamentQueue(player);
 
-	G_WriteClientSessionData( client );
+	G_WritePlayerSessionData( player );
 }
 
 
@@ -180,7 +180,7 @@ void G_InitWorldSession( void ) {
 	gt = atoi( s );
 	
 	// if the gametype changed since the last session, don't use any
-	// client sessions
+	// player sessions
 	if ( g_gametype.integer != gt ) {
 		level.newSession = qtrue;
 		G_Printf( "Gametype changed, clearing session data.\n" );
@@ -213,9 +213,9 @@ void G_WriteSessionData( void ) {
 
 	trap_Cvar_SetValue( "session", g_gametype.integer );
 
-	for ( i = 0 ; i < level.maxclients ; i++ ) {
-		if ( level.clients[i].pers.connected == CON_CONNECTED ) {
-			G_WriteClientSessionData( &level.clients[i] );
+	for ( i = 0 ; i < level.maxplayers ; i++ ) {
+		if ( level.players[i].pers.connected == CON_CONNECTED ) {
+			G_WritePlayerSessionData( &level.players[i] );
 		}
 	}
 }
@@ -223,39 +223,39 @@ void G_WriteSessionData( void ) {
 #ifdef TA_SP
 /*
 ================
-G_WriteClientCoopSessionData
+G_WritePlayerCoopSessionData
 
 Called on game shutdown
 ================
 */
-void G_WriteClientCoopSessionData( gclient_t *client ) {
+void G_WritePlayerCoopSessionData( gplayer_t *player ) {
 	const char	*s;
 	const char	*var;
 
 	s = va("%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i",
-		client->ps.persistant[PERS_LIVES],
-		client->ps.persistant[PERS_CONTINUES],
-		client->ps.persistant[PERS_SCORE],
-		client->ps.holdableIndex,
-		client->ps.holdable[0],
-		client->ps.holdable[1],
-		client->ps.holdable[2],
-		client->ps.holdable[3],
-		client->ps.holdable[4],
-		client->ps.holdable[5],
-		client->ps.holdable[6],
-		client->ps.holdable[7],
-		client->ps.holdable[8],
-		client->ps.holdable[9],
-		client->ps.holdable[10],
-		client->ps.holdable[11],
-		client->ps.holdable[12],
-		client->ps.holdable[13],
-		client->ps.holdable[14],
-		client->ps.holdable[15]
+		player->ps.persistant[PERS_LIVES],
+		player->ps.persistant[PERS_CONTINUES],
+		player->ps.persistant[PERS_SCORE],
+		player->ps.holdableIndex,
+		player->ps.holdable[0],
+		player->ps.holdable[1],
+		player->ps.holdable[2],
+		player->ps.holdable[3],
+		player->ps.holdable[4],
+		player->ps.holdable[5],
+		player->ps.holdable[6],
+		player->ps.holdable[7],
+		player->ps.holdable[8],
+		player->ps.holdable[9],
+		player->ps.holdable[10],
+		player->ps.holdable[11],
+		player->ps.holdable[12],
+		player->ps.holdable[13],
+		player->ps.holdable[14],
+		player->ps.holdable[15]
 		);
 
-	var = va( "coopsession%i", (int)(client - level.clients) );
+	var = va( "coopsession%i", (int)(player - level.players) );
 
 	trap_Cvar_Set( var, s );
 }
@@ -267,7 +267,7 @@ G_ReadCoopSessionData
 Called on a reconnect
 ================
 */
-void G_ReadCoopSessionData( gclient_t *client ) {
+void G_ReadCoopSessionData( gplayer_t *player ) {
 	char	s[MAX_STRING_CHARS];
 	const char	*var;
 
@@ -275,30 +275,30 @@ void G_ReadCoopSessionData( gclient_t *client ) {
 		return;
 	}
 
-	var = va( "coopsession%i", (int)(client - level.clients) );
+	var = va( "coopsession%i", (int)(player - level.players) );
 	trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
 
 	sscanf( s, "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i",
-		&client->ps.persistant[PERS_LIVES],
-		&client->ps.persistant[PERS_CONTINUES],
-		&client->ps.persistant[PERS_SCORE],
-		&client->ps.holdableIndex,
-		&client->ps.holdable[0],
-		&client->ps.holdable[1],
-		&client->ps.holdable[2],
-		&client->ps.holdable[3],
-		&client->ps.holdable[4],
-		&client->ps.holdable[5],
-		&client->ps.holdable[6],
-		&client->ps.holdable[7],
-		&client->ps.holdable[8],
-		&client->ps.holdable[9],
-		&client->ps.holdable[10],
-		&client->ps.holdable[11],
-		&client->ps.holdable[12],
-		&client->ps.holdable[13],
-		&client->ps.holdable[14],
-		&client->ps.holdable[15]
+		&player->ps.persistant[PERS_LIVES],
+		&player->ps.persistant[PERS_CONTINUES],
+		&player->ps.persistant[PERS_SCORE],
+		&player->ps.holdableIndex,
+		&player->ps.holdable[0],
+		&player->ps.holdable[1],
+		&player->ps.holdable[2],
+		&player->ps.holdable[3],
+		&player->ps.holdable[4],
+		&player->ps.holdable[5],
+		&player->ps.holdable[6],
+		&player->ps.holdable[7],
+		&player->ps.holdable[8],
+		&player->ps.holdable[9],
+		&player->ps.holdable[10],
+		&player->ps.holdable[11],
+		&player->ps.holdable[12],
+		&player->ps.holdable[13],
+		&player->ps.holdable[14],
+		&player->ps.holdable[15]
 		);
 }
 
@@ -310,27 +310,27 @@ G_InitCoopSessionData
 Called on a first-time connect
 ================
 */
-void G_InitCoopSessionData( gclient_t *client ) {
+void G_InitCoopSessionData( gplayer_t *player ) {
 
 	if (g_gametype.integer != GT_SINGLE_PLAYER) {
 		return;
 	}
 
-	client->ps.holdableIndex = HI_SHURIKEN;
-	client->ps.holdable[HI_SHURIKEN] = 10;
-	client->ps.persistant[PERS_LIVES] = 3;
+	player->ps.holdableIndex = HI_SHURIKEN;
+	player->ps.holdable[HI_SHURIKEN] = 10;
+	player->ps.persistant[PERS_LIVES] = 3;
 
-	if (client->sess.sessionTeam == TEAM_RED) {
+	if (player->sess.sessionTeam == TEAM_RED) {
 		// Bosses only have 1 life
-		client->ps.persistant[PERS_LIVES] = 1;
+		player->ps.persistant[PERS_LIVES] = 1;
 	} else if (g_singlePlayer.integer) {
 		// Give player a continue in single player
-		client->ps.persistant[PERS_CONTINUES] = 1;
+		player->ps.persistant[PERS_CONTINUES] = 1;
 	}
 
-	G_LoadGameClient( client - level.clients );
+	G_LoadGameClient( player - level.players );
 
-	G_WriteClientCoopSessionData( client );
+	G_WritePlayerCoopSessionData( player );
 }
 
 /*
@@ -358,9 +358,9 @@ void G_WriteCoopSessionData( qboolean restart ) {
 	trap_Cvar_VariableStringBuffer( "g_saveMapname", s, sizeof(s) );
 	trap_Cvar_Set( "coopsession", s );
 
-	for ( i = 0 ; i < level.maxclients ; i++ ) {
-		if ( level.clients[i].pers.connected == CON_CONNECTED ) {
-			G_WriteClientCoopSessionData( &level.clients[i] );
+	for ( i = 0 ; i < level.maxplayers ; i++ ) {
+		if ( level.players[i].pers.connected == CON_CONNECTED ) {
+			G_WritePlayerCoopSessionData( &level.players[i] );
 			connected++;
 		}
 	}

@@ -56,18 +56,18 @@ void multi_trigger( gentity_t *ent, gentity_t *activator ) {
 		return;		// can't retrigger until the wait is over
 	}
 
-	if ( activator->client ) {
+	if ( activator->player ) {
 		if ( ( ent->spawnflags & 1 ) &&
-			activator->client->sess.sessionTeam != TEAM_RED ) {
+			activator->player->sess.sessionTeam != TEAM_RED ) {
 			return;
 		}
 		if ( ( ent->spawnflags & 2 ) &&
-			activator->client->sess.sessionTeam != TEAM_BLUE ) {
+			activator->player->sess.sessionTeam != TEAM_BLUE ) {
 			return;
 		}
 #ifdef TA_PLAYERSYS // ABILITY_TECH
 		if ( ( ent->spawnflags & 4 ) &&
-			activator->client->pers.playercfg.ability != ABILITY_TECH ) {
+			activator->player->pers.playercfg.ability != ABILITY_TECH ) {
 			return;
 		}
 #endif
@@ -92,7 +92,7 @@ void Use_Multi( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 }
 
 void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace ) {
-	if( !other->client ) {
+	if( !other->player ) {
 		return;
 	}
 	multi_trigger( self, other );
@@ -156,11 +156,11 @@ trigger_push
 
 void trigger_push_touch (gentity_t *self, gentity_t *other, trace_t *trace ) {
 
-	if ( !other->client ) {
+	if ( !other->player ) {
 		return;
 	}
 
-	BG_TouchJumpPad( &other->client->ps, &self->s );
+	BG_TouchJumpPad( &other->player->ps, &self->s );
 }
 
 
@@ -228,18 +228,18 @@ void SP_trigger_push( gentity_t *self ) {
 
 
 void Use_target_push( gentity_t *self, gentity_t *other, gentity_t *activator ) {
-	if ( !activator->client ) {
+	if ( !activator->player ) {
 		return;
 	}
 
-	if ( activator->client->ps.pm_type != PM_NORMAL ) {
+	if ( activator->player->ps.pm_type != PM_NORMAL ) {
 		return;
 	}
-	if ( activator->client->ps.powerups[PW_FLIGHT] ) {
+	if ( activator->player->ps.powerups[PW_FLIGHT] ) {
 		return;
 	}
 
-	VectorCopy (self->s.origin2, activator->client->ps.velocity);
+	VectorCopy (self->s.origin2, activator->player->ps.velocity);
 
 	// play fly sound every 1.5 seconds
 	if ( activator->fly_sound_debounce_time < level.time ) {
@@ -300,15 +300,15 @@ trigger_teleport
 void trigger_teleporter_touch (gentity_t *self, gentity_t *other, trace_t *trace ) {
 	gentity_t	*dest;
 
-	if ( !other->client ) {
+	if ( !other->player ) {
 		return;
 	}
-	if ( other->client->ps.pm_type == PM_DEAD ) {
+	if ( other->player->ps.pm_type == PM_DEAD ) {
 		return;
 	}
 	// Spectators only?
 	if ( ( self->spawnflags & 1 ) && 
-		other->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		other->player->sess.sessionTeam != TEAM_SPECTATOR ) {
 		return;
 	}
 
