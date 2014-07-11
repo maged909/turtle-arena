@@ -126,7 +126,6 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	// set angles
 	SetPlayerViewAngle(player, angles);
 	}
-
 	// toggle the teleport bit so the client knows to not lerp
 	player->player->ps.eFlags ^= EF_TELEPORT_BIT;
 #ifdef TURTLEARENA // POWERS

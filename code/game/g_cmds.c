@@ -84,7 +84,7 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 			" %i %i %i %i %i %i %i %i %i %i %i",
 #else
 			" %i %i %i %i %i %i %i %i %i %i %i %i %i %i",
-#endif			
+#endif
 			level.sortedPlayers[i],
 			cl->ps.persistant[PERS_SCORE], ping, (level.time - cl->pers.enterTime)/60000,
 			scoreFlags, g_entities[level.sortedPlayers[i]].s.powerups, accuracy, 
@@ -253,14 +253,14 @@ Give items to a player
 */
 void Cmd_Give_f (gentity_t *ent)
 {
-	char			*name;
-	gitem_t			*it;
-	int				i;
-	qboolean		give_all;
+	char		*name;
+	gitem_t		*it;
+	int			i;
+	qboolean	give_all;
 	gentity_t		*it_ent;
-	trace_t			trace;
+	trace_t		trace;
 #ifdef TA_WEAPSYS
-	int				weapGroup;
+	int			weapGroup;
 #endif
 
 	if ( !CheatsOk( ent ) ) {

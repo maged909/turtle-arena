@@ -1052,6 +1052,7 @@ extern	vmCvar_t	g_enableBreath;
 #ifndef TA_SP
 extern	vmCvar_t	g_singlePlayer;
 #endif
+extern	vmCvar_t	g_proxMineTimeout;
 #endif
 extern	vmCvar_t	g_playerCapsule;
 #ifdef TA_SP
@@ -1063,7 +1064,6 @@ extern	vmCvar_t	g_saveVersions;
 extern	vmCvar_t	g_saveFilename;
 extern	vmCvar_t	g_saveMapname;
 #endif
-extern	vmCvar_t	g_proxMineTimeout;
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
 extern	vmCvar_t	g_teleportFluxTime;
 #endif

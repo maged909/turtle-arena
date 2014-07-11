@@ -858,6 +858,37 @@ static void PlayerCleanName(const char *in, char *out, int outSize)
 		Q_strncpyz(out, DEFAULT_PLAYER_NAME, outSize );
 }
 
+/*
+===========
+PlayerHandicap
+============
+*/
+float PlayerHandicap( gplayer_t *player ) {
+	char	userinfo[MAX_INFO_STRING];
+	float	handicap;
+
+	if (!player) {
+		return 100;
+	}
+
+#ifdef TA_SP // HANDICAP
+	if (g_singlePlayer.integer && !(g_entities[player - level.players].r.svFlags & SVF_BOT)) {
+		// Humans don't use handicap in single player.
+		return 100;
+	}
+#endif
+
+	trap_GetUserinfo( player - level.players, userinfo, sizeof(userinfo) );
+
+	handicap = atof( Info_ValueForKey( userinfo, "handicap" ) );
+	if ( handicap < 1 || handicap > 100) {
+		handicap = 100;
+	}
+
+	return handicap;
+}
+
+
 #ifdef TA_PLAYERSYS
 /*
 ===========
@@ -1168,36 +1199,6 @@ void PlayerUserinfoChanged( int playerNum ) {
 	G_LogPrintf( "PlayerUserinfoChanged: %i %s\n", playerNum, s );
 }
 
-/*
-===========
-PlayerHandicap
-============
-*/
-float PlayerHandicap( gplayer_t *player ) {
-	char	userinfo[MAX_INFO_STRING];
-	float	handicap;
-
-	if (!player) {
-		return 100;
-	}
-
-#ifdef TA_SP // HANDICAP
-	if (g_singlePlayer.integer && !(g_entities[player - level.players].r.svFlags & SVF_BOT)) {
-		// Humans don't use handicap in single player.
-		return 100;
-	}
-#endif
-
-	trap_GetUserinfo( player - level.players, userinfo, sizeof(userinfo) );
-
-	handicap = atof( Info_ValueForKey( userinfo, "handicap" ) );
-	if ( handicap < 1 || handicap > 100) {
-		handicap = 100;
-	}
-
-	return handicap;
-}
-
 
 /*
 ===========
@@ -1243,7 +1244,7 @@ char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int conn
 		if ( G_FilterPacket( value ) ) {
 			return "You are banned from this server.";
 		}
- 
+
 		// we don't check password for bots and local client
 		// NOTE: local client <-> "ip" "localhost"
 		//   this means this client is not running in our current process
@@ -1267,7 +1268,7 @@ char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int conn
 			return "Splitscreen not allowed in single player.";
 		}
 #endif
- 	}
+	}
 
 	// if a player reconnects quickly after a disconnect, the player disconnect may never be called, thus flag can get lost in the ether
 	if (ent->inuse) {
@@ -1774,7 +1775,7 @@ void PlayerSpawn(gentity_t *ent) {
 				}
 			}
 #endif
-			// positively link the client, even if the command times are weird
+			// positively link the player, even if the command times are weird
 			VectorCopy(ent->player->ps.origin, ent->r.currentOrigin);
 
 			tent = G_TempEntity(ent->player->ps.origin, EV_PLAYER_TELEPORT_IN);
@@ -1793,7 +1794,7 @@ void PlayerSpawn(gentity_t *ent) {
 	PlayerThink( ent-g_entities );
 
 #if 1 // ZTM: FIXME: !!! is this suppose to exist? wasn't it removed in ioq3 !!!
-	// positively link the client, even if the command times are weird
+	// positively link the player, even if the command times are weird
 	if ( ent->player->sess.sessionTeam != TEAM_SPECTATOR ) {
 		BG_PlayerStateToEntityState( &player->ps, &ent->s, qtrue );
 		VectorCopy( ent->player->ps.origin, ent->r.currentOrigin );
@@ -2198,7 +2199,7 @@ void SP_nights_target( gentity_t *ent )
 		ent->health = 20;
 	}
 
-	// Tempory model
+	// Temporary model
 	item = BG_FindItemForPowerup(PW_INVUL);
 	if (item) {
 		ent->s.modelindex = G_ModelIndex(item->world_model[0]);

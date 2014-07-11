@@ -891,6 +891,10 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 			G_Damage (ent, NULL, NULL, NULL, NULL, damage, 0, MOD_FALLING);
 			break;
 
+		case EV_FIRE_WEAPON:
+			FireWeapon( ent );
+			break;
+
 #ifdef TA_WEAPSYS_EX
 		case EV_DROP_WEAPON:
 			if (ent->player)
@@ -940,10 +944,6 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 			}
 			break;
 #endif
-
-		case EV_FIRE_WEAPON:
-			FireWeapon( ent );
-			break;
 
 #ifdef TA_HOLDSYS // HI_* is not hooked to EV_USE_ITEM in game now.
 		case EV_USE_ITEM0:
