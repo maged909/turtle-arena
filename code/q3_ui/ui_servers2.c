@@ -1777,7 +1777,7 @@ static void ArenaServers_MenuInit( void ) {
 
 #ifdef TA_MISC 
 	g_arenaservers.numLocalClients = 1;
-	localClientBits = trap_Cvar_VariableValue("cl_localClients");
+	localClientBits = trap_Cvar_VariableValue("cl_localPlayers");
 	for (i = 1; i < MAX_SPLITVIEW; ++i) {
 		if (localClientBits & (1<<i)) {
 			g_arenaservers.numLocalClients++;

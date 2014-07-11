@@ -262,8 +262,8 @@ static void UI_SPPlayerMenu_SaveChanges( void ) {
 
 	// Set characters in cvars.
 	for (i = 0; i < MAX_SPLITVIEW; ++i) {
-		trap_Cvar_Set( Com_LocalClientCvarName(i, "spmodel"), spCharacterNames[playerMenuInfo.selectedCharacter[i]] );
-		trap_Cvar_Set( Com_LocalClientCvarName(i, "spheadmodel"), "" );
+		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "spmodel"), spCharacterNames[playerMenuInfo.selectedCharacter[i]] );
+		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "spheadmodel"), "" );
 	}
 }
 
@@ -308,7 +308,7 @@ static void UI_SPPlayerMenu_PlayEvent( void *ptr, int notification ) {
 		}
 	}
 
-	trap_Cvar_SetValue( "cl_localClients", localClients );
+	trap_Cvar_SetValue( "cl_localPlayers", localClients );
 	UI_SPPlayerMenu_SaveChanges();
 
 	if (playerMenuInfo.action) {
@@ -327,7 +327,7 @@ static void UI_SPPlayerMenu_BackEvent( void* ptr, int notification ) {
 		return;
 	}
 
-	trap_Cvar_SetValue( "cl_localClients", 1 );
+	trap_Cvar_SetValue( "cl_localPlayers", 1 );
 	UI_SPPlayerMenu_SaveChanges();
 	UI_PopMenu();
 }
@@ -362,7 +362,7 @@ static sfxHandle_t UI_SPPlayerMenu_Key( int key ) {
 	key == K_MOUSE2 ||
 #endif
 	key == K_ESCAPE ) {
-		trap_Cvar_SetValue( "cl_localClients", 1 );
+		trap_Cvar_SetValue( "cl_localPlayers", 1 );
 		UI_SPPlayerMenu_SaveChanges();
 	}
 	return Menu_DefaultKey( &playerMenuInfo.menu, key );
@@ -517,7 +517,7 @@ static void UI_SPPlayerMenu_Init( int maxLocalClients ) {
 
 	// Select previously selected characters
 	for (i = 0; i < MAX_SPLITVIEW; ++i) {
-		trap_Cvar_VariableStringBuffer(Com_LocalClientCvarName(i, "spmodel"), playerModel, sizeof(playerModel));
+		trap_Cvar_VariableStringBuffer(Com_LocalPlayerCvarName(i, "spmodel"), playerModel, sizeof(playerModel));
 
 		for (j = 0; j < NUM_SP_CHARACTERS; ++j) {
 			if (Q_stricmp(spCharacterNames[j], playerModel) == 0) {

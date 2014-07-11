@@ -75,9 +75,9 @@ gentity_t	*G_TestEntityPosition( gentity_t *ent ) {
 	}
 #endif
 
-	if ( ent->client ) {
-		VectorCopy( ent->client->ps.origin, origin );
-		collisionType = ent->client->ps.collisionType;
+	if ( ent->player ) {
+		VectorCopy( ent->player->ps.origin, origin );
+		collisionType = ent->player->ps.collisionType;
 	} else {
 		VectorCopy( ent->s.pos.trBase, origin );
 		collisionType = ent->s.collisionType;
@@ -180,9 +180,9 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	pushed_p->ent = check;
 	VectorCopy (check->s.pos.trBase, pushed_p->origin);
 	VectorCopy (check->s.apos.trBase, pushed_p->angles);
-	if ( check->client ) {
-		pushed_p->deltayaw = check->client->ps.delta_angles[YAW];
-		VectorCopy (check->client->ps.origin, pushed_p->origin);
+	if ( check->player ) {
+		pushed_p->deltayaw = check->player->ps.delta_angles[YAW];
+		VectorCopy (check->player->ps.origin, pushed_p->origin);
 	}
 	pushed_p++;
 
@@ -190,8 +190,8 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	// figure movement due to the pusher's amove
 	G_CreateRotationMatrix( amove, transpose );
 	G_TransposeMatrix( transpose, matrix );
-	if ( check->client ) {
-		VectorSubtract (check->client->ps.origin, pusher->r.currentOrigin, org);
+	if ( check->player ) {
+		VectorSubtract (check->player->ps.origin, pusher->r.currentOrigin, org);
 	}
 	else {
 		VectorSubtract (check->s.pos.trBase, pusher->r.currentOrigin, org);
@@ -202,11 +202,11 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	// add movement
 	VectorAdd (check->s.pos.trBase, move, check->s.pos.trBase);
 	VectorAdd (check->s.pos.trBase, move2, check->s.pos.trBase);
-	if ( check->client ) {
-		VectorAdd (check->client->ps.origin, move, check->client->ps.origin);
-		VectorAdd (check->client->ps.origin, move2, check->client->ps.origin);
-		// make sure the client's view rotates when on a rotating mover
-		check->client->ps.delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
+	if ( check->player ) {
+		VectorAdd (check->player->ps.origin, move, check->player->ps.origin);
+		VectorAdd (check->player->ps.origin, move2, check->player->ps.origin);
+		// make sure the player's view rotates when on a rotating mover
+		check->player->ps.delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
 	}
 
 	// may have pushed them off an edge
@@ -217,8 +217,8 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	block = G_TestEntityPosition( check );
 	if (!block) {
 		// pushed ok
-		if ( check->client ) {
-			VectorCopy( check->client->ps.origin, check->r.currentOrigin );
+		if ( check->player ) {
+			VectorCopy( check->player->ps.origin, check->r.currentOrigin );
 		} else {
 			VectorCopy( check->s.pos.trBase, check->r.currentOrigin );
 		}
@@ -230,8 +230,8 @@ qboolean	G_TryPushingEntity( gentity_t *check, gentity_t *pusher, vec3_t move, v
 	// this is only relevent for riding entities, not pushed
 	// Sliding trapdoors can cause this.
 	VectorCopy( (pushed_p-1)->origin, check->s.pos.trBase);
-	if ( check->client ) {
-		VectorCopy( (pushed_p-1)->origin, check->client->ps.origin);
+	if ( check->player ) {
+		VectorCopy( (pushed_p-1)->origin, check->player->ps.origin);
 	}
 	VectorCopy( (pushed_p-1)->angles, check->s.apos.trBase );
 	block = G_TestEntityPosition (check);
@@ -396,7 +396,7 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 
 						// GRAPPLE_MOVE
 						if (bg_projectileinfo[check->s.weapon].grappling
-							&& check->parent && check->parent->client && check->parent->client->hook == check)
+							&& check->parent && check->parent->player && check->parent->player->hook == check)
 						{
 							Weapon_HookFree(check);
 						}
@@ -431,7 +431,7 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 
 						// GRAPPLE_MOVE
 						if (bg_projectileinfo[check->s.weapon].grappling
-							&& check->parent && check->parent->client && check->parent->client->hook == check)
+							&& check->parent && check->parent->player && check->parent->player->hook == check)
 						{
 							Weapon_HookFree(check);
 						}
@@ -504,9 +504,9 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 		for ( p=pushed_p-1 ; p>=pushed ; p-- ) {
 			VectorCopy (p->origin, p->ent->s.pos.trBase);
 			VectorCopy (p->angles, p->ent->s.apos.trBase);
-			if ( p->ent->client ) {
-				p->ent->client->ps.delta_angles[YAW] = p->deltayaw;
-				VectorCopy (p->origin, p->ent->client->ps.origin);
+			if ( p->ent->player ) {
+				p->ent->player->ps.delta_angles[YAW] = p->deltayaw;
+				VectorCopy (p->origin, p->ent->player->ps.origin);
 			}
 			trap_LinkEntity (p->ent);
 		}
@@ -814,10 +814,10 @@ G_SeenByHumans
 Based on Smokin' Guns G_BreakableRespawn
 ================
 */
-qboolean G_SeenByHumans( gentity_t *ent )
+qboolean G_SeenByHumans( gentity_t *seen )
 {
-	gentity_t	*player;
-	gclient_t	*client;
+	gentity_t	*ent;
+	gplayer_t	*player;
 	int			i;
 	const float fov = 100;
 	float		diff;
@@ -829,40 +829,40 @@ qboolean G_SeenByHumans( gentity_t *ent )
 	int			j;
 	vec3_t		origin;
 
-	if (ent->s.eType == ET_MISCOBJECT)
+	if (seen->s.eType == ET_MISCOBJECT)
 	{
-		VectorCopy(ent->r.currentOrigin, origin);
+		VectorCopy(seen->r.currentOrigin, origin);
 	}
 	else
 	{
 		vec3_t pos1, pos2;
 
         // Tequila comment: set breakable center as origin for G_BreakableRespawn needs
-        VectorSubtract(ent->r.absmax, ent->r.absmin, pos1);
+        VectorSubtract(seen->r.absmax, seen->r.absmin, pos1);
         VectorScale(pos1, 0.5f, pos2);
-        VectorAdd(pos2, ent->r.absmin, origin);
+        VectorAdd(pos2, seen->r.absmin, origin);
 	}
 
 	// cycle through all players and see if the breakable respawn would be visible to them
-	for (i = 0; i < level.maxclients; i++) {
-		player = &g_entities[i];
-		client = &level.clients[i];
+	for (i = 0; i < level.maxplayers; i++) {
+		ent = &g_entities[i];
+		player = &level.players[i];
 
-		if (client->pers.connected != CON_CONNECTED)
+		if (player->pers.connected != CON_CONNECTED)
 			continue;
 
 		// if it's too near abort
-		cont = (Distance(client->ps.origin, origin) >= 300);
+		cont = (Distance(player->ps.origin, origin) >= 300);
 
 		if (cont)
 		{
-			// first check if player could be stuck in the breakable
-			if ( player->r.absmin[0] > ent->r.absmax[0]
-				|| player->r.absmin[1] > ent->r.absmax[1]
-				|| player->r.absmin[2] > ent->r.absmax[2]
-				|| player->r.absmax[0] < ent->r.absmin[0]
-				|| player->r.absmax[1] < ent->r.absmin[1]
-				|| player->r.absmax[2] < ent->r.absmin[2] ) {
+			// first check if ent could be stuck in the breakable
+			if ( ent->r.absmin[0] > seen->r.absmax[0]
+				|| ent->r.absmin[1] > seen->r.absmax[1]
+				|| ent->r.absmin[2] > seen->r.absmax[2]
+				|| ent->r.absmax[0] < seen->r.absmin[0]
+				|| ent->r.absmax[1] < seen->r.absmin[1]
+				|| ent->r.absmax[2] < seen->r.absmin[2] ) {
 				cont = qtrue;
 			} else {
 				cont = qfalse;
@@ -875,12 +875,12 @@ qboolean G_SeenByHumans( gentity_t *ent )
 			// Tequila comment: Minor server optimization, don't check if breakable is in a bot FOV
 			// They really don't care to "see" a breakable respawn, so we won't delay the respawn
 			// because of bot proximity.
-			if (player->r.svFlags & SVF_BOT)
+			if (ent->r.svFlags & SVF_BOT)
 				continue;
 
 			// check if its in field of vision
-			VectorCopy(client->ps.origin, eye);
-			eye[2] += client->ps.viewheight;
+			VectorCopy(player->ps.origin, eye);
+			eye[2] += player->ps.viewheight;
 
 			VectorSubtract(origin, eye, dir);
 			vectoangles(dir, angles);
@@ -888,7 +888,7 @@ qboolean G_SeenByHumans( gentity_t *ent )
 			cont = qfalse;
 
 			for (j = 0; j < 2; j++) {
-				angle = AngleMod(client->ps.viewangles[j]);
+				angle = AngleMod(player->ps.viewangles[j]);
 				angles[j] = AngleMod(angles[j]);
 				diff = fabs(angles[j] - angle);
 
@@ -1089,7 +1089,7 @@ qboolean G_PlayerPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t *
 		}
 
 		// if object is heavy must have strength to push it
-		if ((check->flags & FL_HEAVY) && (!pusher->client || pusher->client->pers.playercfg.ability != ABILITY_STRENGTH)) {
+		if ((check->flags & FL_HEAVY) && (!pusher->player || pusher->player->pers.playercfg.ability != ABILITY_STRENGTH)) {
 			continue;
 		}
 
@@ -1124,9 +1124,9 @@ qboolean G_PlayerPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t *
 		for ( p=pushed_p-1 ; p>=pushed ; p-- ) {
 			VectorCopy (p->origin, p->ent->s.pos.trBase);
 			VectorCopy (p->angles, p->ent->s.apos.trBase);
-			if ( p->ent->client ) {
-				p->ent->client->ps.delta_angles[YAW] = p->deltayaw;
-				VectorCopy (p->origin, p->ent->client->ps.origin);
+			if ( p->ent->player ) {
+				p->ent->player->ps.delta_angles[YAW] = p->deltayaw;
+				VectorCopy (p->origin, p->ent->player->ps.origin);
 			}
 			trap_LinkEntity (p->ent);
 		}
@@ -1315,8 +1315,8 @@ Blocked_Door
 ================
 */
 void Blocked_Door( gentity_t *ent, gentity_t *other ) {
-	// remove anything other than a client
-	if ( !other->client ) {
+	// remove anything other than a player
+	if ( !other->player ) {
 		// except CTF flags!!!!
 		if( other->s.eType == ET_ITEM && other->item->giType == IT_TEAM ) {
 			Team_DroppedFlagThink( other );
@@ -1353,7 +1353,7 @@ static void Touch_DoorTriggerSpectator( gentity_t *ent, gentity_t *other, trace_
 	doorMin = ent->r.absmin[axis] + 100;
 	doorMax = ent->r.absmax[axis] - 100;
 
-	VectorCopy(other->client->ps.origin, origin);
+	VectorCopy(other->player->ps.origin, origin);
 
 	if (origin[axis] < doorMin || origin[axis] > doorMax) return;
 
@@ -1372,7 +1372,7 @@ Touch_DoorTrigger
 ================
 */
 void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( other->client && other->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+	if ( other->player && other->player->sess.sessionTeam == TEAM_SPECTATOR ) {
 		// if the door is not open and not opening
 		if ( ent->parent->moverState != MOVER_1TO2 &&
 			ent->parent->moverState != MOVER_POS2) {
@@ -1561,7 +1561,7 @@ Don't allow decent if a living player is on it
 ===============
 */
 void Touch_Plat( gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( !other->client || other->client->ps.stats[STAT_HEALTH] <= 0 ) {
+	if ( !other->player || other->player->ps.stats[STAT_HEALTH] <= 0 ) {
 		return;
 	}
 
@@ -1579,7 +1579,7 @@ If the plat is at the bottom position, start it going up
 ===============
 */
 void Touch_PlatCenterTrigger(gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( !other->client ) {
+	if ( !other->player ) {
 		return;
 	}
 
@@ -1714,7 +1714,7 @@ Touch_Button
 ===============
 */
 void Touch_Button(gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( !other->client ) {
+	if ( !other->player ) {
 		return;
 	}
 
@@ -2352,16 +2352,16 @@ void FuncVooodooThink(gentity_t *self)
 		} else if (self->count == 1) {
 			// Single target
 			self->target_ent = G_PickTarget(self->target);
-		} else if (Q_stricmpn(self->target, "client", 6) == 0 && self->target[6] >= '0' && self->target[6] <= '9') {
+		} else if ( !Q_stricmpn(self->target, "player", 6) && self->target[6] >= '0' && self->target[6] <= '9' ) {
 			// Voodoo doll
-			int client = atoi(&self->target[6]);
+			int player = atoi(&self->target[6]);
 
-			if (client >= 0 && client < MAX_CLIENTS) {
-				self->target_ent = &g_entities[client];
+			if (player >= 0 && player < MAX_CLIENTS) {
+				self->target_ent = &g_entities[player];
 			}
 
-			if (self->target_ent && self->target_ent->client) {
-				self->client = self->target_ent->client;
+			if (self->target_ent && self->target_ent->player) {
+				self->player = self->target_ent->player;
 			}
 		} else {
 			// No targets
@@ -2463,12 +2463,12 @@ void VoodooDamage(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, in
 	if (self->target_ent) {
 
 		self->target_ent->health = self->target_ent->health - damage;
-		if ( self->target_ent->client ) {
-			self->target_ent->client->ps.stats[STAT_HEALTH] = self->target_ent->health;
+		if ( self->target_ent->player ) {
+			self->target_ent->player->ps.stats[STAT_HEALTH] = self->target_ent->health;
 		}
 
 		if ( self->target_ent->health <= 0 ) {
-			if ( self->target_ent->client )
+			if ( self->target_ent->player )
 				self->target_ent->flags |= FL_NO_KNOCKBACK;
 
 			if (self->target_ent->health < -999)
@@ -2501,12 +2501,12 @@ void VoodooDamage(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, in
 				break;
 
 			ent->health = ent->health - damage;
-			if ( ent->client ) {
-				ent->client->ps.stats[STAT_HEALTH] = ent->health;
+			if ( ent->player ) {
+				ent->player->ps.stats[STAT_HEALTH] = ent->health;
 			}
 
 			if ( ent->health <= 0 ) {
-				if ( ent->client )
+				if ( ent->player )
 					ent->flags |= FL_NO_KNOCKBACK;
 
 				if (ent->health < -999)

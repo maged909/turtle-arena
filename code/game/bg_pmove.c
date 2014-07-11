@@ -484,7 +484,7 @@ static void PM_PathMoveInital( void ) {
 		pm->cmd.forwardmove = pm->cmd.rightmove;
 		pm->cmd.rightmove = 0;
 		//pm->cmd.angles[YAW] = angles[YAW];
-		//self->client->ps.stats[STAT_DEAD_YAW] = vectoyaw ( dir );
+		//self->player->ps.stats[STAT_DEAD_YAW] = vectoyaw ( dir );
 	}
 }
 
@@ -633,13 +633,13 @@ static qboolean	PM_CheckWaterJump( void ) {
 
 	VectorMA (pm->ps->origin, 30, flatforward, spot);
 	spot[2] += 4;
-	cont = pm->pointcontents (spot, pm->ps->clientNum );
+	cont = pm->pointcontents (spot, pm->ps->playerNum );
 	if ( !(cont & CONTENTS_SOLID) ) {
 		return qfalse;
 	}
 
 	spot[2] += 16;
-	cont = pm->pointcontents (spot, pm->ps->clientNum );
+	cont = pm->pointcontents (spot, pm->ps->playerNum );
 #ifdef TURTLEARENA // NO_BODY_TRACE
 	if ( cont & pm->tracemask )
 #else
@@ -860,7 +860,7 @@ static void PM_AirMove( void ) {
 	cmd = pm->cmd;
 	scale = PM_CmdScale( &cmd );
 
-	// set the movementDir so clients can rotate the legs for strafing
+	// set the movementDir so players can rotate the legs for strafing
 	PM_SetMovementDir();
 
 	// project moves down to flat plane
@@ -979,7 +979,7 @@ static void PM_WalkMove( void ) {
 	cmd = pm->cmd;
 	scale = PM_CmdScale( &cmd );
 
-	// set the movementDir so clients can rotate the legs for strafing
+	// set the movementDir so players can rotate the legs for strafing
 	PM_SetMovementDir();
 
 	// project moves down to flat plane
@@ -1302,7 +1302,7 @@ PM_CheckStuck
 void PM_CheckStuck(void) {
 	trace_t trace;
 
-	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->playerNum, pm->tracemask);
 	if (trace.allsolid) {
 		//int shit = qtrue;
 	}
@@ -1330,13 +1330,13 @@ static int PM_CorrectAllSolid( trace_t *trace ) {
 				point[0] += (float) i;
 				point[1] += (float) j;
 				point[2] += (float) k;
-				pm->trace (trace, point, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
+				pm->trace (trace, point, pm->ps->mins, pm->ps->maxs, point, pm->ps->playerNum, pm->tracemask);
 				if ( !trace->allsolid ) {
 					point[0] = pm->ps->origin[0];
 					point[1] = pm->ps->origin[1];
 					point[2] = pm->ps->origin[2] - 0.25;
 
-					pm->trace (trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
+					pm->trace (trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->playerNum, pm->tracemask);
 					pml.groundTrace = *trace;
 					return qtrue;
 				}
@@ -1374,7 +1374,7 @@ static void PM_GroundTraceMissed( void ) {
 		VectorCopy( pm->ps->origin, point );
 		point[2] -= 64;
 
-		pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
+		pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->playerNum, pm->tracemask);
 		if ( trace.fraction == 1.0 ) {
 			if ( pm->cmd.forwardmove >= 0 
 #ifdef TA_PATHSYS // 2DMODE
@@ -1414,7 +1414,7 @@ static void PM_GroundTrace( void ) {
 	point[1] = pm->ps->origin[1];
 	point[2] = pm->ps->origin[2] - 0.25;
 
-	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->playerNum, pm->tracemask);
 	pml.groundTrace = trace;
 
 	// do something corrective if the trace starts in a solid...
@@ -1535,7 +1535,7 @@ static void PM_SetWaterLevel( void ) {
 	point[2] = pm->ps->origin[2] + MINS_Z + 1;	
 #endif
 
-	cont = pm->pointcontents( point, pm->ps->clientNum );
+	cont = pm->pointcontents( point, pm->ps->playerNum );
 
 	if ( cont & MASK_WATER ) {
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
@@ -1552,7 +1552,7 @@ static void PM_SetWaterLevel( void ) {
 #else
 		point[2] = pm->ps->origin[2] + MINS_Z + sample1;
 #endif
-		cont = pm->pointcontents (point, pm->ps->clientNum );
+		cont = pm->pointcontents (point, pm->ps->playerNum );
 		if ( cont & MASK_WATER ) {
 			pm->waterlevel = 2;
 #ifdef TA_PLAYERSYS // BOUNDINGBOX
@@ -1560,7 +1560,7 @@ static void PM_SetWaterLevel( void ) {
 #else
 			point[2] = pm->ps->origin[2] + MINS_Z + sample2;
 #endif
-			cont = pm->pointcontents (point, pm->ps->clientNum );
+			cont = pm->pointcontents (point, pm->ps->playerNum );
 			if ( cont & MASK_WATER ){
 				pm->waterlevel = 3;
 			}
@@ -1646,7 +1646,7 @@ static void PM_CheckDuck (void)
 #else
 			pm->ps->maxs[2] = 32;
 #endif
-			pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask );
+			pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->playerNum, pm->tracemask );
 			if (!trace.allsolid)
 				pm->ps->pm_flags &= ~PMF_DUCKED;
 		}
@@ -2867,7 +2867,7 @@ static void PM_LadderMove( void ) {
 	origin[2] -= 20;
 
 	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, origin,
-		pm->ps->clientNum, pm->tracemask);
+		pm->ps->playerNum, pm->tracemask);
 
 	if(trace.fraction < 1)
 		backwards = qtrue;
@@ -3033,7 +3033,7 @@ void CheckLadder( void )
 	origin[2] -= 30;
 
 	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, origin,
-		pm->ps->clientNum, pm->tracemask);
+		pm->ps->playerNum, pm->tracemask);
 
 	if(trace.fraction == 1)
 		backwards = qtrue;
@@ -3052,7 +3052,7 @@ void CheckLadder( void )
 	VectorMA (origin, 2, flatforward, spot);
 
 	pm->trace (&trace, origin, pm->ps->mins, pm->ps->maxs, spot,
-		pm->ps->clientNum, pm->tracemask);
+		pm->ps->playerNum, pm->tracemask);
 
 	if ((trace.fraction < 1) && (trace.surfaceFlags & SURF_LADDER)) {
 		pml.ladder = qtrue;

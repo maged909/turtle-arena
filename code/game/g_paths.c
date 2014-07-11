@@ -287,22 +287,22 @@ gpathtype_e G_SetupPath(gentity_t *ent, const char *target)
 {
 	gpathtype_e type;
 
-	// ZTM: TODO: Don't setup path if client is already following it.
+	// ZTM: TODO: Don't setup path if player is already following it.
 	type = G_SetupPath2(ent, target);
 
 	if (type == PATH_ERROR) {
 		// Disable path mode
-		if (ent->client) {
-			ent->client->ps.pathMode = PATHMODE_NONE;
-			ent->client->ps.eFlags &= ~EF_PATHMODE;
+		if (ent->player) {
+			ent->player->ps.pathMode = PATHMODE_NONE;
+			ent->player->ps.eFlags &= ~EF_PATHMODE;
 		}
 		ent->s.eFlags &= ~EF_PATHMODE;
 	} else {
 		// Enable path mode
-		if (ent->client) {
+		if (ent->player) {
 			// Set pathMode to the mode of the first entity in the path
-			ent->client->ps.pathMode = ent->nextTrain->moverState;
-			ent->client->ps.eFlags |= EF_PATHMODE;
+			ent->player->ps.pathMode = ent->nextTrain->moverState;
+			ent->player->ps.eFlags |= EF_PATHMODE;
 		}
 		ent->s.eFlags |= EF_PATHMODE;
 	}
@@ -328,8 +328,8 @@ qboolean G_ReachedPath(gentity_t *ent, qboolean check)
 		return qfalse;
 	}
 
-	if (ent->client) {
-		backward = (ent->client->ps.eFlags & EF_TRAINBACKWARD);
+	if (ent->player) {
+		backward = (ent->player->ps.eFlags & EF_TRAINBACKWARD);
 	} else {
 		backward = (ent->s.eFlags & EF_TRAINBACKWARD);
 	}
@@ -340,7 +340,7 @@ qboolean G_ReachedPath(gentity_t *ent, qboolean check)
 		point = ent->nextTrain;
 	}
 
-	if (!point && ent->client) {
+	if (!point && ent->player) {
 		// Previous point
 		if (backward)
 			point = ent->nextTrain;
@@ -349,7 +349,7 @@ qboolean G_ReachedPath(gentity_t *ent, qboolean check)
 
 		// Stop train
 		return qfalse;
-	} else if (!point && !ent->client) {
+	} else if (!point && !ent->player) {
 		// end of path
 		if (!(ent->spawnflags & 1)) {
 			// Stop train
@@ -393,12 +393,12 @@ qboolean G_ReachedPath(gentity_t *ent, qboolean check)
 
 		VectorCopy(point->s.origin, targetPos);
 
-		if (ent->client)
-			VectorCopy(ent->client->ps.origin, origin);
+		if (ent->player)
+			VectorCopy(ent->player->ps.origin, origin);
 		else
 			VectorCopy(ent->s.origin, origin);
 
-		if (ent->client && ent->client->ps.pathMode == PATHMODE_SIDE) {
+		if (ent->player && ent->player->ps.pathMode == PATHMODE_SIDE) {
 			// "2D" path
 			origin[2] = targetPos[2] = 0; // Don't compare Z
 		}
@@ -492,7 +492,7 @@ qboolean G_ReachedPath(gentity_t *ent, qboolean check)
 			ent->s.pos.trType = TR_STATIONARY;
 		}
 	}
-	else if (ent->client)
+	else if (ent->player)
 	{
 		vec3_t dir;
 		vec3_t viewAngles;
@@ -503,35 +503,35 @@ qboolean G_ReachedPath(gentity_t *ent, qboolean check)
 
 		// Unset style means use pervious style.
 		if (!mode) {
-			mode = ent->client->ps.pathMode;
+			mode = ent->player->ps.pathMode;
 		}
 
-		VectorCopy( ent->pos1, ent->client->ps.grapplePoint );
-		VectorCopy( ent->pos2, ent->client->ps.nextPoint );
+		VectorCopy( ent->pos1, ent->player->ps.grapplePoint );
+		VectorCopy( ent->pos2, ent->player->ps.nextPoint );
 
 		if (backward)
-			VectorSubtract( ent->pos1, ent->client->ps.origin, dir );
+			VectorSubtract( ent->pos1, ent->player->ps.origin, dir );
 		else
-			VectorSubtract( ent->pos2, ent->client->ps.origin, dir );
+			VectorSubtract( ent->pos2, ent->player->ps.origin, dir );
 
 		vectoangles( dir, viewAngles );
-		viewAngles[ROLL] = ent->client->ps.viewangles[ROLL];
-		viewAngles[PITCH] = ent->client->ps.viewangles[PITCH];
-		SetClientViewAngle(ent, viewAngles);
+		viewAngles[ROLL] = ent->player->ps.viewangles[ROLL];
+		viewAngles[PITCH] = ent->player->ps.viewangles[PITCH];
+		SetPlayerViewAngle(ent, viewAngles);
 
 		if (mode == PATHMODE_SIDE) {
 			if (backward) {
-				ent->client->ps.stats[STAT_DEAD_YAW] = viewAngles[YAW]-90;
+				ent->player->ps.stats[STAT_DEAD_YAW] = viewAngles[YAW]-90;
 			} else {
-				ent->client->ps.stats[STAT_DEAD_YAW] = viewAngles[YAW]+90;
+				ent->player->ps.stats[STAT_DEAD_YAW] = viewAngles[YAW]+90;
 			}
 		} else {
-			ent->client->ps.stats[STAT_DEAD_YAW] = viewAngles[YAW];
+			ent->player->ps.stats[STAT_DEAD_YAW] = viewAngles[YAW];
 		}
 
-		if (mode != ent->client->ps.pathMode) {
+		if (mode != ent->player->ps.pathMode) {
 			// ZTM: Do we need to do anything when the mode changes?
-			ent->client->ps.pathMode = mode;
+			ent->player->ps.pathMode = mode;
 		}
 	}
 

@@ -304,8 +304,8 @@ static void UI_SetCharacter(int localClientNum, int model, int skin ) {
 	s_playersetup.selectedModel[localClientNum] = model;
 	s_playersetup.selectedSkin[localClientNum] = skin;
 
-	trap_Cvar_Set( Com_LocalClientCvarName(localClientNum, "model"), s_playersetup.modelinfos[model].name );
-	trap_Cvar_Set( Com_LocalClientCvarName(localClientNum, "headmodel"), "" );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(localClientNum, "model"), s_playersetup.modelinfos[model].name );
+	trap_Cvar_Set( Com_LocalPlayerCvarName(localClientNum, "headmodel"), "" );
 
 	// Change shader and force loading it
 	Com_sprintf(s_playersetup.clientShaders[localClientNum], sizeof (s_playersetup.clientShaders[localClientNum]),
@@ -421,26 +421,26 @@ static void UI_PlayerSetupMenu_SaveChanges( void ) {
 
 	for (i = 0; i < MAX_SPLITVIEW; ++i) {
 		// name
-		trap_Cvar_Set( Com_LocalClientCvarName(i, "name"), s_playersetup.name[i].field.buffer );
+		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "name"), s_playersetup.name[i].field.buffer );
 
 		// handicap
-		trap_Cvar_SetValue( Com_LocalClientCvarName(i, "handicap"),
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(i, "handicap"),
 				100 - s_playersetup.handicap[i].curvalue * 5 );
 
 		// effects color
-		trap_Cvar_SetValue( Com_LocalClientCvarName(i, "color1"),
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(i, "color1"),
 				uitogamecode[s_playersetup.effects[i].curvalue] );
 #ifdef IOQ3ZTM // UI_COLOR2
-		trap_Cvar_SetValue( Com_LocalClientCvarName(i, "color2"),
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(i, "color2"),
 				uitogamecode[s_playersetup.effects2[i].curvalue] );
 #endif
 
 		// When ingame and player enable changes call dropin and dropout as needed.
 		if (i > 0 && inGame && s_playersetup.default_clientEnabled[i-1] != s_playersetup.clientEnabled[i-1].curvalue) {
 			if (s_playersetup.clientEnabled[i-1].curvalue) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(i, "dropin")) );
+				trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalPlayerCvarName(i, "dropin")) );
 			} else {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(i, "dropout")) );
+				trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalPlayerCvarName(i, "dropout")) );
 			}
 		}
 	}
@@ -464,7 +464,7 @@ static void UI_PlayerSetupMenu_PlayEvent( void *ptr, int notification ) {
 		}
 	}
 
-	trap_Cvar_SetValue( "cl_localClients", localClients );
+	trap_Cvar_SetValue( "cl_localPlayers", localClients );
 
 	UI_PlayerSetupMenu_SaveChanges();
 
@@ -484,7 +484,7 @@ static void UI_PlayerSetupMenu_BackEvent( void* ptr, int notification ) {
 		return;
 	}
 
-	trap_Cvar_SetValue( "cl_localClients", 1 );
+	trap_Cvar_SetValue( "cl_localPlayers", 1 );
 	UI_PlayerSetupMenu_SaveChanges();
 	UI_PopMenu();
 }
@@ -519,7 +519,7 @@ static sfxHandle_t UI_PlayerSetupMenu_Key( int key ) {
 	key == K_MOUSE2 ||
 #endif
 	key == K_ESCAPE ) {
-		trap_Cvar_SetValue( "cl_localClients", 1 );
+		trap_Cvar_SetValue( "cl_localPlayers", 1 );
 		UI_PlayerSetupMenu_SaveChanges();
 	}
 
@@ -605,7 +605,7 @@ static void UI_PlayerSetupMenu_BuildList( void )
 UI_PlayerSetupMenu_Init
 =================
 */
-static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), qboolean playButton ) {
+static void UI_PlayerSetupMenu_Init( int maxLocalPlayers, void (*action)(void), qboolean playButton ) {
 	int		i, j;
 	int		x, y;
 	int		c, h;
@@ -615,14 +615,14 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 	char	*pdest;
 	qboolean inGame;
 
-	if (maxLocalClients > MAX_SPLITVIEW) {
-		maxLocalClients = MAX_SPLITVIEW;
-	} else if (maxLocalClients <= 0) {
-		maxLocalClients = 1;
+	if (maxLocalPlayers > MAX_SPLITVIEW) {
+		maxLocalPlayers = MAX_SPLITVIEW;
+	} else if (maxLocalPlayers <= 0) {
+		maxLocalPlayers = 1;
 	}
 
 	// Setup equal spacing for the character select columns
-	spacing = SCREEN_WIDTH / maxLocalClients;
+	spacing = SCREEN_WIDTH / maxLocalPlayers;
 	leftOffset = (spacing - 128) / 2;
 
 	inGame = trap_Cvar_VariableValue( "cl_paused" );
@@ -729,7 +729,7 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 
 		if (i > 0) {
 			// Extra players default to disabled in main menu.
-			s_playersetup.default_clientEnabled[i-1] = (inGame && cg.localClients[i].clientNum != -1);
+			s_playersetup.default_clientEnabled[i-1] = (inGame && cg.localPlayers[i].playerNum != -1);
 
 			if (!s_playersetup.default_clientEnabled[i-1]) {
 				s_playersetup.clientEnabled[i-1].curvalue = 0;
@@ -774,7 +774,7 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 	Menu_AddItem( &s_playersetup.menu, ( void * )&s_playersetup.art_banner );
 	Menu_AddItem( &s_playersetup.menu, ( void * )&s_playersetup.back );
 
-	for (i = 0; i < maxLocalClients; ++i) {
+	for (i = 0; i < maxLocalPlayers; ++i) {
 		if (i == 0) {
 			Menu_AddItem( &s_playersetup.menu, ( void * )&s_playersetup.item_p1 );
 		} else {
@@ -794,7 +794,7 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 
 	// Select characters
 	for (i = 0; i < MAX_SPLITVIEW; ++i) {
-		trap_Cvar_VariableStringBuffer(Com_LocalClientCvarName(i, "model"), playerModel, sizeof(playerModel));
+		trap_Cvar_VariableStringBuffer(Com_LocalPlayerCvarName(i, "model"), playerModel, sizeof(playerModel));
 
 		// Remove skin
 		pdest = strchr(playerModel, '/');
@@ -819,21 +819,21 @@ static void UI_PlayerSetupMenu_Init( int maxLocalClients, void (*action)(void), 
 
 		// name
 		Q_strncpyz( s_playersetup.name[i].field.buffer, CG_Cvar_VariableString(
-				Com_LocalClientCvarName(i, "name")), sizeof(s_playersetup.name[i].field.buffer) );
+				Com_LocalPlayerCvarName(i, "name")), sizeof(s_playersetup.name[i].field.buffer) );
 
 		// handicap
-		h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalClientCvarName(i, "handicap")) );
+		h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalPlayerCvarName(i, "handicap")) );
 		s_playersetup.handicap[i].curvalue = 20 - h / 5;
 
 		// effects color
-		c = trap_Cvar_VariableValue( Com_LocalClientCvarName(i, "color1") ) - 1;
+		c = trap_Cvar_VariableValue( Com_LocalPlayerCvarName(i, "color1") ) - 1;
 		if( c < 0 || c > NUM_COLOR_EFFECTS-1 ) {
 			c = NUM_COLOR_EFFECTS-1;
 		}
 		s_playersetup.effects[i].curvalue = gamecodetoui[c];
 
 #ifdef IOQ3ZTM // UI_COLOR2
-		c = trap_Cvar_VariableValue( Com_LocalClientCvarName(i, "color2") ) - 1;
+		c = trap_Cvar_VariableValue( Com_LocalPlayerCvarName(i, "color2") ) - 1;
 		if( c < 0 || c > NUM_COLOR_EFFECTS-1 ) {
 			c = NUM_COLOR_EFFECTS-1;
 		}
@@ -893,8 +893,8 @@ void UI_PlayerSetupMenu_Cache( void ) {
 #endif
 }
 
-void UI_PlayerSetupMenu( int maxLocalClients, void (*action)(void), qboolean playButton ) {
-	UI_PlayerSetupMenu_Init(maxLocalClients, action, playButton);
+void UI_PlayerSetupMenu( int maxLocalPlayers, void (*action)(void), qboolean playButton ) {
+	UI_PlayerSetupMenu_Init(maxLocalPlayers, action, playButton);
 	UI_PushMenu( &s_playersetup.menu );
 	if (s_playersetup.action) {
 		Menu_SetCursorToItem( &s_playersetup.menu, &s_playersetup.play );

@@ -1245,7 +1245,7 @@ static qboolean updateModel = qtrue;
 static qboolean q3Model = qfalse;
 
 static void UI_DrawPlayerModel(rectDef_t *rect) {
-  static playerInfo_t info;
+  static uiPlayerInfo_t info;
   char model[MAX_QPATH];
   char team[256];
 	char head[256];
@@ -1276,7 +1276,7 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
 		}
 	}
   if (updateModel) {
-  	memset( &info, 0, sizeof(playerInfo_t) );
+  	memset( &info, 0, sizeof(uiPlayerInfo_t) );
   	viewangles[YAW]   = 180 - 10;
   	viewangles[PITCH] = 0;
   	viewangles[ROLL]  = 0;
@@ -1288,7 +1288,7 @@ static void UI_DrawPlayerModel(rectDef_t *rect) {
 #else
     UI_PlayerInfo_SetInfo( &info, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 #endif
-//		UI_RegisterClientModelname( &info, model, head, team);
+//		UI_RegisterPlayerModelname( &info, model, head, team);
     updateModel = qfalse;
   }
 
@@ -1403,7 +1403,7 @@ static const char *UI_AIFromName(const char *name) {
 
 static qboolean updateOpponentModel = qtrue;
 static void UI_DrawOpponent(rectDef_t *rect) {
-  static playerInfo_t info2;
+  static uiPlayerInfo_t info2;
   char model[MAX_QPATH];
   char headmodel[MAX_QPATH];
   char team[256];
@@ -1416,7 +1416,7 @@ static void UI_DrawOpponent(rectDef_t *rect) {
 	  strcpy(headmodel, CG_Cvar_VariableString("ui_opponentModel"));
 		team[0] = '\0';
 
-  	memset( &info2, 0, sizeof(playerInfo_t) );
+  	memset( &info2, 0, sizeof(uiPlayerInfo_t) );
   	viewangles[YAW]   = 180 - 10;
   	viewangles[PITCH] = 0;
   	viewangles[ROLL]  = 0;
@@ -1428,7 +1428,7 @@ static void UI_DrawOpponent(rectDef_t *rect) {
 #else
     UI_PlayerInfo_SetInfo( &info2, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 #endif
-		UI_RegisterClientModelname( &info2, model, headmodel, team);
+		UI_RegisterPlayerModelname( &info2, model, headmodel, team);
     updateOpponentModel = qfalse;
   }
 
@@ -1722,11 +1722,11 @@ static void UI_BuildPlayerList( void ) {
 	uiInfo.playerCount = 0;
 	uiInfo.myTeamCount = 0;
 
-	if ( !cg.snap || cg.localClients[0].clientNum == -1 ) {
+	if ( !cg.snap || cg.localPlayers[0].playerNum == -1 ) {
 		return;
 	}
 
-	uiInfo.playerNumber = cg.snap->pss[0].clientNum;
+	uiInfo.playerNumber = cg.snap->pss[0].playerNum;
 
 	trap_GetConfigString( CS_PLAYERS + uiInfo.playerNumber, info, MAX_INFO_STRING );
 	uiInfo.teamLeader = atoi(Info_ValueForKey(info, "tl"));
@@ -1740,13 +1740,13 @@ static void UI_BuildPlayerList( void ) {
 		if (info[0]) {
 			Q_strncpyz( uiInfo.playerNames[uiInfo.playerCount], Info_ValueForKey( info, "n" ), MAX_NAME_LENGTH );
 			Q_CleanStr( uiInfo.playerNames[uiInfo.playerCount] );
-			uiInfo.playerClientNums[uiInfo.playerCount] = n;
+			uiInfo.playerNums[uiInfo.playerCount] = n;
 			uiInfo.playerCount++;
 			team2 = atoi(Info_ValueForKey(info, "t"));
 			if (team2 == team) {
-				Q_strncpyz( uiInfo.teamNames[uiInfo.myTeamCount], Info_ValueForKey( info, "n" ), MAX_NAME_LENGTH );
-				Q_CleanStr( uiInfo.teamNames[uiInfo.myTeamCount] );
-				uiInfo.teamClientNums[uiInfo.myTeamCount] = n;
+				Q_strncpyz( uiInfo.teamPlayerNames[uiInfo.myTeamCount], Info_ValueForKey( info, "n" ), MAX_NAME_LENGTH );
+				Q_CleanStr( uiInfo.teamPlayerNames[uiInfo.myTeamCount] );
+				uiInfo.teamPlayerNums[uiInfo.myTeamCount] = n;
 				if (uiInfo.playerNumber == n) {
 					playerTeamNumber = uiInfo.myTeamCount;
 				}
@@ -1764,7 +1764,7 @@ static void UI_BuildPlayerList( void ) {
 		n = 0;
 	}
 	if (n < uiInfo.myTeamCount) {
-		trap_Cvar_Set("cg_selectedPlayerName", uiInfo.teamNames[n]);
+		trap_Cvar_Set("cg_selectedPlayerName", uiInfo.teamPlayerNames[n]);
 	}
 }
 
@@ -2061,25 +2061,25 @@ static qboolean UI_OwnerDrawVisible(int flags) {
 		}
 
 		if (flags & UI_SHOW_LEADER) {
-			// these need to show when this client can give orders to a player or a group
+			// these need to show when this player can give orders to a player or a group
 			if (!uiInfo.teamLeader) {
 				vis = qfalse;
 			} else {
 				// if showing yourself
-				if (ui_selectedPlayer.integer < uiInfo.myTeamCount && uiInfo.teamClientNums[ui_selectedPlayer.integer] == uiInfo.playerNumber) { 
+				if (ui_selectedPlayer.integer < uiInfo.myTeamCount && uiInfo.teamPlayerNums[ui_selectedPlayer.integer] == uiInfo.playerNumber) { 
 					vis = qfalse;
 				}
 			}
 			flags &= ~UI_SHOW_LEADER;
 		} 
 		if (flags & UI_SHOW_NOTLEADER) {
-			// these need to show when this client is assigning their own status or they are NOT the leader
+			// these need to show when this player is assigning their own status or they are NOT the leader
 			if (uiInfo.teamLeader) {
 				// if not showing yourself
-				if (!(ui_selectedPlayer.integer < uiInfo.myTeamCount && uiInfo.teamClientNums[ui_selectedPlayer.integer] == uiInfo.playerNumber)) { 
+				if (!(ui_selectedPlayer.integer < uiInfo.myTeamCount && uiInfo.teamPlayerNums[ui_selectedPlayer.integer] == uiInfo.playerNumber)) { 
 					vis = qfalse;
 				}
-				// these need to show when this client can give orders to a player or a group
+				// these need to show when this player can give orders to a player or a group
 			}
 			flags &= ~UI_SHOW_NOTLEADER;
 		} 
@@ -2535,7 +2535,7 @@ static qboolean UI_SelectedPlayer_HandleKey(int flags, float *special, int key) 
 		if (selected == uiInfo.myTeamCount) {
 		 	trap_Cvar_Set( "cg_selectedPlayerName", "Everyone");
 		} else {
-		 	trap_Cvar_Set( "cg_selectedPlayerName", uiInfo.teamNames[selected]);
+		 	trap_Cvar_Set( "cg_selectedPlayerName", uiInfo.teamPlayerNames[selected]);
 		}
 	 	trap_Cvar_SetValue( "cg_selectedPlayer", selected);
 	}
@@ -3299,7 +3299,7 @@ static void UI_RunMenuScript(char **args) {
 			}
 		} else if (Q_stricmp(name, "voteKick") == 0) {
 			if (uiInfo.playerIndex >= 0 && uiInfo.playerIndex < uiInfo.playerCount) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va("callvote kicknum %i\n",uiInfo.playerClientNums[uiInfo.playerIndex]) );
+				trap_Cmd_ExecuteText( EXEC_APPEND, va("callvote kicknum %i\n",uiInfo.playerNums[uiInfo.playerIndex]) );
 			}
 		} else if (Q_stricmp(name, "voteGame") == 0) {
 			if (ui_netGameType.integer >= 0 && ui_netGameType.integer < uiInfo.numGameTypes) {
@@ -3307,7 +3307,7 @@ static void UI_RunMenuScript(char **args) {
 			}
 		} else if (Q_stricmp(name, "voteLeader") == 0) {
 			if (uiInfo.teamIndex >= 0 && uiInfo.teamIndex < uiInfo.myTeamCount) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, va("callteamvote leader %s\n",uiInfo.teamNames[uiInfo.teamIndex]) );
+				trap_Cmd_ExecuteText( EXEC_APPEND, va("callteamvote leader %s\n",uiInfo.teamPlayerNames[uiInfo.teamIndex]) );
 			}
 		} else if (Q_stricmp(name, "addBot") == 0) {
 			if (trap_Cvar_VariableValue("g_gametype") >= GT_TEAM) {
@@ -3380,16 +3380,16 @@ static void UI_RunMenuScript(char **args) {
 				int selectedPlayer = trap_Cvar_VariableValue("cg_selectedPlayer");
 				if (selectedPlayer < uiInfo.myTeamCount) {
 					strcpy(buff, orders);
-					trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamClientNums[selectedPlayer]) );
+					trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamPlayerNums[selectedPlayer]) );
 					trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 				} else {
 					int i;
 					for (i = 0; i < uiInfo.myTeamCount; i++) {
-						if (Q_stricmp(CG_Cvar_VariableString("name"), uiInfo.teamNames[i]) == 0) {
+						if (Q_stricmp(CG_Cvar_VariableString("name"), uiInfo.teamPlayerNames[i]) == 0) {
 							continue;
 						}
 						strcpy(buff, orders);
-						trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamNames[i]) );
+						trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamPlayerNames[i]) );
 						trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 					}
 				}
@@ -3411,7 +3411,7 @@ static void UI_RunMenuScript(char **args) {
 				int selectedPlayer = trap_Cvar_VariableValue("cg_selectedPlayer");
 				if (selectedPlayer < uiInfo.myTeamCount) {
 					strcpy(buff, orders);
-					trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamClientNums[selectedPlayer]) );
+					trap_Cmd_ExecuteText( EXEC_APPEND, va(buff, uiInfo.teamPlayerNums[selectedPlayer]) );
 					trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 				}
 				UI_ForceMenuOff();
@@ -4265,7 +4265,7 @@ static const char *UI_FeederItemText(float feederID, int index, int column, qhan
 		}
 	} else if (feederID == FEEDER_TEAM_LIST) {
 		if (index >= 0 && index < uiInfo.myTeamCount) {
-			return uiInfo.teamNames[index];
+			return uiInfo.teamPlayerNames[index];
 		}
 	} else if (feederID == FEEDER_MODS) {
 		if (index >= 0 && index < uiInfo.modCount) {
@@ -5090,12 +5090,12 @@ void UI_KeyEvent( int key, qboolean down ) {
 UI_MouseEvent
 =================
 */
-void UI_MouseEvent( int localClientNum, int dx, int dy )
+void UI_MouseEvent( int localPlayerNum, int dx, int dy )
 {
 	float ax, ay, aw, ah;
 	int xbias, ybias;
 
-	if (localClientNum != 0) {
+	if ( localPlayerNum != 0 ) {
 		// ui currently only supports one cursor
 		return;
 	}
@@ -5128,9 +5128,9 @@ void UI_MouseEvent( int localClientNum, int dx, int dy )
 UI_GetCursorPos
 =================
 */
-void UI_GetCursorPos( int localClientNum, int *x, int *y )
+void UI_GetCursorPos( int localPlayerNum, int *x, int *y )
 {
-	if (localClientNum != 0) {
+	if (localPlayerNum != 0) {
 		// ui currently only supports one cursor
 		if ( x ) *x = 0;
 		if ( y ) *y = 0;
@@ -5145,9 +5145,9 @@ void UI_GetCursorPos( int localClientNum, int *x, int *y )
 UI_SetCursorPos
 =================
 */
-void UI_SetCursorPos( int localClientNum, int x, int y )
+void UI_SetCursorPos( int localPlayerNum, int x, int y )
 {
-	if (localClientNum != 0) {
+	if (localPlayerNum != 0) {
 		// ui currently only supports one cursor
 		return;
 	}

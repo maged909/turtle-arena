@@ -155,16 +155,16 @@ int G_StringIndex( char *name ) {
 ================
 trap_SendServerCommand
 
-Broadcasts a command to only a specific client.
+Broadcasts a command to only a specific plsyer.
 
 ZTM: NOTE: Function name kept to reduce source code changes.
 ================
 */
-void trap_SendServerCommand( int clientNum, char *cmd ) {
-	if ( clientNum == -1 ) {
+void trap_SendServerCommand( int playerNum, char *cmd ) {
+	if ( playerNum == -1 ) {
 		trap_SendServerCommandEx( -1, -1, cmd );
 	} else {
-		trap_SendServerCommandEx( level.clients[clientNum].pers.connectionNum, level.clients[clientNum].pers.localPlayerNum, cmd );
+		trap_SendServerCommandEx( level.players[playerNum].pers.connectionNum, level.players[playerNum].pers.localPlayerNum, cmd );
 	}
 }
 
@@ -178,15 +178,15 @@ Broadcasts a command to only a specific team
 */
 void G_TeamCommand( team_t team, char *cmd ) {
 	gconnection_t	*connection;
-	int				i, j, clientNum;
+	int				i, j, playerNum;
 
 	for ( i = 0 ; i < level.maxconnections ; i++ ) {
 		connection = &level.connections[i];
 
 		for ( j = 0; j < MAX_SPLITVIEW; j++ ) {
-			clientNum = connection->localPlayerNums[j];
+			playerNum = connection->localPlayerNums[j];
 
-			if ( level.clients[clientNum].sess.sessionTeam == team )
+			if ( level.players[playerNum].sess.sessionTeam == team )
 				break;			
 		}
 
@@ -509,7 +509,7 @@ G_Spawn
 
 Either finds a free entity, or allocates a new one.
 
-  The slots from 0 to MAX_CLIENTS-1 are always reserved for clients, and will
+  The slots from 0 to MAX_CLIENTS-1 are always reserved for players, and will
 never be used by anything else.
 
 Try to avoid reusing an entity that was recently freed, because it
@@ -559,7 +559,7 @@ gentity_t *G_Spawn( void ) {
 
 	// let the server system know that there are more entities
 	trap_LocateGameData( level.gentities, level.num_entities, sizeof( gentity_t ), 
-		&level.clients[0].ps, sizeof( level.clients[0] ) );
+		&level.players[0].ps, sizeof( level.players[0] ) );
 
 	G_InitGentity( e );
 	return e;
@@ -665,7 +665,7 @@ void G_KillBox (gentity_t *ent) {
 	vec3_t		mins, maxs;
 
 #ifdef TA_ENTSYS // BREAKABLE
-	if (!ent->client)
+	if (!ent->player)
 	{
 		VectorAdd( ent->r.currentOrigin, ent->s.mins, mins );
 		VectorAdd( ent->r.currentOrigin, ent->s.maxs, maxs );
@@ -673,8 +673,8 @@ void G_KillBox (gentity_t *ent) {
 	else
 	{
 #endif
-	VectorAdd( ent->client->ps.origin, ent->s.mins, mins );
-	VectorAdd( ent->client->ps.origin, ent->s.maxs, maxs );
+	VectorAdd( ent->player->ps.origin, ent->s.mins, mins );
+	VectorAdd( ent->player->ps.origin, ent->s.maxs, maxs );
 #ifdef TA_ENTSYS // BREAKABLE
 	}
 #endif
@@ -682,7 +682,7 @@ void G_KillBox (gentity_t *ent) {
 
 	for (i=0 ; i<num ; i++) {
 		hit = &g_entities[touch[i]];
-		if ( !hit->client ) {
+		if ( !hit->player ) {
 			continue;
 		}
 
@@ -705,10 +705,10 @@ Adds an event+parm and twiddles the event counter
 ===============
 */
 void G_AddPredictableEvent( gentity_t *ent, int event, int eventParm ) {
-	if ( !ent->client ) {
+	if ( !ent->player ) {
 		return;
 	}
-	BG_AddPredictableEventToPlayerstate( event, eventParm, &ent->client->ps );
+	BG_AddPredictableEventToPlayerstate( event, eventParm, &ent->player->ps );
 }
 
 
@@ -727,13 +727,13 @@ void G_AddEvent( gentity_t *ent, int event, int eventParm ) {
 		return;
 	}
 
-	// clients need to add the event in playerState_t instead of entityState_t
-	if ( ent->client ) {
-		bits = ent->client->ps.externalEvent & EV_EVENT_BITS;
+	// players need to add the event in playerState_t instead of entityState_t
+	if ( ent->player ) {
+		bits = ent->player->ps.externalEvent & EV_EVENT_BITS;
 		bits = ( bits + EV_EVENT_BIT1 ) & EV_EVENT_BITS;
-		ent->client->ps.externalEvent = event | bits;
-		ent->client->ps.externalEventParm = eventParm;
-		ent->client->ps.externalEventTime = level.time;
+		ent->player->ps.externalEvent = event | bits;
+		ent->player->ps.externalEventParm = eventParm;
+		ent->player->ps.externalEventTime = level.time;
 	} else {
 		bits = ent->s.event & EV_EVENT_BITS;
 		bits = ( bits + EV_EVENT_BIT1 ) & EV_EVENT_BITS;
@@ -804,8 +804,8 @@ gentity_t *G_FindRadius(gentity_t *from, const vec3_t org, float rad)
 			continue;
 
 		if (from-g_entities < MAX_CLIENTS) {
-			VectorCopy(from->client->ps.origin, targetOrg);
-			targetOrg[2] += from->client->ps.viewheight;
+			VectorCopy(from->player->ps.origin, targetOrg);
+			targetOrg[2] += from->player->ps.viewheight;
 		} else {
 			VectorCopy(from->r.currentOrigin, targetOrg);
 			targetOrg[2] += 40;
@@ -861,10 +861,10 @@ qboolean G_ValidTarget(gentity_t *source, gentity_t *target,
 		return qfalse;
 
 	// ZTM: Target players and overload base
-	if (!target->client// && !target->takedamage
+	if (!target->player// && !target->takedamage
 #ifdef MISSIONPACK
-		&& !(source->client && target->pain == ObeliskPain
-			&& target->spawnflags != source->client->sess.sessionTeam)
+		&& !(source->player && target->pain == ObeliskPain
+			&& target->spawnflags != source->player->sess.sessionTeam)
 #endif
 	)
 		return qfalse;
@@ -872,15 +872,15 @@ qboolean G_ValidTarget(gentity_t *source, gentity_t *target,
 	if (target->health <= 0)
 		return qfalse;
 
-	if (target->client && target->client->sess.sessionTeam >= TEAM_SPECTATOR)
+	if (target->player && target->player->sess.sessionTeam >= TEAM_SPECTATOR)
 		return qfalse;
 
 	if (OnSameTeam(target, source))
 		return qfalse;
 
 	if (target-g_entities < MAX_CLIENTS) {
-		VectorCopy(target->client->ps.origin, targetOrg);
-		targetOrg[2] += target->client->ps.viewheight;
+		VectorCopy(target->player->ps.origin, targetOrg);
+		targetOrg[2] += target->player->ps.viewheight;
 	} else {
 		VectorCopy(target->r.currentOrigin, targetOrg);
 		targetOrg[2] += (target->s.mins[2] + target->s.maxs[2])/2;
@@ -968,8 +968,8 @@ gentity_t *G_FindTarget(gentity_t *source, const vec3_t start, const vec3_t dir,
 		}
 
 		if (target-g_entities < MAX_CLIENTS) {
-			VectorCopy(target->client->ps.origin, targetOrg);
-			targetOrg[2] += target->client->ps.viewheight;
+			VectorCopy(target->player->ps.origin, targetOrg);
+			targetOrg[2] += target->player->ps.viewheight;
 		} else {
 			VectorCopy(target->r.currentOrigin, targetOrg);
 			targetOrg[2] += (target->s.mins[2] + target->s.maxs[2])/2;

@@ -42,21 +42,21 @@ damage values to that client for pain blends and kicks, and
 global pain sound events for all clients.
 ===============
 */
-void P_DamageFeedback( gentity_t *player ) {
-	gclient_t	*client;
+void P_DamageFeedback( gentity_t *ent ) {
+	gplayer_t	*player;
 	float	count;
 	vec3_t	angles;
 
-	client = player->client;
-	if ( client->ps.pm_type == PM_DEAD ) {
+	player = ent->player;
+	if ( player->ps.pm_type == PM_DEAD ) {
 		return;
 	}
 
 	// total points of damage shot at the player this frame
 #ifdef TURTLEARENA // NOARMOR
-	count = client->damage_blood;
+	count = player->damage_blood;
 #else
-	count = client->damage_blood + client->damage_armor;
+	count = player->damage_blood + player->damage_armor;
 #endif
 	if ( count == 0 ) {
 		return;		// didn't take any damage
@@ -70,35 +70,35 @@ void P_DamageFeedback( gentity_t *player ) {
 
 	// world damage (falling, slime, etc) uses a special code
 	// to make the blend blob centered instead of positional
-	if ( client->damage_fromWorld ) {
-		client->ps.damagePitch = 255;
-		client->ps.damageYaw = 255;
+	if ( player->damage_fromWorld ) {
+		player->ps.damagePitch = 255;
+		player->ps.damageYaw = 255;
 
-		client->damage_fromWorld = qfalse;
+		player->damage_fromWorld = qfalse;
 	} else {
-		vectoangles( client->damage_from, angles );
-		client->ps.damagePitch = angles[PITCH]/360.0 * 256;
-		client->ps.damageYaw = angles[YAW]/360.0 * 256;
+		vectoangles( player->damage_from, angles );
+		player->ps.damagePitch = angles[PITCH]/360.0 * 256;
+		player->ps.damageYaw = angles[YAW]/360.0 * 256;
 	}
 
 	// play an apropriate pain sound
-	if ( (level.time > player->pain_debounce_time) && !(player->flags & FL_GODMODE) ) {
-		player->pain_debounce_time = level.time + 700;
-		G_AddEvent( player, EV_PAIN, player->health );
-		client->ps.damageEvent++;
+	if ( (level.time > ent->pain_debounce_time) && !(ent->flags & FL_GODMODE) ) {
+		ent->pain_debounce_time = level.time + 700;
+		G_AddEvent( ent, EV_PAIN, ent->health );
+		player->ps.damageEvent++;
 	}
 
 
-	client->ps.damageCount = count;
+	player->ps.damageCount = count;
 
 	//
 	// clear totals
 	//
-	client->damage_blood = 0;
+	player->damage_blood = 0;
 #ifndef TURTLEARENA // NOARMOR
-	client->damage_armor = 0;
+	player->damage_armor = 0;
 #endif
-	client->damage_knockback = 0;
+	player->damage_knockback = 0;
 }
 
 
@@ -119,13 +119,13 @@ void P_WorldEffects( gentity_t *ent ) {
 #ifdef IOQ3ZTM // Drowned in noclip, but not godmode.
 	if ( ent->flags & FL_GODMODE )
 #else
-	if ( ent->client->noclip )
+	if ( ent->player->noclip )
 #endif
 	{
 #ifdef TURTLEARENA // DROWNING
-		ent->client->ps.powerups[PW_AIR] = level.time + 31000;	// don't need air
+		ent->player->ps.powerups[PW_AIR] = level.time + 31000;	// don't need air
 #else
-		ent->client->airOutTime = level.time + 12000;	// don't need air
+		ent->player->airOutTime = level.time + 12000;	// don't need air
 #endif
 		return;
 	}
@@ -133,7 +133,7 @@ void P_WorldEffects( gentity_t *ent ) {
 	waterlevel = ent->waterlevel;
 
 #ifndef TURTLEARENA // POWERS
-	envirosuit = ent->client->ps.powerups[PW_BATTLESUIT] > level.time;
+	envirosuit = ent->player->ps.powerups[PW_BATTLESUIT] > level.time;
 #endif
 
 	//
@@ -143,20 +143,20 @@ void P_WorldEffects( gentity_t *ent ) {
 #ifndef TURTLEARENA // POWERS
 		// envirosuit give air
 		if ( envirosuit ) {
-			ent->client->airOutTime = level.time + 10000;
+			ent->player->airOutTime = level.time + 10000;
 		}
 #endif
 
 		// if out of air, start drowning
 #ifdef TURTLEARENA // DROWNING
-		if (ent->client->ps.powerups[PW_AIR] < level.time)
+		if ( ent->player->ps.powerups[PW_AIR] < level.time )
 #else
-		if ( ent->client->airOutTime < level.time)
+		if ( ent->player->airOutTime < level.time)
 #endif
 		{
 			// drown!
 #ifndef TURTLEARENA // DROWNING
-			ent->client->airOutTime += 1000;
+			ent->player->airOutTime += 1000;
 #endif
 			if ( ent->health > 0 ) {
 #ifdef TURTLEARENA // DROWNING
@@ -181,7 +181,7 @@ void P_WorldEffects( gentity_t *ent ) {
 		}
 #ifdef TURTLEARENA // DROWNING
 		// Low air warning
-		else if (ent->client->ps.powerups[PW_AIR] < level.time + 5000 && !(ent->flags & FL_DROWNING_WARNING)) {
+		else if (ent->player->ps.powerups[PW_AIR] < level.time + 5000 && !(ent->flags & FL_DROWNING_WARNING)) {
 			ent->flags |= FL_DROWNING_WARNING;
 
 			// don't play a normal pain sound
@@ -194,13 +194,13 @@ void P_WorldEffects( gentity_t *ent ) {
 	} else {
 #ifdef TURTLEARENA // DROWNING
 		ent->flags &= ~FL_DROWNING_WARNING;
-		if (ent->client->ps.powerups[PW_AIR]+1000 < level.time + 31000) {
-			ent->client->ps.powerups[PW_AIR] += 1000;
+		if (ent->player->ps.powerups[PW_AIR]+1000 < level.time + 31000) {
+			ent->player->ps.powerups[PW_AIR] += 1000;
 		} else {
-			ent->client->ps.powerups[PW_AIR] = level.time + 31000;
+			ent->player->ps.powerups[PW_AIR] = level.time + 31000;
 		}
 #else
-		ent->client->airOutTime = level.time + 12000;
+		ent->player->airOutTime = level.time + 12000;
 #endif
 		ent->damage = 2;
 	}
@@ -214,7 +214,7 @@ void P_WorldEffects( gentity_t *ent ) {
 			&& ent->pain_debounce_time <= level.time	) {
 
 #ifdef TURTLEARENA // POWERS
-			if ( ent->client->ps.powerups[PW_INVUL] > level.time ) {
+			if ( ent->player->ps.powerups[PW_INVUL] > level.time ) {
 				G_AddEvent( ent, EV_POWERUP_INVUL, 0 );
 			} else
 #else
@@ -241,10 +241,10 @@ void P_WorldEffects( gentity_t *ent ) {
 
 /*
 ===============
-G_SetClientSound
+G_SetPlayerSound
 ===============
 */
-void G_SetClientSound( gentity_t *ent ) {
+void G_SetPlayerSound( gentity_t *ent ) {
 #if defined MISSIONPACK && !defined TURTLEARENA // WEAPONS
 #ifdef TA_WEAPSYS // Per-projectile tick sound name
 	if ((ent->s.eFlags & EF_TICKING) && ent->activator
@@ -252,19 +252,19 @@ void G_SetClientSound( gentity_t *ent ) {
 		&& bg_projectileinfo[ent->activator->s.weapon].explosionType == PE_PROX
 		&& bg_projectileinfo[ent->activator->s.weapon].tickSoundName[0])
 	{
-		ent->client->ps.loopSound = G_SoundIndex(bg_projectileinfo[ent->activator->s.weapon].tickSoundName);
+		ent->player->ps.loopSound = G_SoundIndex(bg_projectileinfo[ent->activator->s.weapon].tickSoundName);
 	}
 #else
 	if( ent->s.eFlags & EF_TICKING ) {
-		ent->client->ps.loopSound = G_SoundIndex( "sound/weapons/proxmine/wstbtick.wav");
+		ent->player->ps.loopSound = G_SoundIndex( "sound/weapons/proxmine/wstbtick.wav");
 	}
 #endif
 	else
 #endif
 	if (ent->waterlevel && (ent->watertype&(CONTENTS_LAVA|CONTENTS_SLIME)) ) {
-		ent->client->ps.loopSound = level.snd_fry;
+		ent->player->ps.loopSound = level.snd_fry;
 	} else {
-		ent->client->ps.loopSound = 0;
+		ent->player->ps.loopSound = 0;
 	}
 }
 
@@ -274,10 +274,10 @@ void G_SetClientSound( gentity_t *ent ) {
 
 /*
 ==============
-ClientImpacts
+PlayerImpacts
 ==============
 */
-void ClientImpacts( gentity_t *ent, pmove_t *pm ) {
+void PlayerImpacts( gentity_t *ent, pmove_t *pm ) {
 	int		i, j;
 	trace_t	trace;
 	gentity_t	*other;
@@ -323,23 +323,23 @@ void	G_TouchTriggers( gentity_t *ent ) {
 	vec3_t		mins, maxs;
 	static vec3_t	range = { 40, 40, 52 };
 
-	if ( !ent->client ) {
+	if ( !ent->player ) {
 		return;
 	}
 
-	// dead clients don't activate triggers!
-	if ( ent->client->ps.stats[STAT_HEALTH] <= 0 ) {
+	// dead players don't activate triggers!
+	if ( ent->player->ps.stats[STAT_HEALTH] <= 0 ) {
 		return;
 	}
 
-	VectorSubtract( ent->client->ps.origin, range, mins );
-	VectorAdd( ent->client->ps.origin, range, maxs );
+	VectorSubtract( ent->player->ps.origin, range, mins );
+	VectorAdd( ent->player->ps.origin, range, maxs );
 
 	num = trap_EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
 
 	// can't use ent->absmin, because that has a one unit pad
-	VectorAdd( ent->client->ps.origin, ent->s.mins, mins );
-	VectorAdd( ent->client->ps.origin, ent->s.maxs, maxs );
+	VectorAdd( ent->player->ps.origin, ent->s.mins, mins );
+	VectorAdd( ent->player->ps.origin, ent->s.maxs, maxs );
 
 	for ( i=0 ; i<num ; i++ ) {
 		hit = &g_entities[touch[i]];
@@ -352,7 +352,7 @@ void	G_TouchTriggers( gentity_t *ent ) {
 		}
 
 		// ignore most entities if a spectator
-		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+		if ( ent->player->sess.sessionTeam == TEAM_SPECTATOR ) {
 			if ( hit->s.eType != ET_TELEPORT_TRIGGER &&
 				// this is ugly but adding a new ET_? type will
 				// most likely cause network incompatibilities
@@ -364,7 +364,7 @@ void	G_TouchTriggers( gentity_t *ent ) {
 		// use seperate code for determining if an item is picked up
 		// so you don't have to actually contact its bounding box
 		if ( hit->s.eType == ET_ITEM ) {
-			if ( !BG_PlayerTouchesItem( &ent->client->ps, &hit->s, level.time ) ) {
+			if ( !BG_PlayerTouchesItem( &ent->player->ps, &hit->s, level.time ) ) {
 				continue;
 			}
 		} else {
@@ -385,9 +385,9 @@ void	G_TouchTriggers( gentity_t *ent ) {
 	}
 
 	// if we didn't touch a jump pad this pmove frame
-	if ( ent->client->ps.jumppad_frame != ent->client->ps.pmove_framecount ) {
-		ent->client->ps.jumppad_frame = 0;
-		ent->client->ps.jumppad_ent = 0;
+	if ( ent->player->ps.jumppad_frame != ent->player->ps.pmove_framecount ) {
+		ent->player->ps.jumppad_frame = 0;
+		ent->player->ps.jumppad_ent = 0;
 	}
 }
 
@@ -398,19 +398,19 @@ SpectatorThink
 */
 void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 	pmove_t	pm;
-	gclient_t	*client;
+	gplayer_t	*player;
 
-	client = ent->client;
+	player = ent->player;
 
-	if ( client->sess.spectatorState != SPECTATOR_FOLLOW ) {
-		client->ps.pm_type = PM_SPECTATOR;
-		client->ps.speed = 400;	// faster than normal
+	if ( player->sess.spectatorState != SPECTATOR_FOLLOW ) {
+		player->ps.pm_type = PM_SPECTATOR;
+		player->ps.speed = 400;	// faster than normal
 
 		// set up for pmove
 		memset (&pm, 0, sizeof(pm));
-		pm.ps = &client->ps;
+		pm.ps = &player->ps;
 #ifdef TA_PLAYERSYS // Pmove
-		pm.playercfg = &client->pers.playercfg;
+		pm.playercfg = &player->pers.playercfg;
 #endif
 		pm.cmd = *ucmd;
 #ifdef TURTLEARENA // NO_BODY_TRACE
@@ -418,7 +418,7 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 #else
 		pm.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;	// spectators can fly through bodies
 #endif
-		if (client->ps.collisionType == CT_CAPSULE) {
+		if (player->ps.collisionType == CT_CAPSULE) {
 			pm.trace = trap_TraceCapsule;
 		} else {
 			pm.trace = trap_Trace;
@@ -428,25 +428,25 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 		// perform a pmove
 		Pmove (&pm);
 		// save results of pmove
-		VectorCopy( client->ps.origin, ent->s.origin );
+		VectorCopy( player->ps.origin, ent->s.origin );
 
 		G_TouchTriggers( ent );
 		trap_UnlinkEntity( ent );
 	}
 
-	client->oldbuttons = client->buttons;
-	client->buttons = ucmd->buttons;
+	player->oldbuttons = player->buttons;
+	player->buttons = ucmd->buttons;
 
 	// attack button cycles through spectators
-	if ( ( client->buttons & BUTTON_ATTACK ) && ! ( client->oldbuttons & BUTTON_ATTACK ) ) {
+	if ( ( player->buttons & BUTTON_ATTACK ) && ! ( player->oldbuttons & BUTTON_ATTACK ) ) {
 		Cmd_FollowCycle_f( ent, 1 );
 	}
 #ifdef IOQ3ZTM // SPECTATOR
-	else if ( ( client->buttons & BUTTON_USE_HOLDABLE ) && ! ( client->oldbuttons & BUTTON_USE_HOLDABLE ) ) {
+	else if ( ( player->buttons & BUTTON_USE_HOLDABLE ) && ! ( player->oldbuttons & BUTTON_USE_HOLDABLE ) ) {
 		Cmd_FollowCycle_f( ent, -1 );
 	}
-	// Stop following client when jump or crouch is pressed.
-	else if ( ent->client->sess.spectatorState == SPECTATOR_FOLLOW && ucmd->upmove != 0 ) {
+	// Stop following player when jump or crouch is pressed.
+	else if ( ent->player->sess.spectatorState == SPECTATOR_FOLLOW && ucmd->upmove != 0 ) {
 		StopFollowing(ent);
 	}
 #endif
@@ -456,34 +456,34 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 
 /*
 =================
-ClientInactivityTimer
+PlayerInactivityTimer
 
-Returns qfalse if the client is dropped
+Returns qfalse if the player is dropped
 =================
 */
-qboolean ClientInactivityTimer( gclient_t *client ) {
+qboolean PlayerInactivityTimer( gplayer_t *player ) {
 	if ( ! g_inactivity.integer ) {
 		// give everyone some time, so if the operator sets g_inactivity during
 		// gameplay, everyone isn't kicked
-		client->inactivityTime = level.time + 60 * 1000;
-		client->inactivityWarning = qfalse;
-	} else if ( client->pers.cmd.forwardmove || 
-		client->pers.cmd.rightmove || 
-		client->pers.cmd.upmove ||
+		player->inactivityTime = level.time + 60 * 1000;
+		player->inactivityWarning = qfalse;
+	} else if ( player->pers.cmd.forwardmove || 
+		player->pers.cmd.rightmove || 
+		player->pers.cmd.upmove ||
 #ifdef IOQ3ZTM
-		(client->pers.cmd.buttons & BUTTON_USE_HOLDABLE) ||
+		(player->pers.cmd.buttons & BUTTON_USE_HOLDABLE) ||
 #endif
-		(client->pers.cmd.buttons & BUTTON_ATTACK) ) {
-		client->inactivityTime = level.time + g_inactivity.integer * 1000;
-		client->inactivityWarning = qfalse;
-	} else if ( !client->pers.localClient ) {
-		if ( level.time > client->inactivityTime ) {
-			trap_DropClient( client - level.clients, "Dropped due to inactivity" );
+		(player->pers.cmd.buttons & BUTTON_ATTACK) ) {
+		player->inactivityTime = level.time + g_inactivity.integer * 1000;
+		player->inactivityWarning = qfalse;
+	} else if ( !player->pers.localClient ) {
+		if ( level.time > player->inactivityTime ) {
+			trap_DropClient( player - level.players, "Dropped due to inactivity" );
 			return qfalse;
 		}
-		if ( level.time > client->inactivityTime - 10000 && !client->inactivityWarning ) {
-			client->inactivityWarning = qtrue;
-			trap_SendServerCommand( client - level.clients, "cp \"Ten seconds until inactivity drop!\n\"" );
+		if ( level.time > player->inactivityTime - 10000 && !player->inactivityWarning ) {
+			player->inactivityWarning = qtrue;
+			trap_SendServerCommand( player - level.players, "cp \"Ten seconds until inactivity drop!\n\"" );
 		}
 	}
 	return qtrue;
@@ -491,103 +491,103 @@ qboolean ClientInactivityTimer( gclient_t *client ) {
 
 /*
 ==================
-ClientTimerActions
+PlayerTimerActions
 
 Actions that happen once a second
 ==================
 */
-void ClientTimerActions( gentity_t *ent, int msec ) {
-	gclient_t	*client;
+void PlayerTimerActions( gentity_t *ent, int msec ) {
+	gplayer_t	*player;
 #ifndef TURTLEARENA // POWERS
 #ifdef MISSIONPACK
 	int			maxHealth;
 #endif
 #endif
 
-	client = ent->client;
-	client->timeResidual += msec;
+	player = ent->player;
+	player->timeResidual += msec;
 
 #ifdef TA_WEAPSYS // MELEEATTACK
-	if (client->ps.meleeLinkTime > 0)
+	if (player->ps.meleeLinkTime > 0)
 	{
-		client->ps.meleeLinkTime -= msec;
-		if (client->ps.meleeLinkTime <= 0)
+		player->ps.meleeLinkTime -= msec;
+		if (player->ps.meleeLinkTime <= 0)
 		{
-			client->ps.meleeLinkTime = 0;
-			client->ps.meleeAttack = -1;
+			player->ps.meleeLinkTime = 0;
+			player->ps.meleeAttack = -1;
 		}
 	}
 
-	if (client->ps.meleeDelay > 0)
+	if (player->ps.meleeDelay > 0)
 	{
-		client->ps.meleeDelay -= msec;
-		if (client->ps.meleeDelay < 0)
+		player->ps.meleeDelay -= msec;
+		if (player->ps.meleeDelay < 0)
 		{
-			client->ps.meleeDelay = 0;
+			player->ps.meleeDelay = 0;
 		}
 	}
 
-	if (client->ps.meleeTime > 0)
+	if (player->ps.meleeTime > 0)
 	{
-		client->ps.meleeTime -= msec;
-		if (client->ps.meleeTime <= 0)
+		player->ps.meleeTime -= msec;
+		if (player->ps.meleeTime <= 0)
 		{
 			int weap_delay;
 			int max_combo;
 
-			max_combo = BG_MaxAttackIndex(&client->ps);
-			weap_delay = bg_weapongroupinfo[client->ps.weapon].weapon[0]->attackDelay;
+			max_combo = BG_MaxAttackIndex(&player->ps);
+			weap_delay = bg_weapongroupinfo[player->ps.weapon].weapon[0]->attackDelay;
 
 			// ZTM: TEST; with the accel changes (xyspeed) weap_delay is way too long.
 			weap_delay /= 2;
 
-			if (client->ps.groundEntityNum == ENTITYNUM_NONE) {
+			if (player->ps.groundEntityNum == ENTITYNUM_NONE) {
 				// Jump attack only uses last attack animation
 				max_combo = 1;
 				weap_delay = 0;
-			} else if (BG_PlayerRunning(client->ps.velocity)) {
+			} else if (BG_PlayerRunning(player->ps.velocity)) {
 				// ZTM: if running have no attack delay and only use first half of animations, like in LoZ:TP
 				max_combo /= 2;
 				weap_delay = 0;
 			}
 
-			client->ps.meleeTime = 0;
+			player->ps.meleeTime = 0;
 
-			if (client->ps.meleeAttack == max_combo-1)
+			if (player->ps.meleeAttack == max_combo-1)
 			{
-				//G_Printf("DEBUG: client %i finished last combo (%i)\n", ent - g_entities, client->ps.meleeAttack);
+				//G_Printf("DEBUG: player %i finished last combo (%i)\n", ent - g_entities, player->ps.meleeAttack);
 
-				client->ps.meleeDelay = weap_delay;
-				client->ps.weaponTime = client->ps.meleeDelay; // Don't let them use a gun...
+				player->ps.meleeDelay = weap_delay;
+				player->ps.weaponTime = player->ps.meleeDelay; // Don't let them use a gun...
 
-				client->ps.meleeAttack = -1;
-				client->ps.meleeLinkTime = 0;
+				player->ps.meleeAttack = -1;
+				player->ps.meleeLinkTime = 0;
 			}
 		}
 	}
 
-	if (client->ps.chainTime > 0)
+	if (player->ps.chainTime > 0)
 	{
-		client->ps.chainTime -= msec;
-		if (client->ps.chainTime <= 0)
+		player->ps.chainTime -= msec;
+		if (player->ps.chainTime <= 0)
 		{
-			client->ps.chainTime = 0;
-			client->ps.chain = 0;
+			player->ps.chainTime = 0;
+			player->ps.chain = 0;
 		}
 	}
 #endif
 
-	while ( client->timeResidual >= 1000 ) {
-		client->timeResidual -= 1000;
+	while ( player->timeResidual >= 1000 ) {
+		player->timeResidual -= 1000;
 
 #ifndef TURTLEARENA // POWERS // Guards having health regen makes them pretty much unkillable, and removed regen powerup.
 		// regenerate
 #ifdef MISSIONPACK
-		if( BG_ItemForItemNum( client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
-			maxHealth = client->ps.stats[STAT_MAX_HEALTH] / 2;
+		if( BG_ItemForItemNum( player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
+			maxHealth = player->ps.stats[STAT_MAX_HEALTH] / 2;
 		}
-		else if ( client->ps.powerups[PW_REGEN] ) {
-			maxHealth = client->ps.stats[STAT_MAX_HEALTH];
+		else if ( player->ps.powerups[PW_REGEN] ) {
+			maxHealth = player->ps.stats[STAT_MAX_HEALTH];
 		}
 		else {
 			maxHealth = 0;
@@ -607,17 +607,17 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
 			}
 #else
-		if ( client->ps.powerups[PW_REGEN] ) {
-			if ( ent->health < client->ps.stats[STAT_MAX_HEALTH]) {
+		if ( player->ps.powerups[PW_REGEN] ) {
+			if ( ent->health < player->ps.stats[STAT_MAX_HEALTH]) {
 				ent->health += 15;
-				if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] * 1.1 ) {
-					ent->health = client->ps.stats[STAT_MAX_HEALTH] * 1.1;
+				if ( ent->health > player->ps.stats[STAT_MAX_HEALTH] * 1.1 ) {
+					ent->health = player->ps.stats[STAT_MAX_HEALTH] * 1.1;
 				}
 				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
-			} else if ( ent->health < client->ps.stats[STAT_MAX_HEALTH] * 2) {
+			} else if ( ent->health < player->ps.stats[STAT_MAX_HEALTH] * 2) {
 				ent->health += 5;
-				if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] * 2 ) {
-					ent->health = client->ps.stats[STAT_MAX_HEALTH] * 2;
+				if ( ent->health > player->ps.stats[STAT_MAX_HEALTH] * 2 ) {
+					ent->health = player->ps.stats[STAT_MAX_HEALTH] * 2;
 				}
 				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
 			}
@@ -626,25 +626,25 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 #endif
 		{
 			// count down health when over max
-			if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
+			if ( ent->health > player->ps.stats[STAT_MAX_HEALTH] ) {
 				ent->health--;
 			}
 		}
 
 #ifndef TURTLEARENA // NOARMOR
 		// count down armor when over max
-		if ( client->ps.stats[STAT_ARMOR] > client->ps.stats[STAT_MAX_HEALTH] ) {
-			client->ps.stats[STAT_ARMOR]--;
+		if ( player->ps.stats[STAT_ARMOR] > player->ps.stats[STAT_MAX_HEALTH] ) {
+			player->ps.stats[STAT_ARMOR]--;
 		}
 #endif
 	}
 #ifdef MISSIONPACK
-	if( BG_ItemForItemNum( client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_AMMOREGEN ) {
+	if( BG_ItemForItemNum( player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_AMMOREGEN ) {
 #ifdef TA_WEAPSYS_EX
 		int w, max, inc, t;
 
 		// Ony gives ammo for current weapon
-		w = client->ps.weapon;
+		w = player->ps.weapon;
 #else
 		int w, max, inc, t, i;
 #ifdef TA_WEAPSYS
@@ -736,16 +736,16 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 #ifdef TA_WEAPSYS_EX
 			if (max > 0)
 			{
-				client->ammoTimes[w] += msec;
-				if ( client->ps.stats[STAT_AMMO] >= max ) {
-					client->ammoTimes[w] = 0;
+				player->ammoTimes[w] += msec;
+				if ( player->ps.stats[STAT_AMMO] >= max ) {
+					player->ammoTimes[w] = 0;
 				}
-				if ( client->ammoTimes[w] >= t ) {
-					while ( client->ammoTimes[w] >= t )
-						client->ammoTimes[w] -= t;
-					client->ps.stats[STAT_AMMO] += inc;
-					if ( client->ps.stats[STAT_AMMO] > max ) {
-						client->ps.stats[STAT_AMMO] = max;
+				if ( player->ammoTimes[w] >= t ) {
+					while ( player->ammoTimes[w] >= t )
+						player->ammoTimes[w] -= t;
+					player->ps.stats[STAT_AMMO] += inc;
+					if ( player->ps.stats[STAT_AMMO] > max ) {
+						player->ps.stats[STAT_AMMO] = max;
 					}
 				}
 			}
@@ -754,16 +754,16 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 			if (max > 0)
 			{
 #endif
-				client->ammoTimes[w] += msec;
-				if ( client->ps.ammo[w] >= max ) {
-					client->ammoTimes[w] = 0;
+				player->ammoTimes[w] += msec;
+				if ( player->ps.ammo[w] >= max ) {
+					player->ammoTimes[w] = 0;
 				}
-				if ( client->ammoTimes[w] >= t ) {
-					while ( client->ammoTimes[w] >= t )
-						client->ammoTimes[w] -= t;
-					client->ps.ammo[w] += inc;
-					if ( client->ps.ammo[w] > max ) {
-						client->ps.ammo[w] = max;
+				if ( player->ammoTimes[w] >= t ) {
+					while ( player->ammoTimes[w] >= t )
+						player->ammoTimes[w] -= t;
+					player->ps.ammo[w] += inc;
+					if ( player->ps.ammo[w] > max ) {
+						player->ps.ammo[w] = max;
 					}
 				}
 #ifdef TA_WEAPSYS
@@ -788,21 +788,21 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 					case HI_LASERSHURIKEN: max = 20; inc = 1; t = 2500; break;
 					default: max = 20; inc = 1; t = 2000; break;
 				}
-				client->holdableTimes[h] += msec;
-				if ( client->ps.holdable[h] >= max ) {
-				client->holdableTimes[h] = 0;
+				player->holdableTimes[h] += msec;
+				if ( player->ps.holdable[h] >= max ) {
+					player->holdableTimes[h] = 0;
 				}
-				if ( client->holdableTimes[h] >= t ) {
-					while ( client->holdableTimes[h] >= t )
-					  client->holdableTimes[h] -= t;
-					client->ps.holdable[h] += inc;
-					if ( client->ps.holdable[h] > max ) {
-					  client->ps.holdable[h] = max;
+				if ( player->holdableTimes[h] >= t ) {
+					while ( player->holdableTimes[h] >= t )
+					  player->holdableTimes[h] -= t;
+					player->ps.holdable[h] += inc;
+					if ( player->ps.holdable[h] > max ) {
+					  player->ps.holdable[h] = max;
 					}
 					// If no holdable is selected auto select this holdable
-					if (inc > 0 && client->ps.holdableIndex == HI_NONE)
+					if (inc > 0 && player->ps.holdableIndex == HI_NONE)
 					{
-						client->ps.holdableIndex = h;
+						player->ps.holdableIndex = h;
 					}
 				}
 			}
@@ -814,44 +814,44 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 
 /*
 ====================
-ClientIntermissionThink
+PlayerIntermissionThink
 ====================
 */
-void ClientIntermissionThink( gclient_t *client ) {
-	client->ps.eFlags &= ~EF_TALK;
-	client->ps.eFlags &= ~EF_FIRING;
+void PlayerIntermissionThink( gplayer_t *player ) {
+	player->ps.eFlags &= ~EF_TALK;
+	player->ps.eFlags &= ~EF_FIRING;
 
 	// the level will exit when everyone wants to or after timeouts
 
 	// swap and latch button actions
-	client->oldbuttons = client->buttons;
-	client->buttons = client->pers.cmd.buttons;
+	player->oldbuttons = player->buttons;
+	player->buttons = player->pers.cmd.buttons;
 #ifdef TA_SP
 	if (g_gametype.integer == GT_SINGLE_PLAYER)
 	{
-		client->readyToExit = 1;
+		player->readyToExit = 1;
 	}
 	else
 #endif
-	if ( client->buttons & ( BUTTON_ATTACK | BUTTON_USE_HOLDABLE ) & ( client->oldbuttons ^ client->buttons ) ) {
+	if ( player->buttons & ( BUTTON_ATTACK | BUTTON_USE_HOLDABLE ) & ( player->oldbuttons ^ player->buttons ) ) {
 		// this used to be an ^1 but once a player says ready, it should stick
-		client->readyToExit = 1;
+		player->readyToExit = 1;
 	}
 }
 
 
 /*
 ================
-ClientEvents
+PlayerEvents
 
 Events will be passed on to the clients for presentation,
 but any server game effects are handled here
 ================
 */
-void ClientEvents( gentity_t *ent, int oldEventSequence ) {
+void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 	int		i;
 	int		event;
-	gclient_t *client;
+	gplayer_t *player;
 	int		damage;
 #ifndef TURTLEARENA // HOLDABLE // no q3 teleporter
 	vec3_t	origin, angles;
@@ -865,13 +865,13 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 	int itemNum;
 #endif
 
-	client = ent->client;
+	player = ent->player;
 
-	if ( oldEventSequence < client->ps.eventSequence - MAX_PS_EVENTS ) {
-		oldEventSequence = client->ps.eventSequence - MAX_PS_EVENTS;
+	if ( oldEventSequence < player->ps.eventSequence - MAX_PS_EVENTS ) {
+		oldEventSequence = player->ps.eventSequence - MAX_PS_EVENTS;
 	}
-	for ( i = oldEventSequence ; i < client->ps.eventSequence ; i++ ) {
-		event = client->ps.events[ i & (MAX_PS_EVENTS-1) ];
+	for ( i = oldEventSequence ; i < player->ps.eventSequence ; i++ ) {
+		event = player->ps.events[ i & (MAX_PS_EVENTS-1) ];
 
 		switch ( event ) {
 		case EV_FALL_MEDIUM:
@@ -893,19 +893,19 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 
 #ifdef TA_WEAPSYS_EX
 		case EV_DROP_WEAPON:
-			if (ent->client)
+			if (ent->player)
 			{
 				int weapon;
 				int ammo;
 				int contents;
 
 				// Get drop info
-				weapon = ent->client->ps.stats[STAT_DROP_WEAPON];
-				ammo = ent->client->ps.stats[STAT_DROP_AMMO];
+				weapon = ent->player->ps.stats[STAT_DROP_WEAPON];
+				ammo = ent->player->ps.stats[STAT_DROP_AMMO];
 
 				// Clear drop info
-				ent->client->ps.stats[STAT_DROP_WEAPON] = WP_NONE;
-				ent->client->ps.stats[STAT_DROP_AMMO] = 0;
+				ent->player->ps.stats[STAT_DROP_WEAPON] = WP_NONE;
+				ent->player->ps.stats[STAT_DROP_AMMO] = 0;
 
 				if (weapon <= WP_NONE) {
 					break;
@@ -979,11 +979,11 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 #else
 		case EV_USE_ITEM1:		// teleporter
 #endif // TA_HOLDSYS
-			TossClientGametypeItems(ent);
+			TossPlayerGametypeItems(ent);
 #ifdef TA_PLAYERSYS
 			SelectSpawnPoint( ent, origin, angles, qfalse );
 #else
-			SelectSpawnPoint( ent->client->ps.origin, origin, angles, qfalse );
+			SelectSpawnPoint( ent->player->ps.origin, origin, angles, qfalse );
 #endif
 			TeleportPlayer( ent, origin, angles );
 			break;
@@ -994,7 +994,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 #else
 		case EV_USE_ITEM2:		// medkit
 #endif
-			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] + 25;
+			ent->health = ent->player->ps.stats[STAT_MAX_HEALTH] + 25;
 
 			break;
 
@@ -1006,7 +1006,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 		case EV_USE_ITEM3:		// kamikaze
 #endif
 			// make sure the invulnerability is off
-			ent->client->invulnerabilityTime = 0;
+			ent->player->invulnerabilityTime = 0;
 			// start the kamikze
 			G_StartKamikaze( ent );
 			break;
@@ -1017,7 +1017,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 #else
 		case EV_USE_ITEM4:		// portal
 #endif
-			if( ent->client->portalID ) {
+			if( ent->player->portalID ) {
 				DropPortalSource( ent );
 			}
 			else {
@@ -1031,7 +1031,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 #else
 		case EV_USE_ITEM5:		// invulnerability
 #endif
-			ent->client->invulnerabilityTime = level.time + 10000;
+			ent->player->invulnerabilityTime = level.time + 10000;
 			break;
 #endif // TURTLEARENA // POWERS
 
@@ -1058,10 +1058,10 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 #if defined MISSIONPACK && !defined TURTLEARENA // POWERS
 /*
 ==============
-StuckInOtherClient
+StuckInOtherPlayer
 ==============
 */
-static int StuckInOtherClient(gentity_t *ent) {
+static int StuckInOtherPlayer(gentity_t *ent) {
 	int i;
 	gentity_t	*ent2;
 
@@ -1073,7 +1073,7 @@ static int StuckInOtherClient(gentity_t *ent) {
 		if ( !ent2->inuse ) {
 			continue;
 		}
-		if ( !ent2->client ) {
+		if ( !ent2->player ) {
 			continue;
 		}
 		if ( ent2->health <= 0 ) {
@@ -1127,14 +1127,14 @@ void SendPendingPredictableEvents( playerState_t *ps ) {
 		t->s.number = number;
 		t->s.eType = ET_EVENTS + event;
 		t->s.eFlags |= EF_PLAYER_EVENT;
-		t->s.otherEntityNum = ps->clientNum;
+		t->s.otherEntityNum = ps->playerNum;
 		t->s.contents = 0;
 		// send to everyone except the client who generated the event
-		t->r.svFlags |= SVF_CLIENTMASK;
-		Com_ClientListAll( &t->r.sendClients );
-		connection = &level.connections[ level.clients[ ps->clientNum ].pers.connectionNum ];
+		t->r.svFlags |= SVF_PLAYERMASK;
+		Com_ClientListAll( &t->r.sendPlayers );
+		connection = &level.connections[ level.players[ ps->playerNum ].pers.connectionNum ];
 		for (i = 0; i < connection->numLocalPlayers; i++ ) {
-			Com_ClientListRemove( &t->r.sendClients, connection->localPlayerNums[i] );
+			Com_ClientListRemove( &t->r.sendPlayers, connection->localPlayerNums[i] );
 		}
 		// set back external event
 		ps->externalEvent = extEvent;
@@ -1201,10 +1201,10 @@ gentity_t *G_FindUseEntity( gentity_t *ent )
 	vec3_t end;
 	gentity_t *traceEnt;
 
-	if (!ent || !ent->client)
+	if (!ent || !ent->player)
 		return NULL;
 
-	AngleVectors (ent->client->ps.viewangles, forward, right, up);
+	AngleVectors (ent->player->ps.viewangles, forward, right, up);
 
 	CalcMuzzlePoint ( ent, forward, right, up, muzzle );
 
@@ -1223,16 +1223,16 @@ gentity_t *G_FindUseEntity( gentity_t *ent )
 	{
 		// Check to make sure multi_trigger will trigger
 		if ( ( traceEnt->spawnflags & 1 ) &&
-			ent->client->ps.persistant[PERS_TEAM] != TEAM_RED ) {
+			ent->player->ps.persistant[PERS_TEAM] != TEAM_RED ) {
 			return NULL;
 		}
 		if ( ( traceEnt->spawnflags & 2 ) &&
-			ent->client->ps.persistant[PERS_TEAM] != TEAM_BLUE ) {
+			ent->player->ps.persistant[PERS_TEAM] != TEAM_BLUE ) {
 			return NULL;
 		}
 #ifdef TA_PLAYERSYS // ABILITY_TECH
 		if ( ( traceEnt->spawnflags & 4 ) &&
-			ent->client->pers.playercfg.ability != ABILITY_TECH ) {
+			ent->player->pers.playercfg.ability != ABILITY_TECH ) {
 			return NULL;
 		}
 #endif
@@ -1246,7 +1246,7 @@ gentity_t *G_FindUseEntity( gentity_t *ent )
 
 /*
 ==============
-ClientThink
+PlayerThink
 
 This will be called once for each client frame, which will
 usually be a couple times for each server frame on fast clients.
@@ -1255,8 +1255,8 @@ If "g_synchronousClients 1" is set, this will be called exactly
 once for each server frame, which makes for smooth demo recording.
 ==============
 */
-void ClientThink_real( gentity_t *ent ) {
-	gclient_t	*client;
+void PlayerThink_real( gentity_t *ent ) {
+	gplayer_t	*player;
 	pmove_t		pm;
 	int			oldEventSequence;
 	int			msec;
@@ -1268,14 +1268,14 @@ void ClientThink_real( gentity_t *ent ) {
 	gentity_t *useEnt;
 #endif
 
-	client = ent->client;
+	player = ent->player;
 
 	// don't think if the client is not yet connected (and thus not yet spawned in)
-	if (client->pers.connected != CON_CONNECTED) {
+	if (player->pers.connected != CON_CONNECTED) {
 		return;
 	}
 	// mark the time, so the connection sprite can be removed
-	ucmd = &ent->client->pers.cmd;
+	ucmd = &ent->player->pers.cmd;
 
 	// sanity check the command time to prevent speedup cheating
 	if ( ucmd->serverTime > level.time + 200 ) {
@@ -1287,10 +1287,10 @@ void ClientThink_real( gentity_t *ent ) {
 //		G_Printf("serverTime >>>>>\n" );
 	} 
 
-	msec = ucmd->serverTime - client->ps.commandTime;
+	msec = ucmd->serverTime - player->ps.commandTime;
 	// following others may result in bad times, but we still want
 	// to check for follow toggles
-	if ( msec < 1 && client->sess.spectatorState != SPECTATOR_FOLLOW ) {
+	if ( msec < 1 && player->sess.spectatorState != SPECTATOR_FOLLOW ) {
 		return;
 	}
 	if ( msec > 200 ) {
@@ -1304,9 +1304,9 @@ void ClientThink_real( gentity_t *ent ) {
 		trap_Cvar_SetValue( "pmove_msec", 33 );
 	}
 
-	if ( pmove_fixed.integer || client->pers.pmoveFixed ) {
+	if ( pmove_fixed.integer || player->pers.pmoveFixed ) {
 		ucmd->serverTime = ((ucmd->serverTime + pmove_msec.integer-1) / pmove_msec.integer) * pmove_msec.integer;
-		//if (ucmd->serverTime - client->ps.commandTime <= 0)
+		//if (ucmd->serverTime - player->ps.commandTime <= 0)
 		//	return;
 	}
 
@@ -1314,19 +1314,19 @@ void ClientThink_real( gentity_t *ent ) {
 	// check for exiting intermission
 	//
 	if ( level.intermissiontime ) {
-		ClientIntermissionThink( client );
+		PlayerIntermissionThink( player );
 		return;
 	}
 
 	// spectators don't do much
-	if ( client->sess.sessionTeam == TEAM_SPECTATOR
+	if ( player->sess.sessionTeam == TEAM_SPECTATOR
 #ifdef IOQ3ZTM // PEAKING
-		|| ( G_AllowPeaking() && client->sess.spectatorState == SPECTATOR_FOLLOW )
+		|| ( G_AllowPeaking() && player->sess.spectatorState == SPECTATOR_FOLLOW )
 #endif
 		)
 	{
 #ifndef IOQ3ZTM
-		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD) {
+		if ( player->sess.spectatorState == SPECTATOR_SCOREBOARD) {
 			return;
 		}
 #endif
@@ -1335,75 +1335,75 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	// check for inactivity timer, but never drop the local client of a non-dedicated server
-	if ( !ClientInactivityTimer( client ) ) {
+	if ( !PlayerInactivityTimer( player ) ) {
 		return;
 	}
 
 #ifdef TURTLEARENA // PLAYERS
 	// switch to using waiting animation if idling for awhile.
-	if (client->pers.cmd.forwardmove || client->pers.cmd.rightmove || client->pers.cmd.upmove
-		|| (client->pers.cmd.buttons & BUTTON_USE_HOLDABLE) || (client->pers.cmd.buttons & BUTTON_ATTACK)
-		|| client->damage_blood || (client->ps.pm_flags & PMF_TIME_KNOCKBACK)) {
-		client->idleTime = level.time;
-		client->ps.eFlags &= ~EF_PLAYER_WAITING;
-	} else if (level.time > client->idleTime + TIME_BEFORE_WAITING_ANIMATION) {
-		client->ps.eFlags |= EF_PLAYER_WAITING;
+	if (player->pers.cmd.forwardmove || player->pers.cmd.rightmove || player->pers.cmd.upmove
+		|| (player->pers.cmd.buttons & BUTTON_USE_HOLDABLE) || (player->pers.cmd.buttons & BUTTON_ATTACK)
+		|| player->damage_blood || (player->ps.pm_flags & PMF_TIME_KNOCKBACK)) {
+		player->idleTime = level.time;
+		player->ps.eFlags &= ~EF_PLAYER_WAITING;
+	} else if (level.time > player->idleTime + TIME_BEFORE_WAITING_ANIMATION) {
+		player->ps.eFlags |= EF_PLAYER_WAITING;
 	}
 #endif
 
 	// clear the rewards if time
-	if ( level.time > client->rewardTime ) {
+	if ( level.time > player->rewardTime ) {
 #ifdef IOQ3ZTM
-		client->ps.eFlags &= ~EF_AWARD_BITS;
+		player->ps.eFlags &= ~EF_AWARD_BITS;
 #else
-		client->ps.eFlags &= ~(EF_AWARD_IMPRESSIVE | EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET | EF_AWARD_ASSIST | EF_AWARD_DEFEND | EF_AWARD_CAP );
+		player->ps.eFlags &= ~(EF_AWARD_IMPRESSIVE | EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET | EF_AWARD_ASSIST | EF_AWARD_DEFEND | EF_AWARD_CAP );
 #endif
 	}
 
-	if ( client->noclip ) {
-		client->ps.pm_type = PM_NOCLIP;
-	} else if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
-		client->ps.pm_type = PM_DEAD;
+	if ( player->noclip ) {
+		player->ps.pm_type = PM_NOCLIP;
+	} else if ( player->ps.stats[STAT_HEALTH] <= 0 ) {
+		player->ps.pm_type = PM_DEAD;
 	} else {
-		client->ps.pm_type = PM_NORMAL;
+		player->ps.pm_type = PM_NORMAL;
 	}
 
-	client->ps.gravity = g_gravity.value;
+	player->ps.gravity = g_gravity.value;
 
 	// set speed
 #ifdef TA_PLAYERSYS // PER_PLAYER_SPEED
-	client->ps.speed = client->pers.playercfg.max_speed * (g_speed.value / 320);
+	player->ps.speed = player->pers.playercfg.max_speed * (g_speed.value / 320);
 #else
-	client->ps.speed = g_speed.value;
+	player->ps.speed = g_speed.value;
 #endif
 
 #ifdef MISSIONPACK
-	if( BG_ItemForItemNum( client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_SCOUT ) {
-		client->ps.speed *= 1.5;
+	if( BG_ItemForItemNum( player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_SCOUT ) {
+		player->ps.speed *= 1.5;
 	}
 	else
 #endif
-	if ( client->ps.powerups[PW_HASTE] ) {
-		client->ps.speed *= 1.3;
+	if ( player->ps.powerups[PW_HASTE] ) {
+		player->ps.speed *= 1.3;
 	}
 
 #ifdef TURTLEARENA // LOCKON
-	if (client->ps.eFlags & EF_LOCKON)
+	if (player->ps.eFlags & EF_LOCKON)
 	{
 		// Walk faster forward like in LOZ:TP
 		if (ucmd->forwardmove > 0) {
-			client->ps.speed *= 1.5;
+			player->ps.speed *= 1.5;
 		} else {
-			client->ps.speed /= 1.4;
+			player->ps.speed /= 1.4;
 		}
 	}
 #endif
 
 	// Let go of the hook if we aren't firing
 #ifdef TA_WEAPSYS
-	if (client->hook) {
-		qboolean weapon_grapple = client->hook->s.weapon == bg_weapongroupinfo[client->ps.weapon].weapon[0]->projnum
-							|| client->hook->s.weapon == bg_weapongroupinfo[client->ps.weapon].weapon[1]->projnum;
+	if (player->hook) {
+		qboolean weapon_grapple = player->hook->s.weapon == bg_weapongroupinfo[player->ps.weapon].weapon[0]->projnum
+							|| player->hook->s.weapon == bg_weapongroupinfo[player->ps.weapon].weapon[1]->projnum;
 
 		if ( (weapon_grapple && !(ucmd->buttons & BUTTON_ATTACK))
 #ifdef TA_HOLDSYS // Allow shurikens to be grappling
@@ -1411,107 +1411,107 @@ void ClientThink_real( gentity_t *ent ) {
 #endif
 			)
 		{
-			Weapon_HookFree(client->hook);
+			Weapon_HookFree(player->hook);
 		}
 	}
 #else
-	if ( client->ps.weapon == WP_GRAPPLING_HOOK &&
-		client->hook && !( ucmd->buttons & BUTTON_ATTACK ) ) {
-		Weapon_HookFree(client->hook);
+	if ( player->ps.weapon == WP_GRAPPLING_HOOK &&
+		player->hook && !( ucmd->buttons & BUTTON_ATTACK ) ) {
+		Weapon_HookFree(player->hook);
 	}
 #endif
 
 #ifdef TURTLEARENA // LOCKON
 	// Set Vieworigin
-	VectorCopy(client->ps.origin, vieworigin);
-	vieworigin[2] += client->ps.viewheight;
+	VectorCopy(player->ps.origin, vieworigin);
+	vieworigin[2] += player->ps.viewheight;
 
 	// Check if current target is valid.
-	if (client->sess.sessionTeam == TEAM_SPECTATOR) {
+	if (player->sess.sessionTeam == TEAM_SPECTATOR) {
 		ent->enemy = NULL;
 	} else {
 		if (ent->enemy && (ent->enemy == ent || !ent->enemy->takedamage)) {
 			ent->enemy = NULL;
 		}
 
-		if (!(client->ps.eFlags & EF_LOCKON)
-			|| !G_ValidTarget(ent, ent->enemy, vieworigin, client->ps.viewangles, 768.0f, 90.0f, 2))
+		if (!(player->ps.eFlags & EF_LOCKON)
+			|| !G_ValidTarget(ent, ent->enemy, vieworigin, player->ps.viewangles, 768.0f, 90.0f, 2))
 		{
 			// Search for a new target
-			ent->enemy = G_FindTarget(ent, vieworigin, client->ps.viewangles, 768.0f, 90.0f);
+			ent->enemy = G_FindTarget(ent, vieworigin, player->ps.viewangles, 768.0f, 90.0f);
 		}
 	}
 
 	// Set origin of target origin
 	if (ent->enemy)
 	{
-		if (ent->enemy->client) {
-			VectorCopy(ent->enemy->client->ps.origin, client->ps.enemyOrigin);
-			client->ps.enemyOrigin[2] += ent->enemy->client->ps.viewheight;
+		if (ent->enemy->player) {
+			VectorCopy(ent->enemy->player->ps.origin, player->ps.enemyOrigin);
+			player->ps.enemyOrigin[2] += ent->enemy->player->ps.viewheight;
 		} else {
-			VectorCopy(ent->enemy->r.currentOrigin, client->ps.enemyOrigin);
-			client->ps.enemyOrigin[2] += ent->enemy->s.maxs[2] * 0.8f;
+			VectorCopy(ent->enemy->r.currentOrigin, player->ps.enemyOrigin);
+			player->ps.enemyOrigin[2] += ent->enemy->s.maxs[2] * 0.8f;
 		}
-		client->ps.enemyEnt = ent->enemy-g_entities;
+		player->ps.enemyEnt = ent->enemy-g_entities;
 	}
 	else
 	{
-		VectorClear(client->ps.enemyOrigin);
-		client->ps.enemyEnt = ENTITYNUM_NONE;
+		VectorClear(player->ps.enemyOrigin);
+		player->ps.enemyEnt = ENTITYNUM_NONE;
 	}
 
-	if (client->hadLockon != (client->ps.eFlags & EF_LOCKON))
+	if (player->hadLockon != (player->ps.eFlags & EF_LOCKON))
 	{
-		client->hadLockon = (client->ps.eFlags & EF_LOCKON);
-		client->lockonTime = level.time;
+		player->hadLockon = (player->ps.eFlags & EF_LOCKON);
+		player->lockonTime = level.time;
 	}
 
 	// A_FaceTarget!
-	if ((client->ps.eFlags & EF_LOCKON) && ent->enemy
-		&& ( level.time - client->lockonTime ) > LOCKON_TIME/2)
+	if ((player->ps.eFlags & EF_LOCKON) && ent->enemy
+		&& ( level.time - player->lockonTime ) > LOCKON_TIME/2)
 	{
 		vec3_t dir;
 		vec3_t viewAngles;
 		vec3_t origin;
 
-		VectorCopy(client->ps.origin, origin);
-		origin[2] += client->ps.viewheight;
+		VectorCopy(player->ps.origin, origin);
+		origin[2] += player->ps.viewheight;
 
-		VectorSubtract( client->ps.enemyOrigin, origin, dir );
+		VectorSubtract( player->ps.enemyOrigin, origin, dir );
 
 		vectoangles( dir, viewAngles );
 
-		BG_SwingAngles( viewAngles[YAW], 40, 90, BG_SWINGSPEED, &ent->client->pers.legs.yawAngle, &ent->client->pers.legs.yawing, (level.time - level.previousTime) );
-		viewAngles[YAW] = ent->client->pers.legs.yawAngle;
+		BG_SwingAngles( viewAngles[YAW], 40, 90, BG_SWINGSPEED, &ent->player->pers.legs.yawAngle, &ent->player->pers.legs.yawing, (level.time - level.previousTime) );
+		viewAngles[YAW] = ent->player->pers.legs.yawAngle;
 
-		SetClientViewAngle(ent, viewAngles);
+		SetPlayerViewAngle(ent, viewAngles);
 	}
 #endif
 #ifdef TA_PATHSYS
-	if (client->ps.pathMode == PATHMODE_SIDE || client->ps.pathMode == PATHMODE_BACK)
+	if (player->ps.pathMode == PATHMODE_SIDE || player->ps.pathMode == PATHMODE_BACK)
 	{
 		// A_FaceTarget!
-		if (ent->client->pers.cmd.rightmove != 0)
+		if (ent->player->pers.cmd.rightmove != 0)
 		{
 			vec3_t dir;
 			vec3_t viewAngles;
 
-			if (ent->client->pers.cmd.rightmove < 0) { // LEFT, pervTrain
-				client->ps.eFlags |= EF_TRAINBACKWARD;
-				VectorSubtract( ent->pos1, client->ps.origin, dir );
+			if (ent->player->pers.cmd.rightmove < 0) { // LEFT, pervTrain
+				player->ps.eFlags |= EF_TRAINBACKWARD;
+				VectorSubtract( ent->pos1, player->ps.origin, dir );
 			} else { // RIGHT, nextTrain
-				client->ps.eFlags &= ~EF_TRAINBACKWARD;
-				VectorSubtract( ent->pos2, client->ps.origin, dir );
+				player->ps.eFlags &= ~EF_TRAINBACKWARD;
+				VectorSubtract( ent->pos2, player->ps.origin, dir );
 			}
 			
 			dir[2] = 0;
 
 			vectoangles( dir, viewAngles );
 
-			//BG_SwingAngles( viewAngles[YAW], 40, 90, BG_SWINGSPEED, &ent->client->pers.legs.yawAngle, &ent->client->pers.legs.yawing, (level.time - level.previousTime) );
-			//viewAngles[YAW] = ent->client->pers.legs.yawAngle;
+			//BG_SwingAngles( viewAngles[YAW], 40, 90, BG_SWINGSPEED, &ent->player->pers.legs.yawAngle, &ent->player->pers.legs.yawing, (level.time - level.previousTime) );
+			//viewAngles[YAW] = ent->player->pers.legs.yawAngle;
 
-			SetClientViewAngle(ent, viewAngles);
+			SetPlayerViewAngle(ent, viewAngles);
 		}
 
 		G_MoveOnPath(ent);
@@ -1519,7 +1519,7 @@ void ClientThink_real( gentity_t *ent ) {
 #endif
 
 	// set up for pmove
-	oldEventSequence = client->ps.eventSequence;
+	oldEventSequence = player->ps.eventSequence;
 
 	memset (&pm, 0, sizeof(pm));
 
@@ -1527,43 +1527,43 @@ void ClientThink_real( gentity_t *ent ) {
 	// Switch to single handed when close to CTF flag
 	// ZTM: TODO: Don't allow CTF flag to be picked up while melee attacking?
 	{
-		qboolean holdingFlag = (client->ps.powerups[PW_BLUEFLAG]
-								|| client->ps.powerups[PW_REDFLAG]
-								|| client->ps.powerups[PW_NEUTRALFLAG]);
+		qboolean holdingFlag = (player->ps.powerups[PW_BLUEFLAG]
+								|| player->ps.powerups[PW_REDFLAG]
+								|| player->ps.powerups[PW_NEUTRALFLAG]);
 
 		// Switch to single handed
-		if (holdingFlag || G_ByEnemyFlag(client->ps.persistant[PERS_TEAM], client->ps.origin))
+		if (holdingFlag || G_ByEnemyFlag(player->ps.persistant[PERS_TEAM], player->ps.origin))
 		{
 			// The Good: When byFlag and attacking, use both hands to attack.
 			// The Bad: If standing by flag, secondary weapon is got out and
 			//    put away before/after each attack...
-			if (!holdingFlag && client->ps.meleeTime)
+			if (!holdingFlag && player->ps.meleeTime)
 			{
-				client->ps.eFlags &= ~EF_PRIMARY_HAND;
+				player->ps.eFlags &= ~EF_PRIMARY_HAND;
 			}
 			else
 			{
-				client->ps.eFlags |= EF_PRIMARY_HAND;
+				player->ps.eFlags |= EF_PRIMARY_HAND;
 			}
 		}
-		else if (client->ps.eFlags & EF_PRIMARY_HAND)
+		else if (player->ps.eFlags & EF_PRIMARY_HAND)
 		{
 			// Don't change while melee attacking
-			if (!client->ps.meleeTime)
+			if (!player->ps.meleeTime)
 			{
-				client->ps.eFlags &= ~EF_PRIMARY_HAND;
+				player->ps.eFlags &= ~EF_PRIMARY_HAND;
 			}
 		}
 	}
 #endif
 
 #ifdef TA_WEAPSYS // MELEEATTACK
-	if (client->ps.pm_type < PM_DEAD && !(client->ps.pm_flags & PMF_RESPAWNED))
+	if (player->ps.pm_type < PM_DEAD && !(player->ps.pm_flags & PMF_RESPAWNED))
 	{
-		if (BG_WeaponHasType(client->ps.weapon, WT_GAUNTLET))
+		if (BG_WeaponHasType(player->ps.weapon, WT_GAUNTLET))
 		{
 			if ((ucmd->buttons & BUTTON_ATTACK) && !(ucmd->buttons & BUTTON_TALK)
-				&& client->ps.weaponTime <= 0 )
+				&& player->ps.weaponTime <= 0 )
 			{
 				pm.gauntletHit = G_MeleeDamage( ent, qtrue );
 			}
@@ -1576,27 +1576,27 @@ void ClientThink_real( gentity_t *ent ) {
 		else
 		{
 			if ((ucmd->buttons & BUTTON_ATTACK) && !( ucmd->buttons & BUTTON_TALK )
-				&& client->ps.meleeDelay <= 0 && client->ps.meleeTime <= 0
-				&& client->ps.weaponTime <= 0)
+				&& player->ps.meleeDelay <= 0 && player->ps.meleeTime <= 0
+				&& player->ps.weaponTime <= 0)
 			{
 				G_StartMeleeAttack(ent);
 			}
 
-			G_MeleeDamage( ent, (client->ps.meleeTime > 0) );
+			G_MeleeDamage( ent, (player->ps.meleeTime > 0) );
 		}
 	}
 #else
 	// check for the hit-scan gauntlet, don't let the action
 	// go through as an attack unless it actually hits something
-	if ( client->ps.weapon == WP_GAUNTLET && !( ucmd->buttons & BUTTON_TALK ) &&
-		( ucmd->buttons & BUTTON_ATTACK ) && client->ps.weaponTime <= 0 ) {
+	if ( player->ps.weapon == WP_GAUNTLET && !( ucmd->buttons & BUTTON_TALK ) &&
+		( ucmd->buttons & BUTTON_ATTACK ) && player->ps.weaponTime <= 0 ) {
 		pm.gauntletHit = CheckGauntletAttack( ent );
 	}
 #endif
 
 	if ( ent->flags & FL_FORCE_GESTURE ) {
 		ent->flags &= ~FL_FORCE_GESTURE;
-		ent->client->pers.cmd.buttons |= BUTTON_GESTURE;
+		ent->player->pers.cmd.buttons |= BUTTON_GESTURE;
 	}
 
 #ifdef TA_ENTSYS // FUNC_USE
@@ -1604,13 +1604,13 @@ void ClientThink_real( gentity_t *ent ) {
 
 	if (useEnt)
 	{
-		ent->client->ps.eFlags |= EF_USE_ENT;
+		ent->player->ps.eFlags |= EF_USE_ENT;
 
 		if ((ucmd->buttons & BUTTON_USE_HOLDABLE) &&
 #ifdef TURTLEARENA // HOLD_SHURIKEN
-			ent->client->ps.holdableTime <= 0
+			ent->player->ps.holdableTime <= 0
 #else
-			! ( ent->client->ps.pm_flags & PMF_USE_ITEM_HELD )
+			! ( ent->player->ps.pm_flags & PMF_USE_ITEM_HELD )
 #endif
 			)
 		{
@@ -1618,23 +1618,23 @@ void ClientThink_real( gentity_t *ent ) {
 				useEnt->use(useEnt, ent, ent);
 			}
 #ifdef TURTLEARENA // HOLD_SHURIKEN
-			ent->client->ps.holdableTime = 500;
+			ent->player->ps.holdableTime = 500;
 #else
-			ent->client->ps.pm_flags |= PMF_USE_ITEM_HELD;
+			ent->player->ps.pm_flags |= PMF_USE_ITEM_HELD;
 #endif
 		}
 	}
 	else
 	{
-		ent->client->ps.eFlags &= ~EF_USE_ENT;
+		ent->player->ps.eFlags &= ~EF_USE_ENT;
 	}
 #endif
 
 #ifndef TURTLEARENA // POWERS
 #ifdef MISSIONPACK
 	// check for invulnerability expansion before doing the Pmove
-	if (client->ps.powerups[PW_INVULNERABILITY] ) {
-		if ( !(client->ps.pm_flags & PMF_INVULEXPAND) ) {
+	if (player->ps.powerups[PW_INVULNERABILITY] ) {
+		if ( !(player->ps.pm_flags & PMF_INVULEXPAND) ) {
 			vec3_t mins = { -42, -42, -42 };
 			vec3_t maxs = { 42, 42, 42 };
 			vec3_t oldmins, oldmaxs;
@@ -1646,9 +1646,9 @@ void ClientThink_real( gentity_t *ent ) {
 			VectorCopy (maxs, ent->s.maxs);
 			trap_LinkEntity(ent);
 			// check if this would get anyone stuck in this player
-			if ( !StuckInOtherClient(ent) ) {
+			if ( !StuckInOtherPlayer(ent) ) {
 				// set flag so the expanded size will be set in PM_CheckDuck
-				client->ps.pm_flags |= PMF_INVULEXPAND;
+				player->ps.pm_flags |= PMF_INVULEXPAND;
 			}
 			// set back
 			VectorCopy (oldmins, ent->s.mins);
@@ -1659,9 +1659,9 @@ void ClientThink_real( gentity_t *ent ) {
 #endif
 #endif
 
-	pm.ps = &client->ps;
+	pm.ps = &player->ps;
 #ifdef TA_PLAYERSYS // PMove
-	pm.playercfg = &client->pers.playercfg;
+	pm.playercfg = &player->pers.playercfg;
 #endif
 	pm.cmd = *ucmd;
 #ifndef TURTLEARENA // NO_BODY_TRACE
@@ -1676,7 +1676,7 @@ void ClientThink_real( gentity_t *ent ) {
 	else {
 		pm.tracemask = MASK_PLAYERSOLID;
 	}
-	if (client->ps.collisionType == CT_CAPSULE) {
+	if (player->ps.collisionType == CT_CAPSULE) {
 		pm.trace = trap_TraceCapsule;
 	} else {
 		pm.trace = trap_Trace;
@@ -1685,13 +1685,13 @@ void ClientThink_real( gentity_t *ent ) {
 	pm.debugLevel = g_debugMove.integer;
 	pm.noFootsteps = ( g_dmflags.integer & DF_NO_FOOTSTEPS ) > 0;
 
-	pm.pmove_fixed = pmove_fixed.integer | client->pers.pmoveFixed;
+	pm.pmove_fixed = pmove_fixed.integer | player->pers.pmoveFixed;
 	pm.pmove_msec = pmove_msec.integer;
 
 	pm.pmove_overbounce = pmove_overbounce.integer;
 
 #if 0 //#ifdef TA_ENTSYS // PUSHABLE
-	if ( !client->noclip )
+	if ( !player->noclip )
 	{
 		gentity_t *obstacle;
 		vec3_t move;
@@ -1699,21 +1699,21 @@ void ClientThink_real( gentity_t *ent ) {
 
 		obstacle = NULL;
 
-		VectorSubtract( client->ps.origin, client->oldOrigin, move );
+		VectorSubtract( player->ps.origin, player->oldOrigin, move );
 		VectorClear( amove );
-		amove[YAW] = client->ps.viewangles[YAW]-client->oldYaw;
+		amove[YAW] = player->ps.viewangles[YAW]-player->oldYaw;
 
-		VectorCopy( client->oldOrigin, ent->r.currentOrigin );
-		VectorCopy( client->ps.viewangles, ent->r.currentAngles );
+		VectorCopy( player->oldOrigin, ent->r.currentOrigin );
+		VectorCopy( player->ps.viewangles, ent->r.currentAngles );
 		ent->r.currentAngles[YAW] -= amove[YAW];
 
 		G_PlayerPush(ent, move, amove, &obstacle);
 	}
-	client->oldYaw = client->ps.viewangles[YAW];
+	player->oldYaw = player->ps.viewangles[YAW];
 #endif
 
 
-	VectorCopy( client->ps.origin, client->oldOrigin );
+	VectorCopy( player->ps.origin, player->oldOrigin );
 
 #ifdef MISSIONPACK
 		if (level.intermissionQueued != 0 && g_singlePlayer.integer) {
@@ -1725,36 +1725,36 @@ void ClientThink_real( gentity_t *ent ) {
 				if ( level.time - level.intermissionQueued >= 2000 && level.time - level.intermissionQueued <= 2500 ) {
 					trap_Cmd_ExecuteText( EXEC_APPEND, "centerview\n");
 				}
-				ent->client->ps.pm_type = PM_SPINTERMISSION;
+				ent->player->ps.pm_type = PM_SPINTERMISSION;
 			}
 		}
 #endif
 	Pmove (&pm);
 
 	// save results of pmove
-	if ( ent->client->ps.eventSequence != oldEventSequence ) {
+	if ( ent->player->ps.eventSequence != oldEventSequence ) {
 		ent->eventTime = level.time;
 	}
 	if (g_smoothClients.integer) {
-		BG_PlayerStateToEntityStateExtraPolate( &ent->client->ps, &ent->s, ent->client->ps.commandTime, qtrue );
+		BG_PlayerStateToEntityStateExtraPolate( &ent->player->ps, &ent->s, ent->player->ps.commandTime, qtrue );
 	}
 	else {
-		BG_PlayerStateToEntityState( &ent->client->ps, &ent->s, qtrue );
+		BG_PlayerStateToEntityState( &ent->player->ps, &ent->s, qtrue );
 	}
-	SendPendingPredictableEvents( &ent->client->ps );
+	SendPendingPredictableEvents( &ent->player->ps );
 
-	if ( !( ent->client->ps.eFlags & EF_FIRING ) ) {
+	if ( !( ent->player->ps.eFlags & EF_FIRING ) ) {
 #ifdef IOQ3ZTM
-		client->ps.pm_flags &= ~PMF_FIRE_HELD;
+		player->ps.pm_flags &= ~PMF_FIRE_HELD;
 #else
-		client->fireHeld = qfalse;		// for grapple
+		player->fireHeld = qfalse;		// for grapple
 #endif
 	}
 
 #ifdef TA_PLAYERSYS // LADDER
 	// Stop grappling if grappled to a ladder
-	if ((ent->client->ps.eFlags & EF_LADDER) && ent->client->hook) {
-		Weapon_HookFree(ent->client->hook);
+	if ((ent->player->ps.eFlags & EF_LADDER) && ent->player->hook) {
+		Weapon_HookFree(ent->player->hook);
 	}
 #endif
 
@@ -1764,78 +1764,79 @@ void ClientThink_real( gentity_t *ent ) {
 	ent->waterlevel = pm.waterlevel;
 	ent->watertype = pm.watertype;
 
-	// execute client events
-	ClientEvents( ent, oldEventSequence );
+	// execute player events
+	PlayerEvents( ent, oldEventSequence );
 
 	// link entity now, after any personal teleporters have been used
 	trap_LinkEntity (ent);
-	if ( !ent->client->noclip ) {
+	if ( !ent->player->noclip ) {
 		G_TouchTriggers( ent );
 	}
 
-	// NOTE: now copy the exact origin over otherwise clients can be snapped into solid
-	VectorCopy( ent->client->ps.origin, ent->r.currentOrigin );
+	// NOTE: now copy the exact origin over otherwise players can be snapped into solid
+	VectorCopy( ent->player->ps.origin, ent->r.currentOrigin );
 
 	//test for solid areas in the AAS file
 	BotTestAAS(ent->r.currentOrigin);
 
 	// touch other objects
-	ClientImpacts( ent, &pm );
+	PlayerImpacts( ent, &pm );
 
-	// save results of triggers and client events
-	if (ent->client->ps.eventSequence != oldEventSequence) {
+	// save results of triggers and player events
+	if (ent->player->ps.eventSequence != oldEventSequence) {
 		ent->eventTime = level.time;
 	}
 
 	// swap and latch button actions
-	client->oldbuttons = client->buttons;
-	client->buttons = ucmd->buttons;
-	client->latched_buttons |= client->buttons & ~client->oldbuttons;
+	player->oldbuttons = player->buttons;
+	player->buttons = ucmd->buttons;
+	player->latched_buttons |= player->buttons & ~player->oldbuttons;
 
 	// check for respawning
-	if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
+	if ( player->ps.stats[STAT_HEALTH] <= 0 ) {
 #ifdef TA_SP // ZTM: Single player death think
 		// wait for the attack button to be pressed
 		if (g_gametype.integer == GT_SINGLE_PLAYER)
 		{
-			if (!client->ps.persistant[PERS_LIVES] && !client->ps.persistant[PERS_CONTINUES])
+			if (!player->ps.persistant[PERS_LIVES] && !player->ps.persistant[PERS_CONTINUES])
 			{
 				// Game Over, don't respawn. In multiplayer you get three lives on the next level.
-				client->respawnTime = -1;
+				player->respawnTime = -1;
 			}
 
 			// If not haven't Game Overed,
-			//   auto respawn in 3 seconds, or if client pressed attack, use, or jump.
-			if ( client->respawnTime > 0 && level.time > client->respawnTime &&
-				((level.time - client->respawnTime > 3000)
+			//   auto respawn in 3 seconds, or if player pressed attack, use, or jump.
+			if ( player->respawnTime > 0 && level.time > player->respawnTime &&
+				((level.time - player->respawnTime > 3000)
 					|| (ucmd->buttons & (BUTTON_ATTACK|BUTTON_USE_HOLDABLE)) || (ucmd->upmove > 0)) )
 			{
-				if (!client->ps.persistant[PERS_LIVES])
+				if (!player->ps.persistant[PERS_LIVES])
 				{
-					/*if (g_singlePlayer.integer && client->ps.pers[PERS_CONTINUES])
+					/*if (g_singlePlayer.integer && player->ps.pers[PERS_CONTINUES])
 					{
 						// ZTM: TODO: Open "Contiue?" menu/screen
 					}
-					else */if (client->ps.persistant[PERS_CONTINUES])
+					else */if (player->ps.persistant[PERS_CONTINUES])
 					{
-						client->ps.persistant[PERS_CONTINUES]--;
-						client->ps.persistant[PERS_LIVES] += 3;
-						ClientRespawn( ent );
+						player->ps.persistant[PERS_CONTINUES]--;
+						player->ps.persistant[PERS_LIVES] += 3;
+						PlayerRespawn( ent );
 					}
 				}
 				else
 				{
-					ClientRespawn( ent );
+					PlayerRespawn( ent );
 				}
 			}
 			return;
 		}
 #endif
 		// wait for the attack button to be pressed
-		if ( level.time > client->respawnTime ) {
+		if ( level.time > player->respawnTime ) {
 			// forcerespawn is to prevent users from waiting out powerups
-			if ( g_forcerespawn.integer > 0 && ( level.time - client->respawnTime ) > g_forcerespawn.integer * 1000 ) {
-				ClientRespawn( ent );
+			if ( g_forcerespawn.integer > 0 && 
+				( level.time - player->respawnTime ) > g_forcerespawn.integer * 1000 ) {
+				PlayerRespawn( ent );
 				return;
 			}
 		
@@ -1846,35 +1847,35 @@ void ClientThink_real( gentity_t *ent ) {
 			if ( ucmd->buttons & ( BUTTON_ATTACK | BUTTON_USE_HOLDABLE ) )
 #endif
 			{
-				ClientRespawn( ent );
+				PlayerRespawn( ent );
 			}
 		}
 		return;
 	}
 
 	// perform once-a-second actions
-	ClientTimerActions( ent, msec );
+	PlayerTimerActions( ent, msec );
 }
 
 /*
 ==================
-ClientThink
+PlayerThink
 
 A new command has arrived from the client
 ==================
 */
-void ClientThink( int clientNum ) {
+void PlayerThink( int playerNum ) {
 	gentity_t *ent;
 
-	ent = g_entities + clientNum;
-	trap_GetUsercmd( clientNum, &ent->client->pers.cmd );
+	ent = g_entities + playerNum;
+	trap_GetUsercmd( playerNum, &ent->player->pers.cmd );
 
 	// mark the time we got info, so we can display the
 	// phone jack if they don't get any for a while
-	ent->client->lastCmdTime = level.time;
+	ent->player->lastCmdTime = level.time;
 
 	if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
-		ClientThink_real( ent );
+		PlayerThink_real( ent );
 	}
 }
 
@@ -1904,7 +1905,7 @@ void G_PlayerAngles( gentity_t *ent, vec3_t legs[3], vec3_t torso[3], vec3_t hea
 	int			dir;
 	int frametime = (level.time - level.previousTime);
 
-	VectorCopy( ent->client->ps.viewangles, headAngles );
+	VectorCopy( ent->player->ps.viewangles, headAngles );
 	headAngles[YAW] = AngleMod( headAngles[YAW] );
 	VectorClear( legsAngles );
 	VectorClear( torsoAngles );
@@ -1913,25 +1914,25 @@ void G_PlayerAngles( gentity_t *ent, vec3_t legs[3], vec3_t torso[3], vec3_t hea
 
 	// allow yaw to drift a bit
 #ifdef TA_WEAPSYS
-	if (!BG_PlayerStandAnim(&ent->client->pers.playercfg, AP_LEGS, ent->client->ps.legsAnim)
-		|| !BG_PlayerStandAnim(&ent->client->pers.playercfg, AP_TORSO, ent->client->ps.torsoAnim))
+	if (!BG_PlayerStandAnim(&ent->player->pers.playercfg, AP_LEGS, ent->player->ps.legsAnim)
+		|| !BG_PlayerStandAnim(&ent->player->pers.playercfg, AP_TORSO, ent->player->ps.torsoAnim))
 #else
-	if ( ( ent->client->ps.legsAnim & ~ANIM_TOGGLEBIT ) != LEGS_IDLE
-		|| ( ent->client->ps.torsoAnim & ~ANIM_TOGGLEBIT ) != TORSO_STAND  )
+	if ( ( ent->player->ps.legsAnim & ~ANIM_TOGGLEBIT ) != LEGS_IDLE
+		|| ( ent->player->ps.torsoAnim & ~ANIM_TOGGLEBIT ) != TORSO_STAND  )
 #endif
 	{
 		// if not standing still, always point all in the same direction
-		ent->client->pers.torso.yawing = qtrue;	// always center
-		ent->client->pers.torso.pitching = qtrue;	// always center
-		ent->client->pers.legs.yawing = qtrue;	// always center
+		ent->player->pers.torso.yawing = qtrue;	// always center
+		ent->player->pers.torso.pitching = qtrue;	// always center
+		ent->player->pers.legs.yawing = qtrue;	// always center
 	}
 
 	// adjust legs for movement dir
-	if ( ent->client->ps.eFlags & EF_DEAD ) {
+	if ( ent->player->ps.eFlags & EF_DEAD ) {
 		// don't let dead bodies twitch
 		dir = 0;
 	} else {
-		dir = ent->client->ps.movementDir;
+		dir = ent->player->ps.movementDir;
 		if ( dir < 0 || dir > 7 ) {
 			Com_Error(ERR_DROP, "G_PlayerAngles: Bad player movement angle" );
 		}
@@ -1940,17 +1941,17 @@ void G_PlayerAngles( gentity_t *ent, vec3_t legs[3], vec3_t torso[3], vec3_t hea
 	torsoAngles[YAW] = headAngles[YAW] + 0.25 * movementOffsets[ dir ];
 
 	// torso
-	BG_SwingAngles( torsoAngles[YAW], 25, 90, BG_SWINGSPEED, &ent->client->pers.torso.yawAngle, &ent->client->pers.torso.yawing, frametime );
-	BG_SwingAngles( legsAngles[YAW], 40, 90, BG_SWINGSPEED, &ent->client->pers.legs.yawAngle, &ent->client->pers.legs.yawing, frametime );
+	BG_SwingAngles( torsoAngles[YAW], 25, 90, BG_SWINGSPEED, &ent->player->pers.torso.yawAngle, &ent->player->pers.torso.yawing, frametime );
+	BG_SwingAngles( legsAngles[YAW], 40, 90, BG_SWINGSPEED, &ent->player->pers.legs.yawAngle, &ent->player->pers.legs.yawing, frametime );
 
-	torsoAngles[YAW] = ent->client->pers.torso.yawAngle;
-	legsAngles[YAW] = ent->client->pers.legs.yawAngle;
+	torsoAngles[YAW] = ent->player->pers.torso.yawAngle;
+	legsAngles[YAW] = ent->player->pers.legs.yawAngle;
 
 
 	// --------- pitch -------------
 
 #ifdef TA_PLAYERSYS // ZTM: If BOTH_* animation, don't have torso pitch
-	if (ent->client->pers.playercfg.fixedtorso || (ent->client->ps.torsoAnim & ~ANIM_TOGGLEBIT) == (ent->client->ps.legsAnim & ~ANIM_TOGGLEBIT)) {
+	if (ent->player->pers.playercfg.fixedtorso || (ent->player->ps.torsoAnim & ~ANIM_TOGGLEBIT) == (ent->player->ps.legsAnim & ~ANIM_TOGGLEBIT)) {
 		dest = 0;
 		headAngles[PITCH] = Com_Clamp( -65, 20, headAngles[PITCH] );
 	} else
@@ -1961,8 +1962,8 @@ void G_PlayerAngles( gentity_t *ent, vec3_t legs[3], vec3_t torso[3], vec3_t hea
 	} else {
 		dest = headAngles[PITCH] * 0.75f;
 	}
-	BG_SwingAngles( dest, 15, 30, 0.1f, &ent->client->pers.torso.pitchAngle, &ent->client->pers.torso.pitching, frametime );
-	torsoAngles[PITCH] = ent->client->pers.torso.pitchAngle;
+	BG_SwingAngles( dest, 15, 30, 0.1f, &ent->player->pers.torso.pitchAngle, &ent->player->pers.torso.pitching, frametime );
+	torsoAngles[PITCH] = ent->player->pers.torso.pitchAngle;
 
 #ifndef TA_PLAYERSYS
 	//
@@ -1994,7 +1995,7 @@ void G_PlayerAngles( gentity_t *ent, vec3_t legs[3], vec3_t torso[3], vec3_t hea
 
 	//
 #ifdef TA_PLAYERSYS
-	if ( ent->client->pers.playercfg.fixedlegs )
+	if ( ent->player->pers.playercfg.fixedlegs )
 #else
 	if ( qfalse )
 #endif
@@ -2005,11 +2006,11 @@ void G_PlayerAngles( gentity_t *ent, vec3_t legs[3], vec3_t torso[3], vec3_t hea
 	}
 
 #ifdef TA_PLAYERSYS // LADDER
-	if (ent->client->ps.eFlags & EF_LADDER) {
+	if (ent->player->ps.eFlags & EF_LADDER) {
 		// Ladder dir, plaver legs should always face dir
-		vectoangles(ent->client->ps.origin2, legsAngles);
+		vectoangles(ent->player->ps.origin2, legsAngles);
 		// If BOTH_* animation, have torso face ladder too
-		if ((ent->client->ps.torsoAnim & ~ANIM_TOGGLEBIT) == (ent->client->ps.legsAnim & ~ANIM_TOGGLEBIT)) {
+		if ((ent->player->ps.torsoAnim & ~ANIM_TOGGLEBIT) == (ent->player->ps.legsAnim & ~ANIM_TOGGLEBIT)) {
 			VectorCopy(legsAngles, torsoAngles);
 			headAngles[0] += torsoAngles[0];
 			headAngles[1] += torsoAngles[1];
@@ -2034,160 +2035,160 @@ void G_PlayerAnimation( gentity_t *ent )
 {
 	int legsAnim;
 
-	if ( ent->client->pers.legs.yawing &&
+	if ( ent->player->pers.legs.yawing &&
 #ifdef TA_WEAPSYS
-		BG_PlayerStandAnim(&ent->client->pers.playercfg, AP_LEGS, ent->client->ps.legsAnim)
+		BG_PlayerStandAnim(&ent->player->pers.playercfg, AP_LEGS, ent->player->ps.legsAnim)
 #else
-		( ent->client->ps.legsAnim & ~ANIM_TOGGLEBIT ) == LEGS_IDLE
+		( ent->player->ps.legsAnim & ~ANIM_TOGGLEBIT ) == LEGS_IDLE
 #endif
 		)
 		legsAnim = LEGS_TURN;
 	else
-		legsAnim = ent->client->ps.legsAnim;
+		legsAnim = ent->player->ps.legsAnim;
 
-	BG_RunLerpFrame( &ent->client->pers.legs,
+	BG_RunLerpFrame( &ent->player->pers.legs,
 #ifdef TA_PLAYERSYS
-		ent->client->pers.playercfg.animations,
+		ent->player->pers.playercfg.animations,
 #else
 #error "ERROR: TA_PLAYERSYS needs to be defined."
 		NULL, // ZTM: This must be valid!
 #endif
-		legsAnim, level.time, ent->client->ps.powerups[PW_HASTE] ? 1.5f : 1.0f );
+		legsAnim, level.time, ent->player->ps.powerups[PW_HASTE] ? 1.5f : 1.0f );
 
-	BG_RunLerpFrame( &ent->client->pers.torso,
+	BG_RunLerpFrame( &ent->player->pers.torso,
 #ifdef TA_PLAYERSYS
-		ent->client->pers.playercfg.animations,
+		ent->player->pers.playercfg.animations,
 #else
 #error "ERROR: TA_PLAYERSYS needs to be defined."
 		NULL, // ZTM: This must be valid!
 #endif
-		ent->client->ps.torsoAnim, level.time, ent->client->ps.powerups[PW_HASTE] ? 1.5f : 1.0f );
+		ent->player->ps.torsoAnim, level.time, ent->player->ps.powerups[PW_HASTE] ? 1.5f : 1.0f );
 }
 #endif
 
-void G_RunClient( gentity_t *ent ) {
+void G_RunPlayer( gentity_t *ent ) {
 #ifdef TA_GAME_MODELS
-	G_PlayerAngles(ent, ent->client->pers.legsAxis, ent->client->pers.torsoAxis, ent->client->pers.headAxis);
+	G_PlayerAngles(ent, ent->player->pers.legsAxis, ent->player->pers.torsoAxis, ent->player->pers.headAxis);
 
 	G_PlayerAnimation(ent);
 #endif
 	if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
 		return;
 	}
-	ent->client->pers.cmd.serverTime = level.time;
-	ClientThink_real( ent );
+	ent->player->pers.cmd.serverTime = level.time;
+	PlayerThink_real( ent );
 }
 
 
 /*
 ==================
-SpectatorClientEndFrame
+SpectatorPlayerEndFrame
 
 ==================
 */
-void SpectatorClientEndFrame( gentity_t *ent ) {
-	gclient_t	*cl;
+void SpectatorPlayerEndFrame( gentity_t *ent ) {
+	gplayer_t	*cl;
 
 	// if we are doing a chase cam or a remote view, grab the latest info
-	if ( ent->client->sess.spectatorState == SPECTATOR_FOLLOW ) {
-		int		clientNum, flags;
+	if ( ent->player->sess.spectatorState == SPECTATOR_FOLLOW ) {
+		int		playerNum, flags;
 
-		clientNum = ent->client->sess.spectatorClient;
+		playerNum = ent->player->sess.spectatorPlayer;
 
-		// team follow1 and team follow2 go to whatever clients are playing
-		if ( clientNum == -1 ) {
-			clientNum = level.follow1;
-		} else if ( clientNum == -2 ) {
-			clientNum = level.follow2;
+		// team follow1 and team follow2 go to whatever players are playing
+		if ( playerNum == -1 ) {
+			playerNum = level.follow1;
+		} else if ( playerNum == -2 ) {
+			playerNum = level.follow2;
 		}
-		if ( clientNum >= 0 ) {
-			cl = &level.clients[ clientNum ];
+		if ( playerNum >= 0 ) {
+			cl = &level.players[ playerNum ];
 			if ( cl->pers.connected == CON_CONNECTED && cl->sess.sessionTeam != TEAM_SPECTATOR ) {
-				flags = (cl->ps.eFlags & ~(EF_VOTED | EF_TEAMVOTED)) | (ent->client->ps.eFlags & (EF_VOTED | EF_TEAMVOTED));
-				ent->client->ps = cl->ps;
-				ent->client->ps.pm_flags |= PMF_FOLLOW;
-				ent->client->ps.eFlags = flags;
+				flags = (cl->ps.eFlags & ~(EF_VOTED | EF_TEAMVOTED)) | (ent->player->ps.eFlags & (EF_VOTED | EF_TEAMVOTED));
+				ent->player->ps = cl->ps;
+				ent->player->ps.pm_flags |= PMF_FOLLOW;
+				ent->player->ps.eFlags = flags;
 				return;
 			} else {
 				// drop them to free spectators unless they are dedicated camera followers
-				if ( ent->client->sess.spectatorClient >= 0 ) {
-					ent->client->sess.spectatorState = SPECTATOR_FREE;
-					ClientBegin( ent->client - level.clients );
+				if ( ent->player->sess.spectatorPlayer >= 0 ) {
+					ent->player->sess.spectatorState = SPECTATOR_FREE;
+					PlayerBegin( ent->player - level.players );
 				}
 			}
 		}
 	}
 
-	if ( ent->client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
-		ent->client->ps.pm_flags |= PMF_SCOREBOARD;
+	if ( ent->player->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
+		ent->player->ps.pm_flags |= PMF_SCOREBOARD;
 	} else {
-		ent->client->ps.pm_flags &= ~PMF_SCOREBOARD;
+		ent->player->ps.pm_flags &= ~PMF_SCOREBOARD;
 	}
 }
 
 /*
 ==============
-ClientEndFrame
+PlayerEndFrame
 
-Called at the end of each server frame for each connected client
-A fast client will have multiple ClientThink for each ClientEdFrame,
-while a slow client may have multiple ClientEndFrame between ClientThink.
+Called at the end of each server frame for each connected player
+A fast client will have multiple PlayerThink for each PlayerEndFrame,
+while a slow client may have multiple PlayerEndFrame between PlayerThink.
 ==============
 */
-void ClientEndFrame( gentity_t *ent ) {
+void PlayerEndFrame( gentity_t *ent ) {
 	int			i;
 
-	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR
+	if ( ent->player->sess.sessionTeam == TEAM_SPECTATOR
 #ifdef IOQ3ZTM // PEAKING
-		|| ( G_AllowPeaking() && ent->client->sess.spectatorState == SPECTATOR_FOLLOW )
+		|| ( G_AllowPeaking() && ent->player->sess.spectatorState == SPECTATOR_FOLLOW )
 #endif
 		)
 	{
-		SpectatorClientEndFrame( ent );
+		SpectatorPlayerEndFrame( ent );
 		return;
 	}
 
 	// turn off any expired powerups
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-		if ( ent->client->ps.powerups[ i ] < level.time ) {
+		if ( ent->player->ps.powerups[ i ] < level.time ) {
 #ifdef NIGHTSMODE
-			if (ent->client->ps.powerups[ i ] > 0
+			if (ent->player->ps.powerups[ i ] > 0
 				&& i == PW_FLIGHT)
 			{
 				G_DeNiGHTSizePlayer(ent);
 			}
 			else
 #endif
-			ent->client->ps.powerups[ i ] = 0;
+			ent->player->ps.powerups[ i ] = 0;
 		}
 	}
 
 #ifdef MISSIONPACK
 	// set powerup for player animation
-	if( BG_ItemForItemNum( ent->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
-		ent->client->ps.powerups[PW_GUARD] = level.time;
+	if( BG_ItemForItemNum( ent->player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
+		ent->player->ps.powerups[PW_GUARD] = level.time;
 	}
-	if( BG_ItemForItemNum( ent->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_SCOUT ) {
-		ent->client->ps.powerups[PW_SCOUT] = level.time;
+	if( BG_ItemForItemNum( ent->player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_SCOUT ) {
+		ent->player->ps.powerups[PW_SCOUT] = level.time;
 	}
-	if( BG_ItemForItemNum( ent->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_DOUBLER ) {
-		ent->client->ps.powerups[PW_DOUBLER] = level.time;
+	if( BG_ItemForItemNum( ent->player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_DOUBLER ) {
+		ent->player->ps.powerups[PW_DOUBLER] = level.time;
 	}
-	if( BG_ItemForItemNum( ent->client->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_AMMOREGEN ) {
-		ent->client->ps.powerups[PW_AMMOREGEN] = level.time;
+	if( BG_ItemForItemNum( ent->player->ps.stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_AMMOREGEN ) {
+		ent->player->ps.powerups[PW_AMMOREGEN] = level.time;
 	}
 #ifndef TURTLEARENA // POWERS
-	if ( ent->client->invulnerabilityTime > level.time ) {
-		ent->client->ps.powerups[PW_INVULNERABILITY] = level.time;
+	if ( ent->player->invulnerabilityTime > level.time ) {
+		ent->player->ps.powerups[PW_INVULNERABILITY] = level.time;
 	}
 #endif
 #endif
 
 	// save network bandwidth
 #if 0
-	if ( !g_synchronousClients->integer && ent->client->ps.pm_type == PM_NORMAL ) {
+	if ( !g_synchronousClients->integer && ent->player->ps.pm_type == PM_NORMAL ) {
 		// FIXME: this must change eventually for non-sync demo recording
-		VectorClear( ent->client->ps.viewangles );
+		VectorClear( ent->player->ps.viewangles );
 	}
 #endif
 
@@ -2206,28 +2207,28 @@ void ClientEndFrame( gentity_t *ent ) {
 	P_DamageFeedback (ent);
 
 	// add the EF_CONNECTION flag if we haven't gotten commands recently
-	if ( level.time - ent->client->lastCmdTime > 1000 ) {
-		ent->client->ps.eFlags |= EF_CONNECTION;
+	if ( level.time - ent->player->lastCmdTime > 1000 ) {
+		ent->player->ps.eFlags |= EF_CONNECTION;
 	} else {
-		ent->client->ps.eFlags &= ~EF_CONNECTION;
+		ent->player->ps.eFlags &= ~EF_CONNECTION;
 	}
 
-	ent->client->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...
+	ent->player->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...
 
-	G_SetClientSound (ent);
+	G_SetPlayerSound (ent);
 
 	// set the latest infor
 	if (g_smoothClients.integer) {
-		BG_PlayerStateToEntityStateExtraPolate( &ent->client->ps, &ent->s, ent->client->ps.commandTime, qtrue );
+		BG_PlayerStateToEntityStateExtraPolate( &ent->player->ps, &ent->s, ent->player->ps.commandTime, qtrue );
 	}
 	else {
-		BG_PlayerStateToEntityState( &ent->client->ps, &ent->s, qtrue );
+		BG_PlayerStateToEntityState( &ent->player->ps, &ent->s, qtrue );
 	}
-	SendPendingPredictableEvents( &ent->client->ps );
+	SendPendingPredictableEvents( &ent->player->ps );
 
-	// set the bit for the reachability area the client is currently in
-//	i = trap_AAS_PointReachabilityAreaIndex( ent->client->ps.origin );
-//	ent->client->areabits[i >> 3] |= 1 << (i & 7);
+	// set the bit for the reachability area the player is currently in
+//	i = trap_AAS_PointReachabilityAreaIndex( ent->player->ps.origin );
+//	ent->player->areabits[i >> 3] |= 1 << (i & 7);
 }
 
 

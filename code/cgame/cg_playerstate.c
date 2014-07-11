@@ -227,42 +227,42 @@ CG_Respawn
 A respawn happened this snapshot
 ================
 */
-void CG_Respawn( int clientNum ) {
+void CG_Respawn( int playerNum ) {
 	int i;
-	qboolean allClients;
+	qboolean allLocalPlayers;
 
 	// no error decay on player movement
 	cg.thisFrameTeleport = qtrue;
 
-	allClients = ( clientNum == -1 );
+	allLocalPlayers = ( playerNum == -1 );
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if ( cg.localClients[i].clientNum == -1 ) {
+		if ( cg.localPlayers[i].playerNum == -1 ) {
 			continue;
 		}
-		if ( !allClients && cg.snap->pss[i].clientNum != clientNum ) {
+		if ( !allLocalPlayers && cg.snap->pss[i].playerNum != playerNum ) {
 			continue;
 		}
 
 #ifndef TA_WEAPSYS_EX
 		// display weapons available
-		cg.localClients[i].weaponSelectTime = cg.time;
+		cg.localPlayers[i].weaponSelectTime = cg.time;
 
 		// select the weapon the server says we are using
-		cg.localClients[i].weaponSelect = cg.snap->pss[i].weapon;
+		cg.localPlayers[i].weaponSelect = cg.snap->pss[i].weapon;
 #endif
 #ifdef TA_HOLDSYS/*2*/
-		cg.localClients[i].holdableSelect = cg.snap->pss[i].holdableIndex;
+		cg.localPlayers[i].holdableSelect = cg.snap->pss[i].holdableIndex;
 #endif
 #ifdef IOQ3ZTM // NEW_CAM
-		cg.localClients[i].camZoomDir = 0;
-		cg.localClients[i].camZoomIn = qfalse;
-		cg.localClients[i].camZoomOut = qfalse;
-		cg.localClients[i].camRotDir = 0;
-		cg.localClients[i].camLeft = qfalse;
-		cg.localClients[i].camRight = qfalse;
-		cg.localClients[i].camReseting = qfalse;
-		cg.localClients[i].camDistance = 0;
+		cg.localPlayers[i].camZoomDir = 0;
+		cg.localPlayers[i].camZoomIn = qfalse;
+		cg.localPlayers[i].camZoomOut = qfalse;
+		cg.localPlayers[i].camRotDir = 0;
+		cg.localPlayers[i].camLeft = qfalse;
+		cg.localPlayers[i].camRight = qfalse;
+		cg.localPlayers[i].camReseting = qfalse;
+		cg.localPlayers[i].camDistance = 0;
 #endif
 	}
 }
@@ -280,13 +280,13 @@ void CG_CheckPlayerstateEvents( playerState_t *ps, playerState_t *ops ) {
 	centity_t	*cent;
 
 	if ( ps->externalEvent && ps->externalEvent != ops->externalEvent ) {
-		cent = &cg_entities[ ps->clientNum ];
+		cent = &cg_entities[ ps->playerNum ];
 		cent->currentState.event = ps->externalEvent;
 		cent->currentState.eventParm = ps->externalEventParm;
 		CG_EntityEvent( cent, cent->lerpOrigin );
 	}
 
-	cent = &cg.cur_lc->predictedPlayerEntity; // cg_entities[ ps->clientNum ];
+	cent = &cg.cur_lc->predictedPlayerEntity; // cg_entities[ ps->playerNum ];
 	// go through the predictable events buffer
 	for ( i = ps->eventSequence - MAX_PS_EVENTS ; i < ps->eventSequence ; i++ ) {
 		// if we have a new predictable event
@@ -521,8 +521,8 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 			(ps->powerups[PW_NEUTRALFLAG] != ops->powerups[PW_NEUTRALFLAG] && ps->powerups[PW_NEUTRALFLAG]) )
 		{
 #ifdef TA_DATA
-			if (CG_NumLocalClients() > 1) {
-				trap_S_StartLocalSound( cgs.media.playerHasFlagSound[cg.cur_localClientNum], CHAN_ANNOUNCER );
+			if (CG_NumLocalPlayers() > 1) {
+				trap_S_StartLocalSound( cgs.media.playerHasFlagSound[cg.cur_localPlayerNum], CHAN_ANNOUNCER );
 			} else
 #endif
 			trap_S_StartLocalSound( cgs.media.youHaveFlagSound, CHAN_ANNOUNCER );
@@ -657,7 +657,7 @@ CG_TransitionPlayerState
 */
 void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops ) {
 	// check for changing follow mode
-	if ( ps->clientNum != ops->clientNum ) {
+	if ( ps->playerNum != ops->playerNum ) {
 		cg.thisFrameTeleport = qtrue;
 		// make sure we don't get any unwanted transition effects
 		*ops = *ps;
@@ -670,7 +670,7 @@ void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops ) {
 
 	// respawning
 	if ( ps->persistant[PERS_SPAWN_COUNT] != ops->persistant[PERS_SPAWN_COUNT] ) {
-		CG_Respawn(ps->clientNum);
+		CG_Respawn(ps->playerNum);
 	}
 
 	if ( cg.mapRestart ) {

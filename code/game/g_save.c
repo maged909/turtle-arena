@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 typedef struct
 {
-	byte localClientNum;
+	byte localPlayerNum;
 	char model[MAX_QPATH];
 	char headModel[MAX_QPATH];
 	byte holdable[MAX_HOLDABLE];
@@ -40,7 +40,7 @@ typedef struct
 	int score;
 	byte lives;
 	byte continues;
-} save_client_t;
+} save_player_t;
 
 typedef struct
 {
@@ -48,13 +48,13 @@ typedef struct
 	//
     byte version; // Save file version.
     char mapname[MAX_QPATH];
-    byte maxclients;
-    byte localClients;
+    byte maxplayers;
+    byte localPlayers;
 
 	// game only, server doesn't read these.
 	//
     byte skill;
-    save_client_t clients[MAX_SPLITVIEW];
+    save_player_t players[MAX_SPLITVIEW];
 
 } save_t;
 
@@ -73,7 +73,7 @@ qboolean G_SaveGame(const char *savegame)
 	char filename[MAX_QPATH];
 	fileHandle_t f;
 	save_t saveData;
-	int client;
+	int player;
 	int i;
 	int j;
 
@@ -106,50 +106,50 @@ qboolean G_SaveGame(const char *savegame)
 	}
 
 	saveData.skill = g_spSkill.integer;
-	saveData.maxclients = level.maxclients;
+	saveData.maxplayers = level.maxplayers;
 
-	// Bits get added are each local client in savegame.
-	saveData.localClients = 0;
+	// Bits get added are each local player in savegame.
+	saveData.localPlayers = 0;
 
-	client = 0;
-	for (i = 0; i < level.maxclients; i++)
+	player = 0;
+	for (i = 0; i < level.maxplayers; i++)
 	{
 		if (g_entities[i].r.svFlags & SVF_BOT)
 			continue;
 
-		if (level.clients[i].pers.connected != CON_CONNECTED)
+		if (level.players[i].pers.connected != CON_CONNECTED)
 			continue;
 
 		// Don't save dead (Game Over) clients.
-		if (level.clients[i].ps.persistant[PERS_LIVES] < 1 && level.clients[i].ps.persistant[PERS_CONTINUES] < 1)
+		if (level.players[i].ps.persistant[PERS_LIVES] < 1 && level.players[i].ps.persistant[PERS_CONTINUES] < 1)
 			continue;
 
-		saveData.clients[client].localClientNum = level.clients[i].pers.localPlayerNum;
-		saveData.localClients |= (1<<saveData.clients[client].localClientNum);
+		saveData.players[player].localPlayerNum = level.players[i].pers.localPlayerNum;
+		saveData.localPlayers |= (1<<saveData.players[player].localPlayerNum);
 
 		// model/skin
-		Q_strncpyz(saveData.clients[client].model, level.clients[i].pers.playercfg.model, MAX_QPATH);
+		Q_strncpyz(saveData.players[player].model, level.players[i].pers.playercfg.model, MAX_QPATH);
 
 		// headmodel/skin
-		Q_strncpyz(saveData.clients[client].headModel, level.clients[i].pers.playercfg.headModel, MAX_QPATH);
+		Q_strncpyz(saveData.players[player].headModel, level.players[i].pers.playercfg.headModel, MAX_QPATH);
 
 		// holdable items
 		for (j = 0; j < MAX_HOLDABLE; j++) {
-			saveData.clients[client].holdable[j] = level.clients[i].ps.holdable[j];
+			saveData.players[player].holdable[j] = level.players[i].ps.holdable[j];
 		}
-		saveData.clients[client].holdableSelected = level.clients[i].ps.holdableIndex;
-		saveData.clients[client].score = level.clients[i].ps.persistant[PERS_SCORE];
-		saveData.clients[client].lives = level.clients[i].ps.persistant[PERS_LIVES];
-		saveData.clients[client].continues = level.clients[i].ps.persistant[PERS_CONTINUES];
-		client++;
-		if (client >= MAX_SPLITVIEW) {
+		saveData.players[player].holdableSelected = level.players[i].ps.holdableIndex;
+		saveData.players[player].score = level.players[i].ps.persistant[PERS_SCORE];
+		saveData.players[player].lives = level.players[i].ps.persistant[PERS_LIVES];
+		saveData.players[player].continues = level.players[i].ps.persistant[PERS_CONTINUES];
+		player++;
+		if (player >= MAX_SPLITVIEW) {
 			break;
 		}
 	}
 
-	for ( ; client < MAX_SPLITVIEW; client++) {
+	for ( ; player < MAX_SPLITVIEW; player++) {
 		// Unused slots
-		saveData.clients[client].localClientNum = 0xff;
+		saveData.players[player].localPlayerNum = 0xff;
 	}
 
 	// Open savefile
@@ -227,17 +227,17 @@ void G_LoadGame(void)
 ==========
 G_LoadGameClient
 
-Figure out which client data to load from save file for this gameClient
-There can be a different number of bots on different maps, the order of the clients changes sometimes,
-	so find the human(s) to get correct client.
+Figure out which player data to load from save file for this gamePlayer
+There can be a different number of bots on different maps, the order of the players changes sometimes,
+	so find the human(s) to get correct player.
 ==========
 */
-void G_LoadGameClient(int gameClient)
+void G_LoadGameClient(int gamePlayer)
 {
-	int localClientNum;
+	int localPlayerNum;
 	int i, j;
-	gclient_t *client;
-	save_client_t *saved;
+	gplayer_t *player;
+	save_player_t *saved;
 
 	// Check if save game is loaded.
 	if (!savegameLoaded) {
@@ -245,43 +245,43 @@ void G_LoadGameClient(int gameClient)
 	}
 
 	// Bots don't save data in save files.
-	if (g_entities[gameClient].r.svFlags & SVF_BOT) {
+	if (g_entities[gamePlayer].r.svFlags & SVF_BOT) {
 		return;
 	}
 
-	localClientNum = level.clients[gameClient].pers.localPlayerNum;
+	localPlayerNum = level.players[gamePlayer].pers.localPlayerNum;
 
-	// Not a valid local client.
-	if (localClientNum < 0) {
+	// Not a valid local player.
+	if (localPlayerNum < 0) {
 		return;
 	}
 
 	// Find save slot.
 	saved = NULL;
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		if (loadData.clients[i].localClientNum == localClientNum) {
-			saved = &loadData.clients[i];
+		if (loadData.players[i].localPlayerNum == localPlayerNum) {
+			saved = &loadData.players[i];
 			break;
 		}
 	}
 
 	if (!saved) {
-		// Client not in savefile.
+		// Player not in savefile.
 		return;
 	}
 
-	client = &level.clients[gameClient];
+	player = &level.players[gamePlayer];
 
 	// Set model/headmodel.
-	trap_Cvar_Set(Com_LocalClientCvarName(localClientNum, "spmodel"), saved->model);
-	trap_Cvar_Set(Com_LocalClientCvarName(localClientNum, "spheadmodel"), saved->headModel);
+	trap_Cvar_Set(Com_LocalPlayerCvarName(localPlayerNum, "spmodel"), saved->model);
+	trap_Cvar_Set(Com_LocalPlayerCvarName(localPlayerNum, "spheadmodel"), saved->headModel);
 
 	for (j = 0; j < MAX_HOLDABLE; j++) {
-		client->ps.holdable[j] = saved->holdable[j];
+		player->ps.holdable[j] = saved->holdable[j];
 	}
-	client->ps.holdableIndex = saved->holdableSelected;
-	client->ps.persistant[PERS_SCORE] = saved->score;
-	client->ps.persistant[PERS_LIVES] = saved->lives;
-	client->ps.persistant[PERS_CONTINUES] = saved->continues;
+	player->ps.holdableIndex = saved->holdableSelected;
+	player->ps.persistant[PERS_SCORE] = saved->score;
+	player->ps.persistant[PERS_LIVES] = saved->lives;
+	player->ps.persistant[PERS_CONTINUES] = saved->continues;
 }
 #endif // TA_SP

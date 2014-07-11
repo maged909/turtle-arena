@@ -408,7 +408,7 @@ extern void UI_SetupMenu(void);
 //
 // ui_team.c
 //
-extern void UI_TeamMainMenu( int localClient );
+extern void UI_TeamMainMenu( int localPlayerNum );
 extern void TeamMain_Cache( void );
 
 //
@@ -425,14 +425,14 @@ extern void UI_SelectPlayer_Cache( void );
 //
 // ui_controls2.c
 //
-extern void UI_ControlsMenu( int localClient );
+extern void UI_ControlsMenu( int localPlayerNum );
 extern void Controls_Cache( void );
 extern qboolean Controls_WantsBindKeys( void );
 
 //
 // ui_joystick.c
 //
-void UI_JoystickMenu( int localClient );
+void UI_JoystickMenu( int localPlayerNum );
 void UI_Joystick_Cache( void );
 
 //
@@ -470,13 +470,13 @@ void UI_PlayerSetupMenu_Cache( void );
 //
 // ui_playermodel.c
 //
-extern void UI_PlayerModelMenu( int localClient );
+extern void UI_PlayerModelMenu( int localPlayerNum );
 extern void PlayerModel_Cache( void );
 
 //
 // ui_playersettings.c
 //
-extern void UI_PlayerSettingsMenu( int localClient );
+extern void UI_PlayerSettingsMenu( int localPlayerNum );
 extern void PlayerSettings_Cache( void );
 #endif
 
@@ -485,12 +485,6 @@ extern void PlayerSettings_Cache( void );
 //
 extern void UI_PreferencesMenu( void );
 extern void Preferences_Cache( void );
-
-//
-// ui_specifyleague.c
-//
-extern void UI_SpecifyLeagueMenu( void );
-extern void SpecifyLeague_Cache( void );
 
 //
 // ui_specifyserver.c
@@ -599,12 +593,12 @@ typedef struct {
 	int				barrelTime;
 
 	int				realWeapon;
-} playerInfo_t;
+} uiPlayerInfo_t;
 
-void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int time );
-void UI_PlayerInfo_SetModel( playerInfo_t *pi, const char *model, const char *headmodel, char *teamName );
-void UI_PlayerInfo_SetInfo( playerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat );
-qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName, const char *headModelSkinName, const char *teamName );
+void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int time );
+void UI_PlayerInfo_SetModel( uiPlayerInfo_t *pi, const char *model, const char *headmodel, char *teamName );
+void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int legsAnim, int torsoAnim, vec3_t viewAngles, vec3_t moveAngles, weapon_t weaponNum, qboolean chat );
+qboolean UI_RegisterPlayerModelname( uiPlayerInfo_t *pi, const char *modelSkinName, const char *headModelSkinName, const char *teamName );
 #endif
 
 //
@@ -684,7 +678,6 @@ extern void			UI_PopMenu (void);
 extern void			UI_ForceMenuOff (void);
 extern void			UI_Refresh( int time );
 extern int			UI_MaxSplitView(void);
-extern int			UI_NumLocalClients(void);
 extern qboolean		m_entersound;
 extern uiStatic_t	uis;
 
@@ -824,35 +817,6 @@ void UI_SPUnlockMedals_f( void );
 #endif
 
 void UI_InitGameinfo( void );
-
-//GRank
-
-//
-// ui_rankings.c
-//
-void Rankings_DrawText( void* self );
-void Rankings_DrawName( void* self );
-void Rankings_DrawPassword( void* self );
-void Rankings_Cache( void );
-void UI_RankingsMenu( void );
-
-//
-// ui_login.c
-//
-void Login_Cache( void );
-void UI_LoginMenu( void );
-
-//
-// ui_signup.c
-//
-void Signup_Cache( void );
-void UI_SignupMenu( void );
-
-//
-// ui_rankstatus.c
-//
-void RankStatus_Cache( void );
-void UI_RankStatusMenu( void );
 
 #ifdef TA_SP
 // Arcade map gamedata

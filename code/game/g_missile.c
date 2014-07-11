@@ -116,9 +116,9 @@ void G_ExplodeMissile( gentity_t *ent ) {
 	G_AddEvent( ent, EV_MISSILE_MISS, DirToByte( dir ) );
 #ifdef TA_WEAPSYS
 	if (ent->parent)
-		ent->s.clientNum = ent->parent->s.number;
+		ent->s.playerNum = ent->parent->s.number;
 	else
-		ent->s.clientNum = ENTITYNUM_NONE;
+		ent->s.playerNum = ENTITYNUM_NONE;
 #endif
 
 	ent->freeAfterEvent = qtrue;
@@ -133,7 +133,7 @@ void G_ExplodeMissile( gentity_t *ent ) {
 			, ent->splashMethodOfDeath ) )
 #endif
 		{
-			g_entities[ent->r.ownerNum].client->accuracy_hits++;
+			g_entities[ent->r.ownerNum].player->accuracy_hits++;
 		}
 	}
 
@@ -190,9 +190,9 @@ void G_SetMissileVelocity(gentity_t *bolt, vec3_t dir, int projnum)
 	}
 
 #if 0
-	if (bolt->parent && bolt->parent->client) {
+	if (bolt->parent && bolt->parent->player) {
 		// "real" physics
-		VectorAdd( bolt->s.pos.trDelta, bolt->parent->client->ps.velocity, bolt->s.pos.trDelta );
+		VectorAdd( bolt->s.pos.trDelta, bolt->parent->player->ps.velocity, bolt->s.pos.trDelta );
 	}
 #endif
 
@@ -235,7 +235,7 @@ void G_HomingMissile(gentity_t * ent)
 
 	while((blip = G_FindRadius(blip, ent->r.currentOrigin, 2000)) != NULL)
 	{
-		if(blip->client == NULL)
+		if(blip->player == NULL)
 			continue;
 
 		if(blip == ent->parent)
@@ -247,7 +247,7 @@ void G_HomingMissile(gentity_t * ent)
 		if(blip->flags & FL_NOTARGET)
 			continue;
 
-		if(blip->client->sess.sessionTeam >= TEAM_SPECTATOR)
+		if(blip->player->sess.sessionTeam >= TEAM_SPECTATOR)
 			continue;
 
 		if(OnSameTeam(blip, ent->parent))
@@ -351,30 +351,30 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 	}
 
 	// Check if can fire grappling projectile
-	if (self && self->client && bg_projectileinfo[projnum].grappling)
+	if (self && self->player && bg_projectileinfo[projnum].grappling)
 	{
 #ifdef IOQ3ZTM
 #ifdef TURTLEARENA // HOLD_SHURIKEN
 		if (handSide == HS_CENTER) // Shuriken holdable item
 		{
-			if ((self->client->ps.pm_flags & PMF_USE_ITEM_HELD) || self->client->hook) {
+			if ((self->player->ps.pm_flags & PMF_USE_ITEM_HELD) || self->player->hook) {
 				return qfalse;
 			}
-			self->client->ps.pm_flags |= PMF_USE_ITEM_HELD;
+			self->player->ps.pm_flags |= PMF_USE_ITEM_HELD;
 		}
 		else
 #endif
 		{
-			if ((self->client->ps.pm_flags & PMF_FIRE_HELD) || self->client->hook) {
+			if ((self->player->ps.pm_flags & PMF_FIRE_HELD) || self->player->hook) {
 				return qfalse;
 			}
-			self->client->ps.pm_flags |= PMF_FIRE_HELD;
+			self->player->ps.pm_flags |= PMF_FIRE_HELD;
 		}
 #else
-		if (self->client->fireHeld || self->client->hook) {
+		if (self->player->fireHeld || self->player->hook) {
 			return qfalse;
 		}
-		self->client->fireHeld = qtrue;
+		self->player->fireHeld = qtrue;
 #endif
 	}
 
@@ -500,13 +500,13 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 				if ( !(tr.surfaceFlags & SURF_NOIMPACT) )
 				{
 					// send bullet impact
-					if ( traceEnt->takedamage && traceEnt->client )
+					if ( traceEnt->takedamage && traceEnt->player )
 					{
 #if 1 // lightning
 						tent = G_TempEntity( tr.endpos, EV_MISSILE_HIT );
 						tent->s.otherEntityNum = traceEnt->s.number;
 						tent->s.eventParm = DirToByte( tr.plane.normal );
-						tent->s.clientNum = self->s.number;
+						tent->s.playerNum = self->s.number;
 #else
 						tent = G_TempEntity( tr.endpos, EV_BULLET_HIT_FLESH );
 						tent->s.eventParm = traceEnt->s.number;
@@ -515,13 +515,13 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 						tent->s.weapon = projnum;
 					} else if (tr.surfaceFlags & SURF_METALSTEPS) {
 						tent = G_TempEntity( tr.endpos, EV_MISSILE_MISS_METAL );
-						tent->s.clientNum = self->s.number;
+						tent->s.playerNum = self->s.number;
 						tent->s.weapon = projnum;
 						tent->s.eventParm = DirToByte( tr.plane.normal );
 					} else {
 #if 1 // lightning
 						tent = G_TempEntity( tr.endpos, EV_MISSILE_MISS );
-						tent->s.clientNum = self->s.number;
+						tent->s.playerNum = self->s.number;
 #else
 						tent = G_TempEntity( tr.endpos, EV_BULLET_HIT_WALL );
 						tent->s.otherEntityNum = self->s.number;
@@ -534,7 +534,7 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 				if ( traceEnt->takedamage)
 				{
 #if defined MISSIONPACK && !defined TURTLEARENA // POWERS
-					if ( traceEnt->client && traceEnt->client->invulnerabilityTime > level.time )
+					if ( traceEnt->player && traceEnt->player->invulnerabilityTime > level.time )
 					{
 						if (G_InvulnerabilityEffect( traceEnt, dir, tr.endpos, impactpoint, bouncedir ))
 						{
@@ -546,9 +546,9 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 								// send railgun beam effect
 								tent = G_TempEntity( tr.endpos, EV_RAILTRAIL );
 								// set player number for custom colors on the railtrail
-								tent->s.clientNum = self->s.clientNum;
+								tent->s.playerNum = self->s.playerNum;
 								tent->s.weapon = projnum;
-								tent->s.weaponHands = MAX_HANDS; // Don't attach to client's gun
+								tent->s.weaponHands = MAX_HANDS; // Don't attach to player's gun
 								VectorCopy( start, tent->s.origin2 );
 								// move origin a bit to come closer to the drawn gun muzzle
 								VectorMA( tent->s.origin2, 4, right, tent->s.origin2 );
@@ -622,35 +622,35 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 				trap_LinkEntity( unlinkedEntities[i] );
 			}
 
-			if (self && self->client) {
+			if (self && self->player) {
 #ifndef TURTLEARENA // AWARDS
 				if (bg_projectileinfo[projnum].maxHits > 1) {
 					// give the shooter a reward sound if they have made two railgun hits in a row
 					if ( hits == 0 ) {
 						// complete miss
-						self->client->accurateCount = 0;
+						self->player->accurateCount = 0;
 					} else {
 						// check for "impressive" reward sound
-						self->client->accurateCount += hits;
-						if ( self->client->accurateCount >= 2 ) {
-							self->client->accurateCount -= 2;
-							self->client->ps.persistant[PERS_IMPRESSIVE_COUNT]++;
+						self->player->accurateCount += hits;
+						if ( self->player->accurateCount >= 2 ) {
+							self->player->accurateCount -= 2;
+							self->player->ps.persistant[PERS_IMPRESSIVE_COUNT]++;
 							// add the sprite over the player's head
 #ifdef IOQ3ZTM
-							self->client->ps.eFlags &= ~EF_AWARD_BITS;
+							self->player->ps.eFlags &= ~EF_AWARD_BITS;
 #else
-							self->client->ps.eFlags &= ~(EF_AWARD_IMPRESSIVE | EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET | EF_AWARD_ASSIST | EF_AWARD_DEFEND | EF_AWARD_CAP );
+							self->player->ps.eFlags &= ~(EF_AWARD_IMPRESSIVE | EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET | EF_AWARD_ASSIST | EF_AWARD_DEFEND | EF_AWARD_CAP );
 #endif
-							self->client->ps.eFlags |= EF_AWARD_IMPRESSIVE;
-							self->client->rewardTime = level.time + REWARD_SPRITE_TIME;
+							self->player->ps.eFlags |= EF_AWARD_IMPRESSIVE;
+							self->player->rewardTime = level.time + REWARD_SPRITE_TIME;
 						}
-						self->client->accuracy_hits++;
+						self->player->accuracy_hits++;
 					}
 				}
 				else
 #endif
 				if (hits) {
-					self->client->accuracy_hits++;
+					self->player->accuracy_hits++;
 				}
 			}
 
@@ -668,17 +668,17 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 				tent = G_TempEntity( tr.endpos, EV_RAILTRAIL );
 
 				// set player number for custom colors on the railtrail
-				tent->s.clientNum = self->s.clientNum;
+				tent->s.playerNum = self->s.playerNum;
 
 				// Set projectile number
 				tent->s.weapon = projnum;
 
 				// ZTM: NOTE: This could be a problem if multiple hands use the same handSide.
 				tent->s.weaponHands = MAX_HANDS;
-				if (self->client) {
+				if (self->player) {
 					for (i = 0; i < MAX_HANDS; i++)
 					{
-						if (self->client->pers.playercfg.handSide[i] == handSide) {
+						if (self->player->pers.playercfg.handSide[i] == handSide) {
 							tent->s.weaponHands = i;
 							break;
 						}
@@ -698,7 +698,7 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 
 		bolt = G_Spawn();
 		bolt->classname = bg_projectileinfo[projnum].name;
-		if (self && self->client && bg_projectileinfo[projnum].grappling)
+		if (self && self->player && bg_projectileinfo[projnum].grappling)
 		{
 			if (bg_projectileinfo[projnum].timetolive == -1)
 				bolt->nextthink = -1;
@@ -707,7 +707,7 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 
 			bolt->think = Weapon_HookFree;
 
-			self->client->hook = bolt;
+			self->player->hook = bolt;
 		}
 		else if (bg_projectileinfo[projnum].homing)
 		{
@@ -789,17 +789,17 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 		// Save handSide in missile
 		bolt->s.weaponHands = handSide;
 
-		if (self && self->client)
+		if (self && self->player)
 		{
 			// Taken from Q3's fire_prox;
 			// ZTM: Used by prox mines so that if that player changes teams the mines
 			//        don't "change" teams as well (or something...).
-			bolt->s.team = self->client->sess.sessionTeam;
+			bolt->s.team = self->player->sess.sessionTeam;
 
 			// Needed for stickOnImpact projectiles
-			bolt->s.angles[0] = self->client->ps.viewangles[0];
-			bolt->s.angles[1] = self->client->ps.viewangles[1];
-			bolt->s.angles[2] = self->client->ps.viewangles[2];
+			bolt->s.angles[0] = self->player->ps.viewangles[0];
+			bolt->s.angles[1] = self->player->ps.viewangles[1];
+			bolt->s.angles[2] = self->player->ps.viewangles[2];
 		}
 	}
 
@@ -845,13 +845,13 @@ qboolean fire_shuriken (gentity_t *self, vec3_t start, vec3_t forward, vec3_t ri
 	int projnum;
 	float s_quadFactor;
 
-	if (self->client->ps.powerups[PW_QUAD] ) {
+	if (self->player->ps.powerups[PW_QUAD] ) {
 		s_quadFactor = g_quadfactor.value;
 	} else {
 		s_quadFactor = 1;
 	}
 #ifdef MISSIONPACK
-	if( self->client->persistantPowerup && self->client->persistantPowerup->item && self->client->persistantPowerup->item->giTag == PW_DOUBLER ) {
+	if( self->player->persistantPowerup && self->player->persistantPowerup->item && self->player->persistantPowerup->item->giTag == PW_DOUBLER ) {
 		s_quadFactor *= 2;
 	}
 #endif
@@ -899,7 +899,7 @@ void ProximityMine_Trigger( gentity_t *trigger, gentity_t *other, trace_t *trace
 	vec3_t		v;
 	gentity_t	*mine;
 
-	if( !other->client ) {
+	if( !other->player ) {
 		return;
 	}
 
@@ -912,7 +912,7 @@ void ProximityMine_Trigger( gentity_t *trigger, gentity_t *other, trace_t *trace
 
 	if ( g_gametype.integer >= GT_TEAM ) {
 		// don't trigger same team mines
-		if (trigger->parent->s.team == other->client->sess.sessionTeam) {
+		if (trigger->parent->s.team == other->player->sess.sessionTeam) {
 			return;
 		}
 	}
@@ -990,13 +990,13 @@ static void ProximityMine_ExplodeOnPlayer( gentity_t *mine ) {
 	gentity_t	*player;
 
 	player = mine->enemy;
-	player->client->ps.eFlags &= ~EF_TICKING;
+	player->player->ps.eFlags &= ~EF_TICKING;
 
 #if defined MISSIONPACK && !defined TURTLEARENA // POWERS
-	if ( player->client->invulnerabilityTime > level.time ) {
+	if ( player->player->invulnerabilityTime > level.time ) {
 		G_Damage( player, mine->parent, mine->parent, vec3_origin, mine->s.origin, 1000, DAMAGE_NO_KNOCKBACK, MOD_JUICED );
-		player->client->invulnerabilityTime = 0;
-		G_TempEntity( player->client->ps.origin, EV_JUICED );
+		player->player->invulnerabilityTime = 0;
+		G_TempEntity( player->player->ps.origin, EV_JUICED );
 	}
 	else
 #endif
@@ -1036,7 +1036,7 @@ static void ProximityMine_Player( gentity_t *mine, gentity_t *player ) {
 		return;
 	}
 
-	player->client->ps.eFlags |= EF_TICKING;
+	player->player->ps.eFlags |= EF_TICKING;
 	player->activator = mine;
 
 	mine->s.eFlags |= EF_NODRAW;
@@ -1047,7 +1047,7 @@ static void ProximityMine_Player( gentity_t *mine, gentity_t *player ) {
 	mine->enemy = player;
 	mine->think = ProximityMine_ExplodeOnPlayer;
 #if defined MISSIONPACK && !defined TURTLEARENA // POWERS
-	if ( player->client->invulnerabilityTime > level.time ) {
+	if ( player->player->invulnerabilityTime > level.time ) {
 		mine->nextthink = level.time + 2 * 1000;
 	}
 	else
@@ -1066,7 +1066,7 @@ G_MissileImpact
 */
 void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 	gentity_t		*other;
-	qboolean		hitClient = qfalse;
+	qboolean		hitPlayer = qfalse;
 #if defined MISSIONPACK && !defined TURTLEARENA // POWERS
 	vec3_t			forward, impactpoint, bouncedir;
 	int				eFlags;
@@ -1084,7 +1084,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		if ( ent->s.weapon != WP_PROX_LAUNCHER )
 #endif
 		{
-			if ( other->client && other->client->invulnerabilityTime > level.time ) {
+			if ( other->player && other->player->invulnerabilityTime > level.time ) {
 				//
 				VectorCopy( ent->s.pos.trDelta, forward );
 				VectorNormalize( forward );
@@ -1113,8 +1113,8 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			vec3_t	velocity;
 
 			if( LogAccuracyHit( other, &g_entities[ent->r.ownerNum] ) ) {
-				g_entities[ent->r.ownerNum].client->accuracy_hits++;
-				hitClient = qtrue;
+				g_entities[ent->r.ownerNum].player->accuracy_hits++;
+				hitPlayer = qtrue;
 			}
 			BG_EvaluateTrajectoryDelta( &ent->s.pos, level.time, velocity );
 			if ( VectorLength( velocity ) == 0 ) {
@@ -1332,7 +1332,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		vec3_t v;
 
 		nent = G_Spawn();
-		if ( other->takedamage && other->client ) {
+		if ( other->takedamage && other->player ) {
 
 			G_AddEvent( nent, EV_MISSILE_HIT, DirToByte( trace->plane.normal ) );
 			nent->s.otherEntityNum = other->s.number;
@@ -1358,9 +1358,9 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 #endif
 #ifdef TA_WEAPSYS
 		if (ent->parent)
-			nent->s.clientNum = ent->parent->s.number;
+			nent->s.playerNum = ent->parent->s.number;
 		else
-			nent->s.clientNum = ENTITYNUM_NONE;
+			nent->s.playerNum = ENTITYNUM_NONE;
 #endif
 
 		SnapVectorTowards( v, ent->s.pos.trBase );	// save net bandwidth
@@ -1376,8 +1376,8 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		ent->think = Weapon_HookThink;
 		ent->nextthink = level.time + FRAMETIME;
 
-		ent->parent->client->ps.pm_flags |= PMF_GRAPPLE_PULL;
-		VectorCopy( ent->r.currentOrigin, ent->parent->client->ps.grapplePoint);
+		ent->parent->player->ps.pm_flags |= PMF_GRAPPLE_PULL;
+		VectorCopy( ent->r.currentOrigin, ent->parent->player->ps.grapplePoint);
 
 		trap_LinkEntity( ent );
 		trap_LinkEntity( nent );
@@ -1400,7 +1400,7 @@ missileExplode:
 	// is it cheaper in bandwidth to just remove this ent and create a new
 	// one, rather than changing the missile into the explosion?
 
-	if ( other->takedamage && other->client ) {
+	if ( other->takedamage && other->player ) {
 		G_AddEvent( ent, EV_MISSILE_HIT, DirToByte( trace->plane.normal ) );
 		ent->s.otherEntityNum = other->s.number;
 	} else if( trace->surfaceFlags & SURF_METALSTEPS ) {
@@ -1410,9 +1410,9 @@ missileExplode:
 	}
 #ifdef TA_WEAPSYS
 	if (ent->parent)
-		ent->s.clientNum = ent->parent->s.number;
+		ent->s.playerNum = ent->parent->s.number;
 	else
-		ent->s.clientNum = ENTITYNUM_NONE;
+		ent->s.playerNum = ENTITYNUM_NONE;
 #endif
 
 	ent->freeAfterEvent = qtrue;
@@ -1436,8 +1436,8 @@ missileExplode:
 			other, ent->splashMethodOfDeath ) )
 #endif
 		{
-			if( !hitClient ) {
-				g_entities[ent->r.ownerNum].client->accuracy_hits++;
+			if( !hitPlayer ) {
+				g_entities[ent->r.ownerNum].player->accuracy_hits++;
 			}
 		}
 	}
@@ -1500,12 +1500,12 @@ void G_RunMissile( gentity_t *ent ) {
 		// never explode or bounce on sky
 		if ( tr.surfaceFlags & SURF_NOIMPACT ) {
 			// If grapple, reset owner
-			if (ent->parent && ent->parent->client && ent->parent->client->hook == ent) {
+			if (ent->parent && ent->parent->player && ent->parent->player->hook == ent) {
 #ifdef IOQ3ZTM
 				Weapon_HookFree(ent);
 				return;
 #else
-				ent->parent->client->hook = NULL;
+				ent->parent->player->hook = NULL;
 #endif
 			}
 			G_FreeEntity( ent );
@@ -1579,8 +1579,8 @@ gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -1627,8 +1627,8 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -1673,8 +1673,8 @@ gentity_t *fire_bfg (gentity_t *self, vec3_t start, vec3_t dir) {
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -1719,8 +1719,8 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -1759,9 +1759,9 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 	SnapVector( hook->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, hook->r.currentOrigin);
 
-	if ( self->client ) {
-		self->client->hook = hook;
-		hook->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		self->player->hook = hook;
+		hook->s.team = self->player->sess.sessionTeam;
 	} else {
 		hook->s.team = TEAM_FREE;
 	}
@@ -1817,8 +1817,8 @@ gentity_t *fire_nail( gentity_t *self, vec3_t start, vec3_t forward, vec3_t righ
 
 	VectorCopy( start, bolt->r.currentOrigin );
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
@@ -1866,8 +1866,8 @@ gentity_t *fire_prox( gentity_t *self, vec3_t start, vec3_t dir ) {
 
 	VectorCopy (start, bolt->r.currentOrigin);
 
-	if ( self->client ) {
-		bolt->s.team = self->client->sess.sessionTeam;
+	if ( self->player ) {
+		bolt->s.team = self->player->sess.sessionTeam;
 	} else {
 		bolt->s.team = TEAM_FREE;
 	}
