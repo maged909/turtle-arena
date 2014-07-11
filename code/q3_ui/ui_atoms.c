@@ -1513,7 +1513,9 @@ void UI_Cache_f( void ) {
 	Controls_Cache();
 	UI_Joystick_Cache();
 	Demos_Cache();
+#ifndef TA_SP
 	UI_CinematicsMenu_Cache();
+#endif
 	Preferences_Cache();
 	ServerInfo_Cache();
 #ifdef TA_MISC
@@ -1677,7 +1679,9 @@ consoleCommand_t	ui_commands[] = {
 #endif
 	{ "postgame", UI_SPPostgameMenu_f, CMD_INGAME },
 	{ "ui_cache", UI_Cache_f, 0 },
+#ifndef TA_SP
 	{ "ui_cinematics", UI_CinematicsMenu_f, 0 },
+#endif
 	{ "ui_teamOrders", UI_TeamOrdersMenu_f, CMD_INGAME },
 	{ "iamacheater", UI_SPUnlock_f, 0 },
 #ifndef TA_SP
