@@ -156,6 +156,7 @@ void UpdateTournamentInfo( void ) {
 	trap_Cmd_ExecuteText( EXEC_APPEND, msg );
 }
 
+
 #ifndef TA_SP
 static gentity_t *SpawnModelOnVictoryPad( gentity_t *pad, vec3_t offset, gentity_t *ent, int place ) {
 	gentity_t	*body;

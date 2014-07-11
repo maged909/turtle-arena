@@ -441,12 +441,14 @@ void UI_Joystick_Cache( void );
 extern void UI_DemosMenu( void );
 extern void Demos_Cache( void );
 
+#ifndef TA_SP
 //
 // ui_cinematics.c
 //
 extern void UI_CinematicsMenu( void );
 extern void UI_CinematicsMenu_f( void );
 extern void UI_CinematicsMenu_Cache( void );
+#endif
 
 //
 // ui_mods.c

@@ -297,11 +297,10 @@ void TossPlayerItems( gentity_t *self ) {
 ===========
 TossPlayerGametypeItems
 
-Drop Flag in CTF, other gametypes could drop gametype specific items as well.
+Drop CTF flag and Harvester cubes
 ===========
 */
-void TossPlayerGametypeItems(gentity_t *ent)
-{
+void TossPlayerGametypeItems(gentity_t *ent) {
 	int j;
 	gitem_t *item;
 	gentity_t *drop;
@@ -367,6 +366,8 @@ void TossPlayerGametypeItems(gentity_t *ent)
 /*
 =================
 TossPlayerCubes
+
+Spawn cube at neutral obelisk
 =================
 */
 extern gentity_t	*neutralObelisk;

@@ -1530,8 +1530,7 @@ void SP_func_door (gentity_t *ent) {
 		if ( health ) {
 			ent->takedamage = qtrue;
 		}
-		if ( ent->targetname || health )
-		{
+		if ( ent->targetname || health ) {
 			// non touch/shoot doors
 			ent->think = Think_MatchTeam;
 		} else {

@@ -856,13 +856,9 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 #ifndef TURTLEARENA // HOLDABLE // no q3 teleporter
 	vec3_t	origin, angles;
 #endif
-//	qboolean	fired;
 #ifdef TA_WEAPSYS_EX
 	gitem_t		*item;
 	gentity_t	*drop;
-#endif
-#ifdef TA_HOLDSYS
-	int itemNum;
 #endif
 
 	player = ent->player;
@@ -889,6 +885,10 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 			}
 			ent->pain_debounce_time = level.time + 200;	// no normal pain sound
 			G_Damage (ent, NULL, NULL, NULL, NULL, damage, 0, MOD_FALLING);
+			break;
+
+		case EV_FIRE_WEAPON:
+			FireWeapon( ent );
 			break;
 
 #ifdef TA_WEAPSYS_EX
@@ -941,11 +941,6 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 			break;
 #endif
 
-		case EV_FIRE_WEAPON:
-			FireWeapon( ent );
-			break;
-
-#ifdef TA_HOLDSYS // HI_* is not hooked to EV_USE_ITEM in game now.
 		case EV_USE_ITEM0:
 		case EV_USE_ITEM1:
 		case EV_USE_ITEM2:
@@ -963,90 +958,61 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 		case EV_USE_ITEM14:
 		case EV_USE_ITEM15:
 		{
-			itemNum = (event & ~EV_EVENT_BITS) - EV_USE_ITEM0;
+			int itemNum = (event & ~EV_EVENT_BITS) - EV_USE_ITEM0;
+
 #ifdef TURTLEARENA // HOLD_SHURIKEN
 			G_ThrowShuriken(ent, itemNum);
 #endif
-			switch (itemNum)
-			{
-				case HI_NONE:
-					break;
-#endif // TA_HOLDSYS
 
-#ifndef TURTLEARENA // HOLDABLE // no q3 teleprter
-#ifdef TA_HOLDSYS
-				case HI_TELEPORTER:
-#else
-		case EV_USE_ITEM1:		// teleporter
-#endif // TA_HOLDSYS
-			TossPlayerGametypeItems(ent);
+			switch ( itemNum ) {
+			default:
+			case HI_NONE:
+				break;
+
+#ifndef TURTLEARENA // HOLDABLE // no q3 teleporter
+			case HI_TELEPORTER:
+				TossPlayerGametypeItems( ent );
 #ifdef TA_PLAYERSYS
-			SelectSpawnPoint( ent, origin, angles, qfalse );
+				SelectSpawnPoint( ent, origin, angles, qfalse );
 #else
-			SelectSpawnPoint( ent->player->ps.origin, origin, angles, qfalse );
+				SelectSpawnPoint( ent->player->ps.origin, origin, angles, qfalse );
 #endif
-			TeleportPlayer( ent, origin, angles );
-			break;
+				TeleportPlayer( ent, origin, angles );
+				break;
 #endif
 
-#ifdef TA_HOLDSYS
-				case HI_MEDKIT:
-#else
-		case EV_USE_ITEM2:		// medkit
-#endif
-			ent->health = ent->player->ps.stats[STAT_MAX_HEALTH] + 25;
-
-			break;
+			case HI_MEDKIT:
+				ent->health = ent->player->ps.stats[STAT_MAX_HEALTH] + 25;
+				break;
 
 #ifdef MISSIONPACK
 #ifndef TURTLEARENA // POWERS NO_KAMIKAZE_ITEM
-#ifdef TA_HOLDSYS
-				case HI_KAMIKAZE:
-#else
-		case EV_USE_ITEM3:		// kamikaze
-#endif
-			// make sure the invulnerability is off
-			ent->player->invulnerabilityTime = 0;
-			// start the kamikze
-			G_StartKamikaze( ent );
-			break;
+			case HI_KAMIKAZE:
+				// make sure the invulnerability is off
+				ent->player->invulnerabilityTime = 0;
+				// start the kamikze
+				G_StartKamikaze( ent );
+				break;
 #endif
 
-#ifdef TA_HOLDSYS
-				case HI_PORTAL:
-#else
-		case EV_USE_ITEM4:		// portal
-#endif
-			if( ent->player->portalID ) {
-				DropPortalSource( ent );
-			}
-			else {
-				DropPortalDestination( ent );
-			}
-			break;
+			case HI_PORTAL:
+				if ( ent->player->portalID ) {
+					DropPortalSource( ent );
+				}
+				else {
+					DropPortalDestination( ent );
+				}
+				break;
 
 #ifndef TURTLEARENA // POWERS
-#ifdef TA_HOLDSYS
-				case HI_INVULNERABILITY:
-#else
-		case EV_USE_ITEM5:		// invulnerability
+			case HI_INVULNERABILITY:
+				ent->player->invulnerabilityTime = level.time + 10000;
+				break;
 #endif
-			ent->player->invulnerabilityTime = level.time + 10000;
-			break;
-#endif // TURTLEARENA // POWERS
-
 #endif // MISSIONPACK
-
-#ifdef TA_HOLDSYS
-				default:
-#ifdef TURTLEARENA // HOLDABLE
-					if (!BG_ProjectileIndexForHoldable(itemNum))
-#endif
-						G_Printf("  EV_USE_ITEM: No code for holdable %d.\n", itemNum);
-					break;
 			}
+			break;
 		}
-#endif
 
 		default:
 			break;

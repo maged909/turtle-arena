@@ -3443,7 +3443,7 @@ static int UI_MapCountByGameType(qboolean singlePlayer) {
 #ifndef TA_SP // Don't skip SP
 	if (game == GT_SINGLE_PLAYER) {
 		game++;
-	}
+	} 
 #endif
 	if (game == GT_TEAM) {
 		game = GT_FFA;

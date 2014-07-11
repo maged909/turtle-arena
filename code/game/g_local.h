@@ -680,7 +680,7 @@ qboolean G_RadiusDamage (vec3_t origin, gentity_t *attacker, float damage, float
 int G_InvulnerabilityEffect( gentity_t *targ, vec3_t dir, vec3_t point, vec3_t impactpoint, vec3_t bouncedir );
 void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath );
 void TossPlayerItems( gentity_t *self );
-void TossPlayerGametypeItems(gentity_t *ent);
+void TossPlayerGametypeItems( gentity_t *self );
 #ifdef MISSIONPACK
 void TossPlayerPersistantPowerups( gentity_t *self );
 #endif
@@ -1052,6 +1052,7 @@ extern	vmCvar_t	g_enableBreath;
 #ifndef TA_SP
 extern	vmCvar_t	g_singlePlayer;
 #endif
+extern	vmCvar_t	g_proxMineTimeout;
 #endif
 extern	vmCvar_t	g_playerCapsule;
 #ifdef TA_SP
@@ -1063,7 +1064,6 @@ extern	vmCvar_t	g_saveVersions;
 extern	vmCvar_t	g_saveFilename;
 extern	vmCvar_t	g_saveMapname;
 #endif
-extern	vmCvar_t	g_proxMineTimeout;
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
 extern	vmCvar_t	g_teleportFluxTime;
 #endif

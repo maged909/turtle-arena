@@ -239,7 +239,6 @@ void MenuField_Draw( menufield_s *f )
 	}	
 #endif
 
-
 	if (Menu_ItemAtCursor( f->generic.parent ) == f) {
 		focus = qtrue;
 		style |= UI_PULSE;

@@ -37,6 +37,7 @@ RESET MENU
 
 #include "ui_local.h"
 
+
 #ifndef TA_SP
 #define ART_FRAME					"menu/art/cut_frame"
 

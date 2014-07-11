@@ -148,6 +148,7 @@ char	*ui_medalSounds[] = {
 };
 #endif
 
+
 /*
 =================
 UI_SPPostgameMenu_AgainEvent
@@ -299,7 +300,7 @@ static sfxHandle_t UI_SPPostgameMenu_MenuKey( int key ) {
 #ifdef TURTLEARENA // AWARDS
 static int medalLocations[MAX_UI_AWARDS] = {144, 32, 560};
 #else
-static int medalLocations[6] = {144, 448, 88, 504, 32, 560};
+static int medalLocations[MAX_UI_AWARDS] = {144, 448, 88, 504, 32, 560};
 #endif
 
 static void UI_SPPostgameMenu_DrawAwardsMedals( int max ) {
