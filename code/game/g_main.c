@@ -1508,7 +1508,7 @@ void LogExit( const char *string ) {
 #ifndef TA_SP
 #ifdef MISSIONPACK
 	qboolean won = qtrue;
-	team_t team = TEAM_RED; // Default team is red in Team Arena and blue in Quake3
+	team_t team = TEAM_RED;
 #endif
 #endif
 	G_LogPrintf( "Exit: %s\n", string );
@@ -1547,7 +1547,7 @@ void LogExit( const char *string ) {
 		G_LogPrintf( "score: %i  ping: %i  player: %i %s\n", cl->ps.persistant[PERS_SCORE], ping, level.sortedPlayers[i],	cl->pers.netname );
 #ifndef TA_SP
 #ifdef MISSIONPACK
-		if (g_singlePlayer.integer && !(g_entities[cl - level.clients].r.svFlags & SVF_BOT)) {
+		if (g_singlePlayer.integer && !(g_entities[cl - level.players].r.svFlags & SVF_BOT)) {
 			team = cl->sess.sessionTeam;
 		}
 		if (g_singlePlayer.integer && g_gametype.integer == GT_TOURNAMENT) {
@@ -1564,10 +1564,11 @@ void LogExit( const char *string ) {
 #ifdef MISSIONPACK
 	if (g_singlePlayer.integer) {
 		if (g_gametype.integer >= GT_CTF) {
-			if (team == TEAM_BLUE)
+			if (team == TEAM_BLUE) {
 				won = level.teamScores[TEAM_BLUE] > level.teamScores[TEAM_RED];
-			else
+			} else {
 				won = level.teamScores[TEAM_RED] > level.teamScores[TEAM_BLUE];
+			}
 		}
 		trap_Cmd_ExecuteText( EXEC_APPEND, (won) ? "spWin\n" : "spLose\n" );
 	}
