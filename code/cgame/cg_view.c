@@ -624,20 +624,6 @@ static void CG_OffsetThirdPersonView( void ) {
 	// in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
 
 	if (!cg_cameraMode.integer) {
-#ifdef IOQ3ZTM // BETTER_THIRD_PERSON
-		// add step offset
-		//CG_StepOffset();
-		{
-			int		timeDelta;
-
-			// smooth out stair climbing
-			timeDelta = cg.time - cg.cur_lc->stepTime;
-			if ( timeDelta < STEP_TIME ) {
-				view[2] -= cg.cur_lc->stepChange
-					* (STEP_TIME - timeDelta) / STEP_TIME;
-			}
-		}
-#endif
 		CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.playerNum, MASK_SOLID );
 
 		if ( trace.fraction != 1.0 ) {
