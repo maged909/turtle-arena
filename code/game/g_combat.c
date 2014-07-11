@@ -323,9 +323,7 @@ void TossPlayerGametypeItems(gentity_t *ent) {
 
 	if ( item ) {
 		drop = Drop_Item( ent, item, angle );
-#ifdef IOQ3ZTM
 		angle += 45;
-#endif
 		// decide how many seconds it has left
 		drop->count = ( ent->player->ps.powerups[ j ] - level.time ) / 1000;
 		if ( drop->count < 1 ) {
@@ -345,14 +343,12 @@ void TossPlayerGametypeItems(gentity_t *ent) {
 			if ( item ) {
 				for ( j = 0; j < ent->player->ps.tokens; j++ ) {
 					drop = Drop_Item( ent, item, angle );
-#ifdef IOQ3ZTM
-					angle += 45;
-#endif
 					if ( ent->player->sess.sessionTeam == TEAM_RED ) {
 						drop->s.team = TEAM_BLUE;
 					} else {
 						drop->s.team = TEAM_RED;
 					}
+					angle += 45;
 				}
 			}
 			ent->player->ps.tokens = 0;
