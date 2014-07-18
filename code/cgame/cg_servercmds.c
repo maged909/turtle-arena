@@ -169,7 +169,7 @@ static void CG_ParseTeamInfo( int start ) {
 
 	for ( i = 0 ; i < numSortedTeamPlayers[team] ; i++ ) {
 #ifdef TURTLEARENA // NOARMOR
-		playerNum = atoi( CG_Argv( i * 6 + 3 + start ) );
+		playerNum = atoi( CG_Argv( i * 5 + 3 + start ) );
 		if( playerNum < 0 || playerNum >= MAX_CLIENTS )
 		{
 			CG_Error( "CG_ParseTeamInfo: bad player number: %d", playerNum );
