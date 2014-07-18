@@ -1456,18 +1456,20 @@ CG_DrawTimer
 */
 static float CG_DrawTimer( float y ) {
 	char		*s;
-	int			mins, seconds, tens;
+	int			hours, mins, seconds;
 	int			msec;
 
 	msec = cg.time - cgs.levelStartTime;
 
-	seconds = msec / 1000;
-	mins = seconds / 60;
-	seconds -= mins * 60;
-	tens = seconds / 10;
-	seconds -= tens * 10;
+	seconds	= ( msec / 1000 ) % 60;
+	mins	= ( msec / ( 1000*60 ) ) % 60;
+	hours	= ( msec / ( 1000*60*60 ) );
 
-	s = va( "%i:%i%i", mins, tens, seconds );
+	if ( hours > 0 ) {
+		s = va( "%i:%s%i:%s%i", hours, mins < 10 ? "0" : "", mins, seconds < 10 ? "0" : "", seconds );
+	} else {
+		s = va( "%i:%s%i", mins, seconds < 10 ? "0" : "", seconds );
+	}
 
 	CG_DrawBigString( -5, y + 2, s, 1.0F);
 

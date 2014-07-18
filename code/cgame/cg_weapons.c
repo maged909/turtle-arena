@@ -446,7 +446,7 @@ void CG_RailTrail (playerInfo_t *pi, vec3_t start, vec3_t end)
 #endif
 	le->lifeRate = 1.0 / (le->endTime - le->startTime);
  
-	re->shaderTime = cg.time / 1000.0f;
+	re->shaderTime = cg.time;
 	re->reType = RT_RAIL_CORE;
 #ifdef TA_WEAPSYS
 	re->customShader = wi->trailShader[0];
@@ -507,7 +507,7 @@ void CG_RailTrail (playerInfo_t *pi, vec3_t start, vec3_t end)
 			le->endTime = cg.time + (i>>1) + 600;
 			le->lifeRate = 1.0 / (le->endTime - le->startTime);
 
-			re->shaderTime = cg.time / 1000.0f;
+			re->shaderTime = cg.time;
 			re->reType = RT_SPRITE;
 			re->radius = 1.1f;
 #ifdef TA_WEAPSYS
@@ -764,7 +764,7 @@ static void CG_PlasmaTrail( centity_t *cent, const weaponInfo_t *wi )
 	VectorScale( xvelocity, waterScale, le->pos.trDelta );
 
 	AxisCopy( axisDefault, re->axis );
-	re->shaderTime = cg.time / 1000.0f;
+	re->shaderTime = cg.time;
 	re->reType = RT_SPRITE;
 	re->radius = 0.25f;
 #ifdef TA_WEAPSYS
