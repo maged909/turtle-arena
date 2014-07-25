@@ -100,7 +100,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 #define ART_FX_WHITE		"menu/art/fx_white"
 #define ART_FX_YELLOW		"menu/art/fx_yel"
-#ifdef TA_DATA // MORE_COLOR_EFFECTS
 #define ART_FX_ORANGE		"menu/art/fx_orange"
 #define ART_FX_LIME			"menu/art/fx_lime"
 #define ART_FX_VIVIDGREEN	"menu/art/fx_vividgreen"
@@ -109,9 +108,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define ART_FX_PINK			"menu/art/fx_pink"
 
 #define NUM_COLOR_EFFECTS 13
-#else
-#define NUM_COLOR_EFFECTS 7
-#endif
 
 #define ASSET_GRADIENTBAR "ui/assets/gradientbar2.tga"
 #define ASSET_SCROLLBAR             "ui/assets/scrollbar.tga"

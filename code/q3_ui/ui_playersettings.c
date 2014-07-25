@@ -54,7 +54,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #endif
 #define ART_FX_WHITE		"menu/art/fx_white"
 #define ART_FX_YELLOW		"menu/art/fx_yel"
-#ifdef TA_DATA // MORE_COLOR_EFFECTS
 #define ART_FX_ORANGE		"menu/art/fx_orange"
 #define ART_FX_LIME			"menu/art/fx_lime"
 #define ART_FX_VIVIDGREEN	"menu/art/fx_vividgreen"
@@ -63,9 +62,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define ART_FX_PINK			"menu/art/fx_pink"
 
 #define NUM_COLOR_EFFECTS 13
-#else
-#define NUM_COLOR_EFFECTS 7
-#endif
 
 #define ID_NAME			10
 #define ID_HANDICAP		11
@@ -106,13 +102,8 @@ typedef struct {
 
 static playersettings_t	s_playersettings;
 
-#ifdef TA_DATA // MORE_COLOR_EFFECTS
 static int gamecodetoui[NUM_COLOR_EFFECTS] = {8,4,6,0,10,2,12,1,3,5,7,9,11};
 static int uitogamecode[NUM_COLOR_EFFECTS] = {4,8,6,9,2,10,3,11,1,12,5,13,7};
-#else
-static int gamecodetoui[NUM_COLOR_EFFECTS] = {4,2,3,0,5,1,6};
-static int uitogamecode[NUM_COLOR_EFFECTS] = {4,6,2,3,1,5,7};
-#endif
 
 static const char *handicap_items[] = {
 	"None",
@@ -270,6 +261,7 @@ static void PlayerSettings_DrawEffects( void *self ) {
 	int				style;
 	float			*color;
 	float			xOffset;
+	qhandle_t		colorShader;
 
 	item = (menulist_s *)self;
 	focus = (item->generic.parent->cursor == item->generic.menuPosition);
@@ -292,13 +284,31 @@ static void PlayerSettings_DrawEffects( void *self ) {
 	xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
 
 	CG_DrawPic( item->generic.x + 64, item->generic.y + PROP_HEIGHT + 8, 128, 8, s_playersettings.fxBasePic );
-	CG_DrawPic( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, s_playersettings.fxPic[item->curvalue] );
+
+	colorShader = s_playersettings.fxPic[item->curvalue];
+	if ( !colorShader ) {
+		vec4_t picColor;
+
+		colorShader = s_playersettings.fxPic[NUM_COLOR_EFFECTS-1]; // white
+		if ( !colorShader )
+			colorShader = uis.whiteShader;
+
+		CG_PlayerColorFromIndex( uitogamecode[item->curvalue], picColor );
+		picColor[3] = 1;
+		trap_R_SetColor( picColor );
+	}
+	CG_DrawPic( item->generic.x + 64 + item->curvalue * xOffset + xOffset * 0.5f, item->generic.y + PROP_HEIGHT + 6, 16, 12, colorShader );
+	trap_R_SetColor( NULL );
 
 	if ( focus ) {
 		float color[4];
 
+#ifdef TURTLEARENA // In Turtle Arena, don't draw orange on orange. In Quake3 don't draw yellow on yellow.
 		if ( item->curvalue == 1 ) {
-			// In Turtle Arena, don't draw orange on orange. In Quake3 don't draw yellow on yellow.
+#else
+		if ( item->curvalue == 2 ) {
+			// don't draw yellow on yellow
+#endif
 			color[0] = color[1] = color[2] = 1.0f; // white
 		} else {
 			VectorCopy(text_color_highlight, color); // Turtle Arena orange / Q3 yellow
@@ -673,7 +683,6 @@ void PlayerSettings_Cache( void ) {
 	trap_R_RegisterShaderNoMip( ART_BACK1 );
 
 	s_playersettings.fxBasePic = trap_R_RegisterShaderNoMip( ART_FX_BASE );
-#ifdef TA_DATA // MORE_COLOR_EFFECTS
 	s_playersettings.fxPic[0] = trap_R_RegisterShaderNoMip( ART_FX_RED );
 	s_playersettings.fxPic[1] = trap_R_RegisterShaderNoMip( ART_FX_ORANGE );
 	s_playersettings.fxPic[2] = trap_R_RegisterShaderNoMip( ART_FX_YELLOW );
@@ -687,15 +696,6 @@ void PlayerSettings_Cache( void ) {
 	s_playersettings.fxPic[10] = trap_R_RegisterShaderNoMip( ART_FX_MAGENTA );
 	s_playersettings.fxPic[11] = trap_R_RegisterShaderNoMip( ART_FX_PINK );
 	s_playersettings.fxPic[12] = trap_R_RegisterShaderNoMip( ART_FX_WHITE );
-#else
-	s_playersettings.fxPic[0] = trap_R_RegisterShaderNoMip( ART_FX_RED );
-	s_playersettings.fxPic[1] = trap_R_RegisterShaderNoMip( ART_FX_YELLOW );
-	s_playersettings.fxPic[2] = trap_R_RegisterShaderNoMip( ART_FX_GREEN );
-	s_playersettings.fxPic[3] = trap_R_RegisterShaderNoMip( ART_FX_CYAN );
-	s_playersettings.fxPic[4] = trap_R_RegisterShaderNoMip( ART_FX_BLUE );
-	s_playersettings.fxPic[5] = trap_R_RegisterShaderNoMip( ART_FX_MAGENTA );
-	s_playersettings.fxPic[6] = trap_R_RegisterShaderNoMip( ART_FX_WHITE );
-#endif
 }
 
 
