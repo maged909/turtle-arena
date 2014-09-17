@@ -251,13 +251,15 @@ void Use_target_push( gentity_t *self, gentity_t *other, gentity_t *activator ) 
 /*QUAKED target_push (.5 .5 .5) (-8 -8 -8) (8 8 8) bouncepad
 Pushes the activator in the direction.of angle, or towards a target apex.
 "speed"		defaults to 1000
-if "bouncepad", play bounce noise instead of windfly
+"noise"		defaults to "sound/misc/windfly.wav"
+if "bouncepad", play bounce noise instead of windfly ("noise" key overrides this)
 */
 void SP_target_push( gentity_t *self ) {
 #ifdef IOQ3ZTM
 	char buffer[MAX_QPATH];
 	char *s;
 #endif
+
 	if (!self->speed) {
 		self->speed = 1000;
 	}
