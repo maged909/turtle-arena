@@ -514,6 +514,10 @@ RespawnItem
 ===============
 */
 void RespawnItem( gentity_t *ent ) {
+	if (!ent) {
+		return;
+	}
+
 	// randomly select from teamed entities
 	if (ent->team) {
 		gentity_t	*master;
@@ -530,8 +534,12 @@ void RespawnItem( gentity_t *ent ) {
 
 		choice = rand() % count;
 
-		for (count = 0, ent = master; count < choice; ent = ent->teamchain, count++)
+		for (count = 0, ent = master; ent && count < choice; ent = ent->teamchain, count++)
 			;
+	}
+
+	if (!ent) {
+		return;
 	}
 
 #ifdef TA_WEAPSYS
@@ -547,6 +555,7 @@ void RespawnItem( gentity_t *ent ) {
 		}
 	}
 #endif
+
 	ent->s.contents = CONTENTS_TRIGGER;
 	ent->s.eFlags &= ~EF_NODRAW;
 	ent->r.svFlags &= ~SVF_NOCLIENT;

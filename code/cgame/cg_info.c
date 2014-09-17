@@ -89,7 +89,7 @@ CG_LoadingItem
 ===================
 */
 void CG_LoadingItem( int itemNum ) {
-	gitem_t	*item;
+	gitem_t		*item;
 
 	item = BG_ItemForItemNum( itemNum );
 	
@@ -289,7 +289,6 @@ void CG_DrawInformation( void ) {
 		if ( value ) {
 			UI_DrawProportionalString( 320, y, va( "capturelimit %i", value ),
 				UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, colorWhite );
-			y += PROP_HEIGHT;
 		}
 	}
 }

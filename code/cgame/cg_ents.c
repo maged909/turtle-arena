@@ -817,7 +817,7 @@ static void CG_Item( centity_t *cent ) {
 		&& (cg_weapons[bg_weapongroupinfo[item->giTag].weaponnum[0]].barrelModel ||
 			cg_weapons[bg_weapongroupinfo[item->giTag].weaponnum[1]].barrelModel)
 #else
-		&& wi->barrelModel
+		&& wi && wi->barrelModel
 #endif
 		) {
 		refEntity_t	barrel;
@@ -1566,12 +1566,12 @@ static void CG_TeamBase( centity_t *cent ) {
 #endif
 			//
 #ifdef TA_DATA // ZTM: Use same origin as target.
-			model.origin[2] += 56;
+			model.origin[2] += OBELISK_TARGET_HEIGHT;
 #endif
 			model.hModel = cgs.media.overloadEnergyModel;
 			CG_AddRefEntityWithMinLight( &model );
 #ifdef TA_DATA // ZTM: Use same origin as target.
-			model.origin[2] -= 56;
+			model.origin[2] -= OBELISK_TARGET_HEIGHT;
 #endif
 		}
 		// if respawning
