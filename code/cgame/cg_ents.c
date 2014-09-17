@@ -817,7 +817,7 @@ static void CG_Item( centity_t *cent ) {
 		&& (cg_weapons[bg_weapongroupinfo[item->giTag].weaponnum[0]].barrelModel ||
 			cg_weapons[bg_weapongroupinfo[item->giTag].weaponnum[1]].barrelModel)
 #else
-		&& wi->barrelModel
+		&& wi && wi->barrelModel
 #endif
 		) {
 		refEntity_t	barrel;

@@ -3990,9 +3990,6 @@ void CG_MissileExplode( int weapon, int playerNum, vec3_t origin, vec3_t dir, im
 	qboolean instantLightningImpact;
 #endif
 
-	mark = 0;
-	radius = 32;
-	sfx = 0;
 	mod = 0;
 	shader = 0;
 	light = 0;

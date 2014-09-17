@@ -166,7 +166,6 @@ void TeamMain_MenuInit( int localPlayerNum ) {
 	s_teammain.spectate.string           = "SPECTATE";
 	s_teammain.spectate.style            = UI_CENTER|UI_SMALLFONT;
 	s_teammain.spectate.color            = colorRed;
-	y += 20;
 
 #ifdef TA_SP
 	if (ui_singlePlayerActive.integer) {

@@ -872,16 +872,16 @@ UI_DrawPlayer
 */
 void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int time ) {
 	refdef_t		refdef;
-	refEntity_t		legs;
-	refEntity_t		torso;
-	refEntity_t		head;
+	refEntity_t		legs = {0};
+	refEntity_t		torso = {0};
+	refEntity_t		head = {0};
 #ifdef TA_WEAPSYS
-	refEntity_t		gun[MAX_HANDS];
+	refEntity_t		gun[MAX_HANDS] = {0};
 #else
-	refEntity_t		gun;
+	refEntity_t		gun = {0};
 #endif
-	refEntity_t		barrel;
-	refEntity_t		flash;
+	refEntity_t		barrel = {0};
+	refEntity_t		flash = {0};
 	vec3_t			origin;
 	int				renderfx;
 	vec3_t			mins = {-16, -16, -24};
