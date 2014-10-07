@@ -1195,8 +1195,8 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			goto missileExplode;
 		}
 
-		// Don't stick to the entity that this missile just killed.
-		if (damagedOther && other->health <= 0)
+		// Don't stick to the entity that this missile just killed or other missiles
+		if ((damagedOther && other->health <= 0) || other->s.eType == ET_MISSILE)
 		{
 			// Don't remove projectile if it doesn't explode.
 			if (bg_projectileinfo[ent->s.weapon].explosionType == PE_NONE)
