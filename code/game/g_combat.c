@@ -1378,7 +1378,7 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		}
 	}
 #ifdef TA_ENTSYS // MISC_OBJECT
-	else if (knockback)
+	else if (knockback && targ->s.eType == ET_MISCOBJECT)
 	{
 		vec3_t	kvel;
 		float	mass;
