@@ -251,7 +251,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_teleportFluxTime, "g_teleportFluxTime", "5", 0, 0, RANGE_ALL },
 #endif
 #ifdef TA_PATHSYS // 2DMODE
-	{ &g_2dmode, "g_2dmode", "0", CVAR_SERVERINFO, 0, RANGE_ALL },
+	{ &g_2dmode, "g_2dmode", "0", CVAR_SYSTEMINFO, 0, RANGE_ALL },
 #endif
 
 	{ &g_playerCapsule, "g_playerCapsule", "0", 0, 0, RANGE_BOOL },

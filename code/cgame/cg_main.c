@@ -573,7 +573,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_impactDebris, "cg_impactDebris", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0, 10 ) },
 #endif
 #ifdef TA_PATHSYS // 2DMODE
-	{ &cg_2dmode, "g_2dmode", "0", CVAR_SERVERINFO, RANGE_ALL },
+	{ &cg_2dmode, "g_2dmode", "0", CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_2dmodeOverride, "cg_2dmodeOverride", "0", 0, RANGE_ALL },
 #endif
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
