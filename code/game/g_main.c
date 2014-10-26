@@ -123,9 +123,6 @@ vmCvar_t	g_playerCapsule;
 #ifdef TA_SP
 vmCvar_t	g_savegameLoading;
 vmCvar_t	g_savegameFilename;
-vmCvar_t	g_spSaveData; // Used to save data between levels.
-//vmCvar_t	g_spSaveDataNet[MAX_CLIENTS]; // Save data for all clients
-vmCvar_t	g_saveVersions;
 vmCvar_t	g_saveFilename;
 vmCvar_t	g_saveMapname;
 #endif
@@ -222,7 +219,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_obeliskRegenPeriod, "g_obeliskRegenPeriod", "1", 0, 0, RANGE_ALL },
 	{ &g_obeliskRegenAmount, "g_obeliskRegenAmount", "15", 0, 0, RANGE_ALL },
 #endif
-	{ &g_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO, 0, RANGE_ALL },
+	{ &g_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO, 0, RANGE_ALL },
 
 #ifdef MISSIONPACK_HARVESTER
 	{ &g_cubeTimeout, "g_cubeTimeout", "30", 0, 0, RANGE_ALL },
@@ -231,8 +228,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
 	{ &g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
 
-	{ &g_enableDust, "g_enableDust", "0", CVAR_SERVERINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
-	{ &g_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
+	{ &g_enableDust, "g_enableDust", "0", CVAR_SYSTEMINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
+	{ &g_enableBreath, "g_enableBreath", "0", CVAR_SYSTEMINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
 #endif
 
 #if defined MISSIONPACK || defined TA_WEAPSYS
@@ -242,16 +239,14 @@ static cvarTable_t		gameCvarTable[] = {
 #ifdef TA_SP
 	{ &g_savegameLoading, "savegame_loading", "0", 0, 0, RANGE_ALL },
 	{ &g_savegameFilename, "savegame_filename", "", 0, 0, RANGE_ALL },
-	{ &g_spSaveData, "g_spSaveData", "", CVAR_SYSTEMINFO, 0, RANGE_ALL },
-	{ &g_saveVersions, "g_saveVersions", BG_SAVE_VERSIONS, CVAR_ROM, 0, RANGE_ALL },
-	{ &g_saveFilename, "g_saveFilename", "", CVAR_SERVERINFO, 0, RANGE_ALL },
+	{ &g_saveFilename, "g_saveFilename", "", 0, 0, RANGE_ALL },
 	{ &g_saveMapname, "g_saveMapname", "", CVAR_ROM, 0, RANGE_ALL },
 #endif
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
 	{ &g_teleportFluxTime, "g_teleportFluxTime", "5", 0, 0, RANGE_ALL },
 #endif
 #ifdef TA_PATHSYS // 2DMODE
-	{ &g_2dmode, "g_2dmode", "0", CVAR_SERVERINFO, 0, RANGE_ALL },
+	{ &g_2dmode, "g_2dmode", "0", CVAR_SYSTEMINFO, 0, RANGE_ALL },
 #endif
 
 	{ &g_playerCapsule, "g_playerCapsule", "0", 0, 0, RANGE_BOOL },
@@ -476,16 +471,6 @@ void G_RegisterCvars( void ) {
 	if ( remapped ) {
 		G_RemapTeamShaders();
 	}
-
-#if 0 //#ifdef TA_SP
-	// Register other g_spSaveData vars.
-	//{ &g_spSaveData, "g_spSaveData", "", CVAR_SYSTEMINFO, 0, qfalse, qfalse  },
-	for (i = 0; i < MAX_CLIENTS; i++)
-	{
-		trap_Cvar_Register( &g_spSaveDataNet[i], va("g_spSaveData%i", i), "", CVAR_SYSTEMINFO);
-		cv->modificationCount = 0;//g_spSaveDataNet[i].modificationCount;
-	}
-#endif
 
 #ifndef TA_SP
 	// Don't allow single player gametype to be used in multiplayer.
@@ -2238,7 +2223,7 @@ Runs thinking code for this frame if necessary
 =============
 */
 void G_RunThink (gentity_t *ent) {
-	float	thinktime;
+	int	thinktime;
 
 	thinktime = ent->nextthink;
 	if (thinktime <= 0) {

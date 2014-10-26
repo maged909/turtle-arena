@@ -129,7 +129,7 @@ static void LoadGame_MenuEvent( void *ptr, int event ) {
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_GO:
 		UI_ForceMenuOff ();
-		trap_Cvar_Set("g_saveFileName", s_savegames.list.itemnames[s_savegames.list.curvalue]);
+		trap_Cvar_Set("g_saveFilename", s_savegames.list.itemnames[s_savegames.list.curvalue]);
 		trap_Cmd_ExecuteText( EXEC_APPEND, va( "loadgame %s\n",
 								s_savegames.list.itemnames[s_savegames.list.curvalue]) );
 		break;
@@ -394,7 +394,7 @@ static void UI_SPMenu_Event( void *ptr, int event ) {
 					now.tm_min,
 					now.tm_sec );
 
-			trap_Cvar_Set("g_saveFileName", nowString);
+			trap_Cvar_Set("g_saveFilename", nowString);
 
 			UI_SPPlayerMenu(MAX_SPLITVIEW, UI_SPMenu_StartMainGame);
 			break;

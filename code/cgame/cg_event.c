@@ -791,6 +791,7 @@ also called by CG_CheckPlayerstateEvents
 ==============
 */
 #define	DEBUGNAME(x) if(cg_debugEvents.integer){CG_Printf(x"\n");}
+#define	DEBUGNAME2(x, y) if(cg_debugEvents.integer){CG_Printf(x"\n",(y));}
 void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	entityState_t	*es;
 	int				event;
@@ -1127,71 +1128,24 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 
 	case EV_USE_ITEM0:
-		DEBUGNAME("EV_USE_ITEM0");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM1:
-		DEBUGNAME("EV_USE_ITEM1");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM2:
-		DEBUGNAME("EV_USE_ITEM2");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM3:
-		DEBUGNAME("EV_USE_ITEM3");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM4:
-		DEBUGNAME("EV_USE_ITEM4");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM5:
-		DEBUGNAME("EV_USE_ITEM5");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM6:
-		DEBUGNAME("EV_USE_ITEM6");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM7:
-		DEBUGNAME("EV_USE_ITEM7");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM8:
-		DEBUGNAME("EV_USE_ITEM8");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM9:
-		DEBUGNAME("EV_USE_ITEM9");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM10:
-		DEBUGNAME("EV_USE_ITEM10");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM11:
-		DEBUGNAME("EV_USE_ITEM11");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM12:
-		DEBUGNAME("EV_USE_ITEM12");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM13:
-		DEBUGNAME("EV_USE_ITEM13");
-		CG_UseItem( cent );
-		break;
 	case EV_USE_ITEM14:
-		DEBUGNAME("EV_USE_ITEM14");
-		CG_UseItem( cent );
-		break;
-#ifdef IOQ3ZTM // IOQ3BUGFIX: Use holdable 15?
 	case EV_USE_ITEM15:
-		DEBUGNAME("EV_USE_ITEM15");
+		DEBUGNAME2("EV_USE_ITEM%d", event - EV_USE_ITEM0);
 		CG_UseItem( cent );
 		break;
-#endif
 
 	//=================================================================
 
@@ -1777,7 +1731,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_DEATH1:
 	case EV_DEATH2:
 	case EV_DEATH3:
-		DEBUGNAME("EV_DEATHx");
+		DEBUGNAME2("EV_DEATH%d", event - EV_DEATH1 + 1);
 
 #ifndef NOTRATEDM // No gibs.
 		// check if gibbed

@@ -3407,7 +3407,6 @@ A player just came into view or teleported, so reset all animation info
 */
 void CG_ResetPlayerEntity( centity_t *cent ) {
 	cent->errorTime = -99999;		// guarantee no error decay added
-	cent->extrapolated = qfalse;	
 
 #ifdef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
 #ifdef TA_PLAYERSYS

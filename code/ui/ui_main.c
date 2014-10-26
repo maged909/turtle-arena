@@ -5535,10 +5535,6 @@ vmCvar_t	ui_spAwards;
 vmCvar_t	ui_spVideos;
 vmCvar_t	ui_spSkill;
 
-#ifdef TA_SP
-vmCvar_t	ui_saveVersions;
-vmCvar_t	ui_saveFilename;
-#endif
 vmCvar_t	ui_spSelection;
 
 #ifdef TA_SP
@@ -5685,10 +5681,6 @@ static cvarTable_t		cvarTable[] = {
 #endif
 	{ &ui_spSkill, "g_spSkill", "2", CVAR_ARCHIVE },
 
-#ifdef TA_SP
-	{ &ui_saveVersions, "g_saveVersions", BG_SAVE_VERSIONS, CVAR_ROM },
-	{ &ui_saveFilename, "g_saveFilename", "", CVAR_SERVERINFO },
-#endif
 	{ &ui_spSelection, "ui_spSelection", "", CVAR_ROM },
 
 #ifdef TA_SP
@@ -5828,6 +5820,10 @@ void UI_UpdateCvars( void ) {
 	cvarTable_t	*cv;
 
 	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+		if ( !cv->vmCvar ) {
+			continue;
+		}
+
 		trap_Cvar_Update( cv->vmCvar );
 	}
 }

@@ -1065,10 +1065,10 @@ static void CG_Missile( centity_t *cent ) {
 	} else {
 		ent.hModel = projectile->missileModel;
 	}
-	ent.renderfx = projectile->missileRenderfx | RF_NOSHADOW;
+	ent.renderfx = RF_NOSHADOW;
 #else
 	ent.hModel = weapon->missileModel;
-	ent.renderfx = weapon->missileRenderfx | RF_NOSHADOW;
+	ent.renderfx = RF_NOSHADOW;
 
 #ifdef MISSIONPACK
 	if ( cent->currentState.weapon == WP_PROX_LAUNCHER ) {
@@ -1257,10 +1257,10 @@ static void CG_Grapple( centity_t *cent ) {
 	} else {
 		ent.hModel = projectile->missileModel;
 	}
-	ent.renderfx = projectile->missileRenderfx | RF_NOSHADOW;
+	ent.renderfx = RF_NOSHADOW;
 #else
 	ent.hModel = weapon->missileModel;
-	ent.renderfx = weapon->missileRenderfx | RF_NOSHADOW;
+	ent.renderfx = RF_NOSHADOW;
 #endif
 
 #ifdef IOQ3ZTM // IOQ3BUGFIX: Fix showing model (only tested with TA_WEAPSYS...)

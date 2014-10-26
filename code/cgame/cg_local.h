@@ -336,7 +336,6 @@ typedef struct centity_s {
 
 	int				muzzleFlashTime;	// move to playerEntity?
 	int				previousEvent;
-	int				teleportFlag;
 
 	int				trailTime;		// so missile trails can handle dropped initial packets
 	int				dustTrailTime;
@@ -351,14 +350,9 @@ typedef struct centity_s {
 #endif
 
 	int				errorTime;		// decay the error from this time
-	vec3_t			errorOrigin;
-	vec3_t			errorAngles;
-	
-	qboolean		extrapolated;	// false if origin / angles is an interpolation
+
 	vec3_t			rawOrigin;
 	vec3_t			rawAngles;
-
-	vec3_t			beamEnd;
 
 	// exact interpolated position of entity on this frame
 	vec3_t			lerpOrigin;
@@ -485,7 +479,6 @@ typedef struct {
 	int				ping;
 	int				time;
 	int				scoreFlags;
-	int				powerUps;
 	int				accuracy;
 #ifndef TURTLEARENA // AWARDS
 	int				impressiveCount;
@@ -645,7 +638,6 @@ typedef struct projectileInfo_s {
 	void			(*missileTrailFunc)( centity_t *, const struct projectileInfo_s *wi );
 	float			missileDlight;
 	vec3_t			missileDlightColor;
-	int				missileRenderfx;
 
 	qhandle_t		trailShader[2];
 	float			trailRadius;
@@ -755,7 +747,6 @@ typedef struct weaponInfo_s {
 	void			(*missileTrailFunc)( centity_t *, const struct weaponInfo_s *wi );
 	float			missileDlight;
 	vec3_t			missileDlightColor;
-	int				missileRenderfx;
 
 	void			(*ejectBrassFunc)( centity_t * );
 
@@ -948,7 +939,6 @@ typedef struct {
 	float		damageX, damageY, damageValue;
 
 	// status bar head
-	float		headYaw;
 	float		headEndPitch;
 	float		headEndYaw;
 	int			headEndTime;
@@ -1714,7 +1704,6 @@ typedef struct {
 	char			gametypeName[MAX_NAME_LENGTH];
 	gametype_t		gametype;
 	int				dmflags;
-	int				teamflags;
 	int				fraglimit;
 	int				capturelimit;
 	int				timelimit;

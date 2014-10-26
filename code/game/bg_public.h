@@ -414,7 +414,6 @@ typedef struct playerState_s {
 
 	int			externalEvent;	// events set on player from another source
 	int			externalEventParm;
-	int			externalEventTime;
 
 	//int			playerNum;		// ranges from 0 to MAX_CLIENTS-1
 	int			weapon;			// copied to entityState_t->weapon
@@ -542,9 +541,6 @@ typedef enum {
 #ifndef TA_HOLDSYS
 	STAT_HOLDABLE_ITEM,
 #endif
-#ifdef MISSIONPACK
-	STAT_PERSISTANT_POWERUP,
-#endif
 #ifdef TA_WEAPSYS
 	STAT_NEW_WEAPON_HANDS, // Set in PM_BeginWeaponHandsChange
 	STAT_DEFAULTWEAPON, // default weapon
@@ -568,7 +564,10 @@ typedef enum {
 	STAT_SPHERES,
 #endif
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
-	STAT_MAX_HEALTH					// health / armor limit, changable by handicap
+	STAT_MAX_HEALTH,				// health / armor limit, changable by handicap
+//#ifdef MISSIONPACK
+	STAT_PERSISTANT_POWERUP
+//#endif
 } statIndex_t;
 
 
@@ -2434,8 +2433,7 @@ typedef struct structdef_s
 qboolean PC_ReadStructure(int source, structdef_t *def, void *structure);
 
 #ifdef TA_SP
-// Set as defaults for g_saveVersions so server can tell if can load savefile.
-// They are setup in q3_ui/ui and game
+// Supported save game versions, so UI can tell if can load savefile.
 #define BG_SAVE_VERSIONS "7" // Example: "0;1;2;3"
 #endif
 
