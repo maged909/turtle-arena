@@ -1046,9 +1046,6 @@ extern	vmCvar_t	g_playerCapsule;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_savegameLoading;
 extern	vmCvar_t	g_savegameFilename;
-extern	vmCvar_t	g_spSaveData;
-extern	vmCvar_t	g_saveVersions;
-extern	vmCvar_t	g_saveFilename;
 extern	vmCvar_t	g_saveMapname;
 #endif
 #ifdef TURTLEARENA // POWERS // PW_FLASHING

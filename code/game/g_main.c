@@ -123,10 +123,6 @@ vmCvar_t	g_playerCapsule;
 #ifdef TA_SP
 vmCvar_t	g_savegameLoading;
 vmCvar_t	g_savegameFilename;
-vmCvar_t	g_spSaveData; // Used to save data between levels.
-//vmCvar_t	g_spSaveDataNet[MAX_CLIENTS]; // Save data for all clients
-vmCvar_t	g_saveVersions;
-vmCvar_t	g_saveFilename;
 vmCvar_t	g_saveMapname;
 #endif
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
@@ -242,9 +238,6 @@ static cvarTable_t		gameCvarTable[] = {
 #ifdef TA_SP
 	{ &g_savegameLoading, "savegame_loading", "0", 0, 0, RANGE_ALL },
 	{ &g_savegameFilename, "savegame_filename", "", 0, 0, RANGE_ALL },
-	{ &g_spSaveData, "g_spSaveData", "", CVAR_SYSTEMINFO, 0, RANGE_ALL },
-	{ &g_saveVersions, "g_saveVersions", BG_SAVE_VERSIONS, CVAR_ROM, 0, RANGE_ALL },
-	{ &g_saveFilename, "g_saveFilename", "", CVAR_SERVERINFO, 0, RANGE_ALL },
 	{ &g_saveMapname, "g_saveMapname", "", CVAR_ROM, 0, RANGE_ALL },
 #endif
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
@@ -476,16 +469,6 @@ void G_RegisterCvars( void ) {
 	if ( remapped ) {
 		G_RemapTeamShaders();
 	}
-
-#if 0 //#ifdef TA_SP
-	// Register other g_spSaveData vars.
-	//{ &g_spSaveData, "g_spSaveData", "", CVAR_SYSTEMINFO, 0, qfalse, qfalse  },
-	for (i = 0; i < MAX_CLIENTS; i++)
-	{
-		trap_Cvar_Register( &g_spSaveDataNet[i], va("g_spSaveData%i", i), "", CVAR_SYSTEMINFO);
-		cv->modificationCount = 0;//g_spSaveDataNet[i].modificationCount;
-	}
-#endif
 
 #ifndef TA_SP
 	// Don't allow single player gametype to be used in multiplayer.

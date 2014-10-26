@@ -97,8 +97,6 @@ extern vmCvar_t	ui_spSkill;
 
 #ifdef TA_SP
 extern vmCvar_t	ui_singlePlayerActive;
-extern vmCvar_t	ui_saveVersions;
-extern vmCvar_t	ui_saveFilename;
 #endif
 extern vmCvar_t	ui_spSelection;
 

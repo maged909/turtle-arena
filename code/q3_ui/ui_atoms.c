@@ -1564,14 +1564,11 @@ See save_t in g_save.c for more info.
 ==================
 */
 qboolean UI_GetSaveGameInfo(fileHandle_t f, char *loadmap, byte *pMaxclients, byte *pLocalClients) {
-	char buffer[MAX_QPATH];
 	byte version;
 
 	trap_FS_Read( &version, 1, f );
 
-	trap_Cvar_VariableStringBuffer( "g_saveVersions", buffer, sizeof (buffer) );
-
-	if ( !strstr( va( "%d", version ), buffer ) ) {
+	if ( !strstr( va( "%d", version ), BG_SAVE_VERSIONS ) ) {
 		// Version not supported
 		return qfalse;
 	}

@@ -2433,8 +2433,7 @@ typedef struct structdef_s
 qboolean PC_ReadStructure(int source, structdef_t *def, void *structure);
 
 #ifdef TA_SP
-// Set as defaults for g_saveVersions so server can tell if can load savefile.
-// They are setup in q3_ui/ui and game
+// Supported save game versions, so UI can tell if can load savefile.
 #define BG_SAVE_VERSIONS "7" // Example: "0;1;2;3"
 #endif
 
