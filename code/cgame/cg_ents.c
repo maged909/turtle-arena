@@ -1065,7 +1065,7 @@ static void CG_Missile( centity_t *cent ) {
 	} else {
 		ent.hModel = projectile->missileModel;
 	}
-	ent.renderfx = projectile->missileRenderfx | RF_NOSHADOW;
+	ent.renderfx = RF_NOSHADOW;
 #else
 	ent.hModel = weapon->missileModel;
 	ent.renderfx = RF_NOSHADOW;
@@ -1257,7 +1257,7 @@ static void CG_Grapple( centity_t *cent ) {
 	} else {
 		ent.hModel = projectile->missileModel;
 	}
-	ent.renderfx = projectile->missileRenderfx | RF_NOSHADOW;
+	ent.renderfx = RF_NOSHADOW;
 #else
 	ent.hModel = weapon->missileModel;
 	ent.renderfx = RF_NOSHADOW;

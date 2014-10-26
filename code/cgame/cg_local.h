@@ -638,7 +638,6 @@ typedef struct projectileInfo_s {
 	void			(*missileTrailFunc)( centity_t *, const struct projectileInfo_s *wi );
 	float			missileDlight;
 	vec3_t			missileDlightColor;
-	int				missileRenderfx;
 
 	qhandle_t		trailShader[2];
 	float			trailRadius;
