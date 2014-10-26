@@ -510,11 +510,11 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, RANGE_ALL },
 #endif
 #ifdef MISSIONPACK
-	{ &cg_enableDust, "g_enableDust", "0", CVAR_SERVERINFO, RANGE_BOOL },
-	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO, RANGE_BOOL },
+	{ &cg_enableDust, "g_enableDust", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
+	{ &cg_enableBreath, "g_enableBreath", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
 	{ &cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO, RANGE_ALL },
+	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO, RANGE_ALL },
 #ifdef MISSIONPACK_HUD
 	{ &cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE, RANGE_ALL },
 #endif

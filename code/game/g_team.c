@@ -371,7 +371,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 	if (targ->player->ps.powerups[enemy_flag_pw]) {
 		attacker->player->pers.teamState.lastfraggedcarrier = level.time;
 		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS);
-		attacker->player->pers.teamState.fragcarrier++;
 #ifdef NOTRATEDM // frag to KO
 		PrintMsg(NULL, "%s" S_COLOR_WHITE " knocked out %s's flag carrier!\n",
 #else
@@ -394,7 +393,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 	if (tokens) {
 		attacker->player->pers.teamState.lastfraggedcarrier = level.time;
 		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS * tokens * tokens);
-		attacker->player->pers.teamState.fragcarrier++;
 #ifdef NOTRATEDM // frag to KO
 		PrintMsg(NULL, "%s" S_COLOR_WHITE " knocked out %s's skull carrier!\n",
 #else
@@ -420,7 +418,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		// fragged a guy who hurt our flag carrier
 		AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_DANGER_PROTECT_BONUS);
 
-		attacker->player->pers.teamState.carrierdefense++;
 		targ->player->pers.teamState.lasthurtcarrier = 0;
 
 		attacker->player->ps.persistant[PERS_DEFEND_COUNT]++;
@@ -441,7 +438,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		// attacker is on the same team as the skull carrier and
 		AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_DANGER_PROTECT_BONUS);
 
-		attacker->player->pers.teamState.carrierdefense++;
 		targ->player->pers.teamState.lasthurtcarrier = 0;
 
 		attacker->player->ps.persistant[PERS_DEFEND_COUNT]++;
@@ -526,7 +522,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 
 		// we defended the base flag
 		AddScore(attacker, targ->r.currentOrigin, CTF_FLAG_DEFENSE_BONUS);
-		attacker->player->pers.teamState.basedefense++;
 
 		attacker->player->ps.persistant[PERS_DEFEND_COUNT]++;
 		// add the sprite over the player's head
@@ -551,7 +546,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 				trap_InPVS(carrier->r.currentOrigin, attacker->r.currentOrigin ) ) ) &&
 			attacker->player->sess.sessionTeam != targ->player->sess.sessionTeam) {
 			AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_PROTECT_BONUS);
-			attacker->player->pers.teamState.carrierdefense++;
 
 			attacker->player->ps.persistant[PERS_DEFEND_COUNT]++;
 			// add the sprite over the player's head
@@ -815,7 +809,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 			cl->pers.netname, TeamName(team));
 #endif
 		AddScore(other, ent->r.currentOrigin, CTF_RECOVERY_BONUS);
-		other->player->pers.teamState.flagrecovery++;
+
 		other->player->pers.teamState.lastreturnedflag = level.time;
 		//ResetFlag will remove this entity!  We must return zero
 		Team_ReturnFlagSound(Team_ResetFlag(team), team);
@@ -853,7 +847,6 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	AddTeamScore(ent->s.pos.trBase, other->player->sess.sessionTeam, 1);
 	Team_ForceGesture(other->player->sess.sessionTeam);
 
-	other->player->pers.teamState.captures++;
 	// add the sprite over the player's head
 #ifdef IOQ3ZTM
 	other->player->ps.eFlags &= ~EF_AWARD_BITS;
@@ -889,7 +882,6 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 			if (player->player->pers.teamState.lastreturnedflag + 
 				CTF_RETURN_FLAG_ASSIST_TIMEOUT > level.time) {
 				AddScore (player, ent->r.currentOrigin, CTF_RETURN_FLAG_ASSIST_BONUS);
-				other->player->pers.teamState.assists++;
 
 				player->player->ps.persistant[PERS_ASSIST_COUNT]++;
 				// add the sprite over the player's head
@@ -905,7 +897,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 			if (player->player->pers.teamState.lastfraggedcarrier + 
 				CTF_FRAG_CARRIER_ASSIST_TIMEOUT > level.time) {
 				AddScore(player, ent->r.currentOrigin, CTF_FRAG_CARRIER_ASSIST_BONUS);
-				other->player->pers.teamState.assists++;
+
 				player->player->ps.persistant[PERS_ASSIST_COUNT]++;
 				// add the sprite over the player's head
 #ifdef IOQ3ZTM
@@ -979,7 +971,6 @@ int Team_TouchEnemyFlag( gentity_t *ent, gentity_t *other, int team ) {
 
 	AddScore(other, ent->r.currentOrigin, CTF_FLAG_BONUS);
 #endif
-	cl->pers.teamState.flagsince = level.time;
 	Team_TakeFlagSound( ent, team );
 
 	return -1; // Do not respawn this automatically, but do delete it if it was FL_DROPPED

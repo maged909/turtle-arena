@@ -222,7 +222,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_obeliskRegenPeriod, "g_obeliskRegenPeriod", "1", 0, 0, RANGE_ALL },
 	{ &g_obeliskRegenAmount, "g_obeliskRegenAmount", "15", 0, 0, RANGE_ALL },
 #endif
-	{ &g_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO, 0, RANGE_ALL },
+	{ &g_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SYSTEMINFO, 0, RANGE_ALL },
 
 #ifdef MISSIONPACK_HARVESTER
 	{ &g_cubeTimeout, "g_cubeTimeout", "30", 0, 0, RANGE_ALL },
@@ -231,8 +231,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
 	{ &g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
 
-	{ &g_enableDust, "g_enableDust", "0", CVAR_SERVERINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
-	{ &g_enableBreath, "g_enableBreath", "0", CVAR_SERVERINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
+	{ &g_enableDust, "g_enableDust", "0", CVAR_SYSTEMINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
+	{ &g_enableBreath, "g_enableBreath", "0", CVAR_SYSTEMINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
 #endif
 
 #if defined MISSIONPACK || defined TA_WEAPSYS
@@ -2238,7 +2238,7 @@ Runs thinking code for this frame if necessary
 =============
 */
 void G_RunThink (gentity_t *ent) {
-	float	thinktime;
+	int	thinktime;
 
 	thinktime = ent->nextthink;
 	if (thinktime <= 0) {
