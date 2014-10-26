@@ -205,6 +205,7 @@ static cvarTable_t		cvarTable[] = {
 
 #ifdef TA_SP
 	{ &ui_singlePlayerActive, "ui_singlePlayerActive", "0", CVAR_ROM},
+	{ NULL, "g_saveFilename", "", 0},
 #endif
 	{ &ui_spSelection, "ui_spSelection", "", CVAR_ROM },
 

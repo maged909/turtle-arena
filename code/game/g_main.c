@@ -123,6 +123,7 @@ vmCvar_t	g_playerCapsule;
 #ifdef TA_SP
 vmCvar_t	g_savegameLoading;
 vmCvar_t	g_savegameFilename;
+vmCvar_t	g_saveFilename;
 vmCvar_t	g_saveMapname;
 #endif
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
@@ -238,6 +239,7 @@ static cvarTable_t		gameCvarTable[] = {
 #ifdef TA_SP
 	{ &g_savegameLoading, "savegame_loading", "0", 0, 0, RANGE_ALL },
 	{ &g_savegameFilename, "savegame_filename", "", 0, 0, RANGE_ALL },
+	{ &g_saveFilename, "g_saveFilename", "", 0, 0, RANGE_ALL },
 	{ &g_saveMapname, "g_saveMapname", "", CVAR_ROM, 0, RANGE_ALL },
 #endif
 #ifdef TURTLEARENA // POWERS // PW_FLASHING
