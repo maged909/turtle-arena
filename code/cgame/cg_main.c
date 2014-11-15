@@ -1920,6 +1920,8 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.balloonShader = trap_R_RegisterShader( "sprites/balloon3" );
 #endif
 
+	cgs.media.coronaShader = trap_R_RegisterShader( "flareShader" );
+
 #ifndef NOBLOOD
 	cgs.media.bloodExplosionShader = trap_R_RegisterShader( "bloodExplosion" );
 #endif
