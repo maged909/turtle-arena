@@ -38,12 +38,7 @@ Handles horizontal scrolling and cursor blinking
 x, y, charWidth, charHeight, are in 640*480 virtual screen size
 ===================
 */
-#ifdef IOQ3ZTM // FONT_REWRITE
-void MField_Draw( mfield_t *edit, int x, int y, font_t *font, vec4_t color, int drawShadow )
-#else
-void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, vec4_t color )
-#endif
-{
+void MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
 	int		len;
 	int		drawLen;
 	int		prestep;
@@ -77,62 +72,17 @@ void MField_Draw( mfield_t *edit, int x, int y, int charWidth, int charHeight, v
 	memcpy( str, edit->buffer + prestep, drawLen );
 	str[ drawLen ] = 0;
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-	CG_DrawFontStringExt( font, 0, x, y, str, g_color_table[ColorIndex(COLOR_WHITE)], qfalse, qtrue, drawShadow, qtrue, 0, 0, NULL );
-#else
-	CG_DrawStringExt( x, y, str, color, 2, qtrue, charWidth, charHeight, 0 );
-#endif
-
-	if ( (int)( cg.realTime >> 8 ) & 1 ) {
-		return;		// off blink
-	}
-
-#ifdef IOQ3ZTM // FONT_REWITE
-	if ( font->fontInfo.name[0] ) {
+	if ( drawCursor ) {
 		if ( trap_Key_GetOverstrikeMode() ) {
-			cursorChar = '_';
+			cursorChar = 11; // full block
 		} else {
-			cursorChar = '|';
+			cursorChar = 10; // full width low line
 		}
-	} else
-#endif
-	if ( trap_Key_GetOverstrikeMode() ) {
-		cursorChar = 11;
 	} else {
-		cursorChar = 10;
+		cursorChar = -1;
 	}
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-	{
-		float strWidth = 0;
-		int i;
-		for (i = 0; i < (edit->cursor - prestep); i++) {
-			strWidth += Com_FontCharWidth( font, str[i], 0 );
-		}
-		// ignore the cursor character's left offset
-		strWidth -= Com_FontCharLeftOffset( font, cursorChar, 0 );
-
-		if ( drawShadow != 0 ) {
-			float offset = drawShadow;
-			vec4_t black;
-
-			// draw the drop shadow
-			black[0] = black[1] = black[2] = 0;
-			black[3] = color[3];
-			trap_R_SetColor( black );
-
-			CG_DrawFontChar( font, 0, x + strWidth + offset, y + offset, cursorChar, qtrue );
-		}
-
-		trap_R_SetColor( color );
-		CG_DrawFontChar( font, 0, x + strWidth, y, cursorChar, qtrue );
-		trap_R_SetColor( NULL );
-	}
-#else
-	str[0] = cursorChar;
-	str[1] = 0;
-	CG_DrawStringExt( x + ( edit->cursor - prestep) * charWidth, y, str, color, qfalse, qtrue, charWidth, charHeight, 0 );
-#endif
+	CG_DrawStringWithCursor( x, y, str, style, NULL, ( edit->cursor - prestep ), cursorChar );
 }
 
 /*

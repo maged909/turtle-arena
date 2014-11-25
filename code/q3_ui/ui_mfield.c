@@ -31,120 +31,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "ui_local.h"
 
 /*
-===================
-UI_Field_Draw
-
-Handles horizontal scrolling and cursor blinking
-x, y, are in pixels
-===================
-*/
-void UI_Field_Draw( mfield_t *edit, int x, int y, int style, vec4_t color ) {
-	int		len;
-#ifdef IOQ3ZTM // FONT_REWRITE
-	size_t	val;
-	int		basex;
-#else
-	int		charw;
-#endif
-	int		drawLen;
-	int		prestep;
-	int		cursorChar;
-	char	str[MAX_STRING_CHARS];
-
-	drawLen = edit->widthInChars;
-	len     = strlen( edit->buffer ) + 1;
-
-	// guarantee that cursor will be visible
-	if ( len <= drawLen ) {
-		prestep = 0;
-	} else {
-		if ( edit->scroll + drawLen > len ) {
-			edit->scroll = len - drawLen;
-			if ( edit->scroll < 0 ) {
-				edit->scroll = 0;
-			}
-		}
-		prestep = edit->scroll;
-	}
-
-	if ( prestep + drawLen > len ) {
-		drawLen = len - prestep;
-	}
-
-	// extract <drawLen> characters from the field at <prestep>
-	if ( drawLen >= MAX_STRING_CHARS ) {
-		trap_Error( "drawLen >= MAX_STRING_CHARS" );
-	}
-	memcpy( str, edit->buffer + prestep, drawLen );
-	str[ drawLen ] = 0;
-
-#ifdef IOQ3ZTM // FONT_REWRITE
-	basex = x;
-	for (val = 0; val < strlen(str)+1; val++)
-	{
-		if (str[val] != '\0') {
-			x += UI_DrawChar( x, y, str[val], style, color );
-		}
-
-		// draw cursor if we have focus
-		if ((style & UI_PULSE) && val == ( edit->cursor - prestep ))
-		{
-			if ( trap_Key_GetOverstrikeMode() ) {
-				cursorChar = 11;
-			} else {
-				cursorChar = 10;
-			}
-
-			UI_DrawChar( basex - Com_FontCharLeftOffset( UI_FontForStyle(style), cursorChar, 0 ), y, cursorChar, (style & ~(UI_PULSE|UI_CENTER|UI_RIGHT))|UI_BLINK, color );
-		}
-		basex = x;
-	}
-#else
-	UI_DrawString( x, y, str, style, color );
-
-	// draw the cursor
-	if (!(style & UI_PULSE)) {
-		return;
-	}
-
-	if ( trap_Key_GetOverstrikeMode() ) {
-		cursorChar = 11;
-	} else {
-		cursorChar = 10;
-	}
-
-	style &= ~UI_PULSE;
-	style |= UI_BLINK;
-
-	if (style & UI_SMALLFONT)
-	{
-		charw =	SMALLCHAR_WIDTH;
-	}
-	else if (style & UI_GIANTFONT)
-	{
-		charw =	GIANTCHAR_WIDTH;
-	}
-	else
-	{
-		charw =	BIGCHAR_WIDTH;
-	}
-
-	if (style & UI_CENTER)
-	{
-		len = strlen(str);
-		x = x - len*charw/2;
-	}
-	else if (style & UI_RIGHT)
-	{
-		len = strlen(str);
-		x = x - len*charw;
-	}
-	
-	UI_DrawChar( x + ( edit->cursor - prestep ) * charw, y, cursorChar, style & ~(UI_CENTER|UI_RIGHT), color );
-#endif
-}
-
-/*
 ==================
 MenuField_Init
 ==================
@@ -153,7 +39,7 @@ void MenuField_Init( menufield_s* m ) {
 	int	l;
 	int	w;
 	int	h;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_FontForStyle( m->generic.flags );
@@ -165,7 +51,7 @@ void MenuField_Init( menufield_s* m ) {
 
 	MField_Clear( &m->field );
 
-#ifndef IOQ3ZTM // FONT_REWRITE
+#if 1 //#ifndef IOQ3ZTM // FONT_REWRITE
 	if (m->generic.flags & QMF_SMALLFONT)
 	{
 		w = SMALLCHAR_WIDTH;
@@ -210,7 +96,7 @@ void MenuField_Draw( menufield_s *f )
 	int		style;
 	qboolean focus;
 	float	*color;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_FontForStyle( f->generic.flags );
@@ -218,7 +104,7 @@ void MenuField_Draw( menufield_s *f )
 
 	x =	f->generic.x;
 	y =	f->generic.y;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	w = font->shaderCharWidth;
 
 	if (f->generic.flags & QMF_SMALLFONT) {
@@ -265,7 +151,7 @@ void MenuField_Draw( menufield_s *f )
 		UI_DrawString( x - w, y, f->generic.name, style|UI_RIGHT, color );
 	}
 
-	UI_Field_Draw( &f->field, x + w, y, style, color );
+	MField_Draw( &f->field, x + w, y, style, color, focus );
 }
 
 /*

@@ -60,219 +60,6 @@ char systemChat[256];
 char teamChat1[256];
 char teamChat2[256];
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-font_t *CG_FontForScale(float scale) {
-	font_t *font = &cgs.media.fontSmall;
-	if (scale <= cg_smallFont.value) {
-		font = &cgs.media.fontTiny;
-	} else if (scale > cg_bigFont.value) {
-		font = &cgs.media.fontGiant;
-	}
-
-	return font;
-}
-
-int CG_Text_Width(const char *text, float scale, int limit) {
-	return Com_FontStringWidthExt(CG_FontForScale(scale), text, scale, limit, qtrue);
-}
-
-int CG_Text_Height(const char *text, float scale, int limit) {
-	return Com_FontStringHeightExt(CG_FontForScale(scale), text, scale, limit, qtrue);
-}
-
-void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style) {
-	font_t *font = CG_FontForScale(scale);
-	int shadowofs;
-
-	if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-		shadowofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
-	} else {
-		shadowofs = 0;
-	}
-
-	// y for this function is bottom of text line, not top...
-	y -= CG_Text_Height(text, scale, 0);
-
-	CG_DrawFontStringExt( font, scale, x, y, text, color, qfalse, qfalse, shadowofs, qtrue, adjust, limit, NULL );
-}
-
-void CG_Text_Paint_Limit(float *maxX, float x, float y, float scale, vec4_t color, const char* text, float adjust, int limit) {
-	font_t *font = CG_FontForScale(scale);
-
-	// y for this function is bottom of text line, not top...
-	y -= CG_Text_Height(text, scale, limit);
-
-	CG_DrawFontStringExt( font, scale, x, y, text, color, qfalse, qfalse, 0, qtrue, adjust, limit, maxX );
-}
-#elif defined MISSIONPACK_HUD
-int CG_Text_Width(const char *text, float scale, int limit) {
-	int count,len;
-	float out;
-	glyphInfo_t *glyph;
-	float useScale;
-// FIXME: see ui_main.c, same problem
-//	const unsigned char *s = text;
-	const char *s = text;
-	fontInfo_t *font = &cgDC.Assets.textFont;
-	if (scale <= cg_smallFont.value) {
-		font = &cgDC.Assets.smallFont;
-	} else if (scale > cg_bigFont.value) {
-		font = &cgDC.Assets.bigFont;
-	}
-	useScale = scale * font->glyphScale;
-	out = 0;
-	if (text) {
-		len = strlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-			if ( Q_IsColorString(s) ) {
-				s += 2;
-				continue;
-			} else {
-				glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
-				out += glyph->xSkip;
-				s++;
-				count++;
-			}
-		}
-	}
-	return out * useScale;
-}
-
-int CG_Text_Height(const char *text, float scale, int limit) {
-	int len, count;
-	float max;
-	glyphInfo_t *glyph;
-	float useScale;
-// TTimo: FIXME
-//	const unsigned char *s = text;
-	const char *s = text;
-	fontInfo_t *font = &cgDC.Assets.textFont;
-	if (scale <= cg_smallFont.value) {
-		font = &cgDC.Assets.smallFont;
-	} else if (scale > cg_bigFont.value) {
-		font = &cgDC.Assets.bigFont;
-	}
-	useScale = scale * font->glyphScale;
-	max = 0;
-	if (text) {
-		len = strlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-			if ( Q_IsColorString(s) ) {
-				s += 2;
-				continue;
-			} else {
-				glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
-				if (max < glyph->height) {
-					max = glyph->height;
-				}
-				s++;
-				count++;
-			}
-		}
-	}
-	return max * useScale;
-}
-
-void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader) {
-  float w, h;
-  w = width * scale;
-  h = height * scale;
-  CG_AdjustFrom640( &x, &y, &w, &h );
-  trap_R_DrawStretchPic( x, y, w, h, s, t, s2, t2, hShader );
-}
-
-void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text, float adjust, int limit, int style) {
-  int len, count;
-	vec4_t newColor;
-	glyphInfo_t *glyph;
-	float useScale;
-	fontInfo_t *font = &cgDC.Assets.textFont;
-	if (scale <= cg_smallFont.value) {
-		font = &cgDC.Assets.smallFont;
-	} else if (scale > cg_bigFont.value) {
-		font = &cgDC.Assets.bigFont;
-	}
-	useScale = scale * font->glyphScale;
-	if (x == CENTER_X) {
-		// center aligned
-		float w;
-
-		w = CG_Text_Width(text, scale, limit);
-		x = (SCREEN_WIDTH - w) * 0.5f;
-	} else if (x < 0) {
-		// right aligned, offset by x
-		float w;
-
-		w = CG_Text_Width(text, scale, limit);
-		x = SCREEN_WIDTH + x - w;
-	}
-  if (text) {
-// TTimo: FIXME
-//		const unsigned char *s = text;
-		const char *s = text;
-		trap_R_SetColor( color );
-		memcpy(&newColor[0], &color[0], sizeof(vec4_t));
-		len = strlen(text);
-		if (limit > 0 && len > limit) {
-			len = limit;
-		}
-		count = 0;
-		while (s && *s && count < len) {
-			glyph = &font->glyphs[(int)*s]; // TTimo: FIXME: getting nasty warnings without the cast, hopefully this doesn't break the VM build
-			//int yadj = Assets.textFont.glyphs[text[i]].bottom + Assets.textFont.glyphs[text[i]].top;
-			//float yadj = scale * (Assets.textFont.glyphs[text[i]].imageHeight - Assets.textFont.glyphs[text[i]].height);
-			if ( Q_IsColorString( s ) ) {
-				memcpy( newColor, g_color_table[ColorIndex(*(s+1))], sizeof( newColor ) );
-				newColor[3] = color[3];
-				trap_R_SetColor( newColor );
-				s += 2;
-				continue;
-			} else {
-				float yadj = useScale * glyph->top;
-				if (style == ITEM_TEXTSTYLE_SHADOWED || style == ITEM_TEXTSTYLE_SHADOWEDMORE) {
-					int ofs = style == ITEM_TEXTSTYLE_SHADOWED ? 1 : 2;
-					colorBlack[3] = newColor[3];
-					trap_R_SetColor( colorBlack );
-					CG_Text_PaintChar(x + ofs, y - yadj + ofs, 
-														glyph->imageWidth,
-														glyph->imageHeight,
-														useScale, 
-														glyph->s,
-														glyph->t,
-														glyph->s2,
-														glyph->t2,
-														glyph->glyph);
-					colorBlack[3] = 1.0;
-					trap_R_SetColor( newColor );
-				}
-				CG_Text_PaintChar(x, y - yadj, 
-													glyph->imageWidth,
-													glyph->imageHeight,
-													useScale, 
-													glyph->s,
-													glyph->t,
-													glyph->s2,
-													glyph->t2,
-													glyph->glyph);
-				// CG_DrawPic(x, y - yadj, scale * cgDC.Assets.textFont.glyphs[text[i]].imageWidth, scale * cgDC.Assets.textFont.glyphs[text[i]].imageHeight, cgDC.Assets.textFont.glyphs[text[i]].glyph);
-				x += (glyph->xSkip * useScale) + adjust;
-				s++;
-				count++;
-			}
-		}
-		trap_R_SetColor( NULL );
-	}
-}
-#endif // MISSIONPACK_HUD
-
 /*
 ==============
 CG_DrawField
@@ -1327,7 +1114,7 @@ void CG_DrawScoreChain(void)
 	s = va("%d Link", cg.cur_ps->chain-1);
 
 	y = SCREEN_HEIGHT - 32;
-	CG_Text_Paint(CENTER_X, y, frac, color, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+	CG_DrawStringExt( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, frac, 0, 0 );
 }
 #endif
 
@@ -1349,6 +1136,7 @@ static float CG_DrawAttacker( float y ) {
 	int			t;
 	float		size;
 	vec3_t		angles;
+	vec4_t		color;
 	const char	*info;
 	const char	*name;
 	int			playerNum;
@@ -1382,7 +1170,9 @@ static float CG_DrawAttacker( float y ) {
 	info = CG_ConfigString( CS_PLAYERS + playerNum );
 	name = Info_ValueForKey(  info, "n" );
 	y += size;
-	CG_DrawBigString( -1, y, name, 0.5 );
+	color[0] = color[1] = color[2] = 1;
+	color[3] = 0.5f;
+	CG_DrawString( 635, y + 2, name, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, color );
 
 	return y + BIGCHAR_HEIGHT + 2;
 }
@@ -1398,7 +1188,7 @@ static float CG_DrawSnapshot( float y ) {
 	s = va( "time:%i snap:%i cmd:%i", cg.snap->serverTime, 
 		cg.latestSnapshotNum, cgs.serverCommandSequence );
 
-	CG_DrawBigString( -5, y + 2, s, 1.0F);
+	CG_DrawString( 635, y + 2, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 	return y + BIGCHAR_HEIGHT + 4;
 }
@@ -1442,8 +1232,7 @@ static float CG_DrawFPS( float y ) {
 		fps = 1000 * FPS_FRAMES / total;
 
 		s = va( "%ifps", fps );
-
-		CG_DrawBigString( -5, y + 2, s, 1.0F);
+		CG_DrawString( 635, y + 2, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
 	return y + BIGCHAR_HEIGHT + 4;
@@ -1471,7 +1260,7 @@ static float CG_DrawTimer( float y ) {
 		s = va( "%i:%s%i", mins, seconds < 10 ? "0" : "", seconds );
 	}
 
-	CG_DrawBigString( -5, y + 2, s, 1.0F);
+	CG_DrawString( 635, y + 2, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 	return y + BIGCHAR_HEIGHT + 4;
 }
@@ -1551,11 +1340,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 		pi = cgs.playerinfo + sortedTeamPlayers[team][i];
 		if ( pi->infoValid && pi->team == team) {
 			plyrs++;
-#ifdef IOQ3ZTM // FONT_REWRITE
-			len = Com_FontStringWidth(&cgs.media.fontTiny, pi->name, 0);
-#else
-			len = CG_DrawStrlen(pi->name);
-#endif
+			len = CG_DrawStrlen( pi->name, UI_TINYFONT );
 			if (len > pwidth)
 				pwidth = len;
 		}
@@ -1564,40 +1349,24 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	if (!plyrs)
 		return y;
 
-#ifdef IOQ3ZTM // FONT_REWRITE
 	if (pwidth > TEAM_OVERLAY_MAXNAME_WIDTH*TINYCHAR_WIDTH)
 		pwidth = TEAM_OVERLAY_MAXNAME_WIDTH*TINYCHAR_WIDTH;
-#else
-	if (pwidth > TEAM_OVERLAY_MAXNAME_WIDTH)
-		pwidth = TEAM_OVERLAY_MAXNAME_WIDTH;
-#endif
 
 	// max location name width
 	lwidth = 0;
 	for (i = 1; i < MAX_LOCATIONS; i++) {
 		p = CG_ConfigString(CS_LOCATIONS + i);
 		if (p && *p) {
-#ifdef IOQ3ZTM // FONT_REWRITE
-			len = Com_FontStringWidth(&cgs.media.fontTiny, p, 0);
-#else
-			len = CG_DrawStrlen(p);
-#endif
+			len = CG_DrawStrlen( p, UI_TINYFONT );
 			if (len > lwidth)
 				lwidth = len;
 		}
 	}
 
-#ifdef IOQ3ZTM // FONT_REWRITE
 	if (lwidth > TEAM_OVERLAY_MAXLOCATION_WIDTH*TINYCHAR_WIDTH)
 		lwidth = TEAM_OVERLAY_MAXLOCATION_WIDTH*TINYCHAR_WIDTH;
 
 	w = pwidth + lwidth + (4 + 7) * TINYCHAR_WIDTH;
-#else
-	if (lwidth > TEAM_OVERLAY_MAXLOCATION_WIDTH)
-		lwidth = TEAM_OVERLAY_MAXLOCATION_WIDTH;
-
-	w = (pwidth + lwidth + 4 + 7) * TINYCHAR_WIDTH;
-#endif
 
 	if ( right )
 		x = 640 - w;
@@ -1636,30 +1405,14 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 
 			xx = x + TINYCHAR_WIDTH;
 
-			CG_DrawStringExt( xx, y,
-				pi->name, hcolor, qfalse, qfalse,
-				TINYCHAR_WIDTH, TINYCHAR_HEIGHT, TEAM_OVERLAY_MAXNAME_WIDTH);
+			CG_DrawStringExt( xx, y, pi->name, UI_TINYFONT, NULL, 0, TEAM_OVERLAY_MAXNAME_WIDTH, 0 );
 
 			if (lwidth) {
 				p = CG_ConfigString(CS_LOCATIONS + pi->location);
 				if (!p || !*p)
 					p = "unknown";
-//				len = CG_DrawStrlen(p);
-//				if (len > lwidth)
-//					len = lwidth;
-
-#ifdef IOQ3ZTM // FONT_REWRITE
 				xx = x + TINYCHAR_WIDTH * 2 + pwidth;
-#else
-//				xx = x + TINYCHAR_WIDTH * 2 + TINYCHAR_WIDTH * pwidth + 
-//					((lwidth/2 - len/2) * TINYCHAR_WIDTH);
-				xx = x + TINYCHAR_WIDTH * 2 + TINYCHAR_WIDTH * pwidth;
-#endif
-				CG_DrawStringExt( xx, y,
-					p, hcolor, qfalse, qfalse, TINYCHAR_WIDTH, TINYCHAR_HEIGHT,
-					TEAM_OVERLAY_MAXLOCATION_WIDTH);
-			} else {
-				p = "";
+				CG_DrawStringExt( xx, y, p, UI_TINYFONT, NULL, 0, TEAM_OVERLAY_MAXLOCATION_WIDTH, 0 );
 			}
 
 #ifdef TURTLEARENA // NOARMOR
@@ -1672,16 +1425,9 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 			Com_sprintf (st, sizeof(st), "%3i %3i", pi->health,	pi->armor);
 #endif
 
-#ifdef IOQ3ZTM // FONT_REWRITE
 			xx = x + TINYCHAR_WIDTH * 3 + pwidth + lwidth;
-#else
-			xx = x + TINYCHAR_WIDTH * 3 + 
-				TINYCHAR_WIDTH * pwidth + TINYCHAR_WIDTH * lwidth;
-#endif
 
-			CG_DrawStringExt( xx, y,
-				st, hcolor, qfalse, qfalse,
-				TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+			CG_DrawString( xx, y, st, UI_TINYFONT, hcolor );
 
 			// draw weapon icon
 			xx += TINYCHAR_WIDTH * 3;
@@ -1827,7 +1573,7 @@ static float CG_DrawScores( float y ) {
 			}
 		}
 
-		CG_DrawBigString( x + (w - Com_FontStringWidth(&cgs.media.fontBig, s, 0)) / 2, y, s, 1.0F);
+		CG_DrawString( x + w / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 		// Red
 		s = va( "%2i", s1 );
@@ -1845,7 +1591,7 @@ static float CG_DrawScores( float y ) {
 			}
 		}
 
-		CG_DrawBigString( x + (w - Com_FontStringWidth(&cgs.media.fontBig, s, 0)) / 2, y, s, 1.0F);
+		CG_DrawString( x + w / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	} else if ( cgs.gametype >= GT_TEAM ) {
 		x = 640;
 
@@ -1889,11 +1635,7 @@ static float CG_DrawScores( float y ) {
 		if ( cgs.gametype == GT_1FCTF ) {
 			h = w = FLAG_SIZE / 2;
 		} else {
-#ifdef IOQ3ZTM // FONT_REWRITE
-			w = Com_FontStringWidth(&cgs.media.fontBig, s, 0) + 8;
-#else
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
-#endif
+			w = CG_DrawStrlen( s, UI_BIGFONT ) + 8;
 			h = BIGCHAR_HEIGHT + 8;
 		}
 
@@ -1912,11 +1654,7 @@ static float CG_DrawScores( float y ) {
 		if ( cgs.gametype == GT_1FCTF ) {
 			h = w = FLAG_SIZE / 2;
 		} else {
-#ifdef IOQ3ZTM // FONT_REWRITE
-			w = Com_FontStringWidth(&cgs.media.fontBig, s, 0) + 8;
-#else
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
-#endif
+			w = CG_DrawStrlen( s, UI_BIGFONT ) + 8;
 			h = BIGCHAR_HEIGHT + 8;
 		}
 
@@ -1940,11 +1678,7 @@ static float CG_DrawScores( float y ) {
 		}
 		if ( s2 != SCORE_NOT_PRESENT ) {
 			s = va( "%2i", s2 );
-#ifdef IOQ3ZTM // FONT_REWRITE
-			w = Com_FontStringWidth(&cgs.media.fontBig, s, 0) + 8;
-#else
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
-#endif
+			w = CG_DrawStrlen( s, UI_BIGFONT ) + 8;
 			x -= w;
 			h = BIGCHAR_HEIGHT + 8;
 			if ( !spectator && score == s2 && score != s1 ) {
@@ -1967,11 +1701,7 @@ static float CG_DrawScores( float y ) {
 		// first place
 		if ( s1 != SCORE_NOT_PRESENT ) {
 			s = va( "%2i", s1 );
-#ifdef IOQ3ZTM // FONT_REWRITE
-			w = Com_FontStringWidth(&cgs.media.fontBig, s, 0) + 8;
-#else
-			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH + 8;
-#endif
+			w = CG_DrawStrlen( s, UI_BIGFONT ) + 8;
 			x -= w;
 			h = BIGCHAR_HEIGHT + 8;
 			if ( !spectator && score == s1 ) {
@@ -2264,10 +1994,10 @@ static void CG_DrawTeamInfo( void ) {
 		hcolor[3] = 1.0f;
 
 		for (i = cgs.teamChatPos - 1; i >= cgs.teamLastChatPos; i--) {
-			CG_DrawStringExt( CHATLOC_X + TINYCHAR_WIDTH, 
+			CG_DrawString( CHATLOC_X + TINYCHAR_WIDTH, 
 				CHATLOC_Y - (cgs.teamChatPos - i)*TINYCHAR_HEIGHT, 
-				cgs.teamChatMsgs[i % chatHeight], hcolor, qfalse, qfalse,
-				TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+				cgs.teamChatMsgs[i % chatHeight],
+				UI_TINYFONT, hcolor );
 		}
 	}
 }
@@ -2391,11 +2121,10 @@ static void CG_DrawReward( void ) {
 		x = 320 - ICON_SIZE/2;
 		CG_DrawPic( x, y, ICON_SIZE-4, ICON_SIZE-4, cg.cur_lc->rewardShader[0] );
 		Com_sprintf(buf, sizeof(buf), "%d", cg.cur_lc->rewardCount[0]);
-#ifdef IOQ3ZTM // FONT_REWRITE
-		CG_DrawBigStringColor(CENTER_X, y+ICON_SIZE, buf, color);
+#ifdef IOQ3ZTM // FONT_REWRITE // ZTM: FIXME: ### why did I change this to big string?
+		CG_DrawString( SCREEN_WIDTH / 2, y+ICON_SIZE, buf, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color );
 #else
-		CG_DrawStringExt( CENTER_X, y+ICON_SIZE, buf, color, qfalse, qtrue,
-								SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, 0 );
+		CG_DrawString( SCREEN_WIDTH / 2, y+ICON_SIZE, buf, UI_CENTER|UI_DROPSHADOW|UI_SMALLFONT, color );
 #endif
 	}
 	else {
@@ -2500,7 +2229,7 @@ static void CG_DrawDisconnect( void ) {
 
 	// also add text in center of screen
 	s = "Connection Interrupted";
-	CG_DrawBigString( CENTER_X, 100, s, 1.0F);
+	CG_DrawString( SCREEN_WIDTH / 2, 100, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 	// blink the icon
 	if ( ( cg.time >> 9 ) & 1 ) {
@@ -2694,7 +2423,7 @@ void CG_DrawVoipMeter( void ) {
 	buffer[i] = '\0';
 
 	Com_sprintf( string, sizeof ( string ), "VoIP: [%s]", buffer );
-	CG_DrawStringExt( CENTER_X, 10, string, colorWhite, qfalse, qtrue, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+	CG_DrawString( SCREEN_WIDTH / 2, 10, string, UI_CENTER|UI_DROPSHADOW|UI_TINYFONT, NULL );
 }
 
 
@@ -2747,11 +2476,6 @@ static void CG_DrawCenterString( void ) {
 	char	*start;
 	int		l;
 	int		y;
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-	int		h;
-#else
-	int		charWidth;
-#endif
 	int		charHeight;
 	float	*color;
 
@@ -2770,13 +2494,7 @@ static void CG_DrawCenterString( void ) {
 
 	start = cg.cur_lc->centerPrint;
 
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-	charHeight = CG_Text_Height("I", cg.cur_lc->centerPrintCharScale, 0);
-#else
-	charWidth = BIGCHAR_WIDTH * 2 * cg.cur_lc->centerPrintCharScale;
-	charHeight = (int)(charWidth * 1.5);
-#endif
-
+	charHeight = cg.cur_lc->centerPrintCharScale * 48.0f;
 	y = cg.cur_lc->centerPrintY - cg.cur_lc->centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
@@ -2790,16 +2508,9 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-		h = CG_Text_Height(linebuffer, cg.cur_lc->centerPrintCharScale, 0);
-		CG_Text_Paint(CENTER_X, y + h, cg.cur_lc->centerPrintCharScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-		y += h + 6;
-#else
-		CG_DrawStringExt( CENTER_X, y, linebuffer, color, qfalse, qtrue,
-			charWidth, charHeight, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.cur_lc->centerPrintCharScale, 0, 0 );
+		y += charHeight + 6;
 
-		y += charHeight;
-#endif
 		while ( *start && ( *start != '\n' ) ) {
 			start++;
 		}
@@ -2850,11 +2561,6 @@ static void CG_DrawGlobalCenterString( void ) {
 	char	*start;
 	int		l;
 	int		y;
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-	int		h;
-#else
-	int		charWidth;
-#endif
 	int		charHeight;
 	float	*color;
 
@@ -2873,13 +2579,7 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	start = cg.centerPrint;
 
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-	charHeight = CG_Text_Height("I", cg.centerPrintCharScale, 0);
-#else
-	charWidth = BIGCHAR_WIDTH * 2 * cg.centerPrintCharScale;
-	charHeight = (int)(charWidth * 1.5);
-#endif
-
+	charHeight = cg.centerPrintCharScale * 48.0f;
 	y = cg.centerPrintY - cg.centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
@@ -2893,16 +2593,9 @@ static void CG_DrawGlobalCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-		h = CG_Text_Height(linebuffer, cg.centerPrintCharScale, 0);
-		CG_Text_Paint(CENTER_X, y + h, cg.centerPrintCharScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-		y += h + 6;
-#else
-		CG_DrawStringExt( CENTER_X, y, linebuffer, color, qfalse, qtrue,
-			charWidth, charHeight, 0 );
+		CG_DrawStringExt( SCREEN_WIDTH / 2, y, linebuffer, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, cg.centerPrintCharScale, 0, 0 );
+		y += charHeight + 6;
 
-		y += charHeight;
-#endif
 		while ( *start && ( *start != '\n' ) ) {
 			start++;
 		}
@@ -3218,18 +2911,12 @@ static void CG_DrawCrosshairNames( void ) {
 	// draw the name of the player being looked at
 	color = CG_FadeColor( cg.cur_lc->crosshairPlayerTime, 1000 );
 	if ( !color ) {
-		trap_R_SetColor( NULL );
 		return;
 	}
 
 	name = cgs.playerinfo[ cg.cur_lc->crosshairPlayerNum ].name;
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
 	color[3] *= 0.5f;
-	CG_Text_Paint( CENTER_X, 170 + CG_Text_Height(name, 0.3f, 0), 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
-#else
-	CG_DrawBigString( CENTER_X, 170, name, color[3] * 0.5f );
-#endif
-	trap_R_SetColor( NULL );
+	CG_DrawStringExt( SCREEN_WIDTH / 2, 170, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, 0, 0, 1 );
 
 	if ( cg_voipShowCrosshairMeter.integer )
 	{
@@ -3252,11 +2939,7 @@ static void CG_DrawCrosshairNames( void ) {
 			buffer[i] = '\0';
 
 			Com_sprintf( string, sizeof ( string ), "VoIP: [%s]", buffer );
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-			CG_Text_Paint( CENTER_X, 170 + CG_Text_Height(name, 0.3f, 0) * 2.5, 0.3f, color, string, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
-#else
-			CG_DrawBigString( CENTER_X, 170 + BIGCHAR_HEIGHT * 1.5f, string, color[3] * 0.5f );
-#endif
+			CG_DrawStringExt( SCREEN_WIDTH / 2, 170 + BIGCHAR_HEIGHT * 1.5f, string, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, 0, 0, 1 );
 		}
 	}
 }
@@ -3306,13 +2989,8 @@ static void CG_DrawShaderInfo( void ) {
 
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
 
-#ifdef MISSIONPACK_HUD
 	color[3] *= 0.5f;
-	CG_Text_Paint( 0, SCREEN_HEIGHT - height - 28, 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
-#else
-	CG_DrawBigString( 0, SCREEN_HEIGHT - height - 28, name, color[3] * 0.5f );
-#endif
-	trap_R_SetColor( NULL );
+	CG_DrawString( 0, SCREEN_HEIGHT - height - 28, name, UI_DROPSHADOW|UI_BIGFONT, color );
 
 	x = 0;
 	y = SCREEN_HEIGHT - height;
@@ -3330,17 +3008,17 @@ CG_DrawSpectator
 */
 static void CG_DrawSpectator(void) {
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
-	CG_DrawBigString(CENTER_X, 440, "SPECTATOR", 1.0F);
+	CG_DrawString(320, 440, "SPECTATOR", UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL);
 	if ( cgs.gametype == GT_TOURNAMENT ) {
-		CG_DrawBigString(CENTER_X, 460, "waiting to play", 1.0F);
+		CG_DrawString(320, 460, "waiting to play", UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL);
 	}
 	else if ( cgs.gametype >= GT_TEAM ) {
 #ifdef TA_MISC // SMART_JOIN_MENU
-		CG_DrawBigString(CENTER_X, 460, "press ESC and use the TEAM menu to play", 1.0F);
+		CG_DrawString(320, 460, "press ESC and use the TEAM menu to play", UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL);
 #elif defined IOQ3ZTM
-		CG_DrawBigString(CENTER_X, 460, "press ESC and use the START menu to play", 1.0F);
+		CG_DrawString(320, 460, "press ESC and use the START menu to play", UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL);
 #else
-		CG_DrawBigString(CENTER_X, 460, "press ESC and use the JOIN menu to play", 1.0F);
+		CG_DrawString(320, 460, "press ESC and use the JOIN menu to play", UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL);
 #endif
 	}
 }
@@ -3560,11 +3238,7 @@ static void CG_DrawSPIntermission( void ) {
 
 	Com_sprintf(str, sizeof (str), "%s got through the level", name);
 
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-	CG_Text_Paint( CENTER_X, 210 + CG_Text_Height(name, 0.3f, 0), 0.3f, color, str, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
-#else
-	CG_DrawBigString( CENTER_X, 210, str, color[3] );
-#endif
+	CG_DrawStringExt( SCREEN_WIDTH / 2, 210, str, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, 0, 0, 1 );
 	trap_R_SetColor( NULL );
 }
 #endif
@@ -3603,7 +3277,6 @@ Draw info for bot that player is following.
 */
 static qboolean CG_DrawBotInfo( int y ) {
 	const char	*info, *str, *leader, *carrying, *action, *node;
-	int x;
 
 	if ( !(cg.cur_ps->pm_flags & PMF_FOLLOW) ) {
 		return qfalse;
@@ -3619,9 +3292,7 @@ static qboolean CG_DrawBotInfo( int y ) {
 
 	if ( *node ) {
 		str = va("AI Node: %s", node);
-		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( str ) );
-
-		CG_DrawBigString( x, y, str, 1.0F );
+		CG_DrawString( SCREEN_WIDTH / 2, y, str, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 		y += BIGCHAR_HEIGHT + 2;
 	}
@@ -3629,9 +3300,7 @@ static qboolean CG_DrawBotInfo( int y ) {
 	action = Info_ValueForKey(info, "a");
 
 	if ( *action ) {
-		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( action ) );
-
-		CG_DrawBigString( x, y, action, 1.0F );
+		CG_DrawString( SCREEN_WIDTH / 2, y, action, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 		y += BIGCHAR_HEIGHT + 2;
 	}
@@ -3640,9 +3309,7 @@ static qboolean CG_DrawBotInfo( int y ) {
 
 	if ( *leader ) {
 		str = "bot is leader";
-		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( str ) );
-
-		CG_DrawBigString( x, y, str, 1.0F );
+		CG_DrawString( SCREEN_WIDTH / 2, y, str, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 		y += BIGCHAR_HEIGHT + 2;
 	}
@@ -3651,9 +3318,7 @@ static qboolean CG_DrawBotInfo( int y ) {
 
 	if ( *carrying ) {
 		str = va("bot carrying: %s", carrying);
-		x = 0.5 * ( 640 - BIGCHAR_WIDTH * CG_DrawStrlen( str ) );
-
-		CG_DrawBigString( x, y, str, 1.0F );
+		CG_DrawString( SCREEN_WIDTH / 2, y, str, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
 	return qtrue;
@@ -3673,11 +3338,11 @@ static qboolean CG_DrawFollow( void ) {
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
-	CG_DrawBigString( CENTER_X, 24, "following", 1.0F );
+	CG_DrawString( SCREEN_WIDTH / 2, 24, "following", UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 	name = cgs.playerinfo[ cg.cur_ps->playerNum ].name;
 
-	CG_DrawGiantString(CENTER_X, 40, name, 1.0F );
+	CG_DrawString( SCREEN_WIDTH / 2, 40, name, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 
 	CG_DrawBotInfo( 40 + GIANT_HEIGHT );
 
@@ -3705,13 +3370,8 @@ static qboolean CG_DrawUseEntity(void)
 
 	s = "Use Entity!";
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-	h = Com_FontStringHeight(&cgs.media.fontBig, s, 0);
-	w = Com_FontStringWidth(&cgs.media.fontBig, s, 0);
-#else
-	h = BIGCHAR_HEIGHT
-	w = BIGCHAR_WIDTH * CG_DrawStrlen( s );
-#endif
+	h = BIGCHAR_HEIGHT;
+	w = CG_DrawStrlen( s, UI_BIGFONT );
 	x = ( SCREEN_WIDTH - w ) * 0.5f;
 	y = SCREEN_HEIGHT-h-12;
 
@@ -3747,7 +3407,7 @@ static void CG_DrawAmmoWarning( void ) {
 	} else {
 		s = "LOW AMMO WARNING";
 	}
-	CG_DrawBigString(CENTER_X, 64, s, 1.0F);
+	CG_DrawString( SCREEN_WIDTH / 2, 64, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 }
 #endif
 
@@ -3787,7 +3447,7 @@ static void CG_DrawProxWarning( void ) {
     Com_sprintf(s, sizeof(s), "YOU HAVE BEEN MINED");
   }
 
-	CG_DrawBigStringColor( CENTER_X, 64 + BIGCHAR_HEIGHT, s, g_color_table[ColorIndex(COLOR_RED)] );
+	CG_DrawString( SCREEN_WIDTH / 2, 64 + BIGCHAR_HEIGHT, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, g_color_table[ColorIndex(COLOR_RED)] );
 }
 #endif
 
@@ -3800,12 +3460,7 @@ CG_DrawWarmup
 static void CG_DrawWarmup( void ) {
 	int			sec;
 	int			i;
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
 	float		scale;
-#else
- 	int			cw;
-	int			w;
-#endif
 	playerInfo_t	*ci1, *ci2;
 	const char	*s;
 
@@ -3817,8 +3472,8 @@ static void CG_DrawWarmup( void ) {
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
 	if ( sec < 0 ) {
-		s = "Waiting for players";
-		CG_DrawBigString(CENTER_X, 24, s, 1.0F);
+		s = "Waiting for players";		
+		CG_DrawString( SCREEN_WIDTH / 2, 24, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 		cg.warmupCount = 0;
 		return;
 	}
@@ -3839,33 +3494,11 @@ static void CG_DrawWarmup( void ) {
 
 		if ( ci1 && ci2 ) {
 			s = va( "%s vs %s", ci1->name, ci2->name );
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-			CG_Text_Paint(CENTER_X, 60, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-#else
-			w = CG_DrawStrlen( s );
-			if ( w > 640 / GIANT_WIDTH ) {
-				cw = 640 / w;
-			} else {
-				cw = GIANT_WIDTH;
-			}
-			CG_DrawStringExt( 320 - w * cw/2, 20,s, colorWhite, 
-					qfalse, qtrue, cw, (int)(cw * 1.5f), 0 );
-#endif
+			CG_DrawStringExt( SCREEN_WIDTH / 2, 25, s, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL, 32 / 48.0f, 0, 0 );
 		}
 	} else {
 		s = cgs.gametypeName;
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-		CG_Text_Paint(CENTER_X, 90, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-#else
-		w = CG_DrawStrlen( s );
-		if ( w > 640 / GIANT_WIDTH ) {
-			cw = 640 / w;
-		} else {
-			cw = GIANT_WIDTH;
-		}
-		CG_DrawStringExt( CENTER_X, 25,s, colorWhite, 
-				qfalse, qtrue, cw, (int)(cw * 1.1f), 0 );
-#endif
+		CG_DrawStringExt( SCREEN_WIDTH / 2, 25, s, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL, 32 / 48.0f, 0, 0 );
 	}
 
 	sec = ( sec - cg.time ) / 1000;
@@ -3891,42 +3524,22 @@ static void CG_DrawWarmup( void ) {
 		}
 	}
 
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
 	switch ( cg.warmupCount ) {
 	case 0:
-		scale = 0.54f;
+		scale = 28 / 48.0f;
 		break;
 	case 1:
-		scale = 0.51f;
+		scale = 24 / 48.0f;
 		break;
 	case 2:
-		scale = 0.48f;
+		scale = 20 / 48.0f;
 		break;
 	default:
-		scale = 0.45f;
+		scale = 16 / 48.0f;
 		break;
 	}
 
-	CG_Text_Paint(CENTER_X, 125, scale, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-#else
-	switch ( cg.warmupCount ) {
-	case 0:
-		cw = 28;
-		break;
-	case 1:
-		cw = 24;
-		break;
-	case 2:
-		cw = 20;
-		break;
-	default:
-		cw = 16;
-		break;
-	}
-
-	CG_DrawStringExt( CENTER_X, 70, s, colorWhite, 
-			qfalse, qtrue, cw, (int)(cw * 1.5), 0 );
-#endif
+	CG_DrawStringExt( SCREEN_WIDTH / 2, 70, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL, scale, 0, 0 );
 }
 
 
@@ -3977,7 +3590,7 @@ void CG_DrawNotify( void ) {
 		x = 0;
 
 	CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
-	CG_DrawSmallWrappedText(x, 0, cg.cur_lc->consoleText);
+	CG_DrawSmallWrappedText(x, 2, cg.cur_lc->consoleText);
 }
 
 //==================================================================================
@@ -4023,23 +3636,7 @@ void CG_DrawGameOver(void)
 	// Show "Game Over"!
 	if (!ps->persistant[PERS_LIVES] && !ps->persistant[PERS_CONTINUES])
 	{
-		int	y;
-#if !defined MISSIONPACK_HUD && !defined IOQ3ZTM
-		int charWidth;
-#endif
-		vec4_t color = {1,1,1,1};
-		const char *str = "Game Over";
-
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-		y = 120 + CG_Text_Height(str, 0.5, 0) / 2;
-		CG_Text_Paint(CENTER_X, y, 0.5, color, str, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
-#else
-		charWidth = GIANTCHAR_WIDTH*2;
-		y = 120;
-
-		CG_DrawStringExt( CENTER_X, y, str, color, qfalse, qtrue,
-			charWidth, (int)(charWidth * 1.5), 0 );
-#endif
+		CG_DrawString( SCREEN_WIDTH / 2, 120, "Game Over", UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 	}
 }
 #endif
@@ -4372,8 +3969,7 @@ void CG_DrawDemoRecording( void ) {
 
 	CG_SetScreenPlacement( PLACE_CENTER, PLACE_TOP );
 
-	CG_DrawStringExt( ( SCREEN_WIDTH - strlen( string ) * TINYCHAR_WIDTH ) / 2, 20, string, g_color_table[ColorIndex(COLOR_WHITE)],
-			qfalse, qtrue, TINYCHAR_WIDTH, TINYCHAR_HEIGHT, 0 );
+	CG_DrawString( SCREEN_WIDTH / 2, 20, string, UI_CENTER|UI_DROPSHADOW|UI_TINYFONT, NULL );
 }
 
 /*
@@ -4389,13 +3985,8 @@ void CG_DrawMessageMode( void ) {
 	// draw the chat line
 	CG_DrawBigString( 8, 232, cg.messagePrompt, 1.0f );
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-	MField_Draw( &cg.messageField, 8 + ( strlen( cg.messagePrompt ) * BIGCHAR_WIDTH ), 232,
-			&cgs.media.fontBig, g_color_table[ColorIndex(COLOR_WHITE)], 2 );
-#else
-	MField_Draw( &cg.messageField, 8 + ( strlen( cg.messagePrompt ) * BIGCHAR_WIDTH ), 232,
-			BIGCHAR_WIDTH, BIGCHAR_HEIGHT, g_color_table[ColorIndex(COLOR_WHITE)] );
-#endif
+	MField_Draw( &cg.messageField, 8 + CG_DrawStrlen( cg.messagePrompt, UI_BIGFONT ), 232,
+			UI_DROPSHADOW|UI_BIGFONT, NULL, qtrue );
 }
 
 /*

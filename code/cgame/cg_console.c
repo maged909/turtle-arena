@@ -166,11 +166,7 @@ void CG_ConsolePrint( const char *p ) {
 			continue;
 		}
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-		lineDrawLen = Com_FontStringWidth( &cgs.media.fontConsole, con.lines[con.current % CON_MAXLINES], 0 );
-#else
-		lineDrawLen = CG_DrawStrlen( con.lines[con.current % CON_MAXLINES] ) * SMALLCHAR_WIDTH;
-#endif
+		lineDrawLen = CG_DrawStrlen( con.lines[con.current % CON_MAXLINES], UI_SMALLFONT );
 		wordDrawLen = charDrawLen = 0;
 
 		for ( i = 0; i < CON_LINELENGTH; i++ ) {
@@ -187,18 +183,14 @@ void CG_ConsolePrint( const char *p ) {
 				break;
 			}
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-			charDrawLen = Com_FontCharWidth( &cgs.media.fontConsole, p[i], 0 );
-#else
-			charDrawLen = CG_DrawStrlenEx( &p[i], 1 ) * SMALLCHAR_WIDTH;
-#endif
+			charDrawLen = CG_DrawStrlenEx( &p[i], UI_SMALLFONT, 1 );
 
 			// make sure the word will fit on screen, even if it needs a whole line to do so.
 			if ( wordDrawLen + charDrawLen > con.screenFakeWidth - ( con.sideMargin * 2 ) ) {
 				break;
 			}
 
-#ifdef IOQ3ZTM // FONT_REWRTIE
+#if 0 // #ifdef IOQ3ZTM // FONT_REWRTIE
 			// ignore kerning of first character, adds up correct since usually remove one kerning at end
 			// it's done here so word fitting line check above is correct
 			if ( wordDrawLen == 0 && charDrawLen > 0 ) {
@@ -246,32 +238,17 @@ Draw the editline after a ] prompt
 ================
 */
 void Con_DrawInput ( connstate_t state, int lines ) {
-#ifdef IOQ3ZTM // FONT_REWRITE
-	float	y;
-	font_t	*font;
-#else
 	int		y;
-#endif
 
 	if ( state != CA_DISCONNECTED && !(trap_Key_GetCatcher( ) & KEYCATCH_CONSOLE ) ) {
 		return;
 	}
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-	font = &cgs.media.fontConsole;
-
-	y = lines - ( Com_FontCharHeight( font, 0 ) * 2 );
-
-	CG_DrawFontChar( font, 0, con.sideMargin, y, ']', qtrue );
-
-	MField_Draw( &g_consoleField, con.sideMargin + Com_FontCharWidth( font, ']', 0 ), y, font, g_color_table[ColorIndex(COLOR_WHITE)], 0 );
-#else
 	y = lines - ( SMALLCHAR_HEIGHT * 2 );
 
 	CG_DrawSmallStringColor( con.sideMargin, y, "]", g_color_table[ColorIndex(COLOR_WHITE)] );
 
-	MField_Draw( &g_consoleField, 2 * SMALLCHAR_WIDTH, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, g_color_table[ColorIndex(COLOR_WHITE)] );
-#endif
+	MField_Draw( &g_consoleField, con.sideMargin + CG_DrawStrlen( "]", UI_SMALLFONT ), y, UI_SMALLFONT, NULL, qtrue );
 }
 
 #ifdef IOQ3ZTM
@@ -322,22 +299,13 @@ Draws the console with the solid background
 */
 void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	int				i;
-#ifdef IOQ3ZTM // FONT_REWRITE
-	float			x, y;
-#else
 	int				x, y;
-#endif
 	int				rows;
 	char			*text;
 	int				row;
 	int				lines;
 	vec4_t			color;
-#ifdef IOQ3ZTM // FONT_REWRITE
-	font_t			*font = &cgs.media.fontConsole;
-	float			fontHeight = Com_FontCharHeight( font, 0 ) * 1.1f; // ZTM: FIXME: this 1.1f seems wrong, but otherwise lines are partially on top of each other.
-#else
 	int				fontHeight = SMALLCHAR_HEIGHT;
-#endif
 
 	if ( frac > 1 )
 		frac = 1;
@@ -377,12 +345,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	CG_SetScreenPlacement( PLACE_RIGHT, PLACE_TOP );
 
 	// draw the version number
-#ifdef IOQ3ZTM // FONT_REWRITE
-	CG_DrawFontStringExt( font, 0, -0.001f /* right align */, lines - fontHeight, con.version, color, qfalse, qfalse, 0, qtrue, 0, 0, NULL );
-#else
-	CG_DrawSmallStringColor( SCREEN_WIDTH - CG_DrawStrlen( con.version ) * SMALLCHAR_WIDTH,
-			lines - SMALLCHAR_HEIGHT, con.version, color );
-#endif
+	CG_DrawString( SCREEN_WIDTH, lines - SMALLCHAR_HEIGHT, con.version, UI_RIGHT|UI_SMALLFONT, color );
 
 	CG_SetScreenPlacement( PLACE_LEFT, PLACE_TOP );
 
@@ -394,22 +357,12 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	// draw from the bottom up
 	if (con.display != con.current)
 	{
-#ifdef IOQ3ZTM // FONT_REWRITE
-		float characterWidth = Com_FontCharWidth( font, '^', 0 );
-		// draw arrows to show the buffer is backscrolled
-		trap_R_SetColor( color );
-		for (x=characterWidth ; x<con.screenFakeWidth ; x+=4*characterWidth)
-			CG_DrawFontChar( font, 0, x, y, '^', qtrue );
-#else
 		int linewidth = con.screenFakeWidth / SMALLCHAR_WIDTH;
 		// draw arrows to show the buffer is backscrolled
-		trap_R_SetColor( color );
 		for (x=0 ; x<linewidth ; x+=4)
-			CG_DrawChar( (x+1)*SMALLCHAR_WIDTH, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, '^' );
-#endif
+			CG_DrawString( (x+1)*SMALLCHAR_WIDTH, y, "^", UI_CENTER|UI_SMALLFONT, color );
 		y -= fontHeight;
 		rows--;
-		trap_R_SetColor( NULL );
 	}
 	
 	row = con.display;
@@ -428,11 +381,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 		}
 
 		text = con.lines[row % CON_MAXLINES];
-#ifdef IOQ3ZTM // FONT_REWRITE
-		CG_DrawFontStringExt( font, 0, con.sideMargin, y, text, g_color_table[ColorIndex(COLOR_WHITE)], qfalse, qfalse, 0, qtrue, 0, 0, NULL );
-#else
 		CG_DrawSmallString( con.sideMargin, y, text, 1.0f );
-#endif
 	}
 
 	// draw the input prompt, user text, and cursor if desired

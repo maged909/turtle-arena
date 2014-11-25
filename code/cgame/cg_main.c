@@ -2304,12 +2304,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-#ifdef IOQ3ZTM // FONT_REWRITE
-			CG_LoadFont(&cgs.media.fontSmall, tempStr, "gfx/2d/bigchars", pointSize, pointSize/2, 0);
-			CG_LoadFont(&cgs.media.fontBig, tempStr, "gfx/2d/bigchars", pointSize, pointSize, 0);
-#else
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.textFont);
-#endif
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.textFont);
 			continue;
 		}
 
@@ -2319,25 +2314,17 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-#ifdef IOQ3ZTM // FONT_REWRITE
-			CG_LoadFont(&cgs.media.fontTiny, tempStr, "gfx/2d/bigchars", pointSize, pointSize, 0);
-#else
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.smallFont);
-#endif
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.smallFont);
 			continue;
 		}
 
-		// font
+		// bigFont
 		if (Q_stricmp(token.string, "bigfont") == 0) {
 			int pointSize;
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-#ifdef IOQ3ZTM // FONT_REWRITE
-			CG_LoadFont(&cgs.media.fontGiant, tempStr, "gfx/2d/bigchars", pointSize, pointSize*0.66f, 0);
-#else
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.bigFont);
-#endif
+			CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.bigFont);
 			continue;
 		}
 
@@ -2777,10 +2764,6 @@ static float CG_Cvar_Get(const char *cvar) {
 	return atof(buff);
 }
 
-void CG_Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
-	CG_Text_Paint(x, y, scale, color, text, 0, limit, style);
-}
-
 static int CG_OwnerDrawWidth(int ownerDraw, float scale) {
 	switch (ownerDraw) {
 	  case CG_GAME_TYPE:
@@ -2981,7 +2964,7 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	CG_InitConsoleCommands();
 
 	// load a few needed things before we do any screen updates
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 // ZTM: FIXME: ### // #ifdef IOQ3ZTM // FONT_REWRITE
 	CG_LoadFont(&cgs.media.fontConsole, CG_Cvar_VariableString("cg_consoleFont"), "gfx/2d/bigchars", cg_consoleFontSize.integer,
 			cg_consoleFontSize.integer*0.66f, cg_consoleFontKerning.value);
 
@@ -2996,14 +2979,12 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	CG_LoadFont(&cgs.media.fontPropGlowSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
 	CG_LoadFont(&cgs.media.fontPropGlowBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT, 22*0.66f, 0);
 #endif
-
-	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
-#else
-	cgs.media.charsetShader		= trap_R_RegisterShader( "gfx/2d/bigchars" );
-	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 #endif
+	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 	cgs.media.consoleShader		= trap_R_RegisterShader( "console" );
 	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
+
+	CG_TextInit();
 
 	// get the rendering configuration from the client system
 	CG_UpdateGlconfig( qtrue );

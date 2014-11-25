@@ -3328,7 +3328,7 @@ void CG_DrawWeaponSelect( void ) {
 		name = cg_weapons[ cg.cur_lc->weaponSelect ].item->pickup_name;
 #endif
 		if ( name ) {
-			CG_DrawBigStringColor(CENTER_X, y - 22, name, color);
+			CG_DrawString( SCREEN_WIDTH / 2, y - BIGCHAR_HEIGHT - 6, name, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color );
 		}
 #ifndef TA_WEAPSYS
 	}

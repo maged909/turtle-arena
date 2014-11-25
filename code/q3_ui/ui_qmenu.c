@@ -204,7 +204,7 @@ static void PText_Init( menutext_s *t )
 	int	w;
 	int	h;
 	float	sizeScale;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_ProportionalFontForStyle( t->style );
@@ -214,7 +214,7 @@ static void PText_Init( menutext_s *t )
 	x = t->generic.x;
 	y = t->generic.y;
 	w = UI_ProportionalStringWidth( t->string, t->style );
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	h =	Com_FontCharHeight(font, 0);
 #else
 	h =	PROP_HEIGHT * sizeScale;
@@ -400,7 +400,7 @@ Action_Init
 */
 static void Action_Init( menuaction_s *a )
 {
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_FontForStyle( a->generic.flags );
@@ -416,13 +416,13 @@ static void Action_Init( menuaction_s *a )
 
 	// left justify text
 	a->generic.left   = a->generic.x;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	a->generic.right  = a->generic.x + Com_FontStringWidth(font, a->generic.name, 0 );
 #else
 	a->generic.right  = a->generic.x + len*BIGCHAR_WIDTH;
 #endif
 	a->generic.top    = a->generic.y;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	a->generic.bottom = a->generic.y + Com_FontCharHeight(font, 0);
 #else
 	a->generic.bottom = a->generic.y + BIGCHAR_HEIGHT;
@@ -480,7 +480,7 @@ RadioButton_Init
 */
 static void RadioButton_Init( menuradiobutton_s *rb )
 {
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_FontForStyle( rb->generic.flags );
@@ -498,7 +498,7 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 	if (rb->generic.flags & QMF_LEFT_JUSTIFY) {
 		rb->generic.left = rb->generic.x;
 		
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 		rb->generic.x += Com_FontStringWidth(font, rb->generic.name, 0 ) + SMALLCHAR_WIDTH;
 #else
 		rb->generic.x += (len+1)*SMALLCHAR_WIDTH;
@@ -507,7 +507,7 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 	} else
 #endif
 	{
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 		rb->generic.left   = rb->generic.x - Com_FontStringWidth(font, rb->generic.name, 0 ) - SMALLCHAR_WIDTH;
 #else
 		rb->generic.left   = rb->generic.x - (len+1)*SMALLCHAR_WIDTH;
@@ -517,7 +517,7 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 	rb->generic.right  = rb->generic.x + 6*SMALLCHAR_WIDTH;
 
 	rb->generic.top    = rb->generic.y;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	rb->generic.bottom = rb->generic.y + Com_FontCharHeight(font, 0);
 #else
 	rb->generic.bottom = rb->generic.y + SMALLCHAR_HEIGHT;
@@ -640,7 +640,7 @@ Slider_Init
 */
 static void Slider_Init( menuslider_s *s )
 {
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_FontForStyle( s->generic.flags );
@@ -654,14 +654,14 @@ static void Slider_Init( menuslider_s *s )
 		len = 0;
 #endif
 
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	s->generic.left   = s->generic.x - Com_FontStringWidth(font, s->generic.name, 0 ) - SMALLCHAR_WIDTH;
 #else
 	s->generic.left   = s->generic.x - (len+1)*SMALLCHAR_WIDTH; 
 #endif
 	s->generic.right  = s->generic.x + (SLIDER_RANGE+2+1)*SMALLCHAR_WIDTH;
 	s->generic.top    = s->generic.y;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	s->generic.bottom = s->generic.y + Com_FontCharHeight(font, 0);
 #else
 	s->generic.bottom = s->generic.y + SMALLCHAR_HEIGHT;
@@ -876,7 +876,7 @@ static void SpinControl_Init( menulist_s *s ) {
 #ifdef IOQ3ZTM
 	qboolean foundItem = qfalse;
 #endif
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_FontForStyle( s->generic.flags );
@@ -899,7 +899,7 @@ static void SpinControl_Init( menulist_s *s ) {
 	len = s->numitems = 0;
 	while ( (str = s->itemnames[s->numitems]) != 0 )
 	{
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 		l = Com_FontStringWidth(font, str, 0 );
 #else
 		l = strlen(str);
@@ -919,7 +919,7 @@ static void SpinControl_Init( menulist_s *s ) {
 	}		
 
 	s->generic.top	  =	s->generic.y;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	s->generic.right  =	s->generic.x + len + SMALLCHAR_WIDTH;
 	s->generic.bottom =	s->generic.y + Com_FontCharHeight(font, 0);
 #else
@@ -1074,7 +1074,7 @@ ScrollList_Init
 static void ScrollList_Init( menulist_s *l )
 {
 	int		w;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_FontForStyle( l->generic.flags );
@@ -1097,7 +1097,7 @@ static void ScrollList_Init( menulist_s *l )
 	l->generic.left   =	l->generic.x;
 	l->generic.top    = l->generic.y;	
 	l->generic.right  =	l->generic.x + w;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	l->generic.bottom =	l->generic.y + l->height * Com_FontCharHeight(font, 0);
 #else
 	l->generic.bottom =	l->generic.y + l->height * SMALLCHAR_HEIGHT;
@@ -1409,7 +1409,7 @@ void ScrollList_Draw( menulist_s *l )
 	float*		color;
 	qboolean	hasfocus;
 	int			style;
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 	font_t *font;
 
 	font = UI_FontForStyle( l->generic.flags );
@@ -1456,7 +1456,7 @@ void ScrollList_Draw( menulist_s *l )
 				style,
 				color);
 
-#ifdef IOQ3ZTM // FONT_REWRITE
+#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
 			y += Com_FontCharHeight(font, 0);
 #else
 			y += SMALLCHAR_HEIGHT;
@@ -1955,27 +1955,11 @@ Menu_Cache
 */
 void Menu_Cache( void )
 {
-#ifdef IOQ3ZTM // FONT_REWRITE
-	UI_LoadFont(&uis.fontSmall, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 8, 0);
-	UI_LoadFont(&uis.fontBig, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 16, 0);
-	UI_LoadFont(&uis.fontGiant, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 48, 32, 0);
-
-	UI_LoadFont(&uis.fontPropSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, PROP_GAP_WIDTH);
-	UI_LoadFont(&uis.fontPropBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT, 22*0.66f, PROP_GAP_WIDTH);
-#ifndef TA_DATA
-	UI_LoadFont(&uis.fontPropGlowSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
-	UI_LoadFont(&uis.fontPropGlowBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT, 22*0.66f, 0);
-#endif
-
-	UI_LoadFont(&uis.fontBanner, "fonts/mplus-2p-black.ttf", "menu/art/font2_prop.tga", 48, 32, 0);
-#else
-	uis.charset			= trap_R_RegisterShaderNoMip( "gfx/2d/bigchars" );
 	uis.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
 #ifndef TA_DATA
 	uis.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
 #endif
 	uis.charsetPropB	= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
-#endif
 	uis.cursor          = trap_R_RegisterShaderNoMip( "menu/art/3_cursor2" );
 	uis.rb_on           = trap_R_RegisterShaderNoMip( "menu/art/switch_on" );
 	uis.rb_off          = trap_R_RegisterShaderNoMip( "menu/art/switch_off" );
