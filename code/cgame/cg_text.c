@@ -103,7 +103,7 @@ void CG_TextInit( void ) {
 	cgs.media.smallFontHeight = 12;
 	cgs.media.bigFontHeight = 20;
 
-	if ( !CG_InitTrueTypeFont( "fonts/mplus-1c-regular.ttf", 8, &cgs.media.tinyFont ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/mplus-1mn-regular.ttf", 8, &cgs.media.tinyFont ) ) {
 		CG_InitBitmapFont( &cgs.media.tinyFont, 8, 8 );
 	}
 
@@ -119,7 +119,7 @@ void CG_TextInit( void ) {
 		CG_InitBitmapFont( &cgs.media.textFont, 16, 16 );
 	}
 
-	if ( !CG_InitTrueTypeFont( "fonts/mplus-1c-regular.ttf", 20, &cgs.media.bigFont ) ) {
+	if ( !CG_InitTrueTypeFont( "fonts/mplus-2p-black.ttf", 20, &cgs.media.bigFont ) ) {
 		// quake 3 bitmap style
 		cgs.media.bigFontHeight = 48;
 		CG_InitBitmapFont( &cgs.media.bigFont, 48, 32 );
