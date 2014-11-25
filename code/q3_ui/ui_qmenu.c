@@ -209,7 +209,7 @@ static void PText_Init( menutext_s *t )
 
 	x = t->generic.x;
 	y = t->generic.y;
-	w = UI_ProportionalStringWidth( t->string, t->style );
+	w = UI_ProportionalStringWidth( t->string ) * sizeScale;
 	h =	PROP_HEIGHT * sizeScale;
 
 	if( t->generic.flags & QMF_RIGHT_JUSTIFY ) {
@@ -395,14 +395,11 @@ static void Action_Init( menuaction_s *a )
 	int	len;
 
 	// calculate bounds
-	if (a->generic.name)
-		len = strlen(a->generic.name);
-	else
-		len = 0;
+	len = CG_DrawStrlen( a->generic.name, UI_BIGFONT );
 
 	// left justify text
-	a->generic.left   = a->generic.x;
-	a->generic.right  = a->generic.x + len*BIGCHAR_WIDTH;
+	a->generic.left   = a->generic.x; 
+	a->generic.right  = a->generic.x + len;
 	a->generic.top    = a->generic.y;
 	a->generic.bottom = a->generic.y + BIGCHAR_HEIGHT;
 }
@@ -461,21 +458,18 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 	int	len;
 
 	// calculate bounds
-	if (rb->generic.name)
-		len = strlen(rb->generic.name);
-	else
-		len = 0;
+	len = CG_DrawStrlen( rb->generic.name, UI_SMALLFONT );
 
 #ifdef IOQ3ZTM
 	if (rb->generic.flags & QMF_LEFT_JUSTIFY) {
 		rb->generic.left = rb->generic.x;
 
-		rb->generic.x += (len+1)*SMALLCHAR_WIDTH;
+		rb->generic.x += len + SMALLCHAR_WIDTH;
 
 	} else
 #endif
 	{
-		rb->generic.left   = rb->generic.x - (len+1)*SMALLCHAR_WIDTH;
+		rb->generic.left   = rb->generic.x - len - SMALLCHAR_WIDTH;
 	}
 
 	rb->generic.right  = rb->generic.x + 6*SMALLCHAR_WIDTH;
@@ -603,12 +597,9 @@ static void Slider_Init( menuslider_s *s )
 	int len;
 
 	// calculate bounds
-	if (s->generic.name)
-		len = strlen(s->generic.name);
-	else
-		len = 0;
+	len = CG_DrawStrlen( s->generic.name, UI_SMALLFONT );
 
-	s->generic.left   = s->generic.x - (len+1)*SMALLCHAR_WIDTH; 
+	s->generic.left   = s->generic.x - len - SMALLCHAR_WIDTH;
 	s->generic.right  = s->generic.x + (SLIDER_RANGE+2+1)*SMALLCHAR_WIDTH;
 	s->generic.top    = s->generic.y;
 	s->generic.bottom = s->generic.y + SMALLCHAR_HEIGHT;
@@ -823,10 +814,7 @@ static void SpinControl_Init( menulist_s *s ) {
 	qboolean foundItem = qfalse;
 #endif
 
-	if (s->generic.name)
-		len = strlen(s->generic.name) * SMALLCHAR_WIDTH;
-	else
-		len = 0;
+	len = CG_DrawStrlen( s->generic.name, UI_SMALLFONT );
 
 #ifdef IOQ3ZTM
 	if (s->generic.flags & QMF_LEFT_JUSTIFY) {
@@ -839,7 +827,7 @@ static void SpinControl_Init( menulist_s *s ) {
 	len = s->numitems = 0;
 	while ( (str = s->itemnames[s->numitems]) != 0 )
 	{
-		l = strlen(str);
+		l = CG_DrawStrlen( str, UI_SMALLFONT );
 		if (l > len)
 			len = l;
 
@@ -855,7 +843,7 @@ static void SpinControl_Init( menulist_s *s ) {
 	}		
 
 	s->generic.top	  =	s->generic.y;
-	s->generic.right  =	s->generic.x + (len+1)*SMALLCHAR_WIDTH;
+	s->generic.right  =	s->generic.x + len + SMALLCHAR_WIDTH;
 	s->generic.bottom =	s->generic.y + SMALLCHAR_HEIGHT;
 }
 
@@ -1868,11 +1856,25 @@ Menu_Cache
 */
 void Menu_Cache( void )
 {
-	uis.charsetProp		= trap_R_RegisterShaderNoMip( "menu/art/font1_prop.tga" );
-#ifndef TA_DATA
-	uis.charsetPropGlow	= trap_R_RegisterShaderNoMip( "menu/art/font1_prop_glo.tga" );
+#ifdef TA_DATA
+	if ( !CG_InitTrueTypeFont( "fonts/mplus-1c-bold.ttf", PROP_HEIGHT, &uis.fontProp ) ) {
+		UI_InitPropFont( &uis.fontProp, qfalse );
+	}
+	if ( !CG_InitTrueTypeFont( "fonts/mplus-2p-black.ttf", 36/*PROPB_HEIGHT*/, &uis.fontPropB ) ) {
+		UI_InitBannerFont( &uis.fontPropB );
+	}
+#else
+	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, &uis.fontProp ) ) {
+		UI_InitPropFont( &uis.fontProp, qfalse );
+	}
+	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, &uis.fontPropGlow ) ) {
+		UI_InitPropFont( &uis.fontPropGlow, qtrue );
+	}
+	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", 36/*PROPB_HEIGHT*/, &uis.fontPropB ) ) {
+		UI_InitBannerFont( &uis.fontPropB );
+	}
 #endif
-	uis.charsetPropB	= trap_R_RegisterShaderNoMip( "menu/art/font2_prop.tga" );
+
 	uis.cursor          = trap_R_RegisterShaderNoMip( "menu/art/3_cursor2" );
 	uis.rb_on           = trap_R_RegisterShaderNoMip( "menu/art/switch_on" );
 	uis.rb_off          = trap_R_RegisterShaderNoMip( "menu/art/switch_off" );

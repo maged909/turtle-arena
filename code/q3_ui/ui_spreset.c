@@ -150,9 +150,9 @@ void UI_ResetMenu(void) {
 
 	Reset_Cache();
 
-	n1 = UI_ProportionalStringWidth( "YES/NO", 0 );
-	n2 = UI_ProportionalStringWidth( "YES", 0 ) + PROP_GAP_WIDTH;
-	n3 = UI_ProportionalStringWidth( "/", 0 )  + PROP_GAP_WIDTH;
+	n1 = UI_ProportionalStringWidth( "YES/NO" );
+	n2 = UI_ProportionalStringWidth( "YES" );
+	n3 = UI_ProportionalStringWidth( "/" );
 	l1 = 320 - ( n1 / 2 );
 	l2 = l1 + n2;
 	l3 = l2 + n3;
