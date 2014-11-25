@@ -190,14 +190,6 @@ void CG_ConsolePrint( const char *p ) {
 				break;
 			}
 
-#if 0 // #ifdef IOQ3ZTM // FONT_REWRTIE
-			// ignore kerning of first character, adds up correct since usually remove one kerning at end
-			// it's done here so word fitting line check above is correct
-			if ( wordDrawLen == 0 && charDrawLen > 0 ) {
-				 charDrawLen -= cgs.media.fontConsole.kerning;
-			}
-#endif
-
 			wordDrawLen += charDrawLen;
 		}
 
@@ -305,7 +297,6 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	int				row;
 	int				lines;
 	vec4_t			color;
-	int				fontHeight = SMALLCHAR_HEIGHT;
 
 	if ( frac > 1 )
 		frac = 1;
@@ -350,9 +341,9 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 	CG_SetScreenPlacement( PLACE_LEFT, PLACE_TOP );
 
 	// draw the text
-	rows = (lines-fontHeight)/fontHeight;		// rows of text to draw
+	rows = (lines-SMALLCHAR_HEIGHT)/SMALLCHAR_HEIGHT;		// rows of text to draw
 
-	y = lines - (fontHeight*3);
+	y = lines - (SMALLCHAR_HEIGHT*3);
 
 	// draw from the bottom up
 	if (con.display != con.current)
@@ -361,7 +352,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 		// draw arrows to show the buffer is backscrolled
 		for (x=0 ; x<linewidth ; x+=4)
 			CG_DrawString( (x+1)*SMALLCHAR_WIDTH, y, "^", UI_CENTER|UI_SMALLFONT, color );
-		y -= fontHeight;
+		y -= SMALLCHAR_HEIGHT;
 		rows--;
 	}
 	
@@ -371,7 +362,7 @@ void Con_DrawSolidConsole( connstate_t state, float frac ) {
 		row--;
 	}
 
-	for (i=0 ; i<rows ; i++, y -= fontHeight, row--)
+	for (i=0 ; i<rows ; i++, y -= SMALLCHAR_HEIGHT, row--)
 	{
 		if (row < 0)
 			break;

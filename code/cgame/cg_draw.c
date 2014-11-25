@@ -33,11 +33,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-#include "../ui/ui_shared.h"
-#endif
-
 #ifdef MISSIONPACK_HUD
+#include "../ui/ui_shared.h"
+
 // used for scoreboard
 extern displayContextDef_t cgDC;
 menuDef_t *menuScoreboard = NULL;
@@ -362,7 +360,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		len = 0.5 * ( maxs[2] - mins[2] );		
 		origin[0] = len / 0.268;	// len / tan( fov/2 )
 
-		angles[YAW] = 60 * sin( cg.time / 2000.0 );
+		angles[YAW] = 60 * sin( cg.time / 2000.0 );;
 
 		if( team == TEAM_RED ) {
 			handle = cgs.media.redFlagModel;
@@ -480,7 +478,7 @@ CG_DrawTeamBackground
 
 ================
 */
-void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team, int playerNum )
+void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 {
 	vec4_t		hcolor;
 
@@ -934,7 +932,7 @@ static void CG_DrawStatusBar( void ) {
 	cent = &cg_entities[ps->playerNum];
 
 	// draw the team background
-	CG_DrawTeamBackground( 0, 420, 640, 60, 0.33f, ps->persistant[PERS_TEAM], ps->playerNum );
+	CG_DrawTeamBackground( 0, 420, 640, 60, 0.33f, ps->persistant[PERS_TEAM] );
 
 	VectorClear( angles );
 
@@ -1550,7 +1548,8 @@ static float CG_DrawScores( float y ) {
 	s1 = cgs.scores1;
 	s2 = cgs.scores2;
 
-	y -= BIGCHAR_HEIGHT + 8;
+	y -=  BIGCHAR_HEIGHT + 8;
+
 	y1 = y;
 
 	// draw from the right side to left

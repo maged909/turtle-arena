@@ -86,6 +86,7 @@ void MenuField_Draw( menufield_s *f )
 
 	x =	f->generic.x;
 	y =	f->generic.y;
+
 	if (f->generic.flags & QMF_SMALLFONT)
 	{
 		w = SMALLCHAR_WIDTH;

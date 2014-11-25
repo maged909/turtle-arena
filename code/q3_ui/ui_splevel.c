@@ -86,6 +86,7 @@ SINGLE PLAYER LEVEL SELECT MENU
 
 #define PLAYER_Y			314
 #define AWARDS_Y			(PLAYER_Y + 26)
+
 #ifndef TA_SP
 #ifdef TURTLEARENA // AWARDS
 #define MAX_UI_AWARDS		3

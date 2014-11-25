@@ -142,7 +142,6 @@ static void PlayerSettings_DrawName( void *self ) {
 	float			*color;
 	int				x, y;
 	char			name[32];
-	int				i;
 
 	f = (menufield_s*)self;
 	x = f->generic.x;
