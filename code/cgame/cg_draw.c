@@ -1104,15 +1104,15 @@ void CG_DrawScoreChain(void)
 		return;
 	}
 
-	frac = fadeColor[3];
+	frac = fadeColor[3] * GIANTCHAR_HEIGHT / 48.0f;
 
 	CG_ColorForChain(cg.cur_ps->chain, color);
 	color[3] = fadeColor[3];
 
 	s = va("%d Link", cg.cur_ps->chain-1);
 
-	y = SCREEN_HEIGHT - 32;
-	CG_DrawStringExt( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, frac, 0, 0 );
+	y = SCREEN_HEIGHT - GIANTCHAR_HEIGHT - 6;
+	CG_DrawStringExt( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, frac, 0, 0 );
 }
 #endif
 
