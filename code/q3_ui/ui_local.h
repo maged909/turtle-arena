@@ -34,22 +34,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../cgame/cg_local.h"
 #include "../ui/ui_public.h"
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-// ZTM: FIXME: cgame replaces height macros with function calls that aren't valid in main menu.
-
-#undef TINYCHAR_HEIGHT
-//#define TINYCHAR_HEIGHT (Com_FontCharHeight(&uis.fontTiny, 0))
-
-#undef SMALLCHAR_HEIGHT
-#define SMALLCHAR_HEIGHT (Com_FontCharHeight(&uis.fontSmall, 0))
-
-#undef BIGCHAR_HEIGHT
-#define BIGCHAR_HEIGHT (Com_FontCharHeight(&uis.fontBig, 0))
-
-#undef GIANTCHAR_HEIGHT
-#define GIANTCHAR_HEIGHT (Com_FontCharHeight(&uis.fontGiant, 0))
-#endif
-
 typedef void (*voidfunc_f)(void);
 
 extern vmCvar_t	ui_ffa_fraglimit;
@@ -348,7 +332,6 @@ extern char	*ui_medalSounds[];
 //
 // ui_mfield.c
 //
-extern void			UI_Field_Draw( mfield_t *edit, int x, int y, int style, vec4_t color );
 extern void			MenuField_Init( menufield_s* m );
 extern void			MenuField_Draw( menufield_s *f );
 extern sfxHandle_t	MenuField_Key( menufield_s* m, int* key );
@@ -620,25 +603,11 @@ typedef struct {
 #else
 	qhandle_t			menuBackNoLogoShader;
 #endif
-#ifdef IOQ3ZTM // FONT_REWRITE
-	font_t				fontSmall;
-	font_t				fontBig;
-	font_t				fontGiant;
-	font_t				fontPropSmall;
-	font_t				fontPropBig;
+	fontInfo_t			fontProp;
 #ifndef TA_DATA
-	font_t				fontPropGlowSmall;
-	font_t				fontPropGlowBig;
+	fontInfo_t			fontPropGlow;
 #endif
-	font_t				fontBanner;
-#else
-	qhandle_t			charset;
-	qhandle_t			charsetProp;
-#ifndef TA_DATA
-	qhandle_t			charsetPropGlow;
-#endif
-	qhandle_t			charsetPropB;
-#endif
+	fontInfo_t			fontPropB;
 	qhandle_t			cursor;
 	qhandle_t			rb_on;
 	qhandle_t			rb_off;
@@ -651,25 +620,15 @@ typedef struct {
 extern void			UI_DrawPicFullScreen(qhandle_t hShader);
 #endif
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
-#ifdef IOQ3ZTM // FONT_REWRITE
-extern qboolean		UI_LoadFont(font_t *font, const char *ttfName, const char *shaderName, int pointSize,
-							int shaderCharWidth, float fontKerning);
-extern void			UI_DrawFontChar( font_t *font, float x, float y, int ch, qboolean adjustFrom640 );
-extern void			UI_DrawFontString( font_t *font, int x, int y, const char *s, float alpha );
-extern void			UI_DrawFontStringColor( font_t *font, int x, int y, const char *s, vec4_t color );
-font_t *UI_FontForStyle( int style );
-font_t *UI_ProportionalFontForStyle( int style );
-#ifndef TA_DATA
-font_t *UI_ProportionalGlowFontForStyle( int style );
-#endif
-#endif
+extern void			UI_InitBannerFont( fontInfo_t *font );
+extern void			UI_InitPropFont( fontInfo_t *font, qboolean glow );
 extern void			UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color );
 extern float		UI_ProportionalSizeScale( int style );
 extern void			UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
 extern void			UI_DrawProportionalString_AutoWrapped( int x, int ystart, int xmax, int ystep, const char* str, int style, vec4_t color );
-extern int			UI_ProportionalStringWidth( const char* str, int style );
+extern int			UI_ProportionalStringWidth( const char* str );
 extern void			UI_DrawString( int x, int y, const char* str, int style, vec4_t color );
-extern int			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
+extern void			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
 extern qboolean 	UI_CursorInRect (int x, int y, int width, int height);
 extern qboolean		UI_IsFullscreen( void );
 extern void			UI_SetActiveMenu( uiMenuCommand_t menu );

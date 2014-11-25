@@ -192,20 +192,6 @@ static void CG_DrawPlayerScore( int y, score_t *score, float *color, float fade,
 	}
 #endif
 
-#ifndef IOQ3ZTM // FONT_REWRITE
-	// draw the score line
-	if ( score->ping == -1 ) {
-		Com_sprintf(string, sizeof(string),
-			" connecting    %s", pi->name);
-	} else if ( pi->team == TEAM_SPECTATOR ) {
-		Com_sprintf(string, sizeof(string),
-			" SPECT %3i %4i %s", score->ping, score->time, pi->name);
-	} else {
-		Com_sprintf(string, sizeof(string),
-			"%5i %4i %4i %s", score->score, score->ping, score->time, pi->name);
-	}
-#endif
-
 	if (cg.cur_ps) {
 		if (score->playerNum == cg.cur_ps->playerNum) {
 			ps = cg.cur_ps;
@@ -251,7 +237,6 @@ static void CG_DrawPlayerScore( int y, score_t *score, float *color, float fade,
 			640 - SB_SCORELINE_X - BIGCHAR_WIDTH - (SB_RATING_WIDTH / 2), BIGCHAR_HEIGHT+1, hcolor );
 	}
 
-#ifdef IOQ3ZTM // FONT_REWRITE
 	// draw the score line
 	if ( score->ping == -1 ) {
 		Com_sprintf(string, sizeof(string), "connecting");
@@ -261,36 +246,32 @@ static void CG_DrawPlayerScore( int y, score_t *score, float *color, float fade,
 		Com_sprintf(string, sizeof(string), "%5i", score->score);
 	}
 #ifdef TA_SP // SP_SCOREBOARD
-	CG_DrawBigString( scorex + (SB_RATING_WIDTH / 2), y, string, fade );
+	CG_DrawString( scorex + (SB_RATING_WIDTH / 2) + 4*BIGCHAR_WIDTH, y, string, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, color );
 #else
-	CG_DrawBigString( SB_SCORE_X + (SB_RATING_WIDTH / 2), y, string, fade );
+	CG_DrawString( SB_SCORE_X + (SB_RATING_WIDTH / 2) + 4*BIGCHAR_WIDTH, y, string, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, color );
 #endif
 
 	if ( score->ping != -1
 #ifdef TA_SP // SP_SCOREBOARD
 		&& !cg_singlePlayer.integer
 #endif
-		)
-	{
+		) {
 		Com_sprintf(string, sizeof(string), "%4i", score->ping);
-		CG_DrawBigString( SB_PING_X - (SB_RATING_WIDTH / 2), y, string, fade );
+		CG_DrawString( SB_PING_X - (SB_RATING_WIDTH / 2) + 4*BIGCHAR_WIDTH, y, string, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, color );
 
 		Com_sprintf(string, sizeof(string), "%4i", score->time);
-		CG_DrawBigString( SB_TIME_X - (SB_RATING_WIDTH / 2), y, string, fade );
+		CG_DrawString( SB_TIME_X - (SB_RATING_WIDTH / 2) + 4*BIGCHAR_WIDTH, y, string, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, color );
 	}
 
 #ifdef TA_SP // SP_SCOREBOARD
-	CG_DrawBigString( namex - (SB_RATING_WIDTH / 2), y, pi->name, fade );
+	CG_DrawString( namex - (SB_RATING_WIDTH / 2), y, pi->name, UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, color );
 #else
-	CG_DrawBigString( SB_NAME_X - (SB_RATING_WIDTH / 2), y, pi->name, fade );
-#endif
-#else
-	CG_DrawBigString( SB_SCORELINE_X + (SB_RATING_WIDTH / 2), y, string, fade );
+	CG_DrawString( SB_NAME_X - (SB_RATING_WIDTH / 2), y, pi->name, UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, color );
 #endif
 
 	// add the "ready" marker for intermission exiting
 	if ( Com_ClientListContains( &cg.readyPlayers, score->playerNum ) ) {
-		CG_DrawBigStringColor( iconx, y, "READY", color );
+		CG_DrawString( iconx, y, "READY", UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, color );
 	}
 }
 
@@ -334,7 +315,7 @@ Draw the normal in-game scoreboard
 =================
 */
 qboolean CG_DrawOldScoreboard( void ) {
-	int		 y, i, n1, n2;
+	int		y, i, n1, n2;
 	float	fade;
 	float	*fadeColor;
 	char	*s;
@@ -379,6 +360,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 			cg.cur_lc->killerName[0] = 0;
 			return qfalse;
 		}
+		// ZTM: FIXME?: to actually fade, should be fade=fadeColor[3] and later CG_DrawString should use fadeColor
 		fade = *fadeColor;
 	}
 
@@ -386,14 +368,14 @@ qboolean CG_DrawOldScoreboard( void ) {
 #ifdef TA_MISC
 	if (cgs.gametype != GT_SINGLE_PLAYER) {
 		s = va( "Time Limit: %2i", cgs.timelimit );
-		CG_DrawBigString( 320-Com_FontStringWidth(&cgs.media.fontBig, s, 0), 20, s, 1.0f);
+		CG_DrawString( 320, 20, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
 
 		if ( cgs.gametype >= GT_CTF ) {
 			s = va( "Capture Limit: %2i", cgs.capturelimit );
 		} else {
 			s = va( "Score Limit: %2i", cgs.fraglimit );
 		}
-		CG_DrawBigString( 328, 20, s, 1.0f);
+		CG_DrawString( 328, 20, s, UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 #endif
 
@@ -405,7 +387,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 		s = va("Fragged by %s", cg.cur_lc->killerName );
 #endif
 		y = 40;
-		CG_DrawBigString( CENTER_X, y, s, fade );
+		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
 	// current rank
@@ -420,7 +402,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 				CG_PlaceString( cg.cur_ps->persistant[PERS_RANK] + 1 ),
 				cg.cur_ps->persistant[PERS_SCORE] );
 			y = 60;
-			CG_DrawBigString( CENTER_X, y, s, fade );
+			CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 		}
 	} else {
 		if ( cg.teamScores[0] == cg.teamScores[1] ) {
@@ -432,7 +414,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 		}
 
 		y = 60;
-		CG_DrawBigString( CENTER_X, y, s, fade );
+		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
 	// scoreboard
@@ -529,20 +511,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 //================================================================================
 
-/*
-================
-CG_CenterGiantLine
-================
-*/
 static void CG_CenterGiantLine( float y, const char *string ) {
-	vec4_t		color;
-
-	color[0] = 1;
-	color[1] = 1;
-	color[2] = 1;
-	color[3] = 1;
-
-	CG_DrawGiantStringColor(CENTER_X, y, string, color);
+	CG_DrawString( 320, y, string, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 }
 
 /*
@@ -575,11 +545,6 @@ void CG_DrawOldTourneyScoreboard( void ) {
 	CG_FillRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color );
 	CG_PopScreenPlacement();
 
-	color[0] = 1;
-	color[1] = 1;
-	color[2] = 1;
-	color[3] = 1;
-
 	// print the mesage of the day
 	s = CG_ConfigString( CS_MOTD );
 	if ( !s[0] ) {
@@ -607,23 +572,15 @@ void CG_DrawOldTourneyScoreboard( void ) {
 		//
 		// teamplay scoreboard
 		//
-		CG_DrawGiantStringColor(8, y, "Red Team", color);
+		CG_DrawString( 8, y, "Red Team", UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		s = va("%i", cg.teamScores[0] );
-#ifdef IOQ3ZTM // FONT_REWRITE
-		CG_DrawGiantStringColor( 632 - Com_FontStringWidth(&cgs.media.fontGiant, s, 0), y, s, color);
-#else
-		CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
-#endif
-
+		CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
+		
 		y += 64;
 
-		CG_DrawGiantStringColor(8, y, "Blue Team", color);
+		CG_DrawString( 8, y, "Blue Team", UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		s = va("%i", cg.teamScores[1] );
-#ifdef IOQ3ZTM // FONT_REWRITE
-		CG_DrawGiantStringColor( 632 - Com_FontStringWidth(&cgs.media.fontGiant, s, 0), y, s, color);
-#else
-		CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
-#endif
+		CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 	} else {
 		//
 		// free for all scoreboard
@@ -637,13 +594,9 @@ void CG_DrawOldTourneyScoreboard( void ) {
 				continue;
 			}
 
-			CG_DrawGiantStringColor(8, y, pi->name, color);
+			CG_DrawString( 8, y, pi->name, UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 			s = va("%i", pi->score );
-#ifdef IOQ3ZTM // FONT_REWRITE
-			CG_DrawGiantStringColor( 632 - Com_FontStringWidth(&cgs.media.fontGiant, s, 0), y, s, color);
-#else
-			CG_DrawStringExt( 632 - GIANT_WIDTH * strlen(s), y, s, color, qtrue, qtrue, GIANT_WIDTH, GIANT_HEIGHT, 0 );
-#endif
+			CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 			y += 64;
 		}
 	}

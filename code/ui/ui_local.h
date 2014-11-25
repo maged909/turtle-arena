@@ -35,14 +35,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "ui_public.h"
 #include "ui_shared.h"
 
-#ifdef IOQ3ZTM // FONT_REWRITE
-// ZTM: FIXME: cgame replaces height macros with function calls that aren't valid in main menu.
-#undef TINYCHAR_HEIGHT
-#undef SMALLCHAR_HEIGHT
-#undef BIGCHAR_HEIGHT
-#undef GIANTCHAR_HEIGHT
-#endif
-
 // global display context
 
 extern vmCvar_t	ui_ffa_fraglimit;
@@ -514,19 +506,12 @@ extern uiInfo_t uiInfo;
 
 
 extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
-#ifdef IOQ3ZTM // FONT_REWRITE
-extern qboolean		UI_LoadFont(font_t *font, const char *ttfName, const char *shaderName, int pointSize,
-							int shaderCharWidth, float fontKerning);
-extern void			UI_DrawFontChar( font_t *font, float x, float y, int ch, qboolean adjustFrom640 );
-extern void			UI_DrawFontString( font_t *font, int x, int y, const char *s, float alpha );
-extern void			UI_DrawFontStringColor( font_t *font, int x, int y, const char *s, vec4_t color );
-#endif
 extern void			UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color );
 extern float		UI_ProportionalSizeScale( int style );
 extern void			UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
-extern int			UI_ProportionalStringWidth( const char* str, int style );
+extern int			UI_ProportionalStringWidth( const char* str );
 extern void			UI_DrawString( int x, int y, const char* str, int style, vec4_t color );
-extern int			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
+extern void			UI_DrawChar( int x, int y, int ch, int style, vec4_t color );
 extern qboolean 	UI_CursorInRect (int x, int y, int width, int height);
 extern qboolean		UI_IsFullscreen( void );
 extern void			UI_SetActiveMenu( uiMenuCommand_t menu );
