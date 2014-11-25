@@ -642,7 +642,7 @@ static void UI_PlayerSetupMenu_Init( int maxLocalPlayers, void (*action)(void), 
 		s_playersetup.name[i].generic.left			= x;
 		s_playersetup.name[i].generic.top			= y;
 		s_playersetup.name[i].generic.right			= x + 128;
-		s_playersetup.name[i].generic.bottom		= y + PROP_HEIGHT;
+		s_playersetup.name[i].generic.bottom		= y + SMALLCHAR_HEIGHT;
 
 		y += SMALLCHAR_HEIGHT+2;
 		s_playersetup.handicap[i].generic.type		= MTYPE_SPINCONTROL;
