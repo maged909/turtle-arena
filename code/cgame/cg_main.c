@@ -154,11 +154,6 @@ vmCvar_t	con_conspeed;
 vmCvar_t	con_autochat;
 vmCvar_t	con_autoclear;
 vmCvar_t	cg_dedicated;
-#ifdef IOQ3ZTM // FONT_REWRITE
-vmCvar_t	cg_consoleFont;
-vmCvar_t	cg_consoleFontSize;
-vmCvar_t	cg_consoleFontKerning;
-#endif
 
 vmCvar_t	cg_railTrailTime;
 vmCvar_t	cg_centertime;
@@ -371,11 +366,6 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &con_autochat, "con_autochat", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &con_autoclear, "con_autoclear", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_dedicated, "dedicated", "0", 0, RANGE_ALL },
-#ifdef IOQ3ZTM // FONT_REWRITE
-	{ &cg_consoleFont, "cg_consoleFont", "fonts/mplus-1mn-regular.ttf", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_consoleFontSize, "cg_consoleFontSize", "16", CVAR_ARCHIVE, RANGE_ALL },
-	{ &cg_consoleFontKerning, "cg_consoleFontKerning", "0", CVAR_ARCHIVE, RANGE_ALL },
-#endif
 
 	{ &cg_ignore, "cg_ignore", "0", 0, RANGE_ALL },	// used for debugging
 #ifndef TURTLEARENA // NOZOOM
@@ -2964,22 +2954,6 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	CG_InitConsoleCommands();
 
 	// load a few needed things before we do any screen updates
-#if 0 // ZTM: FIXME: ### // #ifdef IOQ3ZTM // FONT_REWRITE
-	CG_LoadFont(&cgs.media.fontConsole, CG_Cvar_VariableString("cg_consoleFont"), "gfx/2d/bigchars", cg_consoleFontSize.integer,
-			cg_consoleFontSize.integer*0.66f, cg_consoleFontKerning.value);
-
-	CG_LoadFont(&cgs.media.fontTiny, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 8, 8, 0);
-	CG_LoadFont(&cgs.media.fontSmall, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 8, 0);
-	CG_LoadFont(&cgs.media.fontBig, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 16, 16, 0);
-	CG_LoadFont(&cgs.media.fontGiant, "fonts/mplus-1c-regular.ttf", "gfx/2d/bigchars", 48, 32, 0);
-
-	CG_LoadFont(&cgs.media.fontPropSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
-	CG_LoadFont(&cgs.media.fontPropBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop.tga", PROP_HEIGHT, 22*0.66f, 0);
-#ifndef TA_DATA
-	CG_LoadFont(&cgs.media.fontPropGlowSmall, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT*PROP_SMALL_SIZE_SCALE, PROP_HEIGHT*PROP_SMALL_SIZE_SCALE*0.66f, 0);
-	CG_LoadFont(&cgs.media.fontPropGlowBig, "fonts/mplus-1c-bold.ttf", "menu/art/font1_prop_glo.tga", PROP_HEIGHT, 22*0.66f, 0);
-#endif
-#endif
 	cgs.media.whiteShader		= trap_R_RegisterShader( "white" );
 	cgs.media.consoleShader		= trap_R_RegisterShader( "console" );
 	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );

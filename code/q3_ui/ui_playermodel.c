@@ -589,7 +589,7 @@ static void PlayerModel_MenuInit( int localPlayerNum )
 
 	s_playermodel.banner.generic.type  = MTYPE_BTEXT;
 	s_playermodel.banner.generic.x     = 320;
-#if defined TA_DATA && defined IOQ3ZTM // FONT_REWRITE // ZTM: HACK?: Text is too low, goes behind model select grid
+#if defined TA_DATA && defined IOQ3ZTM // FONT_REWRITE // ZTM: HACK?: TrueType text is too low, goes behind model select grid
 	s_playermodel.banner.generic.y     = 8;
 #else
 	s_playermodel.banner.generic.y     = 16;

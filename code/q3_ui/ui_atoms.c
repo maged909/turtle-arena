@@ -332,11 +332,7 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color )
 			fheight = (float)PROPB_HEIGHT / 256.0f;
 			aw = (float)propMapB[ch][2];
 			CG_AdjustFrom640( NULL, NULL, &aw, NULL );
-#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
-			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol+fwidth, frow+fheight, uis.fontBanner.fontShader );
-#else
 			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol+fwidth, frow+fheight, uis.charsetPropB );
-#endif
 		}
 
 		ax += (aw + agapwidth);
@@ -351,13 +347,6 @@ void UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color
 	int				ch;
 	int				width;
 	vec4_t			drawcolor;
-
-#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
-	if (uis.fontBanner.fontInfo.name[0]) {
-		UI_DrawFontBannerString(&uis.fontBanner, x, y, str, style, color);
-		return;
-	}
-#endif
 
 	// find the width of the drawn text
 	s = str;
@@ -404,15 +393,9 @@ UI_ProportionalSizeScale
 =================
 */
 float UI_ProportionalSizeScale( int style ) {
-#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
-	if (style & UI_SMALLFONT) {
-		return (float)uis.fontPropSmall.pointSize / (float)uis.fontPropBig.pointSize;
-	}
-#else
 	if(  style & UI_SMALLFONT ) {
 		return PROP_SMALL_SIZE_SCALE;
 	}
-#endif
 
 	return 1.00;
 }
@@ -427,15 +410,6 @@ int UI_ProportionalStringWidth( const char* str, int style ) {
 	int				ch;
 	int				charWidth;
 	int				width;
-#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
-	font_t *font;
-
-	font = UI_ProportionalFontForStyle( style );
-
-	if (font->fontInfo.name[0]) {
-		return Com_FontStringWidth(font, str, 0);
-	}
-#endif
 
 	s = str;
 	width = 0;
@@ -513,31 +487,6 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	vec4_t	drawcolor;
 	int		width;
 	float	sizeScale;
-	qhandle_t charsetProp;
-#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
-	font_t *font;
-#ifndef TA_DATA
-	font_t *fontGlow;
-#endif
-
-	font = UI_ProportionalFontForStyle( style );
-#ifndef TA_DATA
-	fontGlow = UI_ProportionalGlowFontForStyle( style );
-#endif
-
-	if (font->fontInfo.name[0]) {
-		UI_DrawFontProportionalString(font,
-#ifndef TA_DATA
-				fontGlow,
-#endif
-				x, y, str, style, color);
-		return;
-	}
-
-	charsetProp = font->fontShader;
-#else
-	charsetProp = uis.charsetProp;
-#endif
 
 	sizeScale = UI_ProportionalSizeScale( style );
 
@@ -560,7 +509,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	if ( style & UI_DROPSHADOW ) {
 		drawcolor[0] = drawcolor[1] = drawcolor[2] = 0;
 		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x+2, y+2, str, drawcolor, sizeScale, charsetProp );
+		UI_DrawProportionalString2( x+2, y+2, str, drawcolor, sizeScale, uis.charsetProp );
 	}
 
 	if ( style & UI_INVERSE ) {
@@ -568,7 +517,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 		drawcolor[1] = color[1] * 0.7;
 		drawcolor[2] = color[2] * 0.7;
 		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, charsetProp );
+		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, uis.charsetProp );
 		return;
 	}
 
@@ -577,7 +526,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 		drawcolor[1] = color[1] * 0.7;
 		drawcolor[2] = color[2] * 0.7;
 		drawcolor[3] = color[3];
-		UI_DrawProportionalString2( x, y, str, color, sizeScale, charsetProp );
+		UI_DrawProportionalString2( x, y, str, color, sizeScale, uis.charsetProp );
 
 #ifdef TURTLEARENA // ZTM: Main menu text drawing.
         // ZTM: hack-ish thing to do?...
@@ -591,16 +540,14 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 #endif
 		drawcolor[3] = 0.5 + 0.5 * sin( uis.realtime / PULSE_DIVISOR );
 #ifdef TA_DATA
-		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, charsetProp );
-#elif 0 //#elif defined IOQ3ZTM // FONT_REWRITE
-		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, fontGlow->fontShader );
+		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, uis.charsetProp );
 #else
 		UI_DrawProportionalString2( x, y, str, drawcolor, sizeScale, uis.charsetPropGlow );
 #endif
 		return;
 	}
 
-	UI_DrawProportionalString2( x, y, str, color, sizeScale, charsetProp );
+	UI_DrawProportionalString2( x, y, str, color, sizeScale, uis.charsetProp );
 }
 
 /*
@@ -679,59 +626,14 @@ void UI_DrawString( int x, int y, const char* str, int style, vec4_t color )
 UI_DrawChar
 =================
 */
-int UI_DrawChar( int x, int y, int ch, int style, vec4_t color )
+void UI_DrawChar( int x, int y, int ch, int style, vec4_t color )
 {
 	char	buff[2];
-#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
-	font_t *font;
-
-	font = UI_FontForStyle( style );
-
-	// Remap bitmap font symbols
-	if (font->fontInfo.name[0])
-	{
-		switch (ch)
-		{
-			case 10: // Overwrite text
-				ch = '|';
-				break;
-
-			case 11: // Insert text
-				ch = '_';
-				break;
-
-			case 13: // Select marker
-				ch = '>';
-				break;
-
-			// Old slider symbols
-			case 128: // Left end
-			case 129: // Intervolt
-			case 130: // Right end
-			case 131: // Slider cursor
-				break;
-
-			default:
-				break;
-		}
-	}
-#endif
 
 	buff[0] = ch;
 	buff[1] = '\0';
 
 	UI_DrawString( x, y, buff, style, color );
-
-#if 0 //#ifdef IOQ3ZTM // FONT_REWRITE
-	return Com_FontStringWidth(font, buff, 0);
-#else
-	if (style & UI_SMALLFONT)
-		return SMALLCHAR_WIDTH;
-	else if (style & UI_GIANTFONT)
-		return GIANTCHAR_WIDTH;
-	else
-		return BIGCHAR_WIDTH;
-#endif
 }
 
 qboolean UI_IsFullscreen( void ) {
