@@ -186,21 +186,19 @@ static void PlayerSettings_DrawName( void *self ) {
 	focus = (f->generic.parent->cursor == f->generic.menuPosition);
 
 	style = UI_LEFT|UI_SMALLFONT;
-	color = text_color_normal;
+	color = g_color_table[ColorIndex(COLOR_WHITE)];
 	if ( f->generic.flags & QMF_GRAYED )
 		color = text_color_disabled;
 	else if( focus ) {
 		style |= UI_PULSE;
-		color = text_color_highlight;
+		//color = text_color_highlight;
 	}
 
 	// draw the actual name
-	if ( !(f->generic.flags & QMF_GRAYED) )
-		color = g_color_table[ColorIndex(COLOR_WHITE)];
 	if ( focus ) {
 		style |= UI_FORCECOLOR;
 	}
-	MField_Draw( &f->field, x, y, style, color, focus || (f->generic.flags & QMF_GRAYED) );
+	MField_Draw( &f->field, x, y, style, color, focus );
 }
 
 
