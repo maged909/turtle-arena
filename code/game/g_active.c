@@ -1240,6 +1240,12 @@ void PlayerThink_real( gentity_t *ent ) {
 	if (player->pers.connected != CON_CONNECTED) {
 		return;
 	}
+
+	// frameOffset should be about the number of milliseconds into a frame
+	// this command packet was received, depending on how fast the server
+	// does a G_RunFrame()
+	player->frameOffset = trap_Milliseconds() - level.frameStartTime;
+
 	// mark the time, so the connection sprite can be removed
 	ucmd = &ent->player->pers.cmd;
 
@@ -1252,6 +1258,8 @@ void PlayerThink_real( gentity_t *ent ) {
 		ucmd->serverTime = level.time - 1000;
 //		G_Printf("serverTime >>>>>\n" );
 	} 
+
+	player->lastCmdServerTime = ucmd->serverTime;
 
 	msec = ucmd->serverTime - player->ps.commandTime;
 	// following others may result in bad times, but we still want
@@ -2191,6 +2199,9 @@ void PlayerEndFrame( gentity_t *ent ) {
 		BG_PlayerStateToEntityState( &ent->player->ps, &ent->s, qtrue );
 	}
 	SendPendingPredictableEvents( &ent->player->ps );
+
+	// store the client's position for backward reconciliation later
+	G_StoreHistory( ent );
 
 	// set the bit for the reachability area the player is currently in
 //	i = trap_AAS_PointReachabilityAreaIndex( ent->player->ps.origin );

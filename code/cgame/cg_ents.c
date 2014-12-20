@@ -811,7 +811,6 @@ static void CG_Item( centity_t *cent ) {
 	// add to refresh list
 	CG_AddRefEntityWithMinLight(&ent);
 
-#if defined MISSIONPACK || defined TA_WEAPSYS
 	if ( item->giType == IT_WEAPON
 #ifdef TA_WEAPSYS
 		&& (cg_weapons[bg_weapongroupinfo[item->giTag].weaponnum[0]].barrelModel ||
@@ -821,6 +820,7 @@ static void CG_Item( centity_t *cent ) {
 #endif
 		) {
 		refEntity_t	barrel;
+		vec3_t		angles;
 
 		memset( &barrel, 0, sizeof( barrel ) );
 
@@ -840,13 +840,17 @@ static void CG_Item( centity_t *cent ) {
 		barrel.shaderRGBA[3] = ent.shaderRGBA[3];
 #endif
 
+		angles[YAW] = 0;
+		angles[PITCH] = 0;
+		angles[ROLL] = 0;
+		AnglesToAxis( angles, barrel.axis );
+
 #ifdef TA_WEAPSYS
 		if (CG_PositionRotatedEntityOnTag( &barrel, &ent, cg_items[es->modelindex].models[0], "tag_barrel" ))
 #else
 		CG_PositionRotatedEntityOnTag( &barrel, &ent, wi->weaponModel, "tag_barrel" );
 #endif
 		{
-			AxisCopy( ent.axis, barrel.axis );
 			barrel.nonNormalizedAxes = ent.nonNormalizedAxes;
 
 			CG_AddRefEntityWithMinLight( &barrel );
@@ -857,14 +861,12 @@ static void CG_Item( centity_t *cent ) {
 
 		if (CG_PositionRotatedEntityOnTag( &barrel, &ent, cg_items[es->modelindex].models[0], "tag_barrel2" ))
 		{
-			AxisCopy( ent.axis, barrel.axis );
 			barrel.nonNormalizedAxes = ent.nonNormalizedAxes;
 
 			CG_AddRefEntityWithMinLight( &barrel );
 		}
 #endif
 	}
-#endif
 
 #ifdef TA_DATA // FLAG_MODEL
 	// Add flag flap

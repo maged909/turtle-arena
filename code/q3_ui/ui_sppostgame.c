@@ -173,12 +173,15 @@ UI_SPPostgameMenu_NextEvent
 =================
 */
 static void UI_SPPostgameMenu_NextEvent( void* ptr, int event ) {
+	const char *name;
+
 	if (event != QM_ACTIVATED) {
 		return;
 	}
 
-	trap_Cvar_Set("ui_arcadeName", postgameMenuInfo.item_name.field.buffer);
-	UI_SavePostGameStats(postgameMenuInfo.item_name.field.buffer);
+	name = MField_Buffer( &postgameMenuInfo.item_name.field );
+	trap_Cvar_Set( "ui_arcadeName", name );
+	UI_SavePostGameStats( name );
 
 	// Move to the next phase
 	postgameMenuInfo.phase = 2;
@@ -743,7 +746,7 @@ static void UI_SPPostgameMenu_Init( void ) {
 	Menu_AddItem( &postgameMenuInfo.menu, ( void * )&postgameMenuInfo.item_next );
 
 #ifdef TA_SP
-	trap_Cvar_VariableStringBuffer("ui_arcadeName", postgameMenuInfo.item_name.field.buffer, postgameMenuInfo.item_name.field.maxchars);
+	MField_SetText( &postgameMenuInfo.item_name.field, CG_Cvar_VariableString( "ui_arcadeName" ) );
 #endif
 }
 

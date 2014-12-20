@@ -266,14 +266,14 @@ static void StartArcade_SaveMenuItems( int gametype ) {
 	int		flaglimit;
 	int		friendlyfire;
 
-	timelimit	 = atoi( s_arcade.timelimit.field.buffer );
-	scorelimit	 = atoi( s_arcade.scorelimit.field.buffer );
-	flaglimit	 = atoi( s_arcade.flaglimit.field.buffer );
+	timelimit	 = atoi( MField_Buffer( &s_arcade.timelimit.field ) );
+	scorelimit	 = atoi( MField_Buffer( &s_arcade.scorelimit.field ) );
+	flaglimit	 = atoi( MField_Buffer( &s_arcade.flaglimit.field ) );
 	friendlyfire = s_arcade.friendlyfire.curvalue;
 
 	trap_Cvar_SetValue( "ui_publicServer", Com_Clamp( 0, 1, s_arcade.publicserver.curvalue ) );
 	trap_Cvar_SetValue( "sv_pure", s_arcade.pure.curvalue );
-	trap_Cvar_Set("sv_hostname", s_arcade.hostname.field.buffer );
+	trap_Cvar_Set("sv_hostname", MField_Buffer( &s_arcade.hostname.field ) );
 
 	switch( gametype ) {
 	case GT_FFA:
@@ -335,59 +335,59 @@ StartArcade_SetMenuItems
 static void StartArcade_SetMenuItems( void ) {
 
 	s_arcade.publicserver.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_publicServer" ) );
-	Q_strncpyz( s_arcade.hostname.field.buffer, CG_Cvar_VariableString( "sv_hostname" ), sizeof( s_arcade.hostname.field.buffer ) );
+	MField_SetText( &s_arcade.hostname.field, CG_Cvar_VariableString( "sv_hostname" ) );
 	s_arcade.pure.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "sv_pure" ) );
 
 	switch( listToGametype[s_arcade.gametype.curvalue] ) {
 	case GT_FFA:
 	default:
-		Com_sprintf( s_arcade.scorelimit.field.buffer, 5, "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_ffa_scorelimit" ) ) );
-		Com_sprintf( s_arcade.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ffa_timelimit" ) ) );
+		MField_SetText( &s_arcade.scorelimit.field, va( "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_ffa_scorelimit" ) ) ) );
+		MField_SetText( &s_arcade.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ffa_timelimit" ) ) ) );
 		s_arcade.friendlyfire.curvalue = 0;
 		break;
 
 	case GT_TOURNAMENT:
-		Com_sprintf( s_arcade.scorelimit.field.buffer, 5, "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_tourney_scorelimit" ) ) );
-		Com_sprintf( s_arcade.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_tourney_timelimit" ) ) );
+		MField_SetText( &s_arcade.scorelimit.field, va( "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_tourney_scorelimit" ) ) ) );
+		MField_SetText( &s_arcade.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_tourney_timelimit" ) ) ) );
 		s_arcade.friendlyfire.curvalue = 0;
 		break;
 
 	case GT_SINGLE_PLAYER:
-		Com_sprintf( s_arcade.scorelimit.field.buffer, 4, "%i", 0 );
-		Com_sprintf( s_arcade.flaglimit.field.buffer, 4, "%i", 0 );
-		Com_sprintf( s_arcade.timelimit.field.buffer, 4, "%i", 0 );
+		MField_SetText( &s_arcade.scorelimit.field, "0" );
+		MField_SetText( &s_arcade.flaglimit.field, "0" );
+		MField_SetText( &s_arcade.timelimit.field, "0" );
 		s_arcade.friendlyfire.curvalue = 0;
 		break;
 
 	case GT_TEAM:
-		Com_sprintf( s_arcade.scorelimit.field.buffer, 5, "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_team_scorelimit" ) ) );
-		Com_sprintf( s_arcade.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_team_timelimit" ) ) );
+		MField_SetText( &s_arcade.scorelimit.field, va( "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_team_scorelimit" ) ) ) );
+		MField_SetText( &s_arcade.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_team_timelimit" ) ) ) );
 		s_arcade.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_team_friendly" ) );
 		break;
 
 	case GT_CTF:
-		Com_sprintf( s_arcade.flaglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_ctf_capturelimit" ) ) );
-		Com_sprintf( s_arcade.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ctf_timelimit" ) ) );
+		MField_SetText( &s_arcade.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_ctf_capturelimit" ) ) ) );
+		MField_SetText( &s_arcade.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ctf_timelimit" ) ) ) );
 		s_arcade.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_ctf_friendly" ) );
 		break;
 
 #ifdef MISSIONPACK
 	case GT_1FCTF:
-		Com_sprintf( s_arcade.flaglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_1flag_capturelimit" ) ) );
-		Com_sprintf( s_arcade.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_1flag_timelimit" ) ) );
+		MField_SetText( &s_arcade.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_1flag_capturelimit" ) ) ) );
+		MField_SetText( &s_arcade.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_1flag_timelimit" ) ) ) );
 		s_arcade.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_1flag_friendly" ) );
 		break;
 
 	case GT_OBELISK:
-		Com_sprintf( s_arcade.flaglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_obelisk_capturelimit" ) ) );
-		Com_sprintf( s_arcade.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_obelisk_timelimit" ) ) );
+		MField_SetText( &s_arcade.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_obelisk_capturelimit" ) ) ) );
+		MField_SetText( &s_arcade.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_obelisk_timelimit" ) ) ) );
 		s_arcade.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_obelisk_friendly" ) );
 		break;
 
 #ifdef MISSIONPACK_HARVESTER
 	case GT_HARVESTER:
-		Com_sprintf( s_arcade.flaglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_harvester_capturelimit" ) ) );
-		Com_sprintf( s_arcade.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_harvester_timelimit" ) ) );
+		MField_SetText( &s_arcade.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_harvester_capturelimit" ) ) ) );
+		MField_SetText( &s_arcade.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_harvester_timelimit" ) ) ) );
 		s_arcade.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_harvester_friendly" ) );
 		break;
 #endif
@@ -418,9 +418,9 @@ static void StartArcade_Start( void ) {
 	const char *info;
 
 	gametype	 = listToGametype[s_arcade.gametype.curvalue];
-	timelimit	 = atoi( s_arcade.timelimit.field.buffer );
-	scorelimit	 = atoi( s_arcade.scorelimit.field.buffer );
-	flaglimit	 = atoi( s_arcade.flaglimit.field.buffer );
+	timelimit	 = atoi( MField_Buffer( &s_arcade.timelimit.field ) );
+	scorelimit	 = atoi( MField_Buffer( &s_arcade.scorelimit.field ) );
+	flaglimit	 = atoi( MField_Buffer( &s_arcade.flaglimit.field ) );
 	publicserver = s_arcade.publicserver.curvalue;
 	dedicated	 = s_arcade.dedicated.curvalue;
 	friendlyfire = s_arcade.friendlyfire.curvalue;
@@ -464,7 +464,7 @@ static void StartArcade_Start( void ) {
 	trap_Cvar_SetValue ("capturelimit", Com_Clamp( 0, flaglimit, flaglimit ) );
 	trap_Cvar_SetValue( "g_friendlyfire", friendlyfire );
 	trap_Cvar_SetValue( "sv_pure", pure );
-	trap_Cvar_Set("sv_hostname", s_arcade.hostname.field.buffer );
+	trap_Cvar_Set("sv_hostname", MField_Buffer( &s_arcade.hostname.field ) );
 
 	// set player's team
 	if( !s_arcade.inGame && dedicated == 0 && gametype >= GT_TEAM ) {
@@ -2042,9 +2042,9 @@ static void ServerOptions_Start( void ) {
 	char	buf[64];
 	const char *info;
 
-	timelimit	 = atoi( s_serveroptions.timelimit.field.buffer );
-	fraglimit	 = atoi( s_serveroptions.fraglimit.field.buffer );
-	flaglimit	 = atoi( s_serveroptions.flaglimit.field.buffer );
+	timelimit	 = atoi( MField_Buffer( &s_serveroptions.timelimit.field ) );
+	fraglimit	 = atoi( MField_Buffer( &s_serveroptions.fraglimit.field ) );
+	flaglimit	 = atoi( MField_Buffer( &s_serveroptions.flaglimit.field ) );
 	publicserver = s_serveroptions.publicserver.curvalue;
 	dedicated	 = s_serveroptions.dedicated.curvalue;
 	friendlyfire = s_serveroptions.friendlyfire.curvalue;
@@ -2156,7 +2156,7 @@ static void ServerOptions_Start( void ) {
 	trap_Cvar_SetValue ("capturelimit", Com_Clamp( 0, flaglimit, flaglimit ) );
 	trap_Cvar_SetValue( "g_friendlyfire", friendlyfire );
 	trap_Cvar_SetValue( "sv_pure", pure );
-	trap_Cvar_Set("sv_hostname", s_serveroptions.hostname.field.buffer );
+	trap_Cvar_Set("sv_hostname", MField_Buffer( &s_serveroptions.hostname.field ) );
 
 	// set player's team
 	if( dedicated == 0 && s_serveroptions.gametype >= GT_TEAM ) {
@@ -2622,63 +2622,63 @@ static void ServerOptions_SetMenuItems( void ) {
 	case GT_FFA:
 	default:
 #ifdef NOTRATEDM // frag to score
-		Com_sprintf( s_serveroptions.fraglimit.field.buffer, 5, "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_ffa_scorelimit" ) ) );
+		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_ffa_scorelimit" ) ) ) );
 #else
-		Com_sprintf( s_serveroptions.fraglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ffa_fraglimit" ) ) );
+		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ffa_fraglimit" ) ) ) );
 #endif
-		Com_sprintf( s_serveroptions.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ffa_timelimit" ) ) );
+		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ffa_timelimit" ) ) ) );
 		break;
 
 	case GT_TOURNAMENT:
 #ifdef NOTRATEDM // frag to score
-		Com_sprintf( s_serveroptions.fraglimit.field.buffer, 5, "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_tourney_scorelimit" ) ) );
+		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_tourney_scorelimit" ) ) ) );
 #else
-		Com_sprintf( s_serveroptions.fraglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_tourney_fraglimit" ) ) );
+		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_tourney_fraglimit" ) ) ) );
 #endif
-		Com_sprintf( s_serveroptions.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_tourney_timelimit" ) ) );
+		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_tourney_timelimit" ) ) ) );
 		break;
 
 #ifdef TA_SP
 	case GT_SINGLE_PLAYER:
-		Com_sprintf( s_serveroptions.flaglimit.field.buffer, 4, "%i", 0 );
-		Com_sprintf( s_serveroptions.timelimit.field.buffer, 4, "%i", 0 );
+		MField_SetText( &s_serveroptions.fraglimit.field, "0" );
+		MField_SetText( &s_serveroptions.timelimit.field, "0" );
 		s_serveroptions.friendlyfire.curvalue = 0;
 		break;
 #endif
 
 	case GT_TEAM:
 #ifdef NOTRATEDM // frag to score
-		Com_sprintf( s_serveroptions.fraglimit.field.buffer, 5, "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_team_scorelimit" ) ) );
+		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 9999, trap_Cvar_VariableValue( "ui_team_scorelimit" ) ) ) );
 #else
-		Com_sprintf( s_serveroptions.fraglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_team_fraglimit" ) ) );
+		MField_SetText( &s_serveroptions.fraglimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_team_fraglimit" ) ) ) );
 #endif
-		Com_sprintf( s_serveroptions.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_team_timelimit" ) ) );
+		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_team_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_team_friendly" ) );
 		break;
 
 	case GT_CTF:
-		Com_sprintf( s_serveroptions.flaglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_ctf_capturelimit" ) ) );
-		Com_sprintf( s_serveroptions.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ctf_timelimit" ) ) );
+		MField_SetText( &s_serveroptions.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_ctf_capturelimit" ) ) ) );
+		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_ctf_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_ctf_friendly" ) );
 		break;
 
 #ifdef MISSIONPACK
 	case GT_1FCTF:
-		Com_sprintf( s_serveroptions.flaglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_1flag_capturelimit" ) ) );
-		Com_sprintf( s_serveroptions.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_1flag_timelimit" ) ) );
+		MField_SetText( &s_serveroptions.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_1flag_capturelimit" ) ) ) );
+		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_1flag_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_1flag_friendly" ) );
 		break;
 
 	case GT_OBELISK:
-		Com_sprintf( s_serveroptions.flaglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_obelisk_capturelimit" ) ) );
-		Com_sprintf( s_serveroptions.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_obelisk_timelimit" ) ) );
+		MField_SetText( &s_serveroptions.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_obelisk_capturelimit" ) ) ) );
+		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_obelisk_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_obelisk_friendly" ) );
 		break;
 
 #ifdef MISSIONPACK_HARVESTER
 	case GT_HARVESTER:
-		Com_sprintf( s_serveroptions.flaglimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_harvester_capturelimit" ) ) );
-		Com_sprintf( s_serveroptions.timelimit.field.buffer, 4, "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_harvester_timelimit" ) ) );
+		MField_SetText( &s_serveroptions.flaglimit.field, va( "%i", (int)Com_Clamp( 0, 100, trap_Cvar_VariableValue( "ui_harvester_capturelimit" ) ) ) );
+		MField_SetText( &s_serveroptions.timelimit.field, va( "%i", (int)Com_Clamp( 0, 999, trap_Cvar_VariableValue( "ui_harvester_timelimit" ) ) ) );
 		s_serveroptions.friendlyfire.curvalue = (int)Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_harvester_friendly" ) );
 		break;
 #endif
@@ -2686,7 +2686,7 @@ static void ServerOptions_SetMenuItems( void ) {
 	}
 
 	s_serveroptions.publicserver.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_publicServer" ) );
-	Q_strncpyz( s_serveroptions.hostname.field.buffer, CG_Cvar_VariableString( "sv_hostname" ), sizeof( s_serveroptions.hostname.field.buffer ) );
+	MField_SetText( &s_serveroptions.hostname.field, CG_Cvar_VariableString( "sv_hostname" ) );
 	s_serveroptions.pure.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "sv_pure" ) );
 
 	// set the map pic
