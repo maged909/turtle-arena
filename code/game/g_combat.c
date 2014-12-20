@@ -671,6 +671,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		return;
 	}
 
+	// make sure the body shows up in the player's current position
+	G_UnTimeShiftClient( self );
+
 #ifndef NOTRATEDM // Disable strong lang.
 	// check for an almost capture
 	CheckAlmostCapture( self, attacker );

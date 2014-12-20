@@ -723,28 +723,6 @@ MACHINEGUN
 ======================================================================
 */
 
-/*
-======================
-SnapVectorTowards
-
-Round a vector to integers for more efficient network
-transmission, but make sure that it rounds towards a given point
-rather than blindly truncating.  This prevents it from truncating 
-into a wall.
-======================
-*/
-void SnapVectorTowards( vec3_t v, vec3_t to ) {
-	int		i;
-
-	for ( i = 0 ; i < 3 ; i++ ) {
-		if ( to[i] <= v[i] ) {
-			v[i] = floor(v[i]);
-		} else {
-			v[i] = ceil(v[i]);
-		}
-	}
-}
-
 #ifndef TA_WEAPSYS // ZTM: I replaced all of these, see fire_weapon
 #ifdef MISSIONPACK
 #define CHAINGUN_SPREAD		600
@@ -778,7 +756,14 @@ void Bullet_Fire (gentity_t *ent, float spread, int damage, int mod ) {
 	passent = ent->s.number;
 	for (i = 0; i < 10; i++) {
 
+		// backward-reconcile the other clients
+		G_DoTimeShiftFor( ent );
+
 		trap_Trace (&tr, muzzle, NULL, NULL, end, passent, MASK_SHOT);
+
+		// put them back
+		G_UndoTimeShiftFor( ent );
+
 		if ( tr.surfaceFlags & SURF_NOIMPACT ) {
 			return;
 		}
@@ -930,6 +915,9 @@ void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
 	PerpendicularVector( right, forward );
 	CrossProduct( forward, right, up );
 
+	// backward-reconcile the other clients
+	G_DoTimeShiftFor( ent );
+
 	// generate the "random" spread pattern
 	for ( i = 0 ; i < DEFAULT_SHOTGUN_COUNT ; i++ ) {
 		r = Q_crandom( &seed ) * DEFAULT_SHOTGUN_SPREAD * 16;
@@ -942,6 +930,9 @@ void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
 			ent->player->accuracy_hits++;
 		}
 	}
+
+	// put them back
+	G_UndoTimeShiftFor( ent );
 }
 
 
@@ -1052,6 +1043,9 @@ void weapon_railgun_fire (gentity_t *ent) {
 
 	VectorMA (muzzle, 8192, forward, end);
 
+	// backward-reconcile the other clients
+	G_DoTimeShiftFor( ent );
+
 	// trace only against the solids, so the railgun will go through people
 	unlinked = 0;
 	hits = 0;
@@ -1105,6 +1099,9 @@ void weapon_railgun_fire (gentity_t *ent) {
 		unlinkedEntities[unlinked] = traceEnt;
 		unlinked++;
 	} while ( unlinked < MAX_RAIL_HITS );
+
+	// put them back
+	G_UndoTimeShiftFor( ent );
 
 	// link back in any entities we unlinked
 	for ( i = 0 ; i < unlinked ; i++ ) {
@@ -1347,7 +1344,13 @@ void Weapon_LightningFire( gentity_t *ent ) {
 	for (i = 0; i < 10; i++) {
 		VectorMA( muzzle, LIGHTNING_RANGE, forward, end );
 
+		// backward-reconcile the other clients
+		G_DoTimeShiftFor( ent );
+
 		trap_Trace( &tr, muzzle, NULL, NULL, end, passent, MASK_SHOT );
+
+		// put them back
+		G_UndoTimeShiftFor( ent );
 
 #if defined MISSIONPACK && !defined TURTLEARENA // POWERS
 		// if not the first trace (the lightning bounced of an invulnerability sphere)

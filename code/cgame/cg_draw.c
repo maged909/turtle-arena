@@ -33,11 +33,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
-#if defined MISSIONPACK_HUD || defined IOQ3ZTM
-#include "../ui/ui_shared.h"
-#endif
-
 #ifdef MISSIONPACK_HUD
+#include "../ui/ui_shared.h"
+
 // used for scoreboard
 extern displayContextDef_t cgDC;
 menuDef_t *menuScoreboard = NULL;
@@ -362,7 +360,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 		len = 0.5 * ( maxs[2] - mins[2] );		
 		origin[0] = len / 0.268;	// len / tan( fov/2 )
 
-		angles[YAW] = 60 * sin( cg.time / 2000.0 );
+		angles[YAW] = 60 * sin( cg.time / 2000.0 );;
 
 		if( team == TEAM_RED ) {
 			handle = cgs.media.redFlagModel;
@@ -480,7 +478,7 @@ CG_DrawTeamBackground
 
 ================
 */
-void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team, int playerNum )
+void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 {
 	vec4_t		hcolor;
 
@@ -934,7 +932,7 @@ static void CG_DrawStatusBar( void ) {
 	cent = &cg_entities[ps->playerNum];
 
 	// draw the team background
-	CG_DrawTeamBackground( 0, 420, 640, 60, 0.33f, ps->persistant[PERS_TEAM], ps->playerNum );
+	CG_DrawTeamBackground( 0, 420, 640, 60, 0.33f, ps->persistant[PERS_TEAM] );
 
 	VectorClear( angles );
 
@@ -1106,15 +1104,15 @@ void CG_DrawScoreChain(void)
 		return;
 	}
 
-	frac = fadeColor[3];
+	frac = fadeColor[3] * GIANTCHAR_HEIGHT / 48.0f;
 
 	CG_ColorForChain(cg.cur_ps->chain, color);
 	color[3] = fadeColor[3];
 
 	s = va("%d Link", cg.cur_ps->chain-1);
 
-	y = SCREEN_HEIGHT - 32;
-	CG_DrawStringExt( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, color, frac, 0, 0 );
+	y = SCREEN_HEIGHT - GIANTCHAR_HEIGHT - 6;
+	CG_DrawStringExt( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_GIANTFONT, color, frac, 0, 0 );
 }
 #endif
 
@@ -1550,7 +1548,8 @@ static float CG_DrawScores( float y ) {
 	s1 = cgs.scores1;
 	s2 = cgs.scores2;
 
-	y -= BIGCHAR_HEIGHT + 8;
+	y -=  BIGCHAR_HEIGHT + 8;
+
 	y1 = y;
 
 	// draw from the right side to left
@@ -2118,7 +2117,7 @@ static void CG_DrawReward( void ) {
 
 	if ( cg.cur_lc->rewardCount[0] >= 10 ) {
 		y = 56;
-		x = 320 - ICON_SIZE/2;
+		x = 320 - ICON_SIZE/2 + 2;
 		CG_DrawPic( x, y, ICON_SIZE-4, ICON_SIZE-4, cg.cur_lc->rewardShader[0] );
 		Com_sprintf(buf, sizeof(buf), "%d", cg.cur_lc->rewardCount[0]);
 #ifdef IOQ3ZTM // FONT_REWRITE // ZTM: FIXME: ### why did I change this to big string?
@@ -2132,7 +2131,7 @@ static void CG_DrawReward( void ) {
 		count = cg.cur_lc->rewardCount[0];
 
 		y = 56;
-		x = 320 - count * ICON_SIZE/2;
+		x = 320 - count * ICON_SIZE/2 + 2;
 		for ( i = 0 ; i < count ; i++ ) {
 			CG_DrawPic( x, y, ICON_SIZE-4, ICON_SIZE-4, cg.cur_lc->rewardShader[0] );
 			x += ICON_SIZE;
@@ -3583,7 +3582,8 @@ void CG_DrawNotify( void ) {
 
 #ifdef MISSIONPACK_HUD
 	// voice head is being shown
-	if ( cg.cur_lc->voiceTime && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum )
+	if ( !cg.cur_lc->showScores && cg.cur_ps->stats[STAT_HEALTH] > 0 &&
+		cg.cur_lc->voiceTime && cg.cur_lc->voiceTime >= cg.time && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum )
 		x = 72;
 	else
 #endif
@@ -3601,14 +3601,7 @@ CG_DrawTimedMenus
 =================
 */
 void CG_DrawTimedMenus( void ) {
-	if (cg.cur_lc->voiceTime) {
-		int t = cg.time - cg.cur_lc->voiceTime;
-		if ( t > 2500 ) {
-			cg.cur_lc->voiceTime = 0;
-		}
-	}
-
-	if ( cg.cur_lc->voiceTime && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum ) {
+	if ( cg.cur_lc->voiceTime && cg.cur_lc->voiceTime >= cg.time && cg.cur_lc->playerNum != cg.cur_lc->currentVoicePlayerNum ) {
 		Menus_OpenByName("voiceMenu");
 	} else {
 		Menus_CloseByName("voiceMenu");

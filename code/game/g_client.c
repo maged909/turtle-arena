@@ -1059,6 +1059,10 @@ void PlayerUserinfoChanged( int playerNum ) {
 		player->pers.predictItemPickup = qtrue;
 	}
 
+	// check the anti lag
+	s = Info_ValueForKey( userinfo, "cg_antiLag" );
+	player->pers.antiLag = atoi( s );
+
 #ifdef TA_SP
 	// Override names in main game and arcade mode.
 	if (g_singlePlayer.integer && !(ent->r.svFlags & SVF_BOT)) {
@@ -1810,6 +1814,9 @@ void PlayerSpawn(gentity_t *ent) {
 
 	// clear entity state values
 	BG_PlayerStateToEntityState( &player->ps, &ent->s, qtrue );
+
+	// we don't want players being backward-reconciled to the place they died
+	G_ResetHistory( ent );
 }
 
 

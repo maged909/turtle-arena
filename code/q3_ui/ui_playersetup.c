@@ -372,7 +372,7 @@ static void UI_PlayerSetupMenu_SaveChanges( void ) {
 
 	for (i = 0; i < MAX_SPLITVIEW; ++i) {
 		// name
-		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "name"), s_playersetup.name[i].field.buffer );
+		trap_Cvar_Set( Com_LocalPlayerCvarName(i, "name"), MField_Buffer( &s_playersetup.name[i].field ) );
 
 		// handicap
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(i, "handicap"),
@@ -769,8 +769,8 @@ static void UI_PlayerSetupMenu_Init( int maxLocalPlayers, void (*action)(void), 
 		}
 
 		// name
-		Q_strncpyz( s_playersetup.name[i].field.buffer, CG_Cvar_VariableString(
-				Com_LocalPlayerCvarName(i, "name")), sizeof(s_playersetup.name[i].field.buffer) );
+		MField_SetText( &s_playersetup.name[i].field, CG_Cvar_VariableString(
+				Com_LocalPlayerCvarName(i, "name")) );
 
 		// handicap
 		h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalPlayerCvarName(i, "handicap")) );

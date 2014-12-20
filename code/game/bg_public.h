@@ -2285,6 +2285,8 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 int		BG_ComposeUserCmdValue( int weapon, int holdable );
 void	BG_DecomposeUserCmdValue( int value, int *weapon, int *holdable );
 
+void	SnapVectorTowards( vec3_t v, vec3_t to );
+
 #ifdef TA_SP
 #define ARENAS_PER_TIER		2
 #else

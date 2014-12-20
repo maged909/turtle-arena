@@ -397,7 +397,7 @@ static qboolean UI_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *
 	int				i;
 	orientation_t	lerped;
 	qboolean		returnValue;
-
+	
 	// lerp the tag
 	returnValue = trap_R_LerpTagFrameModel( &lerped, parentModel,
 		parent->oldframeModel, parent->oldframe,
@@ -448,6 +448,7 @@ static qboolean UI_PositionRotatedEntityOnTag( refEntity_t *entity, const refEnt
 
 	return returnValue;
 }
+
 
 
 #ifndef IOQ3ZTM // LERP_FRAME_CLIENT_LESS
@@ -1425,6 +1426,7 @@ static qboolean UI_ParseAnimationFile( const char *filename, animation_t *animat
 }
 #endif
 
+
 /*
 ==========================
 UI_RegisterPlayerModelname
@@ -1678,7 +1680,7 @@ void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int legsAnim, int torsoAnim, vec
 	}
 #else
 	if ( torsoAnim == TORSO_ATTACK || torsoAnim == TORSO_ATTACK2 ) {
-		if ( weaponNum == WP_NONE || weaponNum == WP_GAUNTLET) {
+		if ( weaponNum == WP_NONE || weaponNum == WP_GAUNTLET ) {
 			torsoAnim = TORSO_ATTACK2;
 		}
 		else {

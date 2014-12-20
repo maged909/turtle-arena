@@ -473,7 +473,6 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 	}
 
 	rb->generic.right  = rb->generic.x + 6*SMALLCHAR_WIDTH;
-
 	rb->generic.top    = rb->generic.y;
 	rb->generic.bottom = rb->generic.y + SMALLCHAR_HEIGHT;
 }

@@ -149,6 +149,7 @@ void AssetCache( void ) {
 	//Com_Printf("Menu Size: %i bytes\n", sizeof(uiInfo.uiDC.Menus));
 	uiInfo.uiDC.Assets.gradientBar = trap_R_RegisterShaderNoMip( ASSET_GRADIENTBAR );
 	uiInfo.uiDC.Assets.fxBasePic = trap_R_RegisterShaderNoMip( ART_FX_BASE );
+	uiInfo.uiDC.Assets.fxPic[0] = trap_R_RegisterShaderNoMip( ART_FX_RED );
 	uiInfo.uiDC.Assets.fxPic[1] = trap_R_RegisterShaderNoMip( ART_FX_ORANGE );
 	uiInfo.uiDC.Assets.fxPic[2] = trap_R_RegisterShaderNoMip( ART_FX_YELLOW );
 	uiInfo.uiDC.Assets.fxPic[3] = trap_R_RegisterShaderNoMip( ART_FX_LIME );
@@ -2145,7 +2146,7 @@ static qboolean UI_NetSource_HandleKey(int flags, float *special, int key) {
 			}
 		}
 
- 		if (ui_netSource.integer >= numNetSources) {
+		if (ui_netSource.integer >= numNetSources) {
 			ui_netSource.integer = 0;
 		} else if (ui_netSource.integer < 0) {
 			ui_netSource.integer = numNetSources - 1;
@@ -3212,7 +3213,7 @@ static int UI_MapCountByGameType(qboolean singlePlayer) {
 
 qboolean UI_hasSkinForBase(const char *base, const char *team) {
 	char	test[MAX_QPATH];
-
+	
 	Com_sprintf( test, sizeof( test ), "models/players/%s/%s/lower_default.skin", base, team );
 
 	if (trap_FS_FOpenFile(test, NULL, FS_READ)) {

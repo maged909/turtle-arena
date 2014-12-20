@@ -153,18 +153,26 @@ enum {
 
 //=================================================
 
+// The menu code needs to get both key and char events, but
+// to avoid duplicating the paths, the char events are just
+// distinguished by or'ing in K_CHAR_FLAG (ugly)
+#define	K_CHAR_FLAG		(1<<31)
+
 #define	MAX_EDIT_LINE	256
 typedef struct {
 	int		cursor;
-	int		scroll;
-	int		widthInChars;
-	char	buffer[MAX_EDIT_LINE];
-	int		maxchars;
+	int		scroll;					// display buffer offset
+	int		widthInChars;			// display width
+	int		buffer[MAX_EDIT_LINE];	// buffer holding Unicode code points
+	int		len;					// length of buffer
+	int		maxchars;				// max number of characters to insert in buffer
 } mfield_t;
 
 void	MField_Clear( mfield_t *edit );
 void	MField_KeyDownEvent( mfield_t *edit, int key );
 void	MField_CharEvent( mfield_t *edit, int ch );
+void	MField_SetText( mfield_t *edit, const char *text );
+const char *MField_Buffer( mfield_t *edit );
 void	MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
 
 //=================================================
@@ -1866,6 +1874,7 @@ extern	vmCvar_t		cg_skybox;
 extern	vmCvar_t		cg_drawScores;
 extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
+extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
@@ -1940,6 +1949,7 @@ int CG_CrosshairPlayer( int localPlayerNum );
 int CG_LastAttacker( int localPlayerNum );
 void CG_LoadMenus(const char *menuFile);
 void CG_DistributeKeyEvent( int key, qboolean down, unsigned time, connstate_t state, int axisNum );
+void CG_DistributeCharEvent( int key, connstate_t state );
 void CG_KeyEvent(int key, qboolean down);
 void CG_MouseEvent(int localPlayerNum, int x, int y);
 void CG_JoystickAxisEvent( int localPlayerNum, int axis, int value, unsigned time, connstate_t state );
@@ -2135,14 +2145,13 @@ void CG_DrawHead( float x, float y, float w, float h, int playerNum, vec3_t head
 void CG_DrawActive( stereoFrame_t stereoView );
 void CG_DrawScreen2D( stereoFrame_t stereoView );
 void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean force2D );
-void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team, int clientNum );
+void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team );
 void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y, int ownerDraw, int ownerDrawFlags, int align, float special, float scale, vec4_t color, qhandle_t shader, int textStyle);
 void CG_SelectPrevPlayer( int localPlayerNum );
 void CG_SelectNextPlayer( int localPlayerNum );
 float CG_GetValue(int ownerDraw);
 qboolean CG_OwnerDrawVisible(int flags);
 void CG_RunMenuScript(char **args);
-void CG_ShowResponseHead( void );
 void CG_SetPrintString(q3print_t type, const char *p);
 void CG_InitTeamChat( void );
 void CG_GetTeamColor(vec4_t *color);
@@ -2269,6 +2278,7 @@ void CG_MissileImpact( int projnum, int clientNum, vec3_t origin, vec3_t dir, im
 void CG_WeaponImpact( int weaponGroup, int hand, int clientNum, vec3_t origin, vec3_t dir, impactSound_t soundType );
 void CG_WeaponHitPlayer( int weaponGroup, int hand, vec3_t origin, vec3_t dir, int entityNum );
 #else
+void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int otherEntNum );
 void CG_ShotgunFire( entityState_t *es );
 #endif
 #ifdef TA_WEAPSYS
@@ -2389,6 +2399,7 @@ void CG_DrawLetterbox(void);
 //
 void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
+void CG_TransitionEntity( centity_t *cent );
 playerState_t *CG_LocalPlayerState( int playerNum );
 int CG_NumLocalPlayers( void );
 
@@ -2469,6 +2480,7 @@ void CG_LoadVoiceChats( void );
 void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int playerNum, int color, const char *cmd );
 void CG_PlayBufferedVoiceChats( void );
 #endif
+int CG_LocalPlayerBitsForTeam( team_t );
 
 //
 // cg_playerstate.c
