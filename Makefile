@@ -110,6 +110,10 @@ BUILD_DEFINES += -DTA_GAME_MODELS
 #############################################################################
 -include Makefile.local
 
+ifeq ($(COMPILE_PLATFORM),cygwin)
+  PLATFORM=mingw32
+endif
+
 ifndef PLATFORM
 PLATFORM=$(COMPILE_PLATFORM)
 endif
@@ -471,6 +475,11 @@ ifeq ($(PLATFORM),mingw32)
 
   ifeq ($(CROSS_COMPILING),0)
     TOOLS_BINEXT=.exe
+  endif
+
+  ifeq ($(COMPILE_PLATFORM),cygwin)
+    TOOLS_BINEXT=.exe
+    TOOLS_CC=$(CC)
   endif
 
   LIBS= -lws2_32 -lwinmm -lpsapi

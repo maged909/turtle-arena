@@ -1219,14 +1219,12 @@ void CG_RegisterWeapon( int weaponNum )
 	if (weap->model[0] != '\0') {
 		weaponInfo->weaponModel = trap_R_RegisterModel( weap->model );
 
-		strcpy( path, weap->model );
-		COM_StripExtension(path, path, sizeof(path));
-		strcat( path, "_flash.md3" );
+		COM_StripExtension( weap->model, path, sizeof(path) );
+		Q_strcat( path, sizeof(path), "_flash.md3" );
 		weaponInfo->flashModel = trap_R_RegisterModel( path );
 
-		strcpy( path, weap->model );
-		COM_StripExtension(path, path, sizeof(path));
-		strcat( path, "_barrel.md3" );
+		COM_StripExtension( weap->model, path, sizeof(path) );
+		Q_strcat( path, sizeof(path), "_barrel.md3" );
 		weaponInfo->barrelModel = trap_R_RegisterModel( path );
 	}
 
