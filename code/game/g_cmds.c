@@ -792,9 +792,7 @@ void StopFollowing( gentity_t *ent ) {
 		return;
 	}
 #endif
-#ifdef IOQ3ZTM // SPECTATOR
-	SetPlayerViewAngle(ent, ent->player->ps.viewangles);
-#endif
+
 	ent->player->ps.persistant[ PERS_TEAM ] = TEAM_SPECTATOR;	
 	ent->player->sess.sessionTeam = TEAM_SPECTATOR;	
 	ent->player->sess.spectatorState = SPECTATOR_FREE;
