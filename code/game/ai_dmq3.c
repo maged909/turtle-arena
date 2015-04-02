@@ -1759,6 +1759,10 @@ void BotSetupForMovement(bot_state_t *bs) {
 	if (BotWantsToWalk(bs)) {
 		initmove.or_moveflags |= MFL_WALK;
 	}
+	//make walker bots run to items
+	if (bs->walker > 0.5f && (initmove.or_moveflags & MFL_WALK)) {
+		initmove.or_moveflags |= MFL_SPRINT;
+	}
 	//
 	VectorCopy(bs->viewangles, initmove.viewangles);
 	//
@@ -2119,7 +2123,7 @@ void BotUseKamikaze(bot_state_t *bs) {
 		VectorSubtract(bs->origin, target, dir);
 		if (VectorLengthSquared(dir) < Square(KAMIKAZE_DIST * 0.9)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->playernum, CONTENTS_SOLID);
-			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
+			if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
 				EA_Use(bs->playernum
 #ifdef TA_HOLDSYS
 				, HI_KAMIKAZE
@@ -2205,7 +2209,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		VectorSubtract(bs->origin, target, dir);
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->playernum, CONTENTS_SOLID);
-			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
+			if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
 				EA_Use(bs->playernum
 #ifdef TA_HOLDSYS
 				, HI_INVULNERABILITY
@@ -2233,7 +2237,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		VectorSubtract(bs->origin, target, dir);
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->playernum, CONTENTS_SOLID);
-			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
+			if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
 				EA_Use(bs->playernum
 #ifdef TA_HOLDSYS
 				, HI_INVULNERABILITY
@@ -2254,7 +2258,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		VectorSubtract(bs->origin, target, dir);
 		if (VectorLengthSquared(dir) < Square(300)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->playernum, CONTENTS_SOLID);
-			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
+			if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
 				EA_Use(bs->playernum
 #ifdef TA_HOLDSYS
 				, HI_INVULNERABILITY
@@ -2283,7 +2287,7 @@ void BotUseInvulnerability(bot_state_t *bs) {
 		VectorSubtract(bs->origin, target, dir);
 		if (VectorLengthSquared(dir) < Square(200)) {
 			BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->playernum, CONTENTS_SOLID);
-			if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
+			if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
 				EA_Use(bs->playernum
 #ifdef TA_HOLDSYS
 				, HI_INVULNERABILITY
@@ -3257,7 +3261,7 @@ bot_moveresult_t BotAttackMove(bot_state_t *bs, int tfl) {
 		BotAI_Trace(&bsptrace, start, NULL, NULL, entinfo.origin, bs->playernum, MASK_SHOT);
 
 		// only try to crouch if the enemy remains visible
-		if (bsptrace.fraction >= 1.0 || bsptrace.ent == attackentity) {
+		if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == attackentity) {
 			movetype = MOVE_CROUCH;
 		}
 	}
@@ -3461,6 +3465,7 @@ float BotEntityVisible(int viewer, vec3_t eye, vec3_t viewangles, float fov, int
 		BotAI_Trace(&trace, start, NULL, NULL, end, passent, contents_mask);
 		//if water was hit
 		waterfactor = 1.0;
+#if 0 // FIXME?: bsp_trace_t::contents was always 0 in quake3, now it's actually set
 		if (trace.contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER)) {
 			//if the water surface is translucent
 			if (1) {
@@ -3470,8 +3475,9 @@ float BotEntityVisible(int viewer, vec3_t eye, vec3_t viewangles, float fov, int
 				waterfactor = 0.5;
 			}
 		}
+#endif
 		//if a full trace or the hitent was hit
-		if (trace.fraction >= 1 || trace.ent == hitent) {
+		if (trace.fraction >= 1 || trace.entityNum == hitent) {
 			//check for fog, assuming there's only one fog brush where
 			//either the viewer or the entity is in or both are in
 			otherinfog = (trap_AAS_PointContents(middle) & CONTENTS_FOG);
@@ -3567,7 +3573,7 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		VectorCopy(goal->origin, target);
 		target[2] += 1;
 		BotAI_Trace(&trace, bs->eye, NULL, NULL, target, bs->playernum, CONTENTS_SOLID);
-		if (trace.fraction >= 1 || trace.ent == goal->entitynum) {
+		if (trace.fraction >= 1 || trace.entityNum == goal->entitynum) {
 			if (goal->entitynum == bs->enemy) {
 				return qfalse;
 			}
@@ -4020,7 +4026,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 		//
 		BotAI_Trace(&trace, start, mins, maxs, bestorigin, bs->entitynum, MASK_SHOT);
 		//if the enemy is NOT hit
-		if (trace.fraction <= 1 && trace.ent != entinfo.number) {
+		if (trace.fraction <= 1 && trace.entityNum != entinfo.number) {
 			bestorigin[2] += 16;
 		}
 		//if it is not an instant hit weapon the bot might want to predict the enemy
@@ -4056,7 +4062,7 @@ void BotAimAtEnemy(bot_state_t *bs) {
 					//
 					VectorClear(cmdmove);
 					//AAS_ClearShownDebugLines();
-					trap_AAS_PredictClientMovement(&move, bs->enemy, origin,
+					trap_AAS_PredictPlayerMovement(&move, bs->enemy, origin,
 														PRESENCE_CROUCH, qfalse,
 														dir, cmdmove, 0,
 #ifdef TA_WEAPSYS
@@ -4325,7 +4331,7 @@ void BotCheckAttack(bot_state_t *bs) {
 	if (!InFieldOfVision(bs->viewangles, fov, angles))
 		return;
 	BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, bs->aimtarget, bs->playernum, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
-	if (bsptrace.fraction < 1 && bsptrace.ent != attackentity)
+	if (bsptrace.fraction < 1 && bsptrace.entityNum != attackentity)
 		return;
 
 #ifdef TA_WEAPSYS
@@ -4389,15 +4395,15 @@ void BotCheckAttack(bot_state_t *bs) {
 		VectorMA(start, -12, forward, start);
 		BotAI_Trace(&trace, start, mins, maxs, end, bs->entitynum, MASK_SHOT);
 		//if the entity is a player
-		if (trace.ent >= 0 && trace.ent < MAX_CLIENTS) {
-			if (trace.ent != attackentity) {
+		if (trace.entityNum >= 0 && trace.entityNum < MAX_CLIENTS) {
+			if (trace.entityNum != attackentity) {
 				//if a teammate is hit
-				if (BotSameTeam(bs, trace.ent))
+				if (BotSameTeam(bs, trace.entityNum))
 					return;
 			}
 		}
 		//if won't hit the enemy or not attacking a player (obelisk)
-		if (trace.ent != attackentity || attackentity >= MAX_CLIENTS) {
+		if (trace.entityNum != attackentity || attackentity >= MAX_CLIENTS) {
 			//if the projectile does radial damage
 #ifdef TA_WEAPSYS
 			if (bgProj->splashRadius > 0 && bgProj->splashDamage > 0)
@@ -4612,7 +4618,6 @@ int BotFuncButtonActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *a
 	modelindex = atoi(model+1);
 	if (!modelindex)
 		return qfalse;
-	VectorClear(angles);
 	entitynum = BotModelMinsMaxs(modelindex, ET_MOVER, 0, mins, maxs);
 	//get the lip of the button
 	trap_AAS_FloatForBSPEpairKey(bspent, "lip", &lip);
@@ -4627,8 +4632,7 @@ int BotFuncButtonActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *a
 	VectorAdd(mins, maxs, origin);
 	VectorScale(origin, 0.5, origin);
 	//touch distance of the button
-	dist = fabs(movedir[0]) * size[0] + fabs(movedir[1]) * size[1] + fabs(movedir[2]) * size[2];
-	dist *= 0.5;
+	dist = fabs(movedir[0]) * size[0] + fabs(movedir[1]) * size[1] + fabs(movedir[2]) * size[2] - lip;
 	//
 	trap_AAS_FloatForBSPEpairKey(bspent, "health", &health);
 	//if the button is shootable
@@ -4641,7 +4645,7 @@ int BotFuncButtonActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *a
 		//
 		BotAI_Trace(&bsptrace, bs->eye, NULL, NULL, goalorigin, bs->entitynum, MASK_SHOT);
 		// if the button is visible from the current position
-		if (bsptrace.fraction >= 1.0 || bsptrace.ent == entitynum) {
+		if (bsptrace.fraction >= 1.0 || bsptrace.entityNum == entitynum) {
 			//
 			activategoal->goal.entitynum = entitynum; //NOTE: this is the entity number of the shootable button
 			activategoal->goal.number = 0;
@@ -4750,7 +4754,7 @@ BotFuncDoorGoal
 int BotFuncDoorActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *activategoal) {
 	int modelindex, entitynum;
 	char model[MAX_INFO_STRING];
-	vec3_t mins, maxs, origin, angles;
+	vec3_t mins, maxs, origin;
 
 	//shoot at the shootable door
 	trap_AAS_ValueForBSPEpairKey(bspent, "model", model, sizeof(model));
@@ -4759,7 +4763,6 @@ int BotFuncDoorActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *act
 	modelindex = atoi(model+1);
 	if (!modelindex)
 		return qfalse;
-	VectorClear(angles);
 	entitynum = BotModelMinsMaxs(modelindex, ET_MOVER, 0, mins, maxs);
 	//door origin
 	VectorAdd(mins, maxs, origin);
@@ -4785,7 +4788,7 @@ BotTriggerMultipleGoal
 int BotTriggerMultipleActivateGoal(bot_state_t *bs, int bspent, bot_activategoal_t *activategoal) {
 	int i, areas[10], numareas, modelindex, entitynum;
 	char model[128];
-	vec3_t start, end, mins, maxs, angles;
+	vec3_t start, end, mins, maxs;
 	vec3_t origin, goalorigin;
 
 	activategoal->shoot = qfalse;
@@ -4797,7 +4800,6 @@ int BotTriggerMultipleActivateGoal(bot_state_t *bs, int bspent, bot_activategoal
 	modelindex = atoi(model+1);
 	if (!modelindex)
 		return qfalse;
-	VectorClear(angles);
 	entitynum = BotModelMinsMaxs(modelindex, 0, CONTENTS_TRIGGER, mins, maxs);
 	//trigger origin
 	VectorAdd(mins, maxs, origin);
@@ -4945,7 +4947,7 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 	char targetname[10][128];
 	aas_entityinfo_t entinfo;
 	aas_areainfo_t areainfo;
-	vec3_t origin, angles, absmins, absmaxs;
+	vec3_t origin, absmins, absmaxs;
 
 	memset(activategoal, 0, sizeof(bot_activategoal_t));
 	BotEntityInfo(entitynum, &entinfo);
@@ -4989,7 +4991,6 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 		if (*model) {
 			modelindex = atoi(model+1);
 			if (modelindex) {
-				VectorClear(angles);
 				BotModelMinsMaxs(modelindex, ET_MOVER, 0, absmins, absmaxs);
 				//
 				numareas = trap_AAS_BBoxAreas(absmins, absmaxs, areas, MAX_ACTIVATEAREAS*2);
@@ -5290,8 +5291,8 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	else if (entinfo.modelindex > 0 && entinfo.modelindex <= max_bspmodelindex) {
 		// a closed doors without a targetname will operate automatically
 		if (!strcmp(ent->classname, "func_door") && (ent->moverState == MOVER_POS1)) {
-			// if no targetname
-			if (!ent->targetname) {
+			// if no targetname and not a shootable door
+			if (!ent->targetname && !ent->health) {
 				return;
 			}
 		}
@@ -5357,11 +5358,15 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 		}
 	}
 	//
-	if (bs->notblocked_time < FloatTime() - 0.4) {
-		// just reset goals and hope the bot will go into another direction?
-		// is this still needed??
-		if (bs->ainode == AINode_Seek_NBG) bs->nbg_time = 0;
-		else if (bs->ainode == AINode_Seek_LTG) bs->ltg_time = 0;
+	if (!activate) {
+		if (bs->notblocked_time < FloatTime() - 0.4) {
+			// just reset goals and hope the bot will go into another direction
+			if (bs->ainode == AINode_Seek_NBG) {
+				bs->nbg_time = 0;
+			} else if (bs->ainode == AINode_Seek_LTG) {
+				bs->ltg_time = 0;
+			}
+		}
 	}
 }
 
