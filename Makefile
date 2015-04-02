@@ -158,7 +158,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=0.1
+VERSION=0.6.2
 endif
 
 ifndef VM_PREFIX
