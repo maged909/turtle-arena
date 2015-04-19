@@ -99,8 +99,6 @@ localEntity_t	*CG_AllocLocalEntity( void ) {
 
 	memset( le, 0, sizeof( *le ) );
 
-	le->firstPersonEntity = -1;
-
 	// link into the active list
 	le->next = cg_activeLocalEntities.next;
 	le->prev = &cg_activeLocalEntities;
@@ -971,7 +969,9 @@ CG_AddLocalEntities
 */
 void CG_AddLocalEntities( void ) {
 	localEntity_t	*le, *next;
-	qboolean forceOnlyMirror;
+	leViewFlags_t	viewFlags;
+	int				i;
+	int				forceRenderfx;
 	int oldPhysicsTime;
 
 	// have local entities interact with movers (submodels) at their render position
@@ -991,8 +991,24 @@ void CG_AddLocalEntities( void ) {
 			continue;
 		}
 
-		// Check if local entity should be rendered by this player.
-		if (le->localPlayerBits && !(le->localPlayerBits & (1<<cg.cur_localPlayerNum))) {
+		// Check if local entity should be rendered for this player.
+		viewFlags = le->defaultViewFlags;
+		for ( i = 0; i < le->numPlayerEffects; i++ ) {
+			if ( le->playerEffects[i].playerNum == cg.snap->pss[cg.cur_localPlayerNum].playerNum ) {
+				viewFlags = le->playerEffects[i].viewFlags;
+				break;
+			}
+		}
+
+		if ( viewFlags & LEVF_NO_DRAW ) {
+			continue;
+		}
+
+		if ( ( viewFlags & LEVF_THIRD_PERSON_NO_DRAW ) && cg.cur_lc->renderingThirdPerson ) {
+			continue;
+		}
+
+		if ( ( viewFlags & LEVF_FIRST_PERSON_NO_DRAW ) && !cg.cur_lc->renderingThirdPerson ) {
 			continue;
 		}
 
@@ -1012,13 +1028,14 @@ void CG_AddLocalEntities( void ) {
 		}
 #endif
 
-		forceOnlyMirror = (!(le->refEntity.renderfx & RF_ONLY_MIRROR) &&
-				!cg.cur_lc->renderingThirdPerson &&
-				cg.snap->pss[cg.cur_localPlayerNum].playerNum == le->firstPersonEntity);
-
-		if ( forceOnlyMirror ) {
-			le->refEntity.renderfx |= RF_ONLY_MIRROR;
+		if ( ( viewFlags & LEVF_FIRST_PERSON_MIRROR ) && !cg.cur_lc->renderingThirdPerson ) {
+			forceRenderfx = RF_ONLY_MIRROR;
+		} else {
+			forceRenderfx = 0;
 		}
+
+		forceRenderfx &= ~le->refEntity.renderfx;
+		le->refEntity.renderfx |= forceRenderfx;
 
 		switch ( le->leType ) {
 		default:
@@ -1087,9 +1104,7 @@ void CG_AddLocalEntities( void ) {
 #endif
 		}
 
-		if ( forceOnlyMirror ) {
-			le->refEntity.renderfx &= ~RF_ONLY_MIRROR;
-		}
+		le->refEntity.renderfx &= ~forceRenderfx;
 	}
 
 	cg.physicsTime = oldPhysicsTime;
