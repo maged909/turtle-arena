@@ -3784,7 +3784,10 @@ void CG_PlayerHitEffect( vec3_t origin, int entityNum, qboolean meleeDamage ) {
 	ex->refEntity.customShader = hShader;
 
 	// don't show player's own blood in view
-	ex->firstPersonEntity = entityNum;
+	ex->defaultViewFlags = 0;
+	ex->playerEffects[0].playerNum = entityNum;
+	ex->playerEffects[0].viewFlags = LEVF_FIRST_PERSON_MIRROR;
+	ex->numPlayerEffects = 1;
 }
 #endif
 

@@ -395,6 +395,20 @@ typedef enum {
 	LEBS_BRASS
 } leBounceSoundType_t;	// fragment local entities can make sounds on impacts
 
+typedef enum {
+	LEVF_NO_DRAW				= 0x0001,	// do not draw for this player
+	LEVF_FIRST_PERSON_MIRROR	= 0x0002,	// if player is first person, draw in mirrors only
+	LEVF_FIRST_PERSON_NO_DRAW	= 0x0004,	// if player is first person, do not draw
+	LEVF_THIRD_PERSON_NO_DRAW	= 0x0008	// if player is third person, do not draw
+} leViewFlags_t;
+
+typedef struct {
+	int				playerNum;
+	leViewFlags_t	viewFlags;
+} lePlayerEfx_t;
+
+#define MAX_PLAYER_EFX MAX_SPLITVIEW
+
 typedef struct localEntity_s {
 	struct localEntity_s	*prev, *next;
 	leType_t		leType;
@@ -425,9 +439,9 @@ typedef struct localEntity_s {
 
 	int				groundEntityNum;
 
-	int				firstPersonEntity; // don't render in firstPersonEntity's first person view
-
-	int				localPlayerBits; // 0 means all, else check if localPlayerBits & (1<<localPlayerNum)
+	int				defaultViewFlags; // view flags for players not listed in playerEffects
+	lePlayerEfx_t	playerEffects[MAX_PLAYER_EFX];	// specific how to draw for specific players
+	int				numPlayerEffects;
 } localEntity_t;
 
 //======================================================================
@@ -2356,7 +2370,7 @@ void CG_BubbleTrail( vec3_t start, vec3_t end, float spacing );
 #ifdef TA_WEAPSYS
 qboolean CG_BulletBubbleTrail( vec3_t start, vec3_t end, int skipNum );
 #endif
-void CG_SpawnBubbles( vec3_t origin, float baseSize, int numBubbles );
+int CG_SpawnBubbles( localEntity_t **bubbles, vec3_t origin, float baseSize, int numBubbles );
 void CG_SpawnEffect( vec3_t org );
 #ifdef MISSIONPACK
 #ifndef TURTLEARENA // NO_KAMIKAZE_ITEM
