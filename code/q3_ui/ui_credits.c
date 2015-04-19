@@ -188,10 +188,10 @@ static void UI_CreditMenu_Draw_QuitMessage( void ) {
 	y += (1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE) * 2;
 	UI_DrawProportionalString( 320, y, "TMNT(c) Viacom", UI_CENTER|UI_SMALLFONT, color_white );
 	y += 1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE;
-	UI_DrawProportionalString( 320, y, "Turtle Arena(c) 2009-2013 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
+	UI_DrawProportionalString( 320, y, "Turtle Arena(c) 2009-2015 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
 
 	// Website
-	UI_DrawString( 320, 459, "http://turtlearena.googlecode.com/", UI_CENTER|UI_SMALLFONT, color_red );
+	UI_DrawString( 320, 459, "http://ztm.x10host.com/ta", UI_CENTER|UI_SMALLFONT, color_red );
 }
 
 /*
