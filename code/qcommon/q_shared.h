@@ -1003,6 +1003,7 @@ struct cvar_s {
 	qboolean	integral;
 	float			min;
 	float			max;
+	char			*description;
 
 	cvar_t *next;
 	cvar_t *prev;
@@ -1049,8 +1050,6 @@ COLLISION DETECTION
 
 ==============================================================
 */
-
-#include "surfaceflags.h"			// shared with the q3map utility
 
 // plane types are used to speed some tests
 // 0-2 are axial planes
@@ -1339,4 +1338,3 @@ typedef enum {
 #define LUMA( red, green, blue ) ( 0.2126f * ( red ) + 0.7152f * ( green ) + 0.0722f * ( blue ) )
 
 #endif	// __Q_SHARED_H
-
