@@ -151,6 +151,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CHARACTERISTIC_ALERTNESS					34	//float [0, 1]
 //how much the bot fires it's weapon
 #define CHARACTERISTIC_FIRETHROTTLE					35	//float [0, 1]
+//========================================================
+//========================================================
+//max characteristics for game VM
+#define MAX_CHARACTERISTICS							36
 
 
 #else // !TURTLEARENA =============== !!!!!!END OF RENUMBER!!!!!!! ===========
@@ -220,5 +224,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define CHARACTERISTIC_ALERTNESS					46	//float [0, 1]
 //how much the bot fires its weapon
 #define CHARACTERISTIC_FIRETHROTTLE					47	//float [0, 1]
+//========================================================
+//========================================================
+//note: 48 is CHARACTERISTIC_WALKER
+//max characteristics for game VM
+#define MAX_CHARACTERISTICS							49
 #endif // TURTLEARENA // WEAPONS
 

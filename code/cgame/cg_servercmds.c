@@ -1001,7 +1001,6 @@ CG_PlayVoiceChat
 =================
 */
 void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
-#ifdef MISSIONPACK
 	int			i;
 
 	// if we are going into the intermission, don't start any voices
@@ -1043,7 +1042,6 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 #endif
 	}
 	voiceChatBuffer[cg.voiceChatBufferOut].snd = 0;
-#endif
 }
 
 /*
@@ -1052,7 +1050,6 @@ CG_PlayBufferedVoieChats
 =====================
 */
 void CG_PlayBufferedVoiceChats( void ) {
-#ifdef MISSIONPACK
 	if ( cg.voiceChatTime < cg.time ) {
 		if (cg.voiceChatBufferOut != cg.voiceChatBufferIn && voiceChatBuffer[cg.voiceChatBufferOut].snd) {
 			//
@@ -1062,7 +1059,6 @@ void CG_PlayBufferedVoiceChats( void ) {
 			cg.voiceChatTime = cg.time + 1000;
 		}
 	}
-#endif
 }
 
 /*
@@ -1071,7 +1067,6 @@ CG_AddBufferedVoiceChat
 =====================
 */
 void CG_AddBufferedVoiceChat( bufferedVoiceChat_t *vchat ) {
-#ifdef MISSIONPACK
 	// if we are going into the intermission, don't start any voices
 	if ( cg.intermissionStarted ) {
 		return;
@@ -1083,7 +1078,6 @@ void CG_AddBufferedVoiceChat( bufferedVoiceChat_t *vchat ) {
 		CG_PlayVoiceChat( &voiceChatBuffer[cg.voiceChatBufferOut] );
 		cg.voiceChatBufferOut++;
 	}
-#endif
 }
 
 /*
@@ -1092,7 +1086,6 @@ CG_VoiceChatLocal
 =================
 */
 void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int playerNum, int color, const char *cmd ) {
-#ifdef MISSIONPACK
 	char *chat;
 	voiceChatList_t *voiceChatList;
 	playerInfo_t *pi;
@@ -1131,7 +1124,6 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int p
 			CG_AddBufferedVoiceChat(&vchat);
 		}
 	}
-#endif
 }
 
 /*
@@ -1162,7 +1154,7 @@ void CG_VoiceChat( int localPlayerBits, int mode, int start ) {
 
 	CG_VoiceChatLocal( localPlayerBits, mode, voiceOnly, playerNum, color, cmd );
 }
-#endif
+#endif // MISSIONPACK
 
 /*
 =================
