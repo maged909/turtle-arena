@@ -3930,13 +3930,6 @@ void BotAimAtEnemy(bot_state_t *bs) {
 	//
 	aim_skill = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_SKILL, 0, 1);
 	aim_accuracy = Characteristic_BFloat(bs->character, CHARACTERISTIC_AIM_ACCURACY, 0, 1);
-	//
-	if (aim_skill > 0.95) {
-		//don't aim too early
-		reactiontime = 0.5 * Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
-		if (bs->enemysight_time > FloatTime() - reactiontime) return;
-		if (bs->teleport_time > FloatTime() - reactiontime) return;
-	}
 
 #ifdef TA_WEAPSYS
 	bgProj = bg_weapongroupinfo[bs->weaponnum].weapon[0]->proj;
@@ -3978,9 +3971,14 @@ void BotAimAtEnemy(bot_state_t *bs) {
 #endif
 #endif
 	//
+	if (aim_skill > 0.95) {
+		//don't aim too early
+		reactiontime = 0.5 * Characteristic_BFloat(bs->character, CHARACTERISTIC_REACTIONTIME, 0, 1);
+		if (bs->enemysight_time > FloatTime() - reactiontime) return;
+		if (bs->teleport_time > FloatTime() - reactiontime) return;
+	}
+	//
 	if (aim_accuracy <= 0) aim_accuracy = 0.0001f;
-	//get the enemy entity information
-	BotEntityInfo(bs->enemy, &entinfo);
 	//if the enemy is invisible then shoot crappy most of the time
 	if (EntityIsInvisible(&entinfo)) {
 		if (random() > 0.1) aim_accuracy *= 0.4f;
