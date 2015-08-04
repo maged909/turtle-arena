@@ -1313,7 +1313,7 @@ static void CG_RegisterSounds( void ) {
 		if ( cgs.gametype == GT_CTF || cg_buildScript.integer ) {
 			cgs.media.redFlagReturnedSound = trap_S_RegisterSound( "sound/teamplay/voc_red_returned.wav", qtrue );
 			cgs.media.blueFlagReturnedSound = trap_S_RegisterSound( "sound/teamplay/voc_blue_returned.wav", qtrue );
-#ifdef TA_DATA
+#ifdef TA_DATA_NEWSOUNDS
 			cgs.media.redTeamTookBlueFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_red_flag.wav", qtrue );
 			cgs.media.blueTeamTookRedFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_blue_flag.wav", qtrue );
 #else
@@ -1324,7 +1324,7 @@ static void CG_RegisterSounds( void ) {
 
 #ifdef MISSIONPACK
 		if ( cgs.gametype == GT_1FCTF || cg_buildScript.integer ) {
-#ifdef TA_DATA
+#ifdef TA_DATA_NEWSOUNDS
 			cgs.media.neutralFlagReturnedSound = trap_S_RegisterSound( "sound/teamplay/voc_neutral_returned.wav", qtrue );
 			cgs.media.redTeamTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_red_1flag.wav", qtrue );
 			cgs.media.blueTeamTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_blue_1flag.wav", qtrue );
@@ -1338,7 +1338,7 @@ static void CG_RegisterSounds( void ) {
 
 		if ( cgs.gametype == GT_1FCTF || cgs.gametype == GT_CTF || cg_buildScript.integer ) {
 			cgs.media.youHaveFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_you_flag.wav", qtrue );
-#ifdef TA_DATA
+#ifdef TA_DATA_NEWSOUNDS
 			for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 				cgs.media.playerHasFlagSound[i] = trap_S_RegisterSound( va( "sound/teamplay/voc_player%d_flag.wav", i+1 ), qtrue );
 			}
@@ -1349,7 +1349,7 @@ static void CG_RegisterSounds( void ) {
 		}
 
 		if ( cgs.gametype == GT_OBELISK || cg_buildScript.integer ) {
-#ifdef TA_DATA
+#ifdef TA_DATA_NEWSOUNDS
 			cgs.media.redBaseIsUnderAttackSound = trap_S_RegisterSound( "sound/teamplay/voc_red_base_attack.wav", qtrue );
 			cgs.media.blueBaseIsUnderAttackSound = trap_S_RegisterSound( "sound/teamplay/voc_blue_base_attack.wav", qtrue );
 #else
@@ -1358,7 +1358,7 @@ static void CG_RegisterSounds( void ) {
 		}
 #else
 		cgs.media.youHaveFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_you_flag.wav", qtrue );
-#ifdef TA_DATA
+#ifdef TA_DATA_NEWSOUNDS
 		for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 			cgs.media.playerHasFlagSound[i] = trap_S_RegisterSound( va( "sound/teamplay/voc_player%d_flag.wav", i+1 ), qtrue );
 		}

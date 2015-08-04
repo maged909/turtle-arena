@@ -520,7 +520,7 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 			(ps->powerups[PW_BLUEFLAG] != ops->powerups[PW_BLUEFLAG] && ps->powerups[PW_BLUEFLAG]) ||
 			(ps->powerups[PW_NEUTRALFLAG] != ops->powerups[PW_NEUTRALFLAG] && ps->powerups[PW_NEUTRALFLAG]) )
 		{
-#ifdef TA_DATA
+#ifdef TA_DATA_NEWSOUNDS
 			if (CG_NumLocalPlayers() > 1) {
 				trap_S_StartLocalSound( cgs.media.playerHasFlagSound[cg.cur_localPlayerNum], CHAN_ANNOUNCER );
 			} else

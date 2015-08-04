@@ -1501,7 +1501,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_GLOBAL_TEAM_SOUND:	// play as a local sound so it never diminishes
 		DEBUGNAME("EV_GLOBAL_TEAM_SOUND");
 		{
-#ifndef TA_DATA
+#ifndef TA_DATA_NEWSOUNDS
 			qboolean blueTeam			= qfalse;
 			qboolean redTeam			= qfalse;
 #endif
@@ -1514,7 +1514,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				if (cg.snap->playerNums[i] == -1) {
 					continue;
 				}
-#ifndef TA_DATA
+#ifndef TA_DATA_NEWSOUNDS
 				if (cg.snap->pss[i].persistant[PERS_TEAM] == TEAM_BLUE) {
 					blueTeam = qtrue;
 				}
@@ -1534,7 +1534,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				}
 			}
 
-#ifndef TA_DATA
+#ifndef TA_DATA_NEWSOUNDS
 			// ZTM: NOTE: Some of these sounds don't really work with local player on different teams.
 			//     New games might want to replace you/enemy sounds with red/blue.
 			//     See http://github.com/zturtleman/spearmint/wiki/New-Sounds
@@ -1592,13 +1592,13 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 					//
 					CG_AddBufferedSound( cgs.media.redFlagReturnedSound );
 					break;
-#ifdef TA_DATA
+#ifdef TA_DATA_NEWSOUNDS
 				case GTS_RED_TAKEN: // CTF: red team took blue flag, 1FCTF: blue team took the neutral flag
 					// if this player picked up the flag then a sound is played in CG_CheckLocalSounds
 					if (localHasBlue || localHasNeutral) {
 #ifdef MISSIONPACK
 					} else if (cgs.gametype == GT_1FCTF) {
-						CG_AddBufferedSound( cgs.media.redTeamTookTheFlagSound );
+						CG_AddBufferedSound( cgs.media.blueTeamTookTheFlagSound );
 #endif
 					} else {
 						CG_AddBufferedSound( cgs.media.redTeamTookBlueFlagSound );
@@ -1609,7 +1609,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 					if (localHasRed || localHasNeutral) {
 #ifdef MISSIONPACK
 					} else if (cgs.gametype == GT_1FCTF) {
-						CG_AddBufferedSound( cgs.media.blueTeamTookTheFlagSound );
+						CG_AddBufferedSound( cgs.media.redTeamTookTheFlagSound );
 #endif
 					} else {
 						CG_AddBufferedSound( cgs.media.blueTeamTookRedFlagSound );

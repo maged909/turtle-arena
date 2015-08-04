@@ -1562,7 +1562,7 @@ typedef struct {
 #ifdef MISSIONPACK
 	sfxHandle_t neutralFlagReturnedSound;
 #endif
-#ifdef TA_DATA
+#ifdef TA_DATA_NEWSOUNDS
 	sfxHandle_t redTeamTookBlueFlagSound;
 	sfxHandle_t blueTeamTookRedFlagSound;
 	sfxHandle_t	youHaveFlagSound;
