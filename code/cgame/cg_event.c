@@ -1598,7 +1598,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 					if (localHasBlue || localHasNeutral) {
 #ifdef MISSIONPACK
 					} else if (cgs.gametype == GT_1FCTF) {
-						CG_AddBufferedSound( cgs.media.redTeamTookTheFlagSound );
+						CG_AddBufferedSound( cgs.media.blueTeamTookTheFlagSound );
 #endif
 					} else {
 						CG_AddBufferedSound( cgs.media.redTeamTookBlueFlagSound );
@@ -1609,7 +1609,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 					if (localHasRed || localHasNeutral) {
 #ifdef MISSIONPACK
 					} else if (cgs.gametype == GT_1FCTF) {
-						CG_AddBufferedSound( cgs.media.blueTeamTookTheFlagSound );
+						CG_AddBufferedSound( cgs.media.redTeamTookTheFlagSound );
 #endif
 					} else {
 						CG_AddBufferedSound( cgs.media.blueTeamTookRedFlagSound );
