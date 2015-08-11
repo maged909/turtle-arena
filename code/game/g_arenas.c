@@ -106,7 +106,7 @@ void UpdateTournamentInfo( void ) {
 					ent->player->ps.persistant[PERS_CAPTURES]);
 #elif defined MISSIONPACK
 		won = qfalse;
-		if (g_gametype.integer >= GT_CTF) {
+		if (g_gametype.integer >= GT_TEAM) {
 			score1 = level.teamScores[TEAM_RED];
 			score2 = level.teamScores[TEAM_BLUE];
 			if (level.players[playerNum].sess.sessionTeam	== TEAM_RED) {

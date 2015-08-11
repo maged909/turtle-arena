@@ -654,9 +654,7 @@ This needs to be the same for client side prediction and server use.
 */
 qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps ) {
 	gitem_t	*item;
-#if defined MISSIONPACK || defined TA_HOLDSYS
 	int		upperBound;
-#endif
 
 #ifdef TURTLEARENA // ZTM: NOTE: New item system allows item index 0 to be valid I guess?
 	if ( ent->modelindex < 0 || ent->modelindex >= BG_NumItems() ) {
@@ -753,22 +751,19 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 			return qfalse;
 		}
 
-		// we also clamp armor to the maxhealth for handicapping
 		if( BG_ItemForItemNum( ps->stats[STAT_PERSISTANT_POWERUP] )->giTag == PW_GUARD ) {
 			upperBound = ps->stats[STAT_MAX_HEALTH];
 		}
-		else {
+		else
+#endif
+		{
 			upperBound = ps->stats[STAT_MAX_HEALTH] * 2;
 		}
 
+		// we also clamp armor to the maxhealth for handicapping
 		if ( ps->stats[STAT_ARMOR] >= upperBound ) {
 			return qfalse;
 		}
-#else
-		if ( ps->stats[STAT_ARMOR] >= ps->stats[STAT_MAX_HEALTH] * 2 ) {
-			return qfalse;
-		}
-#endif
 		return qtrue;
 #endif
 
@@ -887,15 +882,11 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 #endif
 		return qtrue;
 
-        case IT_BAD:
-            Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: IT_BAD" );
-        default:
-#ifndef Q3_VM
-#ifndef NDEBUG
-          Com_Printf("BG_CanItemBeGrabbed: unknown enum %d\n", item->giType );
-#endif
-#endif
-         break;
+	case IT_BAD:
+		Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: IT_BAD" );
+
+	default:
+		Com_Printf( "BG_CanItemBeGrabbed: unknown enum %d\n", item->giType );
 	}
 
 	return qfalse;
@@ -1142,9 +1133,6 @@ BG_AddPredictableEventToPlayerstate
 Handles the sequence numbers
 ===============
 */
-
-void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
-
 void BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerState_t *ps ) {
 
 #ifdef _DEBUG
@@ -1600,13 +1588,16 @@ int PC_ExpectTokenType(int handle, int type, int subtype, pc_token_t *token) {
 		if ((token->subtype & subtype) != subtype)
 		{
 			if (subtype & TT_DECIMAL) strcpy(str, "decimal");
-			if (subtype & TT_HEX) strcpy(str, "hex");
-			if (subtype & TT_OCTAL) strcpy(str, "octal");
-			if (subtype & TT_BINARY) strcpy(str, "binary");
+			else if (subtype & TT_HEX) strcpy(str, "hex");
+			else if (subtype & TT_OCTAL) strcpy(str, "octal");
+			else if (subtype & TT_BINARY) strcpy(str, "binary");
+			else strcpy(str, "unknown");
+
 			if (subtype & TT_LONG) strcat(str, " long");
 			if (subtype & TT_UNSIGNED) strcat(str, " unsigned");
 			if (subtype & TT_FLOAT) strcat(str, " float");
 			if (subtype & TT_INTEGER) strcat(str, " integer");
+
 			PC_SourceError(handle, "expected %s, found %s", str, token->string);
 			return qfalse;
 		}

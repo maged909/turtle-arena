@@ -329,9 +329,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 	gentity_t *ent;
 	int flag_pw, enemy_flag_pw;
 	int otherteam;
-#ifdef MISSIONPACK_HARVESTER
-	int tokens;
-#endif
 	gentity_t *flag, *carrier = NULL;
 	char *c;
 	vec3_t v1, v2;
@@ -362,12 +359,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 #endif
 
 	// did the attacker frag the flag carrier?
-#ifdef MISSIONPACK_HARVESTER
-	tokens = 0;
-	if( g_gametype.integer == GT_HARVESTER ) {
-		tokens = targ->player->ps.tokens;
-	}
-#endif
 	if (targ->player->ps.powerups[enemy_flag_pw]) {
 		attacker->player->pers.teamState.lastfraggedcarrier = level.time;
 		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS);
@@ -388,9 +379,11 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		return;
 	}
 
+	// did the attacker frag a skull carrier?
 #ifdef MISSIONPACK_HARVESTER
-	// did the attacker frag a head carrier?
-	if (tokens) {
+	if (g_gametype.integer == GT_HARVESTER && targ->player->ps.tokens) {
+		int tokens = targ->player->ps.tokens;
+
 		attacker->player->pers.teamState.lastfraggedcarrier = level.time;
 		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS * tokens * tokens);
 #ifdef NOTRATEDM // frag to KO
@@ -697,10 +690,8 @@ void Team_TakeFlagSound( gentity_t *ent, int team ) {
 	te->r.svFlags |= SVF_BROADCAST;
 }
 
-void Team_CaptureFlagSound( gentity_t *ent, int team, int playerNum ) {
+void Team_CaptureFlagSound( gentity_t *ent, int team ) {
 	gentity_t	*te;
-	gconnection_t *connection;
-	int			i;
 
 	if (ent == NULL) {
 		G_Printf ("Warning:  NULL passed to Team_CaptureFlagSound\n");
@@ -715,14 +706,6 @@ void Team_CaptureFlagSound( gentity_t *ent, int team, int playerNum ) {
 		te->s.eventParm = GTS_RED_CAPTURE;
 	}
 	te->r.svFlags |= SVF_BROADCAST;
-
-	// send to everyone except the client who generated the event
-	te->r.svFlags |= SVF_PLAYERMASK;
-	Com_ClientListAll( &te->r.sendPlayers );
-	connection = &level.connections[ level.players[ playerNum ].pers.connectionNum ];
-	for (i = 0; i < connection->numLocalPlayers; i++ ) {
-		Com_ClientListRemove( &te->r.sendPlayers, connection->localPlayerNums[i] );
-	}
 }
 
 void Team_ReturnFlag( int team ) {
@@ -870,7 +853,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	// other gets another 10 frag bonus
 	AddScore(other, ent->r.currentOrigin, CTF_CAPTURE_BONUS);
 
-	Team_CaptureFlagSound( ent, team, other->s.number );
+	Team_CaptureFlagSound( ent, team );
 
 	// Ok, let's do the player loop, hand out the bonuses
 	for (i = 0; i < g_maxplayers.integer; i++) {
@@ -1450,7 +1433,7 @@ static void ObeliskDie( gentity_t *self, gentity_t *inflictor, gentity_t *attack
 	attacker->player->rewardTime = level.time + REWARD_SPRITE_TIME;
 	attacker->player->ps.persistant[PERS_CAPTURES]++;
 
-	Team_CaptureFlagSound(self, self->spawnflags, attacker->s.number);
+	Team_CaptureFlagSound(self, self->spawnflags);
 
 	teamgame.redObeliskAttackedTime = 0;
 	teamgame.blueObeliskAttackedTime = 0;
@@ -1500,7 +1483,7 @@ static void ObeliskTouch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 	other->player->ps.tokens = 0;
 	CalculateRanks();
 
-	Team_CaptureFlagSound( self, self->spawnflags, other->s.number );
+	Team_CaptureFlagSound( self, self->spawnflags );
 }
 #endif // #ifdef MISSIONPACK_HARVESTER
 

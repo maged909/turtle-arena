@@ -983,11 +983,7 @@ static void CG_DrawStatusBar( void ) {
 				// draw as dark grey when reloading
 				color = 2;	// dark grey
 			} else {
-				if ( value >= 0 ) {
-					color = 0;	// green
-				} else {
-					color = 1;	// red
-				}
+				color = 0;	// green
 			}
 			trap_R_SetColor( colors[color] );
 			
@@ -1230,7 +1226,7 @@ static float CG_DrawFPS( float y ) {
 		if ( !total ) {
 			total = 1;
 		}
-		fps = 1000 * FPS_FRAMES / total;
+		fps = 1000 * FPS_FRAMES / (float)total;
 
 		s = va( "%ifps", fps );
 		CG_DrawString( 635, y + 2, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
@@ -2094,7 +2090,9 @@ static void CG_DrawReward( void ) {
 #ifdef TA_MISC // COMIC_ANNOUNCER
 			CG_AddAnnouncement(cg.cur_lc->rewardAnnoucement[0], cg.cur_lc - cg.localPlayers);
 #else
-			trap_S_StartLocalSound(cg.cur_lc->rewardSound[0], CHAN_ANNOUNCER);
+			if ( cg.cur_lc->rewardSound[0] ) {
+				trap_S_StartLocalSound( cg.cur_lc->rewardSound[0], CHAN_ANNOUNCER );
+			}
 #endif
 		} else {
 			return;

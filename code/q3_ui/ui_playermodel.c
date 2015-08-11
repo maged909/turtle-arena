@@ -371,8 +371,8 @@ static void PlayerModel_PicEvent( void* ptr, int event )
 	if (pdest)
 	{
 		// track the whole model/skin name
-		Q_strncpyz(s_playermodel.modelskin,buffptr,pdest-buffptr+1);
-		strcat(s_playermodel.modelskin,pdest + 5);
+		Q_strncpyz( s_playermodel.modelskin, buffptr, pdest - buffptr + 1 );
+		Q_strcat( s_playermodel.modelskin, sizeof (s_playermodel.modelskin), pdest + 5);
 
 		//
 #ifdef IOQ3ZTM // BLANK_HEADMODEL
@@ -529,8 +529,8 @@ static void PlayerModel_SetMenuItems( void )
 		pdest    = strstr(buffptr,"icon_");
 		if (pdest)
 		{
-			Q_strncpyz(modelskin,buffptr,pdest-buffptr+1);
-			strcat(modelskin,pdest + 5);
+			Q_strncpyz( modelskin, buffptr, pdest - buffptr + 1 );
+			Q_strcat( modelskin, sizeof (modelskin), pdest + 5);
 		}
 		else
 			continue;

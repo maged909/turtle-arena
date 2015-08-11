@@ -331,6 +331,7 @@ vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPersonHeight[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonSmooth[MAX_SPLITVIEW];
 #ifdef IOQ3ZTM // ANALOG
 vmCvar_t	cg_thirdPersonAnalog[MAX_SPLITVIEW];
 #endif
@@ -477,7 +478,11 @@ static cvarTable_t cgameCvarTable[] = {
 #else
 	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE, RANGE_INT(0, 3) },
 #endif
+#ifdef MISSIONPACK_HUD
+	{ &cg_teamOverlayUserinfo, "teamoverlay", "1", CVAR_ROM | CVAR_USERINFO_ALL, RANGE_ALL },
+#else
 	{ &cg_teamOverlayUserinfo, "teamoverlay", "0", CVAR_ROM | CVAR_USERINFO_ALL, RANGE_ALL },
+#endif
 	{ &cg_stats, "cg_stats", "0", 0, RANGE_ALL },
 	{ &cg_drawFriend, "cg_drawFriend", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_teamChatsOnly, "cg_teamChatsOnly", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -603,6 +608,7 @@ static userCvarTable_t userCvarTable[] = {
 	{ cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT, RANGE_ALL },
 #endif
 	{ cg_thirdPersonHeight, "cg_thirdPersonHeight", "24", 0, RANGE_INT( 0, 32 ) },
+	{ cg_thirdPersonSmooth, "cg_thirdPersonSmooth", "0", 0, RANGE_ALL }, // this cvar exists because it's behavior is too buggy to enable by default
 #ifdef IOQ3ZTM // ANALOG
 	{ cg_thirdPersonAnalog, "cg_thirdPersonAnalog", "0", 0, RANGE_BOOL },
 #endif
@@ -815,6 +821,7 @@ void CG_UpdateCvars( void ) {
 
 	// check for modications here
 
+#ifndef MISSIONPACK_HUD
 	// If team overlay is on, ask for updates from the server.  If it's off,
 	// let the server know so we don't receive it
 	if ( drawTeamOverlayModificationCount != cg_drawTeamOverlay.modificationCount ) {
@@ -826,6 +833,7 @@ void CG_UpdateCvars( void ) {
 			trap_Cvar_SetValue( "teamoverlay", 0 );
 		}
 	}
+#endif
 
 
 #ifdef MISSIONPACK
@@ -950,8 +958,8 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 	}
 
 	// [player #] perfix for text that only shows up in notify area for one local player
-	if ( !Q_strncmp( buffer, "[player ", 8 ) && isdigit(buffer[8]) && buffer[9] == ']' ) {
-		localPlayerBits = 1 << ( atoi( &buffer[8] ) - 1 );
+	if ( !Q_strncmp( buffer, "[player ", 8 ) && buffer[8] >= '1' && buffer[8] < '1'+MAX_SPLITVIEW && buffer[9] == ']' ) {
+		localPlayerBits = 1 << ( buffer[8] - '1' );
 
 		buffer += 10;
 	} else {
@@ -967,12 +975,17 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 
 		player = &cg.localPlayers[i];
 
-		if( player->numConsoleLines == MAX_CONSOLE_LINES )
+		if ( player->numConsoleLines == MAX_CONSOLE_LINES ) {
 			CG_RemoveNotifyLine( player );
+		}
 
 		// free lines until there is enough space to fit buffer
 		while ( strlen( player->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
 			CG_RemoveNotifyLine( player );
+		}
+
+		if ( player->numConsoleLines == MAX_CONSOLE_LINES ) {
+			continue; // this shouldn't ever happen
 		}
 
 		Q_strcat( player->consoleText, MAX_CONSOLE_TEXT, buffer );
@@ -1285,9 +1298,10 @@ static void CG_RegisterSounds( void ) {
 
 	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
 
-#ifndef TA_DATA
-		cgs.media.captureAwardSound = trap_S_RegisterSound( "sound/teamplay/flagcapture_yourteam.wav", qtrue );
-#endif
+		// ZTM: Disabled capture award sound because it causes capture sound to play twice
+		//      this might make sense if it was a different sound, but you'd probably want to
+		//      silence GTS_*_CAPTURE which is a callange of its own
+		//cgs.media.captureAwardSound = trap_S_RegisterSound( "sound/teamplay/flagcapture_yourteam.wav", qtrue );
 		cgs.media.redLeadsSound = trap_S_RegisterSound( "sound/feedback/redleads.wav", qtrue );
 		cgs.media.blueLeadsSound = trap_S_RegisterSound( "sound/feedback/blueleads.wav", qtrue );
 		cgs.media.teamsTiedSound = trap_S_RegisterSound( "sound/feedback/teamstied.wav", qtrue );
@@ -1330,7 +1344,7 @@ static void CG_RegisterSounds( void ) {
 			cgs.media.blueTeamTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_blue_1flag.wav", qtrue );
 #else
 			// FIXME: get a replacement for this sound ?
-			cgs.media.neutralFlagReturnedSound = trap_S_RegisterSound( "sound/teamplay/flagreturn_opponent.wav", qtrue );
+			cgs.media.neutralFlagReturnedSound = 0; //trap_S_RegisterSound( "sound/teamplay/voc_red_returned.wav", qtrue );
 			cgs.media.yourTeamTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_team_1flag.wav", qtrue );
 			cgs.media.enemyTookTheFlagSound = trap_S_RegisterSound( "sound/teamplay/voc_enemy_1flag.wav", qtrue );
 #endif

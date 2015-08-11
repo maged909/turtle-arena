@@ -593,7 +593,9 @@ static void CG_OffsetThirdPersonView( void ) {
 
 	AngleVectors( focusAngles, forward, NULL, NULL );
 
-	CG_StepOffset( cg.refdef.vieworg );
+	if ( cg_thirdPersonSmooth[cg.cur_localPlayerNum].integer ) {
+		CG_StepOffset( cg.refdef.vieworg );
+	}
 
 #ifdef IOQ3ZTM // BETTER_THIRD_PERSON
 	// Focus on player
