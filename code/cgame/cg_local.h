@@ -1935,6 +1935,7 @@ extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonAngle[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPersonHeight[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPersonSmooth[MAX_SPLITVIEW];
 #ifdef IOQ3ZTM // ANALOG
 extern	vmCvar_t		cg_thirdPersonAnalog[MAX_SPLITVIEW];
 #endif

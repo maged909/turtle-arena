@@ -1429,7 +1429,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		// if the end was on a nomark surface, don't make an explosion
 		if ( es->eventParm != 255 ) {
 			ByteToDir( es->eventParm, dir );
-			CG_MissileExplode( es->weapon, es->playerNum, position, dir, IMPACTSOUND_DEFAULT );
+			CG_MissileExplode( es->weapon, playerNum, position, dir, IMPACTSOUND_DEFAULT );
 		}
 #endif
 		break;
@@ -1584,6 +1584,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 					}
 #endif
 #else
+#ifdef MISSIONPACK
+					if ( cgs.gametype == GT_1FCTF ) {
+						CG_AddBufferedSound( cgs.media.returnOpponentSound );
+						CG_AddBufferedSound( cgs.media.neutralFlagReturnedSound );
+						break;
+					}
+#endif
+
 					if ( blueTeam )
 						CG_AddBufferedSound( cgs.media.returnYourTeamSound );
 					else
@@ -1690,24 +1698,44 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 #endif
 
 				case GTS_REDTEAM_SCORED:
+#ifdef TA_MISC // COMIC_ANNOUNCER
+					CG_AddAnnouncement( ANNOUNCE_REDSCORES, -1 );
+#else
 					CG_AddBufferedSound(cgs.media.redScoredSound);
+#endif
 					break;
 				case GTS_BLUETEAM_SCORED:
+#ifdef TA_MISC // COMIC_ANNOUNCER
+					CG_AddAnnouncement( ANNOUNCE_BLUESCORES, -1 );
+#else
 					CG_AddBufferedSound(cgs.media.blueScoredSound);
+#endif
 					break;
 				case GTS_REDTEAM_TOOK_LEAD:
 					if ( cgs.gametype != GT_TEAM || cg_teamDmLeadAnnouncements.integer ) {
+#ifdef TA_MISC // COMIC_ANNOUNCER
+						CG_AddAnnouncement( ANNOUNCE_REDLEADS, -1 );
+#else
 						CG_AddBufferedSound(cgs.media.redLeadsSound);
+#endif
 					}
 					break;
 				case GTS_BLUETEAM_TOOK_LEAD:
 					if ( cgs.gametype != GT_TEAM || cg_teamDmLeadAnnouncements.integer ) {
+#ifdef TA_MISC // COMIC_ANNOUNCER
+						CG_AddAnnouncement( ANNOUNCE_BLUELEADS, -1 );
+#else
 						CG_AddBufferedSound(cgs.media.blueLeadsSound);
+#endif
 					}
 					break;
 				case GTS_TEAMS_ARE_TIED:
 					if ( cgs.gametype != GT_TEAM || cg_teamDmLeadAnnouncements.integer ) {
+#ifdef TA_MISC // COMIC_ANNOUNCER
+						CG_AddAnnouncement( ANNOUNCE_TEAMSTIED, -1 );
+#else
 						CG_AddBufferedSound( cgs.media.teamsTiedSound );
+#endif
 					}
 					break;
 #if defined MISSIONPACK && !defined TURTLEARENA // NO_KAMIKAZE_ITEM

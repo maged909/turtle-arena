@@ -155,7 +155,11 @@ int BotSortTeamMatesByBaseTravelTime(bot_state_t *bs, int *teammates, int maxtea
 			goal = &ctf_blueflag;
 	}
 #ifdef MISSIONPACK
-	else {
+	else if (gametype == GT_OBELISK
+#ifdef MISSIONPACK_HARVESTER
+		|| gametype == GT_HARVESTER
+#endif
+		) {
 		if (BotTeam(bs) == TEAM_RED)
 			goal = &redobelisk;
 		else
