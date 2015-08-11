@@ -1438,7 +1438,8 @@ const char *cg_announcementMessages[ANNOUNCE_MAX] = {
 	"You have the flag!",	// ANNOUNCE_YOUHAVETHEFLAG
 	"Red scores.",			// ANNOUNCE_REDSCORES
 	"Blue scores.",			// ANNOUNCE_BLUESCORES
-	"(missing message.)",	// ANNOUNCE_TEAMCAPTURE,
+	// ZTM: TODO: Fill in these announcer messages
+	"(missing message.)",	// ANNOUNCE_TEAMCAPTURE
 	"(missing message.)",	// ANNOUNCE_ENEMYCAPTURE
 	"(missing message.)",	// ANNOUNCE_YOURFLAGRETURNED
 	"(missing message.)",	// ANNOUNCE_ENEMYFLAGRETURNED
@@ -1517,23 +1518,29 @@ void CG_AddAnnouncement(int announcement, int localPlayerNum)
 			sfx = cgs.media.defendSound;
 			break;
 		case ANNOUNCE_REDLEADS:
-			sfx = 0;
+			sfx = cgs.media.redLeadsSound;
+			bufferedSfx = qtrue;
 			break;
 		case ANNOUNCE_BLUELEADS:
-			sfx = 0;
+			sfx = cgs.media.blueLeadsSound;
+			bufferedSfx = qtrue;
 			break;
 		case ANNOUNCE_TEAMSTIED:
-			sfx = 0;
+			sfx = cgs.media.teamsTiedSound;
+			bufferedSfx = qtrue;
 			break;
 		case ANNOUNCE_YOUHAVETHEFLAG:
-			sfx = 0;
+			sfx = cgs.media.youHaveFlagSound;
 			break;
 		case ANNOUNCE_REDSCORES:
-			sfx = 0;
+			sfx = cgs.media.redScoredSound;
+			bufferedSfx = qtrue;
 			break;
 		case ANNOUNCE_BLUESCORES:
-			sfx = 0;
+			sfx = cgs.media.blueScoredSound;
+			bufferedSfx = qtrue;
 			break;
+		// ZTM: TODO: Fill in these announcer sound handles
 		case ANNOUNCE_TEAMCAPTURE:
 			sfx = 0;
 			break;
@@ -1607,7 +1614,7 @@ Add announcement for local client
 */
 void CG_AddAnnouncementEx(localPlayer_t *player, qhandle_t sfx, qboolean bufferedSfx, const char *message)
 {
-	if (cg_announcerVoice.integer) {
+	if (cg_announcerVoice.integer && sfx) {
 		if (bufferedSfx) {
 			CG_AddBufferedSound( sfx );
 		} else {

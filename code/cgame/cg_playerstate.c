@@ -525,7 +525,11 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 				trap_S_StartLocalSound( cgs.media.playerHasFlagSound[cg.cur_localPlayerNum], CHAN_ANNOUNCER );
 			} else
 #endif
+#ifdef TA_MISC // COMIC_ANNOUNCER
+			CG_AddAnnouncement( ANNOUNCE_YOUHAVETHEFLAG, cg.cur_localPlayerNum );
+#else
 			trap_S_StartLocalSound( cgs.media.youHaveFlagSound, CHAN_ANNOUNCER );
+#endif
 		}
 	}
 
