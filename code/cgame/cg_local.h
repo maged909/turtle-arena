@@ -57,10 +57,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	GIANTCHAR_WIDTH		32
 #define	GIANTCHAR_HEIGHT	cgs.media.bigFontHeight //48
 
-#ifdef MISSIONPACK
-#define CG_FONT_THRESHOLD 0.1
-#endif
-
 #define	POWERUP_BLINKS		5
 
 #define	POWERUP_BLINK_TIME	1000
@@ -101,10 +97,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #define	TEAMCHAT_WIDTH		80
 #define TEAMCHAT_HEIGHT		8
-
-// very large characters
-#define	GIANT_WIDTH			32
-#define	GIANT_HEIGHT		48
 
 #ifdef TA_DATA
 #define	NUM_CROSSHAIRS		4
@@ -1834,6 +1826,7 @@ extern	vmCvar_t		cg_zoomFov;
 
 #endif
 extern	vmCvar_t		cg_splitviewVertical;
+extern	vmCvar_t		cg_splitviewThirdEqual;
 extern	vmCvar_t		cg_lagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
