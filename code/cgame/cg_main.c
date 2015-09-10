@@ -223,6 +223,7 @@ vmCvar_t	cg_fov;
 vmCvar_t	cg_zoomFov;
 #endif
 vmCvar_t	cg_splitviewVertical;
+vmCvar_t	cg_splitviewThirdEqual;
 vmCvar_t	cg_lagometer;
 vmCvar_t	cg_drawAttacker;
 vmCvar_t	cg_synchronousClients;
@@ -454,6 +455,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_tracerWidth, "cg_tracerwidth", "1", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_splitviewThirdEqual, "cg_splitviewThirdEqual", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #ifdef IOQ3ZTM // TEAM_CHAT_CON // con_notifytime
 	{ &cg_teamChatTime, "cg_teamChatTime", "5", CVAR_ARCHIVE, RANGE_ALL },
 #else

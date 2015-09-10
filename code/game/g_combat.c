@@ -1531,11 +1531,7 @@ qboolean G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// the total will be turned into screen blends and view angle kicks
 	// at the end of the frame
 	if ( player ) {
-		if ( attacker ) {
-			player->ps.persistant[PERS_ATTACKER] = attacker->s.number;
-		} else {
-			player->ps.persistant[PERS_ATTACKER] = ENTITYNUM_WORLD;
-		}
+		player->ps.persistant[PERS_ATTACKER] = attacker->s.number;
 #ifndef TURTLEARENA // NOARMOR
 		player->damage_armor += asave;
 #endif
