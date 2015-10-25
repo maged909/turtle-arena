@@ -62,6 +62,11 @@ void CG_TextInit( void ) {
 		// team arena truetype style
 		//CG_InitBitmapFont( &cgs.media.bigFont, 20, 10 );
 	}
+
+	// note: the original Q3 number bitmaps look like font1_prop
+	if ( !CG_InitTrueTypeFont( "fonts/mplus-1c-bold.ttf", 48, &cgs.media.numberFont ) ) {
+		CG_InitBitmapNumberFont( &cgs.media.numberFont );
+	}
 #else
 	cgs.media.smallFontHeight = 12;
 	cgs.media.bigFontHeight = 20;
@@ -89,12 +94,12 @@ void CG_TextInit( void ) {
 		// team arena truetype style
 		//CG_InitBitmapFont( &cgs.media.bigFont, 20, 10 );
 	}
-#endif
 
 	// note: the original Q3 number bitmaps look like font1_prop
 	if ( !CG_InitTrueTypeFont( "fonts/numberfont", 48, &cgs.media.numberFont ) ) {
 		CG_InitBitmapNumberFont( &cgs.media.numberFont );
 	}
+#endif
 }
 
 // 256x256 image with characters that are 16x16

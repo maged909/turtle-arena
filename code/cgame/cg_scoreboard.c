@@ -382,20 +382,6 @@ qboolean CG_DrawOldScoreboard( void ) {
 	}
 
 
-#ifdef TA_MISC
-	if (cgs.gametype != GT_SINGLE_PLAYER) {
-		s = va( "Time Limit: %2i", cgs.timelimit );
-		CG_DrawString( 320, 20, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
-
-		if ( cgs.gametype >= GT_CTF ) {
-			s = va( "Capture Limit: %2i", cgs.capturelimit );
-		} else {
-			s = va( "Score Limit: %2i", cgs.fraglimit );
-		}
-		CG_DrawString( 328, 20, s, UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, NULL );
-	}
-#endif
-
 	// fragged by ... line
 	if ( cg.cur_lc && cg.cur_lc->killerName[0] ) {
 #ifdef NOTRATEDM // frag to KO
@@ -406,6 +392,21 @@ qboolean CG_DrawOldScoreboard( void ) {
 		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT ) * 2;
 		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
+#ifdef TA_MISC
+	else if (cgs.gametype != GT_SINGLE_PLAYER) {
+		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT ) * 2;
+
+		s = va( "Time Limit: %2i", cgs.timelimit );
+		CG_DrawString( 320, y, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
+
+		if ( cgs.gametype >= GT_CTF ) {
+			s = va( "Capture Limit: %2i", cgs.capturelimit );
+		} else {
+			s = va( "Score Limit: %2i", cgs.fraglimit );
+		}
+		CG_DrawString( 328, y, s, UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, NULL );
+	}
+#endif
 
 	// current rank
 	if ( cgs.gametype < GT_TEAM) {

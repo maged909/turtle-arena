@@ -181,6 +181,8 @@ void CG_Draw3DHeadModel( int playerNum, float x, float y, float w, float h, vec3
 	ent.customSkin = CG_AddSkinToFrame( skin );
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
+	Byte4Copy( pi->c1RGBA, ent.shaderRGBA );
+
 	refdef.rdflags = RDF_NOWORLDMODEL;
 
 	AxisClear( refdef.viewaxis );
@@ -503,13 +505,9 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 CG_DrawFieldSmall
 ================
 */
-void CG_DrawFieldSmall(int x, int y, int width, int value)
-{
-	char	num[16], *ptr;
-	int		l;
-	int		frame;
-	int		char_width = CHAR_WIDTH/2;
-	int		char_height = CHAR_HEIGHT/2;
+static void CG_DrawFieldSmall (int x, int y, int style, int width, int value, float *color) {
+	char	num[16];
+	float	scale;
 
 	if ( width < 1 ) {
 		return;
@@ -548,24 +546,11 @@ void CG_DrawFieldSmall(int x, int y, int width, int value)
 	}
 
 	Com_sprintf (num, sizeof(num), "%i", value);
-	l = strlen(num);
-	if (l > width)
-		l = width;
-	x += 2 + (char_width*0.75f)*(width - l);
 
-	ptr = num;
-	while (*ptr && l)
-	{
-		if (*ptr == '-')
-			frame = STAT_MINUS;
-		else
-			frame = *ptr -'0';
+	// draw number font at half size
+	scale = CHAR_HEIGHT / 48.0f / 2.0f;
 
-		CG_DrawPic( x,y, char_width, char_height, cgs.media.numberShaders[frame] );
-		x += (char_width*0.75f);
-		ptr++;
-		l--;
-	}
+	CG_DrawStringExt( x + 2 + ( CHAR_WIDTH * 0.75f * 0.5f ) * width, y, num, UI_RIGHT|UI_GRADIENT|UI_NUMBERFONT|UI_NOSCALE|style, color, scale, 0, 0 );
 }
 
 /*
@@ -799,7 +784,7 @@ static void CG_DrawStatusBar( void ) {
 #endif
 
 	// Score
-	CG_DrawFieldSmall(x + HUD_WIDTH - 78, y+64-22-12-CHAR_HEIGHT/2-4, 6, ps->persistant[PERS_SCORE]);
+	CG_DrawFieldSmall(x + HUD_WIDTH - 78, y+64-22-12-CHAR_HEIGHT/2-4, 0, 6, ps->persistant[PERS_SCORE], NULL);
 
 	// Colorize hud background
 	if (CG_GetHudColor(color_hud)) {
@@ -867,10 +852,8 @@ static void CG_DrawStatusBar( void ) {
 					color = 1;	// red
 				}
 			}
-			trap_R_SetColor( colors[color] );
 
-			CG_DrawFieldSmall(x - CHAR_WIDTH/2 * 0.75f, y, 3, value);
-			trap_R_SetColor( NULL );
+			CG_DrawFieldSmall(x - CHAR_WIDTH/2 * 0.75f, y, 0, 3, value, colors[color]);
 		}
 
 		x += (2 * (CHAR_WIDTH/2) * 0.75f) + 4;
@@ -910,10 +893,8 @@ static void CG_DrawStatusBar( void ) {
 				} else {
 					color = 0;	// green
 				}
-				trap_R_SetColor( colors[color] );
 
-				CG_DrawFieldSmall(x, y, 2, useCount);
-				trap_R_SetColor( NULL );
+				CG_DrawFieldSmall(x, y, 0, 2, useCount, colors[color]);
 			}
 		}
 
@@ -1557,7 +1538,7 @@ static float CG_DrawScores( float y ) {
 		// Display flag status
 		item = BG_FindItemForPowerup( PW_BLUEFLAG );
 
-		y1 = y + BIGCHAR_HEIGHT + 8 - h;
+		y1 = y + scoreHeight - h;
 
 		if (item) {
 			if( cgs.blueflag >= 0 && cgs.blueflag <= 2 ) {
@@ -1575,7 +1556,7 @@ static float CG_DrawScores( float y ) {
 		// Display flag status
 		item = BG_FindItemForPowerup( PW_REDFLAG );
 
-		y1 = y + BIGCHAR_HEIGHT + 8 - h;
+		y1 = y + scoreHeight - h;
 
 		if (item) {
 			if( cgs.redflag >= 0 && cgs.redflag <= 2 ) {
@@ -1595,7 +1576,7 @@ static float CG_DrawScores( float y ) {
 			if (item) {
 				h = w = FLAG_SIZE;
 				x -= w;
-				y1 = y + BIGCHAR_HEIGHT + 8 - h;
+				y1 = y + scoreHeight - h;
 				if( cgs.flagStatus >= 0 && cgs.flagStatus <= 4 ) {
 					vec4_t color = {1, 1, 1, 1};
 					int index = 0;
@@ -1628,7 +1609,7 @@ static float CG_DrawScores( float y ) {
 			h = w = FLAG_SIZE / 2;
 		} else {
 			w = CG_DrawStrlen( s, UI_BIGFONT ) + 8;
-			h = BIGCHAR_HEIGHT + 8;
+			h = scoreHeight;
 		}
 
 		x -= w;
@@ -1636,7 +1617,7 @@ static float CG_DrawScores( float y ) {
 		if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_BLUE ) {
 			CG_DrawPic( x, y, w, h, cgs.media.selectShader );
 		}
-		CG_DrawBigString( x + 4, y, s, 1.0F);
+		CG_DrawBigString( x + 4, y + 4, s, 1.0F);
 
 		color[0] = 1.0f;
 		color[1] = 0.0f;
@@ -1647,7 +1628,7 @@ static float CG_DrawScores( float y ) {
 			h = w = FLAG_SIZE / 2;
 		} else {
 			w = CG_DrawStrlen( s, UI_BIGFONT ) + 8;
-			h = BIGCHAR_HEIGHT + 8;
+			h = scoreHeight;
 		}
 
 		x -= w;
@@ -1656,7 +1637,7 @@ static float CG_DrawScores( float y ) {
 		if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_RED ) {
 			CG_DrawPic( x, y, w, h, cgs.media.selectShader );
 		}
-		CG_DrawBigString( x + 4, y, s, 1.0F);
+		CG_DrawBigString( x + 4, y + 4, s, 1.0F);
 	} else if (cgs.gametype != GT_SINGLE_PLAYER) {
 		qboolean	spectator;
 
@@ -1672,7 +1653,7 @@ static float CG_DrawScores( float y ) {
 			s = va( "%2i", s2 );
 			w = CG_DrawStrlen( s, UI_BIGFONT ) + 8;
 			x -= w;
-			h = BIGCHAR_HEIGHT + 8;
+			h = scoreHeight;
 			if ( !spectator && score == s2 && score != s1 ) {
 				color[0] = 1.0f;
 				color[1] = 0.0f;
@@ -1687,7 +1668,7 @@ static float CG_DrawScores( float y ) {
 				color[3] = 0.33f;
 				CG_FillRect( x, y,  w, h, color );
 			}	
-			CG_DrawBigString( x + 4, y, s, 1.0F);
+			CG_DrawBigString( x + 4, y + 4, s, 1.0F);
 		}
 
 		// first place
@@ -1695,7 +1676,7 @@ static float CG_DrawScores( float y ) {
 			s = va( "%2i", s1 );
 			w = CG_DrawStrlen( s, UI_BIGFONT ) + 8;
 			x -= w;
-			h = BIGCHAR_HEIGHT + 8;
+			h = scoreHeight;
 			if ( !spectator && score == s1 ) {
 				color[0] = 0.0f;
 				color[1] = 0.0f;
@@ -1710,7 +1691,7 @@ static float CG_DrawScores( float y ) {
 				color[3] = 0.33f;
 				CG_FillRect( x, y,  w, h, color );
 			}	
-			CG_DrawBigString( x + 4, y, s, 1.0F);
+			CG_DrawBigString( x + 4, y + 4, s, 1.0F);
 		}
 	}
 
