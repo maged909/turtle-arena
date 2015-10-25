@@ -635,7 +635,7 @@ static void UI_PlayerSetupMenu_Init( int maxLocalPlayers, void (*action)(void), 
 		s_playersetup.name[i].generic.type			= MTYPE_FIELD;
 		s_playersetup.name[i].generic.flags			= QMF_NODEFAULTINIT;
 		s_playersetup.name[i].generic.ownerdraw		= PlayerSettings_DrawName;
-		s_playersetup.name[i].field.widthInChars	= 8;//MAX_NAMELENGTH;
+		s_playersetup.name[i].field.widthInChars	= 15; //MAX_NAMELENGTH;
 		s_playersetup.name[i].field.maxchars		= MAX_NAMELENGTH;
 		s_playersetup.name[i].generic.x				= x;
 		s_playersetup.name[i].generic.y				= y;

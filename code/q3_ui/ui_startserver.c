@@ -803,7 +803,7 @@ static void StartArcade_MenuInit( qboolean multiplayer ) {
 	s_arcade.gametype.generic.callback	= StartArcade_GametypeEvent;
 	s_arcade.gametype.generic.id		= ID_GAMETYPE;
 	s_arcade.gametype.generic.x			= 64;
-	s_arcade.gametype.generic.y			= 80;
+	s_arcade.gametype.generic.y			= 224 - (SMALLCHAR_HEIGHT+2) * 2; // if gtDescription is added then use y=80
 	if (!multiplayer) {
 		s_arcade.gametype.itemnames		= arcade_gametype_items;
 	} else {
@@ -850,7 +850,7 @@ static void StartArcade_MenuInit( qboolean multiplayer ) {
 	s_arcade.map.generic.callback		= StartArcade_MapEvent;
 	s_arcade.map.generic.id				= ID_MAP;
 	s_arcade.map.generic.x				= 64;
-	s_arcade.map.generic.y				= 224 - SMALLCHAR_HEIGHT;
+	s_arcade.map.generic.y				= 224 - (SMALLCHAR_HEIGHT+2);
 	s_arcade.map.itemnames				= gametype_items; // Poor fix for SpinControl_Init // (const char **)s_arcade.mapNames;
 
 	s_arcade.mappic.generic.type		= MTYPE_BITMAP;
@@ -863,6 +863,47 @@ static void StartArcade_MenuInit( qboolean multiplayer ) {
 
 	if( s_arcade.multiplayer ) {
 		y = 224+SMALLCHAR_HEIGHT+2;
+
+		s_arcade.hostname.generic.type			= MTYPE_FIELD;
+		s_arcade.hostname.generic.name			= "Server Name:";
+		s_arcade.hostname.generic.flags			= QMF_SMALLFONT|QMF_LEFT_JUSTIFY;
+		s_arcade.hostname.generic.x				= RIGHT_OPTIONS_X;
+		s_arcade.hostname.generic.y				= y;
+		s_arcade.hostname.field.widthInChars	= 20;
+		s_arcade.hostname.field.maxchars		= 64;
+		y += SMALLCHAR_HEIGHT+2;
+
+		s_arcade.pure.generic.type			= MTYPE_RADIOBUTTON;
+		s_arcade.pure.generic.flags			= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_LEFT_JUSTIFY;
+		s_arcade.pure.generic.x				= RIGHT_OPTIONS_X;
+		s_arcade.pure.generic.y				= y;
+		s_arcade.pure.generic.name			= "Pure Server:";
+		if (!trap_Cvar_VariableValue( "fs_pure" )) {
+			// Don't let users think they can modify sv_pure, it won't work.
+			s_arcade.pure.generic.flags |= QMF_GRAYED;
+		}
+		y += SMALLCHAR_HEIGHT+2;
+
+		s_arcade.publicserver.generic.type	= MTYPE_RADIOBUTTON;
+		s_arcade.publicserver.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_LEFT_JUSTIFY;
+		s_arcade.publicserver.generic.x		= RIGHT_OPTIONS_X;
+		s_arcade.publicserver.generic.y		= y;
+		s_arcade.publicserver.generic.name	= "Advertise on Internet:";
+		y += SMALLCHAR_HEIGHT+2;
+
+		s_arcade.dedicated.generic.type		= MTYPE_RADIOBUTTON;
+		s_arcade.dedicated.generic.id		= ID_DEDICATED;
+		s_arcade.dedicated.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_LEFT_JUSTIFY;
+		s_arcade.dedicated.generic.callback	= StartArcade_Event;
+		s_arcade.dedicated.generic.x		= RIGHT_OPTIONS_X;
+		s_arcade.dedicated.generic.y		= y;
+		s_arcade.dedicated.generic.name		= "Dedicated:";
+
+		if (s_arcade.inGame) {
+			s_arcade.dedicated.generic.flags |= QMF_GRAYED;
+		}
+
+		y += SMALLCHAR_HEIGHT+2;
 
 		// Scorelimit and capturelimit have the same x/y, only show one at a time!
 		s_arcade.scorelimit.generic.type       = MTYPE_FIELD;
@@ -899,46 +940,6 @@ static void StartArcade_MenuInit( qboolean multiplayer ) {
 		s_arcade.friendlyfire.generic.x	      = RIGHT_OPTIONS_X;
 		s_arcade.friendlyfire.generic.y	      = y;
 		s_arcade.friendlyfire.generic.name	  = "Team Damage:";
-
-		y += SMALLCHAR_HEIGHT+2;
-		s_arcade.pure.generic.type			= MTYPE_RADIOBUTTON;
-		s_arcade.pure.generic.flags			= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_LEFT_JUSTIFY;
-		s_arcade.pure.generic.x				= RIGHT_OPTIONS_X;
-		s_arcade.pure.generic.y				= y;
-		s_arcade.pure.generic.name			= "Pure Server:";
-		if (!trap_Cvar_VariableValue( "fs_pure" )) {
-			// Don't let users think they can modify sv_pure, it won't work.
-			s_arcade.pure.generic.flags |= QMF_GRAYED;
-		}
-
-		y += SMALLCHAR_HEIGHT+2;
-		s_arcade.publicserver.generic.type	= MTYPE_RADIOBUTTON;
-		s_arcade.publicserver.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_LEFT_JUSTIFY;
-		s_arcade.publicserver.generic.x		= RIGHT_OPTIONS_X;
-		s_arcade.publicserver.generic.y		= y;
-		s_arcade.publicserver.generic.name	= "Advertise on Internet:";
-
-		y += SMALLCHAR_HEIGHT+2;
-		s_arcade.dedicated.generic.type		= MTYPE_RADIOBUTTON;
-		s_arcade.dedicated.generic.id		= ID_DEDICATED;
-		s_arcade.dedicated.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_LEFT_JUSTIFY;
-		s_arcade.dedicated.generic.callback	= StartArcade_Event;
-		s_arcade.dedicated.generic.x		= RIGHT_OPTIONS_X;
-		s_arcade.dedicated.generic.y		= y;
-		s_arcade.dedicated.generic.name		= "Dedicated:";
-
-		if (s_arcade.inGame) {
-			s_arcade.dedicated.generic.flags |= QMF_GRAYED;
-		}
-
-		y += SMALLCHAR_HEIGHT+2;
-		s_arcade.hostname.generic.type			= MTYPE_FIELD;
-		s_arcade.hostname.generic.name			= "Hostname:";
-		s_arcade.hostname.generic.flags			= QMF_SMALLFONT|QMF_LEFT_JUSTIFY;
-		s_arcade.hostname.generic.x				= RIGHT_OPTIONS_X;
-		s_arcade.hostname.generic.y				= y;
-		s_arcade.hostname.field.widthInChars	= 20;
-		s_arcade.hostname.field.maxchars		= 64;
 	} else {
 		// Record demo option
 		y = 224+SMALLCHAR_HEIGHT+2;
@@ -956,7 +957,7 @@ static void StartArcade_MenuInit( qboolean multiplayer ) {
 		s_arcade.viewreplay.generic.x			= LEFT_OPTIONS_X;
 		s_arcade.viewreplay.generic.y			= y;
 		s_arcade.viewreplay.generic.callback	= StartArcade_ViewReplayEvent;
-		s_arcade.viewreplay.string  			= "View Replay";
+		s_arcade.viewreplay.string  			= "Watch Replay";
 		s_arcade.viewreplay.color  				= color_white;
 		s_arcade.viewreplay.style  				= UI_SMALLFONT|UI_LEFT;
 
@@ -1040,15 +1041,15 @@ static void StartArcade_MenuInit( qboolean multiplayer ) {
 	Menu_AddItem( &s_arcade.menu, &s_arcade.mappic );
 
 	if( s_arcade.multiplayer ) {
+		Menu_AddItem( &s_arcade.menu, &s_arcade.hostname );
+		Menu_AddItem( &s_arcade.menu, &s_arcade.pure );
+		Menu_AddItem( &s_arcade.menu, &s_arcade.publicserver );
+		Menu_AddItem( &s_arcade.menu, &s_arcade.dedicated );
+
 		Menu_AddItem( &s_arcade.menu, &s_arcade.scorelimit );
 		Menu_AddItem( &s_arcade.menu, &s_arcade.flaglimit );
 		Menu_AddItem( &s_arcade.menu, &s_arcade.timelimit );
 		Menu_AddItem( &s_arcade.menu, &s_arcade.friendlyfire );
-
-		Menu_AddItem( &s_arcade.menu, &s_arcade.pure );
-		Menu_AddItem( &s_arcade.menu, &s_arcade.publicserver );
-		Menu_AddItem( &s_arcade.menu, &s_arcade.dedicated );
-		Menu_AddItem( &s_arcade.menu, &s_arcade.hostname );
 	} else {
 		Menu_AddItem( &s_arcade.menu, &s_arcade.recordreplay);
 		Menu_AddItem( &s_arcade.menu, &s_arcade.viewreplay);
