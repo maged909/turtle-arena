@@ -374,7 +374,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.framer.width  	   = 256;
 	s_preferences.framer.height  	   = 334;
 
-	y = ( SCREEN_HEIGHT - ID_NUM_ITEMS*BIGCHAR_HEIGHT - (2+4) ) / 2;
+	y = ( SCREEN_HEIGHT - ID_NUM_ITEMS*(BIGCHAR_HEIGHT+2) - (2+4) ) / 2;
 #ifndef TURTLEARENA
 	s_preferences.crosshair.generic.type		= MTYPE_SPINCONTROL;
 	s_preferences.crosshair.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT|QMF_NODEFAULTINIT|QMF_OWNERDRAW;
@@ -399,7 +399,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.viewbob.generic.x	              = PREFERENCES_X_POS;
 	s_preferences.viewbob.generic.y	              = y;
 
-	y += BIGCHAR_HEIGHT;
+	y += BIGCHAR_HEIGHT+2;
 #endif
 	s_preferences.simpleitems.generic.type        = MTYPE_RADIOBUTTON;
 	s_preferences.simpleitems.generic.name	      = "Simple Items:";
@@ -409,7 +409,7 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.simpleitems.generic.x	          = PREFERENCES_X_POS;
 	s_preferences.simpleitems.generic.y	          = y;
 
-	y += BIGCHAR_HEIGHT;
+	y += BIGCHAR_HEIGHT+2;
 	s_preferences.wallmarks.generic.type          = MTYPE_RADIOBUTTON;
 	s_preferences.wallmarks.generic.name	      = "Marks on Walls:";
 	s_preferences.wallmarks.generic.flags	      = QMF_PULSEIFFOCUS|QMF_SMALLFONT;

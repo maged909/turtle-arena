@@ -182,13 +182,30 @@ static void CG_DrawPlayerScore( int y, score_t *score, float *color, float fade,
 
 #ifdef MISSIONPACK
 	// draw the team task
-	if ( pi->teamTask != TEAMTASK_NONE ) {
-		if ( pi->teamTask == TEAMTASK_OFFENSE ) {
+	switch ( pi->teamTask ) {
+		case TEAMTASK_OFFENSE:
 			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.assaultShader );
-		}
-		else if ( pi->teamTask == TEAMTASK_DEFENSE ) {
+			break;
+		case TEAMTASK_DEFENSE:
 			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.defendShader );
-		}
+			break;
+		case TEAMTASK_PATROL:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.patrolShader );
+			break;
+		case TEAMTASK_FOLLOW:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.followShader );
+			break;
+		case TEAMTASK_CAMP:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.campShader );
+			break;
+		case TEAMTASK_RETRIEVE:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.retrieveShader );
+			break;
+		case TEAMTASK_ESCORT:
+			CG_DrawPic( headx + 48, y, 16, 16, cgs.media.escortShader );
+			break;
+		default:
+			break;
 	}
 #endif
 
@@ -365,20 +382,6 @@ qboolean CG_DrawOldScoreboard( void ) {
 	}
 
 
-#ifdef TA_MISC
-	if (cgs.gametype != GT_SINGLE_PLAYER) {
-		s = va( "Time Limit: %2i", cgs.timelimit );
-		CG_DrawString( 320, 20, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
-
-		if ( cgs.gametype >= GT_CTF ) {
-			s = va( "Capture Limit: %2i", cgs.capturelimit );
-		} else {
-			s = va( "Score Limit: %2i", cgs.fraglimit );
-		}
-		CG_DrawString( 328, 20, s, UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, NULL );
-	}
-#endif
-
 	// fragged by ... line
 	if ( cg.cur_lc && cg.cur_lc->killerName[0] ) {
 #ifdef NOTRATEDM // frag to KO
@@ -386,9 +389,24 @@ qboolean CG_DrawOldScoreboard( void ) {
 #else
 		s = va("Fragged by %s", cg.cur_lc->killerName );
 #endif
-		y = 40;
+		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT ) * 2;
 		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
+#ifdef TA_MISC
+	else if (cgs.gametype != GT_SINGLE_PLAYER) {
+		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT ) * 2;
+
+		s = va( "Time Limit: %2i", cgs.timelimit );
+		CG_DrawString( 320, y, s, UI_RIGHT|UI_DROPSHADOW|UI_BIGFONT, NULL );
+
+		if ( cgs.gametype >= GT_CTF ) {
+			s = va( "Capture Limit: %2i", cgs.capturelimit );
+		} else {
+			s = va( "Score Limit: %2i", cgs.fraglimit );
+		}
+		CG_DrawString( 328, y, s, UI_LEFT|UI_DROPSHADOW|UI_BIGFONT, NULL );
+	}
+#endif
 
 	// current rank
 	if ( cgs.gametype < GT_TEAM) {
@@ -401,7 +419,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("%s place with %i",
 				CG_PlaceString( cg.cur_ps->persistant[PERS_RANK] + 1 ),
 				cg.cur_ps->persistant[PERS_SCORE] );
-			y = 60;
+			y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT );
 			CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 		}
 	} else {
@@ -413,7 +431,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 			s = va("Blue leads %i to %i",cg.teamScores[1], cg.teamScores[0] );
 		}
 
-		y = 60;
+		y = SB_HEADER - 6 - CG_DrawStringLineHeight( UI_BIGFONT );
 		CG_DrawString( SCREEN_WIDTH / 2, y, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT, NULL );
 	}
 
@@ -578,7 +596,7 @@ void CG_DrawTourneyScoreboard( void ) {
 		s = va("%i", cg.teamScores[0] );
 		CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		
-		y += 64;
+		y += GIANTCHAR_HEIGHT + 16;
 
 		CG_DrawString( 8, y, "Blue Team", UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 		s = va("%i", cg.teamScores[1] );
@@ -599,12 +617,23 @@ void CG_DrawTourneyScoreboard( void ) {
 			CG_DrawString( 8, y, pi->name, UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
 			s = va("%i", pi->score );
 			CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
-			y += 64;
+			y += GIANTCHAR_HEIGHT + 16;
 		}
 	} else {
 		//
 		// free for all scoreboard (players sorted by score)
 		//
+		int style, gap;
+
+		style = UI_GIANTFONT;
+		gap = GIANTCHAR_HEIGHT + 16;
+
+		// use smaller font if not all players fit
+		if ( cg.numScores > ( SCREEN_HEIGHT - y ) / gap ) {
+			style = UI_BIGFONT;
+			gap = BIGCHAR_HEIGHT + 4;
+		}
+
 		for ( i = 0 ; i < cg.numScores; i++ ) {
 			pi = &cgs.playerinfo[ cg.scores[i].playerNum ];
 			if ( !pi->infoValid ) {
@@ -614,10 +643,10 @@ void CG_DrawTourneyScoreboard( void ) {
 				continue;
 			}
 
-			CG_DrawString( 8, y, pi->name, UI_LEFT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
+			CG_DrawString( 8, y, pi->name, UI_LEFT|UI_DROPSHADOW|style, NULL );
 			s = va("%i", pi->score );
-			CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|UI_GIANTFONT, NULL );
-			y += 64;
+			CG_DrawString( 632, y, s, UI_RIGHT|UI_DROPSHADOW|style, NULL );
+			y += gap;
 
 			if ( y >= SCREEN_HEIGHT ) {
 				break;
