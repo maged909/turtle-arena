@@ -1066,8 +1066,6 @@ extern	vmCvar_t	pmove_fixed;
 extern	vmCvar_t	pmove_msec;
 extern	vmCvar_t	g_rankings;
 #ifdef MISSIONPACK
-extern	vmCvar_t	g_enableDust;
-extern	vmCvar_t	g_enableBreath;
 #ifndef TA_SP
 extern	vmCvar_t	g_singlePlayer;
 #endif

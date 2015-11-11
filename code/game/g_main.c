@@ -113,8 +113,6 @@ vmCvar_t	g_cubeTimeout;
 #endif
 vmCvar_t	g_redteam;
 vmCvar_t	g_blueteam;
-vmCvar_t	g_enableDust;
-vmCvar_t	g_enableBreath;
 #endif
 #if defined MISSIONPACK || defined TA_WEAPSYS
 vmCvar_t	g_proxMineTimeout;
@@ -227,9 +225,6 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
 	{ &g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
-
-	{ &g_enableDust, "g_enableDust", "0", CVAR_SYSTEMINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
-	{ &g_enableBreath, "g_enableBreath", "0", CVAR_SYSTEMINFO, GCF_TRACK_CHANGE, RANGE_BOOL },
 #endif
 
 #if defined MISSIONPACK || defined TA_WEAPSYS
