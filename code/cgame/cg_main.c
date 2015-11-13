@@ -2303,7 +2303,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			if (!CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.textFont)) {
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.textFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.textFont, pointSize, pointSize / 2);
 			}
 			continue;
@@ -2315,7 +2315,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			if (!CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.smallFont)) {
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.smallFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.smallFont, pointSize, pointSize / 2);
 			}
 			continue;
@@ -2327,7 +2327,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			if (!CG_InitTrueTypeFont(tempStr, pointSize, &cgDC.Assets.bigFont)) {
+			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.bigFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.bigFont, pointSize, pointSize / 2);
 			}
 			continue;
