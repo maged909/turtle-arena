@@ -2507,7 +2507,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 #ifndef TURTLEARENA // POWERS
 	// quad gives a dlight
 	if ( powerups & ( 1 << PW_QUAD ) ) {
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 0.2f, 0.2f, 1 );
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 0.2f, 0.2f, 1, 0 );
 	}
 #endif
 
@@ -2531,7 +2531,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 			CG_TrailItem( cent, cgs.media.redFlagModel );
 		}
 #endif
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 0.2f, 0.2f );
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 0.2f, 0.2f, 0 );
 	}
 
 	// blueflag
@@ -2546,7 +2546,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 			CG_TrailItem( cent, cgs.media.blueFlagModel );
 		}
 #endif
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 0.2f, 0.2f, 1.0f );
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 0.2f, 0.2f, 1.0f, 0 );
 	}
 
 	// neutralflag
@@ -2561,7 +2561,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 			CG_TrailItem( cent, cgs.media.neutralFlagModel );
 		}
 #endif
-		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f, 1.0f );
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f, 1.0f, 0 );
 	}
 
 	// haste leaves smoke trails
@@ -2852,7 +2852,7 @@ static void CG_PlayerSplash( centity_t *cent ) {
 	verts[3].modulate[2] = 255;
 	verts[3].modulate[3] = 255;
 
-	trap_R_AddPolyToScene( cgs.media.wakeMarkShader, 4, verts, 0 );
+	trap_R_AddPolyToScene( cgs.media.wakeMarkShader, 4, verts, 0, 0 );
 }
 
 
