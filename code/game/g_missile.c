@@ -795,12 +795,14 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 			// ZTM: Used by prox mines so that if that player changes teams the mines
 			//        don't "change" teams as well (or something...).
 			bolt->s.team = self->player->sess.sessionTeam;
-
-			// Needed for stickOnImpact projectiles
-			bolt->s.angles[0] = self->player->ps.viewangles[0];
-			bolt->s.angles[1] = self->player->ps.viewangles[1];
-			bolt->s.angles[2] = self->player->ps.viewangles[2];
 		}
+		else
+		{
+			bolt->s.team = TEAM_FREE;
+		}
+
+		// Needed for stickOnImpact and grappling projectiles
+		vectoangles( forward, bolt->s.angles );
 	}
 
 	return qtrue;
