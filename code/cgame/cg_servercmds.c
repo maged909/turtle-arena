@@ -1028,7 +1028,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 					cg.localPlayers[i].acceptLeader = vchat->playerNum;
 				}
 
-				cg.localPlayers[i].voiceTime = cg.time + 2500;
+				cg.localPlayers[i].voiceTime = cg.time + cg_consoleLatency.integer;
 				cg.localPlayers[i].currentVoicePlayerNum = vchat->playerNum;
 			}
 		}
@@ -1097,6 +1097,10 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int p
 		return;
 	}
 
+	if ( mode == SAY_ALL && cgs.gametype >= GT_TEAM && cg_teamChatsOnly.integer ) {
+		return;
+	}
+
 	if ( playerNum < 0 || playerNum >= MAX_CLIENTS ) {
 		playerNum = 0;
 	}
@@ -1105,24 +1109,21 @@ void CG_VoiceChatLocal( int localPlayerBits, int mode, qboolean voiceOnly, int p
 	voiceChatList = CG_VoiceChatListForPlayer( playerNum );
 
 	if ( CG_GetVoiceChat( voiceChatList, cmd, &snd, &chat ) ) {
-		//
-		if ( mode == SAY_TEAM || !cg_teamChatsOnly.integer ) {
-			vchat.localPlayerBits = localPlayerBits;
-			vchat.playerNum = playerNum;
-			vchat.snd = snd;
-			vchat.voiceOnly = voiceOnly;
-			Q_strncpyz(vchat.cmd, cmd, sizeof(vchat.cmd));
-			if ( mode == SAY_TELL ) {
-				Com_sprintf(vchat.message, sizeof(vchat.message), "[%s]: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
-			}
-			else if ( mode == SAY_TEAM ) {
-				Com_sprintf(vchat.message, sizeof(vchat.message), "(%s): %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
-			}
-			else {
-				Com_sprintf(vchat.message, sizeof(vchat.message), "%s: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
-			}
-			CG_AddBufferedVoiceChat(&vchat);
+		vchat.localPlayerBits = localPlayerBits;
+		vchat.playerNum = playerNum;
+		vchat.snd = snd;
+		vchat.voiceOnly = voiceOnly;
+		Q_strncpyz(vchat.cmd, cmd, sizeof(vchat.cmd));
+		if ( mode == SAY_TELL ) {
+			Com_sprintf(vchat.message, sizeof(vchat.message), "[%s]: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
 		}
+		else if ( mode == SAY_TEAM ) {
+			Com_sprintf(vchat.message, sizeof(vchat.message), "(%s): %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
+		}
+		else {
+			Com_sprintf(vchat.message, sizeof(vchat.message), "%s: %c%c%s", pi->name, Q_COLOR_ESCAPE, color, chat);
+		}
+		CG_AddBufferedVoiceChat(&vchat);
 	}
 }
 
@@ -1332,14 +1333,16 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "chat" ) ) {
-		if ( !cg_teamChatsOnly.integer ) {
-			trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
-
-			Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
-
-			CG_RemoveChatEscapeChar( text );
-			CG_Printf( "%s\n", text );
+		if ( cgs.gametype >= GT_TEAM && cg_teamChatsOnly.integer ) {
+			return;
 		}
+
+		trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
+
+		Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
+
+		CG_RemoveChatEscapeChar( text );
+		CG_Printf( "%s\n", text );
 		return;
 	}
 
