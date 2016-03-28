@@ -615,6 +615,7 @@ typedef struct {
 	qboolean			demoversion;
 	qboolean			firstdraw;
 	int					maxSplitView;
+	qboolean			bannerNumbers;
 } uiStatic_t;
 
 #ifdef TA_DATA

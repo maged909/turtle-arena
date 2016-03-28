@@ -73,7 +73,9 @@ vec4_t text_color_normal    = {1.00f, 0.43f, 0.00f, 1.00f};	// light orange
 vec4_t text_color_highlight = {1.00f, 1.00f, 0.00f, 1.00f};	// bright yellow
 #endif
 vec4_t listbar_color        = {1.00f, 0.43f, 0.00f, 0.30f};	// transluscent orange
-vec4_t text_banner_color	= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
+vec4_t text_banner_color;
+vec4_t bitmap_banner_color	= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
+vec4_t ttf_banner_color		= {0.70f, 0.00f, 0.00f, 1.00f};	// dark red
 #ifdef TURTLEARENA
 vec4_t text_big_color		= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
 vec4_t text_small_title_color={1.00f, 0.43f, 0.00f, 1.00f};	// light orange
@@ -1866,7 +1868,12 @@ void Menu_Cache( void )
 	if ( !CG_InitTrueTypeFont( "fonts/mplus-1c-bold.ttf", PROP_HEIGHT, 0, &uis.fontProp ) ) {
 		UI_InitPropFont( &uis.fontProp, qfalse );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/mplus-2p-black.ttf", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
+	if ( CG_InitTrueTypeFont( "fonts/mplus-2p-black.ttf", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
+		uis.bannerNumbers = qtrue;
+		Vector4Copy( ttf_banner_color, text_banner_color );
+	} else {
+		uis.bannerNumbers = qfalse;
+		Vector4Copy( bitmap_banner_color, text_banner_color );
 		UI_InitBannerFont( &uis.fontPropB );
 	}
 #else
@@ -1876,7 +1883,12 @@ void Menu_Cache( void )
 	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, 0, &uis.fontPropGlow ) ) {
 		UI_InitPropFont( &uis.fontPropGlow, qtrue );
 	}
-	if ( !CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
+	if ( CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
+		uis.bannerNumbers = qtrue;
+		Vector4Copy( ttf_banner_color, text_banner_color );
+	} else {
+		uis.bannerNumbers = qfalse;
+		Vector4Copy( bitmap_banner_color, text_banner_color );
 		UI_InitBannerFont( &uis.fontPropB );
 	}
 #endif
