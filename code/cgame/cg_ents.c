@@ -1033,6 +1033,14 @@ static void CG_Missile( centity_t *cent ) {
 	}
 #endif
 
+#ifdef TA_WEAPSYS
+	if ( bg_projectileinfo[s1->weapon].grappling && !cg_drawGrappleHook.integer ) {
+#else
+	if ( cent->currentState.weapon == WP_GRAPPLING_HOOK && !cg_drawGrappleHook.integer ) {
+#endif
+		return;
+	}
+
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
 	VectorCopy( cent->lerpOrigin, ent.origin);
@@ -1234,6 +1242,10 @@ static void CG_Grapple( centity_t *cent ) {
 #else
 	CG_GrappleTrail ( cent, weapon );
 #endif
+
+	if ( !cg_drawGrappleHook.integer ) {
+		return;
+	}
 
 	if ( s1->groundEntityNum < MAX_CLIENTS ) {
 		// don't draw hook at center of player hook is attached to
