@@ -795,12 +795,14 @@ qboolean fire_projectile(gentity_t *self, vec3_t start, vec3_t forward,
 			// ZTM: Used by prox mines so that if that player changes teams the mines
 			//        don't "change" teams as well (or something...).
 			bolt->s.team = self->player->sess.sessionTeam;
-
-			// Needed for stickOnImpact projectiles
-			bolt->s.angles[0] = self->player->ps.viewangles[0];
-			bolt->s.angles[1] = self->player->ps.viewangles[1];
-			bolt->s.angles[2] = self->player->ps.viewangles[2];
 		}
+		else
+		{
+			bolt->s.team = TEAM_FREE;
+		}
+
+		// Needed for stickOnImpact and grappling projectiles
+		vectoangles( forward, bolt->s.angles );
 	}
 
 	return qtrue;
@@ -1337,21 +1339,12 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			G_AddEvent( nent, EV_MISSILE_HIT, DirToByte( trace->plane.normal ) );
 			nent->s.otherEntityNum = other->s.number;
 
-			ent->enemy = other;
-
 			v[0] = other->r.currentOrigin[0] + (other->s.mins[0] + other->s.maxs[0]) * 0.5;
 			v[1] = other->r.currentOrigin[1] + (other->s.mins[1] + other->s.maxs[1]) * 0.5;
 			v[2] = other->r.currentOrigin[2] + (other->s.mins[2] + other->s.maxs[2]) * 0.5;
-
-			SnapVectorTowards( v, ent->s.pos.trBase );	// save net bandwidth
 		} else {
 			VectorCopy(trace->endpos, v);
 			G_AddEvent( nent, EV_MISSILE_MISS, DirToByte( trace->plane.normal ) );
-#ifdef TA_WEAPSYS // GRAPPLE_MOVE
-			ent->enemy = other;
-#else
-			ent->enemy = NULL;
-#endif
 		}
 #ifdef IOQ3ZTM // IOQ3BUGFIX: Fix grapple wallmark/death-effect/debris (only tested with TA_WEAPSYS...)
 		nent->s.weapon = ent->s.weapon;
@@ -1362,6 +1355,11 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		else
 			nent->s.playerNum = ENTITYNUM_NONE;
 #endif
+
+		nent->s.weapon = ent->s.weapon;
+
+		ent->enemy = other;
+		ent->s.groundEntityNum = other->s.number;
 
 		SnapVectorTowards( v, ent->s.pos.trBase );	// save net bandwidth
 
@@ -1765,6 +1763,8 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 	} else {
 		hook->s.team = TEAM_FREE;
 	}
+
+	vectoangles( dir, hook->s.angles );
 
 	return hook;
 }

@@ -1295,18 +1295,15 @@ void Weapon_HookFree (gentity_t *ent)
 
 void Weapon_HookThink (gentity_t *ent)
 {
-#ifdef TA_WEAPSYS // GRAPPLE_MOVE
-	// Update grapple position each frame
 	ent->nextthink = level.time + FRAMETIME;
-#endif
 
-	if (ent->enemy
-#ifdef TA_WEAPSYS // GRAPPLE_MOVE
-		&& ent->enemy->player
-#endif
-		)
-	{
+	if (ent->enemy && ent->enemy->player) {
 		vec3_t v, oldorigin;
+
+		if ( ent->enemy->player->ps.pm_type == PM_DEAD ) {
+			Weapon_HookFree( ent );
+			return;
+		}
 
 		VectorCopy(ent->r.currentOrigin, oldorigin);
 		v[0] = ent->enemy->r.currentOrigin[0] + (ent->enemy->s.mins[0] + ent->enemy->s.maxs[0]) * 0.5;

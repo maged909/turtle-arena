@@ -823,18 +823,12 @@ void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi )
 #endif
 {
 	vec3_t	origin;
-	entityState_t	*es;
-#ifndef IOQ3ZTM
-	vec3_t			forward, up;
-#endif
 	refEntity_t		beam;
 #ifdef TA_WEAPSYS
 	int				i;
 #endif
 
-	es = &ent->currentState;
-
-	BG_EvaluateTrajectory( &es->pos, cg.time, origin );
+	VectorCopy( ent->lerpOrigin, origin );
 	ent->trailTime = cg.time;
 
 	memset( &beam, 0, sizeof( beam ) );
@@ -844,7 +838,11 @@ void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi )
 	{
 		if (bg_weapongroupinfo[cg_entities[ent->currentState.otherEntityNum].currentState.weapon].weapon[i]->projnum == wi-cg_projectiles)
 		{
-			VectorCopy(cg_entities[ ent->currentState.otherEntityNum ].pe.flashOrigin[i], beam.origin);
+			if ( !cg.cur_lc->renderingThirdPerson && cg.cur_ps->playerNum == ent->currentState.otherEntityNum ) {
+				VectorCopy( cg.cur_lc->flashOrigin[i], beam.origin );
+			} else {
+				VectorCopy( cg_entities[ ent->currentState.otherEntityNum ].pe.flashOrigin[i], beam.origin );
+			}
 			break;
 		}
 	}
@@ -855,14 +853,12 @@ void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi )
 		VectorCopy(cg_entities[ ent->currentState.otherEntityNum ].lerpOrigin, beam.origin);
 		beam.origin[2] += DEFAULT_VIEWHEIGHT - 6;
 	}
-#elif defined IOQ3ZTM
-	VectorCopy(cg_entities[ ent->currentState.otherEntityNum ].pe.flashOrigin, beam.origin);
 #else
-	//FIXME adjust for muzzle position
-	VectorCopy ( cg_entities[ ent->currentState.otherEntityNum ].lerpOrigin, beam.origin );
-	beam.origin[2] += 26;
-	AngleVectors( cg_entities[ ent->currentState.otherEntityNum ].lerpAngles, forward, NULL, up );
-	VectorMA( beam.origin, -6, up, beam.origin );
+	if ( !cg.cur_lc->renderingThirdPerson && cg.cur_ps->playerNum == ent->currentState.otherEntityNum ) {
+		VectorCopy( cg.cur_lc->flashOrigin, beam.origin );
+	} else {
+		VectorCopy( cg_entities[ ent->currentState.otherEntityNum ].pe.flashOrigin, beam.origin );
+	}
 #endif
 	VectorCopy( origin, beam.oldorigin );
 
@@ -870,11 +866,6 @@ void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi )
 	// Switch points so chain pulls out of gun not projectile
 	VectorCopy(beam.origin, beam.oldorigin);
 	VectorCopy(origin, beam.origin);
-#endif
-
-#ifndef IOQ3ZTM
-	if (Distance( beam.origin, beam.oldorigin ) < 64 )
-		return; // Don't draw if close
 #endif
 
 	beam.reType = RT_LIGHTNING;
@@ -2659,10 +2650,8 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 #endif
 
-#ifdef IOQ3ZTM
 	// make sure we aren't looking at cg.cur_lc->predictedPlayerEntity for LG
 	nonPredictedCent = &cg_entities[cent->currentState.playerNum];
-#endif
 
 #ifdef TA_WEAPSYS
 	foundModel = qfalse;
@@ -2721,9 +2710,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		}
 
 		// set default flashOrigin
-		if (!gun[i].hModel || !cg_weapons[weaponGroup->weaponnum[i]].flashModel) {
-			// Use default flash origin when no flash model.
-			VectorCopy(cent->lerpOrigin, nonPredictedCent->pe.flashOrigin[i]);
+		if ( !gun[i].hModel || !cg_weapons[weaponGroup->weaponnum[i]].flashModel ) {
+			// use default flash origin when no flash model
+			VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin[i] );
 			nonPredictedCent->pe.flashOrigin[i][2] += DEFAULT_VIEWHEIGHT - 6;
 		}
 	}
@@ -2733,9 +2722,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 #else
 #ifdef IOQ3ZTM
-	if (!weapon->weaponModel || !weapon->flashModel) {
-		// Use default flash origin when no flash model.
-		VectorCopy(cent->lerpOrigin, nonPredictedCent->pe.flashOrigin);
+	if ( !weapon->weaponModel || !weapon->flashModel ) {
+		// use default flash origin when no flash model
+		VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin );
 		nonPredictedCent->pe.flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
 	}
 #endif
@@ -2826,7 +2815,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	trap_R_LerpTag(&lerped, parent->hModel, parent->oldframe, parent->frame,
 		1.0 - parent->backlerp, "tag_weapon");
 	VectorCopy(parent->origin, gun.origin);
-  
+
 	VectorMA(gun.origin, lerped.origin[0], parent->axis[0], gun.origin);
 
 	// Make weapon appear left-handed for 2 and centered for 3
@@ -2854,6 +2843,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		if (!drawWeapon[i] || !cg_weapons[weaponGroup->weaponnum[i]].barrelModel)
 			continue;
 #endif
+
 		memset( &barrel, 0, sizeof( barrel ) );
 		VectorCopy( parent->lightingOrigin, barrel.lightingOrigin );
 		barrel.shadowPlane = parent->shadowPlane;
@@ -2903,11 +2893,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 #endif
 	}
 
-#ifndef IOQ3ZTM // Moved up so it can be used for fallback flashOrigin
-	// make sure we aren't looking at cg.cur_lc->predictedPlayerEntity for LG
-	nonPredictedCent = &cg_entities[cent->currentState.playerNum];
-#endif
-
 	// if the index of the nonPredictedCent is not the same as the playerNum
 #ifndef IOQ3ZTM // IOQ3BUGFIX: How could this even happen? pointer = array + num; if (pointer - array != num) unused code;
 	// then this is a fake player (like on teh single player podiums), so
@@ -2922,52 +2907,6 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	for (i = 0; i < MAX_HANDS; i++)
 #endif
 	{
-		if (
-#ifdef TA_WEAPSYS
-			( weaponGroup->weapon[i]->flags & WIF_CONTINUOUS_FLASH )
-#else
-			( weaponNum == WP_LIGHTNING || weaponNum == WP_GAUNTLET || weaponNum == WP_GRAPPLING_HOOK )
-#endif
-			&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) ) 
-		{
-			// continuous flash
-		} else {
-			// impulse flash
-			if ( cg.time - cent->muzzleFlashTime > MUZZLE_FLASH_TIME ) {
-#ifdef IOQ3ZTM // GRAPPLE_RETURN // Always update flash origin
-				if ( ps || cg.cur_lc->renderingThirdPerson ||
-						cent->currentState.number != cg.cur_lc->predictedPlayerState.playerNum ) {
-					memset( &flash, 0, sizeof( flash ) );
-#ifdef TA_WEAPSYS
-					flash.hModel = cg_weapons[weaponGroup->weaponnum[i]].flashModel;
-#else
-					flash.hModel = weapon->flashModel;
-#endif
-					if (!flash.hModel) {
-#ifdef TA_WEAPSYS
-						continue;
-#else
-						return;
-#endif
-					}
-
-#ifdef TA_WEAPSYS
-					CG_PositionRotatedEntityOnTag( &flash, &gun[i], gun[i].hModel, "tag_flash");
-#else
-					CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
-#endif
-
-#ifdef TA_WEAPSYS
-					VectorCopy(flash.origin, nonPredictedCent->pe.flashOrigin[i]);
-#elif defined IOQ3ZTM
-					VectorCopy(flash.origin, nonPredictedCent->pe.flashOrigin);
-#endif
-				}
-#endif
-				return;
-			}
-		}
-
 		memset( &flash, 0, sizeof( flash ) );
 		VectorCopy( parent->lightingOrigin, flash.lightingOrigin );
 		flash.shadowPlane = parent->shadowPlane;
@@ -3019,23 +2958,48 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		Byte4Copy( pi->c1RGBA, flash.shaderRGBA );
 #endif
 
-
 #ifdef TA_WEAPSYS
 		CG_PositionRotatedEntityOnTag( &flash, &gun[i], gun[i].hModel, "tag_flash");
 #else
 		CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 #endif
-		CG_AddRefEntityWithMinLight( &flash );
 
+		// udate muzzle origin
+#ifdef TA_WEAPSYS
+		if ( ps ) {
+			VectorCopy( flash.origin, cg.cur_lc->flashOrigin[i] );
+		} else {
+			VectorCopy( flash.origin, nonPredictedCent->pe.flashOrigin[i] );
+		}
+#else
+		if ( ps ) {
+			VectorCopy( flash.origin, cg.cur_lc->flashOrigin );
+		} else {
+			VectorCopy( flash.origin, nonPredictedCent->pe.flashOrigin );
+		}
+#endif
+
+		// add the flash
+		if (
+#ifdef TA_WEAPSYS
+			( weaponGroup->weapon[i]->flags & WIF_CONTINUOUS_FLASH )
+#else
+			( weaponNum == WP_LIGHTNING || weaponNum == WP_GAUNTLET || weaponNum == WP_GRAPPLING_HOOK )
+#endif
+			&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
+		{
+			// continuous flash
+		} else {
+			// impulse flash
+			if ( cg.time - cent->muzzleFlashTime > MUZZLE_FLASH_TIME ) {
+				return;
+			}
+		}
+
+		CG_AddRefEntityWithMinLight( &flash );
 
 		if ( ps || cg.cur_lc->renderingThirdPerson ||
 			cent->currentState.number != cg.cur_lc->predictedPlayerState.playerNum ) {
-#ifdef TA_WEAPSYS
-			VectorCopy(flash.origin, nonPredictedCent->pe.flashOrigin[i]);
-#elif defined IOQ3ZTM
-			VectorCopy(flash.origin, nonPredictedCent->pe.flashOrigin);
-#endif
-
 #ifdef TA_WEAPSYS
 			if (weaponGroup->weapon[i]->proj->trailType == PT_LIGHTNING
 				&& weaponGroup->weapon[i]->proj->instantDamage)
@@ -3105,28 +3069,38 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 
 	// allow the gun to be completely removed
 	if ( !cg_drawGun[cg.cur_localPlayerNum].integer ) {
-		vec3_t		origin;
+#ifdef TA_WEAPSYS
+		int i;
+		vec3_t origin;
+
+		cent = &cg_entities[ps->playerNum];
+
+		// use default flash origin
+		for (i = 0; i < MAX_HANDS; i++)
+		{
+			// ZTM: TODO: stop using refdef here
+			VectorCopy( cg.refdef.vieworg, origin );
+
+			if ( cgs.playerinfo[cent->currentState.playerNum].playercfg.handSide[i] == HS_RIGHT )
+				VectorMA( origin, -8, cg.refdef.viewaxis[2], origin );
+			else if ( cgs.playerinfo[cent->currentState.playerNum].playercfg.handSide[i] == HS_LEFT )
+				VectorMA( origin, 8, cg.refdef.viewaxis[2], origin );
+
+			VectorCopy( origin, cent->pe.flashOrigin[i] );
+		}
+#else
+		// use default flash origin
+		VectorCopy( cg_entities[cg.cur_ps->playerNum].lerpOrigin, cg.cur_lc->flashOrigin );
+		cg.cur_lc->flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
+#endif
 
 		if ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING ) {
 			// special hack for lightning gun...
 #ifdef TA_WEAPSYS
 			int i;
 
-			cent = &cg_entities[ps->playerNum];
-
 			for (i = 0; i < MAX_HANDS; i++)
 			{
-				// Set weapon muzzle origin
-				VectorCopy( cg.refdef.vieworg, origin );
-	
-				if (cgs.playerinfo[cent->currentState.playerNum].playercfg.handSide[i] == HS_RIGHT)
-					VectorMA( origin, -8, cg.refdef.viewaxis[2], origin );
-				else if (cgs.playerinfo[cent->currentState.playerNum].playercfg.handSide[i] == HS_LEFT)
-					VectorMA( origin, 8, cg.refdef.viewaxis[2], origin );
-	
-				// Set flash origin
-				VectorCopy( origin, cent->pe.flashOrigin[i] );
-
 				// Check if holding weapon
 				if (!(cent->currentState.weaponHands & HAND_TO_HB(i))) {
 					continue;
@@ -3136,20 +3110,11 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 				if (bg_weapongroupinfo[cent->currentState.weapon].weapon[i]->proj->trailType == PT_LIGHTNING
 					&& bg_weapongroupinfo[cent->currentState.weapon].weapon[i]->proj->instantDamage)
 				{
-					CG_LightningBolt( cent, origin, bg_weapongroupinfo[cent->currentState.weapon].weapon[i]->projnum);
+					CG_LightningBolt( cent, cent->pe.flashOrigin[i], bg_weapongroupinfo[cent->currentState.weapon].weapon[i]->projnum);
 				}
 			}
 #else
-#ifdef IOQ3ZTM
-			cent = &cg_entities[ps->playerNum];
-
-			// Use default flashOrigin when no flash model.
-			VectorCopy(cent->lerpOrigin, cent->pe.flashOrigin);
-			cent->pe.flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
-#endif
-			VectorCopy( cg.refdef.vieworg, origin );
-			VectorMA( origin, -8, cg.refdef.viewaxis[2], origin );
-			CG_LightningBolt( &cg_entities[ps->playerNum], origin );
+			CG_LightningBolt( &cg_entities[ps->playerNum], cg.cur_lc->flashOrigin );
 #endif
 		}
 		return;

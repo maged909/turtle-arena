@@ -234,12 +234,11 @@ typedef struct {
 	int				barrelTime;
 	qboolean		barrelSpinning;
 
+	// third person gun flash origin
 #ifdef TA_WEAPSYS
-	// Hook grapple chain to flash origin
-	vec3_t flashOrigin[MAX_HANDS];
-#elif defined IOQ3ZTM
-	// Hook grapple chain to flash origin
-	vec3_t flashOrigin;
+	vec3_t			flashOrigin[MAX_HANDS];
+#else
+	vec3_t			flashOrigin;
 #endif
 } playerEntity_t;
 
@@ -938,6 +937,13 @@ typedef struct {
 #endif
 
 	qboolean	renderingThirdPerson;		// during deaths, chasecams, etc
+
+	// first person gun flash origin
+#ifdef TA_WEAPSYS
+	vec3_t		flashOrigin[MAX_HANDS];
+#else
+	vec3_t		flashOrigin;
+#endif
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
@@ -1888,6 +1894,7 @@ extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
 extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		cg_forceBitmapFonts;
+extern	vmCvar_t		cg_drawGrappleHook;
 extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
