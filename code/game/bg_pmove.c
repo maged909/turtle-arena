@@ -3302,31 +3302,19 @@ void PmoveSingle (pmove_t *pmove) {
 	} else
 #endif
 #endif
-	if ( pm->ps->powerups[PW_FLIGHT] ) {
-#ifdef IOQ3ZTM // Use grapple while flying
-		if (pm->ps->pm_flags & PMF_GRAPPLE_PULL) {
-			PM_GrappleMove();
-		}
-		else
-#endif
-#ifdef IOQ3ZTM // LADDER
-		if (pml.ladder) {
-			PM_LadderMove();
-		}
-		else
-#endif
-		// flight powerup doesn't allow jump and has different friction
-		PM_FlyMove();
-	} else if (pm->ps->pm_flags & PMF_GRAPPLE_PULL) {
+	if ( pm->ps->pm_flags & PMF_GRAPPLE_PULL ) {
 		PM_GrappleMove();
 		// We can wiggle a bit
 		PM_AirMove();
-	} else if (pm->ps->pm_flags & PMF_TIME_WATERJUMP) {
-		PM_WaterJumpMove();
 #ifdef IOQ3ZTM // LADDER
 	} else if (pml.ladder) {
 		PM_LadderMove();
 #endif
+	} else if ( pm->ps->powerups[PW_FLIGHT] ) {
+		// flight powerup doesn't allow jump and has different friction
+		PM_FlyMove();
+	} else if (pm->ps->pm_flags & PMF_TIME_WATERJUMP) {
+		PM_WaterJumpMove();
 	} else if ( pm->waterlevel > 1 ) {
 #ifdef IOQ3ZTM // WALK_UNDERWATER
 		if (pm->waterlevel == 3 &&

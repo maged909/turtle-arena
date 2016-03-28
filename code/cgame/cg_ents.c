@@ -1235,6 +1235,11 @@ static void CG_Grapple( centity_t *cent ) {
 	CG_GrappleTrail ( cent, weapon );
 #endif
 
+	if ( s1->groundEntityNum < MAX_CLIENTS ) {
+		// don't draw hook at center of player hook is attached to
+		return;
+	}
+
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
 	VectorCopy( cent->lerpOrigin, ent.origin);
@@ -1268,14 +1273,7 @@ static void CG_Grapple( centity_t *cent ) {
 	ent.renderfx = RF_NOSHADOW;
 #endif
 
-#ifdef IOQ3ZTM // IOQ3BUGFIX: Fix showing model (only tested with TA_WEAPSYS...)
 	AnglesToAxis( cent->lerpAngles, ent.axis );
-#else
-	// convert direction of travel into axis
-	if ( VectorNormalize2( s1->pos.trDelta, ent.axis[0] ) == 0 ) {
-		ent.axis[0][2] = 1;
-	}
-#endif
 
 #ifdef TA_WEAPSYS
 	CG_AddRefEntityWithPowerups( &ent, s1 );

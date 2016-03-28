@@ -234,12 +234,11 @@ typedef struct {
 	int				barrelTime;
 	qboolean		barrelSpinning;
 
+	// third person gun flash origin
 #ifdef TA_WEAPSYS
-	// Hook grapple chain to flash origin
-	vec3_t flashOrigin[MAX_HANDS];
-#elif defined IOQ3ZTM
-	// Hook grapple chain to flash origin
-	vec3_t flashOrigin;
+	vec3_t			flashOrigin[MAX_HANDS];
+#else
+	vec3_t			flashOrigin;
 #endif
 } playerEntity_t;
 
@@ -938,6 +937,13 @@ typedef struct {
 #endif
 
 	qboolean	renderingThirdPerson;		// during deaths, chasecams, etc
+
+	// first person gun flash origin
+#ifdef TA_WEAPSYS
+	vec3_t		flashOrigin[MAX_HANDS];
+#else
+	vec3_t		flashOrigin;
+#endif
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
