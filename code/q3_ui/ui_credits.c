@@ -181,10 +181,10 @@ static void UI_CreditMenu_Draw_QuitMessage( void ) {
 
 	y += (1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE) * 2;
 
-	UI_DrawProportionalString( 320, y, "Extraordinary Beat X (c) 2009-2015 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
+	UI_DrawProportionalString( 320, y, "Extraordinary Beat X (c) 2009-2016 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
 
 
-	UI_DrawString( 320, 459, "http://ztm.x10host.com/ebx", UI_CENTER|UI_SMALLFONT, color_red );
+	UI_DrawString( 320, 459, "http://extraordinarybeat.xyz", UI_CENTER|UI_SMALLFONT, color_red );
 }
 
 /*
