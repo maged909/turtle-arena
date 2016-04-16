@@ -188,10 +188,10 @@ static void UI_CreditMenu_Draw_QuitMessage( void ) {
 	y += (1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE) * 2;
 	UI_DrawProportionalString( 320, y, "TMNT(c) Viacom", UI_CENTER|UI_SMALLFONT, color_white );
 	y += 1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE;
-	UI_DrawProportionalString( 320, y, "Turtle Arena(c) 2009-2015 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
+	UI_DrawProportionalString( 320, y, "Turtle Arena(c) 2009-2016 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
 
 	// Website
-	UI_DrawString( 320, 459, "http://ztm.x10host.com/ta", UI_CENTER|UI_SMALLFONT, color_red );
+	UI_DrawString( 320, 459, "http://turtlearena.com", UI_CENTER|UI_SMALLFONT, color_red );
 }
 
 /*
@@ -254,22 +254,13 @@ static void UI_CreditMenu_Draw_ioq3( void ) {
 	int		y;
 	int		i;
 
-	// These are all people that have made commits to Subversion, and thus
-	//  probably incomplete.
-	// (These are in alphabetical order, for the defense of everyone's egos.)
 	static const char *names[] = {
-		"Tim Angus",
-		"James Canete",
-		"Vincent Cojot",
-		"Ryan C. Gordon",
-		"Aaron Gyes",
+		"",
+		S_COLOR_YELLOW "id Software",
+		S_COLOR_RED "ioquake3 contributors",
+		S_COLOR_GREEN "Spearmint contributors",
 		"Zack Middleton",
-		"Ludwig Nussel",
-		"Julian Priestley",
-		"Scirocco Six",
-		"Thilo Schulz",
-		"Zachary J. Slater",
-		"Tony J. White",
+		"",
 		"...and many, many others!",  // keep this one last.
 		NULL
 	};
@@ -277,7 +268,7 @@ static void UI_CreditMenu_Draw_ioq3( void ) {
 	// Center text vertically on the screen
 	y = (SCREEN_HEIGHT - ARRAY_LEN(names) * (1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE)) / 2;
 
-	UI_DrawProportionalString( 320, y, "ioquake3 contributors:", UI_CENTER|UI_SMALLFONT, color_white );
+	UI_DrawProportionalString( 320, y, "Spearmint Quake 3 credits:", UI_CENTER|UI_SMALLFONT, color_white );
 	y += 1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE;
 
 	for (i = 0; names[i]; i++) {
@@ -285,7 +276,7 @@ static void UI_CreditMenu_Draw_ioq3( void ) {
 		y += 1.42 * PROP_HEIGHT * PROP_SMALL_SIZE_SCALE;
 	}
 
-	UI_DrawString( 320, 459, "http://www.ioquake3.org/", UI_CENTER|UI_SMALLFONT, color_red );
+	UI_DrawString( 320, 459, "http://spearmint.pw", UI_CENTER|UI_SMALLFONT, colorGreen );
 }
 
 
