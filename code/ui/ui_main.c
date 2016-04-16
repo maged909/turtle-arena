@@ -3494,9 +3494,11 @@ typedef struct
 serverStatusCvar_t serverStatusCvars[] = {
 	{"sv_hostname", "Name"},
 	{"Address", ""},
-	{"gamename", "Game name"},
-	{"sv_gametypeName", "Game type name"},
-	{"sv_gametypeNetName", "Game type short name"},
+	{"fs_game", "Game"},
+	{"gamename", "Game name"}, // ZTM: This won't be present after Spearmint 0.3
+	{"gameversion", "Game version"},
+	{"sv_gametypeName", "Game type"},
+	{"sv_gametypeNetName", "Game type abbr"},
 	{"g_gametype", "Game type number"},
 	{"mapname", "Map"},
 	{"version", ""},
@@ -3507,6 +3509,7 @@ serverStatusCvar_t serverStatusCvars[] = {
 #else
 	{"fraglimit", ""},
 #endif
+	{"capturelimit", ""},
 	{NULL, NULL}
 };
 

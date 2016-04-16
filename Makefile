@@ -206,7 +206,7 @@ BUILD_DEFINES =
 endif
 
 ifndef COPYDIR
-COPYDIR="/usr/local/games/ebx"
+COPYDIR="/usr/local/games/spearmint"
 endif
 
 ifndef COPYBINDIR
