@@ -549,9 +549,6 @@ void CG_PredictPlayerState( void ) {
 		cg_pmove.trace = CG_Trace;
 	}
 	cg_pmove.pointcontents = CG_PointContents;
-#ifdef TURTLEARENA // NO_BODY_TRACE
-	cg_pmove.tracemask = MASK_PLAYERSOLID;
-#else
 	if ( cg_pmove.ps->pm_type == PM_DEAD ) {
 		cg_pmove.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;
 	}
@@ -561,7 +558,6 @@ void CG_PredictPlayerState( void ) {
 	if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
 		cg_pmove.tracemask &= ~CONTENTS_BODY;	// spectators can fly through bodies
 	}
-#endif
 	cg_pmove.noFootsteps = ( cgs.dmflags & DF_NO_FOOTSTEPS ) > 0;
 
 	// save the state before the pmove so we can detect transitions

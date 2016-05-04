@@ -640,7 +640,7 @@ static qboolean	PM_CheckWaterJump( void ) {
 
 	spot[2] += 16;
 	cont = pm->pointcontents (spot, pm->ps->playerNum );
-#ifdef TURTLEARENA // NO_BODY_TRACE
+#ifdef IOQ3ZTM // IOQ3BUGFIX?
 	if ( cont & pm->tracemask )
 #else
 	if ( cont & (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BODY) )
@@ -3096,11 +3096,9 @@ void PmoveSingle (pmove_t *pmove) {
 	pm->watertype = 0;
 	pm->waterlevel = 0;
 
-#ifndef TURTLEARENA // NO_BODY_TRACE
 	if ( pm->ps->stats[STAT_HEALTH] <= 0 ) {
 		pm->tracemask &= ~CONTENTS_BODY;	// corpses can fly through bodies
 	}
-#endif
 
 	// make sure walking button is clear if they are running, to avoid
 	// proxy no-footsteps cheats

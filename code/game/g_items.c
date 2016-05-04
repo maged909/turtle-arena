@@ -1392,11 +1392,7 @@ void G_RunItem( gentity_t *ent ) {
 	if ( ent->clipmask ) {
 		mask = ent->clipmask;
 	} else {
-#ifdef TURTLEARENA // NO_BODY_TRACE
-		mask = MASK_PLAYERSOLID;//MASK_SOLID;
-#else
 		mask = MASK_PLAYERSOLID & ~CONTENTS_BODY;//MASK_SOLID;
-#endif
 	}
 	trap_Trace( &tr, ent->r.currentOrigin, ent->s.mins, ent->s.maxs, origin, 
 		ent->r.ownerNum, mask );
