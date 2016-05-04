@@ -3846,7 +3846,7 @@ void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFla
 
 		CG_Trace( &trace, origin, NULL, NULL, newOrigin, skipNum, MASK_PLAYERSOLID );
 
-		hSurfShader = trap_R_GetSurfaceShader( trace.surfaceNum, 0 );
+		hSurfShader = trap_R_GetSurfaceShader( trace.surfaceNum, LIGHTMAP_NONE );
 
 		if (surfaceFlags == -1) {
 			surfaceFlags = trace.surfaceFlags;
@@ -3858,7 +3858,7 @@ void CG_ImpactParticles( vec3_t origin, vec3_t dir, float radius, int surfaceFla
 
 		VectorMA( origin, 10, trace.plane.normal, origin );
 
-		hSurfShader = trap_R_GetSurfaceShader( trace.surfaceNum, 0 );
+		hSurfShader = trap_R_GetSurfaceShader( trace.surfaceNum, LIGHTMAP_NONE );
 
 		if (surfaceFlags == -1) {
 			surfaceFlags = trace.surfaceFlags;

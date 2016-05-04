@@ -555,6 +555,9 @@ void UI_MainMenu( void ) {
 #ifdef TURTLEARENA // BANNER_IMAGE
 	Menu_AddItem( &s_main.menu,	&s_main.banner_image );
 #endif
+#ifdef TA_SP // Disable main game because it's a incomplete test
+	if ( trap_Cvar_VariableIntegerValue( "ui_maingame" ) )
+#endif
 	Menu_AddItem( &s_main.menu,	&s_main.singleplayer );
 #ifdef TA_SP // ARCADE
 	Menu_AddItem( &s_main.menu,	&s_main.arcade );

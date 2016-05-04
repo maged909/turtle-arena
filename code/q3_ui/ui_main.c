@@ -214,6 +214,7 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_spSelection, "ui_spSelection", "", CVAR_ROM },
 
 #ifdef TA_SP
+	{ NULL, "ui_maingame", "0", CVAR_ARCHIVE },
 	{ &ui_arcadeName, "ui_arcadeName", "Unnamed", CVAR_ARCHIVE },
 #endif
 
