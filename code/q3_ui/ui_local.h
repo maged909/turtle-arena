@@ -656,6 +656,7 @@ void UI_SPLevelMenu_ReInit( void );
 // ui_spArena.c
 //
 void UI_SPArena_Start( const char *arenaInfo );
+void UI_SPMap_f( void );
 #ifdef TA_SP
 void UI_LoadGameMenu( void );
 void LoadGame_Cache( void );

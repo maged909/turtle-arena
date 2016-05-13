@@ -298,7 +298,7 @@ qboolean CG_ParseSpawnVars( void ) {
 	cg.numSpawnVarChars = 0;
 
 	// parse the opening brace
-	if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+	if ( !trap_GetEntityToken( &cg.spawnEntityOffset, com_token, sizeof( com_token ) ) ) {
 		// end of spawn string
 		return qfalse;
 	}
@@ -309,7 +309,7 @@ qboolean CG_ParseSpawnVars( void ) {
 	// go through all the key / value pairs
 	while ( 1 ) {
 		// parse key
-		if ( !trap_GetEntityToken( keyname, sizeof( keyname ) ) ) {
+		if ( !trap_GetEntityToken( &cg.spawnEntityOffset, keyname, sizeof( keyname ) ) ) {
 			CG_Error( "CG_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -318,7 +318,7 @@ qboolean CG_ParseSpawnVars( void ) {
 		}
 
 		// parse value
-		if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+		if ( !trap_GetEntityToken( &cg.spawnEntityOffset, com_token, sizeof( com_token ) ) ) {
 			CG_Error( "CG_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -381,6 +381,7 @@ void CG_ParseEntitiesFromString( void ) {
 	// allow calls to CG_Spawn*()
 	cg.spawning = qtrue;
 	cg.numSpawnVars = 0;
+	cg.spawnEntityOffset = 0;
 	cg.numMiscGameModels = 0;
 
 	// the worldspawn is not an actual entity, but it still
