@@ -403,7 +403,11 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 	player = ent->player;
 
 	if ( player->sess.spectatorState != SPECTATOR_FOLLOW ) {
-		player->ps.pm_type = PM_SPECTATOR;
+		if ( player->noclip ) {
+			player->ps.pm_type = PM_NOCLIP;
+		} else {
+			player->ps.pm_type = PM_SPECTATOR;
+		}
 		player->ps.speed = 400;	// faster than normal
 
 		// set up for pmove
@@ -413,11 +417,7 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 		pm.playercfg = &player->pers.playercfg;
 #endif
 		pm.cmd = *ucmd;
-#ifdef TURTLEARENA // NO_BODY_TRACE
-		pm.tracemask = MASK_PLAYERSOLID;
-#else
 		pm.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;	// spectators can fly through bodies
-#endif
 		if (player->ps.collisionType == CT_CAPSULE) {
 			pm.trace = trap_TraceCapsule;
 		} else {
@@ -1621,13 +1621,10 @@ void PlayerThink_real( gentity_t *ent ) {
 	pm.playercfg = &player->pers.playercfg;
 #endif
 	pm.cmd = *ucmd;
-#ifndef TURTLEARENA // NO_BODY_TRACE
 	if ( pm.ps->pm_type == PM_DEAD ) {
 		pm.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;
 	}
-	else
-#endif
-	if ( ent->r.svFlags & SVF_BOT ) {
+	else if ( ent->r.svFlags & SVF_BOT ) {
 		pm.tracemask = MASK_PLAYERSOLID | CONTENTS_BOTCLIP;
 	}
 	else {
