@@ -2032,7 +2032,7 @@ static qboolean UI_NetGameType_HandleKey(int flags, float *special, int key) {
 			ui_netGameType.integer = uiInfo.numGameTypes - 1;
 		} else if (ui_netGameType.integer >= uiInfo.numGameTypes) {
 			ui_netGameType.integer = 0;
-		} 
+		}
 
 		trap_Cvar_SetValue( "ui_netGameType", ui_netGameType.integer);
 		trap_Cvar_SetValue( "ui_actualnetGameType", uiInfo.gameTypes[ui_netGameType.integer].gtEnum);
@@ -2260,7 +2260,7 @@ static qboolean UI_Crosshair_HandleKey(int flags, float *special, int key) {
 		} else if (uiInfo.currentCrosshair < 0) {
 			uiInfo.currentCrosshair = NUM_CROSSHAIRS - 1;
 		}
-		trap_Cvar_SetValue("cg_drawCrosshair", uiInfo.currentCrosshair); 
+		trap_Cvar_SetValue("cg_drawCrosshair", uiInfo.currentCrosshair);
 		return qtrue;
 	}
 	return qfalse;
@@ -2288,11 +2288,11 @@ static qboolean UI_SelectedPlayer_HandleKey(int flags, float *special, int key) 
 		}
 
 		if (selected == uiInfo.myTeamCount) {
-		 	trap_Cvar_Set( "cg_selectedPlayerName", "Everyone");
+			trap_Cvar_Set( "cg_selectedPlayerName", "Everyone");
 		} else {
-		 	trap_Cvar_Set( "cg_selectedPlayerName", uiInfo.teamPlayerNames[selected]);
+			trap_Cvar_Set( "cg_selectedPlayerName", uiInfo.teamPlayerNames[selected]);
 		}
-	 	trap_Cvar_SetValue( "cg_selectedPlayer", selected);
+		trap_Cvar_SetValue( "cg_selectedPlayer", selected);
 	}
 	return qfalse;
 }
