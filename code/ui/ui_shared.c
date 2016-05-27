@@ -496,31 +496,6 @@ qboolean PC_Script_Parse(int handle, const char **out) {
 // display, window, menu, item code
 // 
 
-int UI_SelectForKey(int key)
-{
-	if (key == K_MOUSE1 || key == K_ENTER || key == K_KP_ENTER
-#ifdef IOQ3ZTM // ARROWS
-			|| key == K_MOUSE3 || key == K_RIGHTARROW || key == K_KP_RIGHTARROW
-#endif
-			)
-	{
-		// Next
-		return 1;
-	}
-	else if (key == K_MOUSE2
-#ifdef IOQ3ZTM // ARROWS
-			|| key == K_LEFTARROW || key == K_KP_LEFTARROW
-#endif
-			)
-	{
-		// Previous
-		return -1;
-	}
-
-	// No change
-	return 0;
-}
-
 /*
 ==================
 Init_Display
@@ -1963,25 +1938,22 @@ qboolean Item_ListBox_HandleKey(itemDef_t *item, int key, qboolean down, qboolea
 
 qboolean Item_YesNo_HandleKey(itemDef_t *item, int key) {
 
-#ifdef IOQ3ZTM // ARROWS // This changes the behavor... now it is the same as all of the ownerdraw
-	if (item->cvar)
-	{
-		if (UI_SelectForKey(key) != 0)
-		{
+	if (item->cvar) {
+		qboolean action = qfalse;
+		if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3) {
+			if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS) {
+				action = qtrue;
+			}
+		} else if (UI_SelectForKey(key) != 0) {
+			action = qtrue;
+		}
+		if (action) {
 			DC->setCVar(item->cvar, va("%i", !DC->getCVarValue(item->cvar)));
 			return qtrue;
 		}
 	}
-#else
-	if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS && item->cvar) {
-		if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
-			DC->setCVar(item->cvar, va("%i", !DC->getCVarValue(item->cvar)));
-			return qtrue;
-		}
-	}
-#endif
 
-	return qfalse;
+  return qfalse;
 }
 
 int Item_Multi_CountSettings(itemDef_t *item) {
@@ -2047,29 +2019,23 @@ const char *Item_Multi_Setting(itemDef_t *item) {
 qboolean Item_Multi_HandleKey(itemDef_t *item, int key) {
 	multiDef_t *multiPtr = (multiDef_t*)item->typeData;
 	if (multiPtr) {
-#ifdef IOQ3ZTM // ARROWS // This changes the behavor... now it is the same as all of the ownerdraw
-		if (item->cvar)
-		{
-			int select = UI_SelectForKey(key);
+		if (item->cvar) {
+			int select = 0;
+			if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3) {
+				if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS) {
+					select = (key == K_MOUSE2) ? -1 : 1;
+				}
+			} else {
+				select = UI_SelectForKey(key);
+			}
 			if (select != 0) {
 				int current = Item_Multi_FindCvarByValue(item) + select;
-#else
-	  if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS && item->cvar) {
-			if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
-				int current = Item_Multi_FindCvarByValue(item) + 1;
-#endif
 				int max = Item_Multi_CountSettings(item);
-#ifdef IOQ3ZTM // ARROWS
 				if ( current < 0 ) {
 					current = max-1;
 				} else if ( current >= max ) {
 					current = 0;
 				}
-#else
-				if ( current < 0 || current >= max ) {
-					current = 0;
-				}
-#endif
 				if (multiPtr->strDef) {
 					DC->setCVar(item->cvar, multiPtr->cvarStr[current]);
 				} else {
@@ -2391,10 +2357,10 @@ qboolean Item_Slider_HandleKey(itemDef_t *item, int key, qboolean down) {
 	float x, value, width, work;
 
 	//DC->Print("slider handle key\n");
-	if (item->window.flags & WINDOW_HASFOCUS && item->cvar && Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory)) {
-		if (key == K_MOUSE1 || key == K_ENTER || key == K_MOUSE2 || key == K_MOUSE3) {
+	if (item->cvar) {
+		if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3) {
 			editFieldDef_t *editDef = item->typeData;
-			if (editDef) {
+			if (editDef && Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && item->window.flags & WINDOW_HASFOCUS) {
 				rectDef_t testRect;
 				width = SLIDER_WIDTH;
 				if (item->text) {
@@ -2421,33 +2387,27 @@ qboolean Item_Slider_HandleKey(itemDef_t *item, int key, qboolean down) {
 					return qtrue;
 				}
 			}
-		}
-	}
+		} else {
+			int select = UI_SelectForKey(key);
+			if (select != 0) {
+				editFieldDef_t *editDef = item->typeData;
+				if (editDef) {
+					// 20 is number of steps
+					value = DC->getCVarValue(item->cvar) + (((editDef->maxVal - editDef->minVal)/20) * select);
 
-#ifdef IOQ3ZTM // ARROWS // This changes the behavor... now arrows are supported
-	if (item->cvar)
-	{
-		int select = UI_SelectForKey(key);
-		if (select != 0)
-		{
-			editFieldDef_t *editDef = item->typeData;
-			if (editDef) {
-				// 20 is number of steps
-				value = DC->getCVarValue(item->cvar) + (((editDef->maxVal - editDef->minVal)/20) * select);
+					if (value < editDef->minVal)
+						value = editDef->minVal;
+					else if (value > editDef->maxVal)
+						value = editDef->maxVal;
 
-				if (value < editDef->minVal)
-					value = editDef->minVal;
-				else if (value > editDef->maxVal)
-					value = editDef->maxVal;
-
-				DC->setCVar(item->cvar, va("%f", value));
-				return qtrue;
+					DC->setCVar(item->cvar, va("%f", value));
+					return qtrue;
+				}
 			}
 		}
 	}
-#else
+
 	DC->Print("slider handle key exit\n");
-#endif
 	return qfalse;
 }
 
@@ -2681,6 +2641,48 @@ static rectDef_t *Item_CorrectedTextRect(itemDef_t *item) {
 	return &rect;
 }
 
+// menu item key horizontal action: -1 = previous value, 1 = next value, 0 = no change
+int UI_SelectForKey(int key)
+{
+	switch (key) {
+		case K_MOUSE1:
+		case K_MOUSE3:
+		case K_ENTER:
+		case K_KP_ENTER:
+		case K_RIGHTARROW:
+		case K_KP_RIGHTARROW:
+		case K_JOY_A:
+		case K_2JOY_A:
+		case K_3JOY_A:
+		case K_4JOY_A:
+		case K_JOY_DPAD_RIGHT:
+		case K_JOY_LEFTSTICK_RIGHT:
+		case K_2JOY_DPAD_RIGHT:
+		case K_2JOY_LEFTSTICK_RIGHT:
+		case K_3JOY_DPAD_RIGHT:
+		case K_3JOY_LEFTSTICK_RIGHT:
+		case K_4JOY_DPAD_RIGHT:
+		case K_4JOY_LEFTSTICK_RIGHT:
+			return 1; // next
+
+		case K_MOUSE2:
+		case K_LEFTARROW:
+		case K_KP_LEFTARROW:
+		case K_JOY_DPAD_LEFT:
+		case K_JOY_LEFTSTICK_LEFT:
+		case K_2JOY_DPAD_LEFT:
+		case K_2JOY_LEFTSTICK_LEFT:
+		case K_3JOY_DPAD_LEFT:
+		case K_3JOY_LEFTSTICK_LEFT:
+		case K_4JOY_DPAD_LEFT:
+		case K_4JOY_LEFTSTICK_LEFT:
+			return -1; // previous
+	}
+
+	// no change
+	return 0;
+}
+
 void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 	int i;
 	itemDef_t *item = NULL;
@@ -2828,7 +2830,6 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 		case K_AUX14:
 		case K_AUX15:
 		case K_AUX16:
-			break;
 		case K_KP_ENTER:
 		case K_ENTER:
 			if (item) {
@@ -3545,9 +3546,10 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {
 	int			id;
 	int			i;
 
-	if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory) && !g_waitingForKey)
+	if (!g_waitingForKey)
 	{
-		if (down && (key == K_MOUSE1 || key == K_ENTER)) {
+		if (down && ((key == K_MOUSE1 && Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory))
+				|| key == K_ENTER || key == K_KP_ENTER || key == K_JOY_A || key == K_2JOY_A || key == K_3JOY_A || key == K_4JOY_A)) {
 			g_waitingForKey = qtrue;
 			g_bindItem = item;
 		}
@@ -3555,7 +3557,7 @@ qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {
 	}
 	else
 	{
-		if (!g_waitingForKey || g_bindItem == NULL) {
+		if (g_bindItem == NULL) {
 			return qtrue;
 		}
 

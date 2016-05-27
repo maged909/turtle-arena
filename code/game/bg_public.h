@@ -1790,8 +1790,8 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 #define DEFAULT_HEAD4			"mike"
 
 // For fallback sounds
-#define DEFAULT_MODEL_MALE		"raph" // ZTM: Only raph has sounds...
-#define DEFAULT_MODEL_FEMALE	"raph" // ZTM: TODO: Add female model/sounds
+#define DEFAULT_MODEL_MALE		"male-default"
+#define DEFAULT_MODEL_FEMALE	"female-default"
 
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL

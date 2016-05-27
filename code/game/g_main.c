@@ -429,6 +429,14 @@ void G_RemapTeamShaders( void ) {
 	Com_sprintf( string, sizeof(string), "team_icon/%s_blue", g_blueteam.string );
 	AddRemap("textures/ctf2/blueteam01", string, f); 
 	AddRemap("textures/ctf2/blueteam02", string, f); 
+
+#ifdef TA_DATA // FLAG_MODEL
+	Com_sprintf( string, sizeof(string), "team_icon/flags/%s_red", g_redteam.string );
+	AddRemap("models/flags/r_flag2", string, f);
+	Com_sprintf( string, sizeof(string), "team_icon/flags/%s_blue", g_blueteam.string );
+	AddRemap("models/flags/b_flag2", string, f);
+#endif
+
 	trap_SetConfigstring(CS_SHADERSTATE, BuildShaderStateConfig());
 #endif
 }
