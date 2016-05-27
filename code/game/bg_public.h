@@ -1790,8 +1790,8 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 #define DEFAULT_HEAD4			"raz"
 
 // For fallback sounds
-#define DEFAULT_MODEL_MALE		"exa"
-#define DEFAULT_MODEL_FEMALE	"cloe"
+#define DEFAULT_MODEL_MALE		"male-default"
+#define DEFAULT_MODEL_FEMALE	"female-default"
 
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL
