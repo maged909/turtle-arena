@@ -113,6 +113,9 @@ vmCvar_t	g_cubeTimeout;
 #endif
 vmCvar_t	g_redteam;
 vmCvar_t	g_blueteam;
+#ifdef TA_DATA // FLAG_MODEL
+vmCvar_t	g_neutralteam;
+#endif
 #endif
 #if defined MISSIONPACK || defined TA_WEAPSYS
 vmCvar_t	g_proxMineTimeout;
@@ -225,6 +228,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &g_redteam, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
 	{ &g_blueteam, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
+#ifdef TA_DATA // FLAG_MODEL
+	{ &g_neutralteam, "g_neutralteam", DEFAULT_NEUTRALTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO, GCF_TRACK_CHANGE | GCF_TEAM_SHADER, RANGE_ALL },
+#endif
 #endif
 
 #if defined MISSIONPACK || defined TA_WEAPSYS
@@ -435,6 +441,8 @@ void G_RemapTeamShaders( void ) {
 	AddRemap("models/flags/r_flag2", string, f);
 	Com_sprintf( string, sizeof(string), "team_icon/flags/%s_blue", g_blueteam.string );
 	AddRemap("models/flags/b_flag2", string, f);
+	Com_sprintf( string, sizeof(string), "team_icon/flags/%s_neutral", g_neutralteam.string );
+	AddRemap("models/flags/n_flag2", string, f);
 #endif
 
 	trap_SetConfigstring(CS_SHADERSTATE, BuildShaderStateConfig());

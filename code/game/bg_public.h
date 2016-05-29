@@ -2109,9 +2109,11 @@ void Pmove (pmove_t *pmove);
 #ifdef TURTLEARENA // DEFAULT_TEAMS
 #define DEFAULT_REDTEAM_NAME		"Clover"
 #define DEFAULT_BLUETEAM_NAME		"Shell"
+#define DEFAULT_NEUTRALTEAM_NAME	"Plus"
 #else
 #define DEFAULT_REDTEAM_NAME		"Pagans"
 #define DEFAULT_BLUETEAM_NAME		"Stroggs"
+#define DEFAULT_NEUTRALTEAM_NAME	"Stroggs"
 #endif
 #define MAX_TEAMNAME		32
 
