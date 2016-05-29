@@ -446,7 +446,7 @@ static void Action_Draw( menuaction_s *a )
 	if ( a->generic.parent->cursor == a->generic.menuPosition )
 	{
 		// draw cursor
-		UI_DrawChar( x - BIGCHAR_WIDTH, y, 13, UI_LEFT|UI_BLINK, color);
+		UI_DrawChar( x - BIGCHAR_WIDTH, y, GLYPH_ARROW, UI_LEFT|UI_BLINK, color);
 	}
 }
 
@@ -571,7 +571,7 @@ static void RadioButton_Draw( menuradiobutton_s *rb )
 	{
 		// draw cursor
 		CG_FillRect( rb->generic.left, rb->generic.top, rb->generic.right-rb->generic.left+1, rb->generic.bottom-rb->generic.top+1, listbar_color ); 
-		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
+		UI_DrawChar( x, y, GLYPH_ARROW, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
 	if ( rb->generic.name )
@@ -774,7 +774,7 @@ static void Slider_Draw( menuslider_s *s )
 	{
 		// draw cursor
 		CG_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
-		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
+		UI_DrawChar( x, y, GLYPH_ARROW, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
 	// draw label
@@ -984,7 +984,7 @@ static void SpinControl_Draw( menulist_s *s )
 	{
 		// draw cursor
 		CG_FillRect( s->generic.left, s->generic.top, s->generic.right-s->generic.left+1, s->generic.bottom-s->generic.top+1, listbar_color ); 
-		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
+		UI_DrawChar( x, y, GLYPH_ARROW, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
 	UI_DrawString( x - SMALLCHAR_WIDTH, y, s->generic.name, style|UI_RIGHT, color );
