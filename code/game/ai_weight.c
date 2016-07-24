@@ -67,7 +67,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define EVALUATERECURSIVELY
 
 #define MAX_WEIGHT_FILES			128
-weightconfig_t	weightFileList[MAX_WEIGHT_FILES];
+weightconfig_t	*weightFileList[MAX_WEIGHT_FILES];
 
 //===========================================================================
 //
@@ -137,12 +137,10 @@ int ReadFuzzyWeight(int source, fuzzyseperator_t *fs)
 //===========================================================================
 void FreeFuzzySeperators_r(fuzzyseperator_t *fs)
 {
-#if 0 // game currently can't free memory
 	if (!fs) return;
 	if (fs->child) FreeFuzzySeperators_r(fs->child);
 	if (fs->next) FreeFuzzySeperators_r(fs->next);
-	FreeMemory(fs);
-#endif
+	trap_HeapFree(fs);
 } //end of the function FreeFuzzySeperators
 //===========================================================================
 //
@@ -157,9 +155,9 @@ void FreeWeightConfig2(weightconfig_t *config)
 	for (i = 0; i < config->numweights; i++)
 	{
 		FreeFuzzySeperators_r(config->weights[i].firstseperator);
+		if (config->weights[i].name) trap_HeapFree(config->weights[i].name);
 	} //end for
-	// ZTM: NOTE: weightconfig_t usually static now, and game can't free it anyway.
-	//FreeMemory(config);
+	trap_HeapFree(config);
 } //end of the function FreeWeightConfig2
 //===========================================================================
 //
@@ -172,28 +170,6 @@ void FreeWeightConfig(weightconfig_t *config)
 	if (!bot_reloadcharacters.integer) return;
 	FreeWeightConfig2(config);
 } //end of the function FreeWeightConfig
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void ErrorWeightConfig(weightconfig_t *config)
-{
-	// game can't free all the fuzzy separates, so error instead
-	Com_Error(ERR_DROP, "Failed loading weight file %s", config->filename );
-} //end of the function ErrorWeightConfig
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void ErrorFuzzySeperators_r(fuzzyseperator_t *fs)
-{
-	// game can't free all the fuzzy separates, so error instead
-	Com_Error(ERR_DROP, "Failed loading weight file" );
-} //end of the function ErrorFuzzySeperators_r
 //===========================================================================
 //
 // Parameter:			-
@@ -220,7 +196,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 		def = !strcmp(token.string, "default");
 		if (def || !strcmp(token.string, "case"))
 		{
-			fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
+			fs = (fuzzyseperator_t *) trap_HeapMalloc(sizeof(fuzzyseperator_t));
 			fs->index = index;
 			if (lastfs) lastfs->next = fs;
 			else firstfs = fs;
@@ -230,7 +206,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 				if (founddefault)
 				{
 					PC_SourceError(source, "switch already has a default");
-					ErrorFuzzySeperators_r(firstfs);
+					FreeFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 				fs->value = MAX_INVENTORYVALUE;
@@ -240,14 +216,14 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 			{
 				if (!PC_ExpectTokenType(source, TT_NUMBER, TT_INTEGER, &token))
 				{
-					ErrorFuzzySeperators_r(firstfs);
+					FreeFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 				fs->value = token.intvalue;
 			} //end else
 			if (!PC_ExpectTokenString(source, ":") || !PC_ExpectAnyToken(source, &token))
 			{
-				ErrorFuzzySeperators_r(firstfs);
+				FreeFuzzySeperators_r(firstfs);
 				return NULL;
 			} //end if
 			newindent = qfalse;
@@ -256,7 +232,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 				newindent = qtrue;
 				if (!PC_ExpectAnyToken(source, &token))
 				{
-					ErrorFuzzySeperators_r(firstfs);
+					FreeFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 			} //end if
@@ -264,7 +240,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 			{
 				if (!ReadFuzzyWeight(source, fs))
 				{
-					ErrorFuzzySeperators_r(firstfs);
+					FreeFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 			} //end if
@@ -273,7 +249,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 				fs->child = ReadFuzzySeperators_r(source);
 				if (!fs->child)
 				{
-					ErrorFuzzySeperators_r(firstfs);
+					FreeFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 			} //end else if
@@ -286,20 +262,20 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 			{
 				if (!PC_ExpectTokenString(source, "}"))
 				{
-					ErrorFuzzySeperators_r(firstfs);
+					FreeFuzzySeperators_r(firstfs);
 					return NULL;
 				} //end if
 			} //end if
 		} //end if
 		else
 		{
-			ErrorFuzzySeperators_r(firstfs);
+			FreeFuzzySeperators_r(firstfs);
 			PC_SourceError(source, "invalid name %s", token.string);
 			return NULL;
 		} //end else
 		if (!PC_ExpectAnyToken(source, &token))
 		{
-			ErrorFuzzySeperators_r(firstfs);
+			FreeFuzzySeperators_r(firstfs);
 			return NULL;
 		} //end if
 	} while(strcmp(token.string, "}"));
@@ -307,7 +283,7 @@ fuzzyseperator_t *ReadFuzzySeperators_r(int source)
 	if (!founddefault)
 	{
 		PC_SourceWarning(source, "switch without default");
-		fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
+		fs = (fuzzyseperator_t *) trap_HeapMalloc(sizeof(fuzzyseperator_t));
 		fs->index = index;
 		fs->value = MAX_INVENTORYVALUE;
 		fs->weight = 0;
@@ -341,8 +317,8 @@ weightconfig_t *ReadWeightConfig(char *filename)
 		avail = -1;
 		for( n = 0; n < MAX_WEIGHT_FILES; n++ )
 		{
-			config = &weightFileList[n];
-			if( !config->valid )
+			config = weightFileList[n];
+			if( !config )
 			{
 				if( avail == -1 )
 				{
@@ -371,16 +347,7 @@ weightconfig_t *ReadWeightConfig(char *filename)
 		return NULL;
 	} //end if
 	//
-	if (!bot_reloadcharacters.integer)
-	{
-		config = &weightFileList[avail];
-	}
-	else
-	{
-		config = (weightconfig_t *) trap_Alloc(sizeof(weightconfig_t), NULL);
-	}
-	//
-	config->valid = qfalse;
+	config = (weightconfig_t *) trap_HeapMalloc(sizeof(weightconfig_t));
 	config->numweights = 0;
 	Q_strncpyz( config->filename, filename, sizeof(config->filename) );
 	//parse the item config file
@@ -395,14 +362,15 @@ weightconfig_t *ReadWeightConfig(char *filename)
 			} //end if
 			if (!PC_ExpectTokenType(source, TT_STRING, 0, &token))
 			{
-				ErrorWeightConfig(config);
+				FreeWeightConfig(config);
 				trap_PC_FreeSource(source);
 				return NULL;
 			} //end if
-			Q_strncpyz(config->weights[config->numweights].name, token.string, sizeof (config->weights[config->numweights].name));
+			config->weights[config->numweights].name = (char *) trap_HeapMalloc(strlen(token.string) + 1);
+			strcpy(config->weights[config->numweights].name, token.string);
 			if (!PC_ExpectAnyToken(source, &token))
 			{
-				ErrorWeightConfig(config);
+				FreeWeightConfig(config);
 				trap_PC_FreeSource(source);
 				return NULL;
 			} //end if
@@ -412,7 +380,7 @@ weightconfig_t *ReadWeightConfig(char *filename)
 				newindent = qtrue;
 				if (!PC_ExpectAnyToken(source, &token))
 				{
-					ErrorWeightConfig(config);
+					FreeWeightConfig(config);
 					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
@@ -422,7 +390,7 @@ weightconfig_t *ReadWeightConfig(char *filename)
 				fs = ReadFuzzySeperators_r(source);
 				if (!fs)
 				{
-					ErrorWeightConfig(config);
+					FreeWeightConfig(config);
 					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
@@ -430,27 +398,24 @@ weightconfig_t *ReadWeightConfig(char *filename)
 			} //end if
 			else if (!strcmp(token.string, "return"))
 			{
-				fuzzyseperator_t fuzzy;
-
-				Com_Memset(&fuzzy, 0, sizeof (fuzzyseperator_t));
-				fuzzy.index = 0;
-				fuzzy.value = MAX_INVENTORYVALUE;
-				fuzzy.next = NULL;
-				fuzzy.child = NULL;
-				if (!ReadFuzzyWeight(source, &fuzzy))
+				fs = (fuzzyseperator_t *) trap_HeapMalloc(sizeof(fuzzyseperator_t));
+				fs->index = 0;
+				fs->value = MAX_INVENTORYVALUE;
+				fs->next = NULL;
+				fs->child = NULL;
+				if (!ReadFuzzyWeight(source, fs))
 				{
-					ErrorWeightConfig(config);
+					trap_HeapFree(fs);
+					FreeWeightConfig(config);
 					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
-				fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
-				Com_Memcpy(fs, &fuzzy, sizeof (fuzzyseperator_t));
 				config->weights[config->numweights].firstseperator = fs;
 			} //end else if
 			else
 			{
 				PC_SourceError(source, "invalid name %s", token.string);
-				ErrorWeightConfig(config);
+				FreeWeightConfig(config);
 				trap_PC_FreeSource(source);
 				return NULL;
 			} //end else
@@ -458,7 +423,7 @@ weightconfig_t *ReadWeightConfig(char *filename)
 			{
 				if (!PC_ExpectTokenString(source, "}"))
 				{
-					ErrorWeightConfig(config);
+					FreeWeightConfig(config);
 					trap_PC_FreeSource(source);
 					return NULL;
 				} //end if
@@ -468,7 +433,7 @@ weightconfig_t *ReadWeightConfig(char *filename)
 		else
 		{
 			PC_SourceError(source, "invalid name %s", token.string);
-			ErrorWeightConfig(config);
+			FreeWeightConfig(config);
 			trap_PC_FreeSource(source);
 			return NULL;
 		} //end else
@@ -479,7 +444,10 @@ weightconfig_t *ReadWeightConfig(char *filename)
 	BotAI_Print(PRT_DEVELOPER, "loaded %s\n", filename);
 	BotAI_Print(PRT_DEVELOPER, "weights loaded in %d msec\n", trap_Milliseconds() - starttime);
 	//
-	config->valid = qtrue;
+	if (!bot_reloadcharacters.integer)
+	{
+		weightFileList[avail] = config;
+	} //end if
 	//
 	return config;
 } //end of the function ReadWeightConfig
@@ -957,9 +925,10 @@ void BotShutdownWeights(void)
 
 	for( i = 0; i < MAX_WEIGHT_FILES; i++ )
 	{
-		if (weightFileList[i].valid)
+		if (weightFileList[i])
 		{
-			FreeWeightConfig2(&weightFileList[i]);
+			FreeWeightConfig2(weightFileList[i]);
+			weightFileList[i] = NULL;
 		} //end if
 	} //end for
 } //end of the function BotShutdownWeights

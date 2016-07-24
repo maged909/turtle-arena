@@ -2944,6 +2944,21 @@ int BotCanAndWantsToRocketJump(bot_state_t *bs) {
 
 /*
 ==================
+BotCanGrapple
+==================
+*/
+int BotCanGrapple(bot_state_t *bs) {
+	//if grappling is disabled
+	if (!bot_grapple.integer) return qfalse;
+#ifndef TURTLEARENA // ZTM: FIXME: should this check for grappling hook or did I already add it somewhere else?
+	//if no grappling hook
+	if (!bot_offhandgrapple.integer && bs->inventory[INVENTORY_GRAPPLINGHOOK] <= 0) return qfalse;
+#endif
+	return qtrue;
+}
+
+/*
+==================
 BotHasPersistantPowerupAndWeapon
 ==================
 */
@@ -6540,11 +6555,7 @@ void BotSetupDeathmatchAI(void) {
 #ifndef TURTLEARENA // NO_ROCKET_JUMPING
 	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
 #endif
-#ifdef TURTLEARENA // BOTLIB
 	trap_Cvar_Register(&bot_grapple, "bot_grapple", "1", 0);
-#else
-	trap_Cvar_Register(&bot_grapple, "bot_grapple", "0", 0);
-#endif
 	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
 	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
 	trap_Cvar_Register(&bot_testichat, "bot_testichat", "0", 0);

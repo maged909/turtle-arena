@@ -485,8 +485,8 @@ static void CG_OffsetThirdPersonView( void ) {
 	vec3_t		view;
 	vec3_t		focusAngles;
 	trace_t		trace;
-	static vec3_t	mins = { -4, -4, -4 };
-	static vec3_t	maxs = { 4, 4, 4 };
+	static vec3_t	mins = { -5, -5, -5 };
+	static vec3_t	maxs = { 5, 5, 5 };
 	vec3_t		focusPoint;
 	float		focusDist;
 #ifdef IOQ3ZTM // BETTER_THIRD_PERSON
@@ -628,7 +628,7 @@ static void CG_OffsetThirdPersonView( void ) {
 #endif
 
 	// trace a ray from the origin to the viewpoint to make sure the view isn't
-	// in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
+	// in a solid block.  Use a 10 by 10 block to prevent the view from near clipping anything
 
 	if (!cg_cameraMode.integer) {
 		CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.playerNum, MASK_SOLID );
