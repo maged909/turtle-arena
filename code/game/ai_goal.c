@@ -324,6 +324,7 @@ int CreateFuzzyWeight(weightconfig_t *iwc, const iteminfo_t *item)
 
 	index = iwc->numweights;
 
+	iwc->weights[index].name = trap_HeapMalloc( strlen( item->classname ) + 1 );
 	Q_strncpyz(iwc->weights[index].name, item->classname, sizeof ( iwc->weights[index].name ) );
 
 	if (item->inventory)
