@@ -338,7 +338,7 @@ int CreateFuzzyWeight(weightconfig_t *iwc, const iteminfo_t *item)
 		//}
 
 		// Setup fuzzyseperator
-		fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
+		fs = (fuzzyseperator_t *) trap_HeapMalloc(sizeof(fuzzyseperator_t));
 		fs->next = NULL;
 		fs->child = NULL;
 		fs->index = item->inventory; //switch(INVENTORY_*)
@@ -361,7 +361,7 @@ int CreateFuzzyWeight(weightconfig_t *iwc, const iteminfo_t *item)
 #endif
 
 		//default: return 0;
-		fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
+		fs = (fuzzyseperator_t *) trap_HeapMalloc(sizeof(fuzzyseperator_t));
 		fs->index = item->inventory;
 		fs->value = MAX_INVENTORYVALUE;
 		fs->weight = 0;
@@ -376,7 +376,7 @@ int CreateFuzzyWeight(weightconfig_t *iwc, const iteminfo_t *item)
 	}
 
 	// Setup fuzzyseperator
-	fs = (fuzzyseperator_t *) trap_Alloc(sizeof(fuzzyseperator_t), NULL);
+	fs = (fuzzyseperator_t *) trap_HeapMalloc(sizeof(fuzzyseperator_t));
 	fs->index = 0;
 	fs->value = MAX_INVENTORYVALUE;
 	fs->next = NULL;
@@ -545,7 +545,7 @@ void BotInitInfoEntities(void)
 				continue;
 			} //end if
 
-			cs = (campspot_t *) trap_Alloc(sizeof(campspot_t), NULL);
+			cs = (campspot_t *) trap_HeapMalloc(sizeof(campspot_t));
 			VectorCopy(origin, cs->origin);
 			trap_AAS_ValueForBSPEpairKey(ent, "message", cs->name, sizeof(cs->name));
 			trap_AAS_FloatForBSPEpairKey(ent, "range", &cs->range);

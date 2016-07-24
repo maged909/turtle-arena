@@ -1831,9 +1831,10 @@ void BG_InitItemInfo(void)
 	int			i;
 	int			dirlen;
 
-	// ZTM: NOTE: game/cgame/ui DLLs share the same memory and only parse files once!
-	// QVMs do not support it as of writting (Feb 13 2013).
-	bg_common = trap_Alloc( sizeof ( bg_commonInfo_t ), "bg_common" );
+	// ZTM: NOTE: In the past game/cgame/ui DLLs shared the same memory and only parsed files once.
+	//            QVMs did not support it and it was removed from the engine in Spearmint 0.4.
+	//            Since CGame/UI were merged it still makes sense to check if already inited -- though, could probably remove call from UI?
+	bg_common = trap_HeapMalloc( sizeof ( bg_commonInfo_t ) );
 
 	if (bg_itemsys_init)
 		return;
