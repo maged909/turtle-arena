@@ -42,8 +42,12 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	GAME_VERSION		MODDIR "-4"
 
 // used for switching fs_game
-#define BASEQ3				"baseq3"
-#define BASETA				"missionpack"
+#ifndef BASEQ3
+	#define BASEQ3			"baseq3"
+#endif
+#ifndef BASETA
+	#define BASETA			"missionpack"
+#endif
 
 #define	DEFAULT_GRAVITY		800
 #ifndef NOTRATEDM // No gibs.
@@ -1789,9 +1793,12 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 #define DEFAULT_MODEL4			"raz"
 #define DEFAULT_HEAD4			"raz"
 
-// For fallback sounds
-#define DEFAULT_MODEL_MALE		"male-default"
-#define DEFAULT_MODEL_FEMALE	"female-default"
+// For fallback player and gender-specific fallback sounds
+#define DEFAULT_MODEL_GENDER	"male"
+#define DEFAULT_MODEL_MALE		"exa"
+#define DEFAULT_HEAD_MALE		"exa"
+#define DEFAULT_MODEL_FEMALE	"cloe"
+#define DEFAULT_HEAD_FEMALE		"cloe"
 
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL
@@ -1806,9 +1813,12 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 #define DEFAULT_TEAM_MODEL4		DEFAULT_MODEL4
 #define DEFAULT_TEAM_HEAD4		DEFAULT_HEAD4
 
-// For team fallback sounds
+// For fallback player and gender-specific fallback sounds
+#define DEFAULT_TEAM_MODEL_GENDER	DEFAULT_MODEL_GENDER
 #define DEFAULT_TEAM_MODEL_MALE		DEFAULT_MODEL_MALE
+#define DEFAULT_TEAM_HEAD_MALE		DEFAULT_HEAD_MALE
 #define DEFAULT_TEAM_MODEL_FEMALE	DEFAULT_MODEL_FEMALE
+#define DEFAULT_TEAM_HEAD_FEMALE	DEFAULT_HEAD_FEMALE
 
 #else // Q3
 
@@ -1828,27 +1838,34 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 #define DEFAULT_MODEL4			"visor"
 #define DEFAULT_HEAD4			"visor"
 
-// For fallback sounds
+// For fallback player and gender-specific fallback sounds
+#define DEFAULT_MODEL_GENDER	"male"
 #define DEFAULT_MODEL_MALE		"sarge"
+#define DEFAULT_HEAD_MALE		"sarge"
 #define DEFAULT_MODEL_FEMALE	"major"
+#define DEFAULT_HEAD_FEMALE		"major"
 
 #ifdef MISSIONPACK
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		"james"
 #define DEFAULT_TEAM_HEAD		"*james"
 
-#define DEFAULT_TEAM_MODEL2		"james"
-#define DEFAULT_TEAM_HEAD2		"*james"
+#define DEFAULT_TEAM_MODEL2		"janet"
+#define DEFAULT_TEAM_HEAD2		"*janet"
 
-#define DEFAULT_TEAM_MODEL3		"janet"
-#define DEFAULT_TEAM_HEAD3		"*janet"
+#define DEFAULT_TEAM_MODEL3		"james"
+#define DEFAULT_TEAM_HEAD3		"*james"
 
 #define DEFAULT_TEAM_MODEL4		"janet"
 #define DEFAULT_TEAM_HEAD4		"*janet"
 
-// For team fallback sounds
+// For fallback player and gender-specific fallback sounds
+// Also used for Team Arena UI's character base model and CGame player pre-caching
+#define DEFAULT_TEAM_MODEL_GENDER	"male"
 #define DEFAULT_TEAM_MODEL_MALE		"james"
+#define DEFAULT_TEAM_HEAD_MALE		"*james"
 #define DEFAULT_TEAM_MODEL_FEMALE	"janet"
+#define DEFAULT_TEAM_HEAD_FEMALE	"*janet"
 #else
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL
@@ -1863,9 +1880,12 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 #define DEFAULT_TEAM_MODEL4		DEFAULT_MODEL4
 #define DEFAULT_TEAM_HEAD4		DEFAULT_HEAD4
 
-// For team fallback sounds
+// For fallback player and gender-specific fallback sounds
+#define DEFAULT_TEAM_MODEL_GENDER	DEFAULT_MODEL_GENDER
 #define DEFAULT_TEAM_MODEL_MALE		DEFAULT_MODEL_MALE
+#define DEFAULT_TEAM_HEAD_MALE		DEFAULT_HEAD_MALE
 #define DEFAULT_TEAM_MODEL_FEMALE	DEFAULT_MODEL_FEMALE
+#define DEFAULT_TEAM_HEAD_FEMALE	DEFAULT_HEAD_FEMALE
 #endif // MISSIONPACK
 
 #endif // TURTLEARENA

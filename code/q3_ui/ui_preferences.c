@@ -66,6 +66,7 @@ enum {
 	ID_ALLOWDOWNLOAD,
 	ID_SPLITVERTICAL,
 	ID_SPLITTEXTSIZE,
+	ID_THIRDSIZE,
 	ID_ATMEFFECTS,
 
 #ifdef IOQ3ZTM // CONTENT_FILTERING
@@ -116,6 +117,7 @@ typedef struct {
 	menuradiobutton_s	allowdownload;
 	menulist_s			splitvertical;
 	menulist_s			splittextsize;
+	menulist_s			thirdsize;
 	menulist_s			atmeffects;
 #ifdef IOQ3ZTM // CONTENT_FILTERING
 #ifndef NOBLOOD
@@ -155,6 +157,13 @@ static const char *splittextsize_names[] =
 	"small",
 	"medium",
 	"large",
+	NULL
+};
+
+static const char *thirdsize_names[] =
+{
+	"half",
+	"quarter",
 	NULL
 };
 
@@ -199,6 +208,8 @@ static void Preferences_SetMenuItems( void ) {
 	} else {
 		s_preferences.splittextsize.curvalue	= 2;
 	}
+
+	s_preferences.thirdsize.curvalue		= trap_Cvar_VariableValue( "cg_splitviewThirdEqual" ) != 0;
 
 	s_preferences.atmeffects.curvalue		= 2*trap_Cvar_VariableValue( "cg_atmosphericEffects" );
 	if (s_preferences.atmeffects.curvalue < 0)
@@ -289,6 +300,10 @@ static void Preferences_Event( void* ptr, int notification ) {
 
 	case ID_SPLITTEXTSIZE:
 		trap_Cvar_SetValue( "cg_splitviewTextScale", 1.0f + (float)s_preferences.splittextsize.curvalue/2.0f );
+		break;
+
+	case ID_THIRDSIZE:
+		trap_Cvar_SetValue( "cg_splitviewThirdEqual", s_preferences.thirdsize.curvalue );
 		break;
 
 	case ID_ATMEFFECTS:
@@ -543,6 +558,16 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.splittextsize.itemnames			= splittextsize_names;
 
 	y += BIGCHAR_HEIGHT+2;
+	s_preferences.thirdsize.generic.type			= MTYPE_SPINCONTROL;
+	s_preferences.thirdsize.generic.name			= "Third view size:";
+	s_preferences.thirdsize.generic.flags			= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_preferences.thirdsize.generic.callback		= Preferences_Event;
+	s_preferences.thirdsize.generic.id				= ID_SPLITVERTICAL;
+	s_preferences.thirdsize.generic.x				= PREFERENCES_X_POS;
+	s_preferences.thirdsize.generic.y				= y;
+	s_preferences.thirdsize.itemnames				= thirdsize_names;
+
+	y += BIGCHAR_HEIGHT+2;
 	s_preferences.atmeffects.generic.type		= MTYPE_SPINCONTROL;
 	s_preferences.atmeffects.generic.name		= "Snow/Rain:";
 	s_preferences.atmeffects.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -608,6 +633,7 @@ static void Preferences_MenuInit( void ) {
 	Menu_AddItem( &s_preferences.menu, &s_preferences.allowdownload );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.splitvertical );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.splittextsize );
+	Menu_AddItem( &s_preferences.menu, &s_preferences.thirdsize );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.atmeffects );
 #ifdef IOQ3ZTM // CONTENT_FILTERING
 #ifndef NOBLOOD

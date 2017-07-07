@@ -218,7 +218,7 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_arcadeName, "ui_arcadeName", "Unnamed", CVAR_ARCHIVE },
 #endif
 
-	{ &ui_browserMaster, "ui_browserMaster", "0", CVAR_ARCHIVE },
+	{ &ui_browserMaster, "ui_browserMaster", "1", CVAR_ARCHIVE },
 	{ &ui_browserGameType, "ui_browserGameType", "0", CVAR_ARCHIVE },
 	{ &ui_browserSortKey, "ui_browserSortKey", "4", CVAR_ARCHIVE },
 	{ &ui_browserShowFull, "ui_browserShowFull", "1", CVAR_ARCHIVE },

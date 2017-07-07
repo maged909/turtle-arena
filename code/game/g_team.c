@@ -1503,6 +1503,7 @@ void ObeliskPain( gentity_t *self, gentity_t *attacker, int damage ) {
 	AddScore(attacker, self->r.currentOrigin, actualDamage);
 }
 
+// spawn invisible damagable obelisk entity / harvester base trigger.
 gentity_t *SpawnObelisk( vec3_t origin, vec3_t mins, vec3_t maxs, int team ) {
 	gentity_t	*ent;
 
@@ -1543,6 +1544,7 @@ gentity_t *SpawnObelisk( vec3_t origin, vec3_t mins, vec3_t maxs, int team ) {
 	return ent;
 }
 
+// setup entity for team base model / obelisk model.
 void ObeliskInit( gentity_t *ent ) {
 	trace_t		tr;
 	vec3_t		dest;
@@ -1647,7 +1649,7 @@ void SP_team_neutralobelisk( gentity_t *ent ) {
 #ifdef MISSIONPACK_HARVESTER
 	if ( g_gametype.integer == GT_HARVESTER) {
 		neutralObelisk = SpawnObelisk( ent->s.origin, ent->s.mins, ent->s.maxs, TEAM_FREE );
-		neutralObelisk->spawnflags = TEAM_FREE;
+		neutralObelisk->activator = ent;
 	}
 #endif
 	ent->s.modelindex = TEAM_FREE;

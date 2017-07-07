@@ -63,6 +63,9 @@ INGAME MENU
 #ifndef TA_MISC
 #define ID_LOCALPLAYERS			20
 #endif
+#ifndef TA_MISC // INGAME_SERVER_MENU
+#define ID_CREATE				21
+#endif
 #ifdef TA_MISC // SMART_JOIN_MENU
 #define ID_JOINGAME				21
 #define ID_SPECTATE				22
@@ -70,7 +73,6 @@ INGAME MENU
 #ifdef TA_MISC
 #define ID_CUSTOMIZEPLAYER		23
 #endif
-
 
 typedef struct {
 	menuframework_s	menu;
@@ -84,6 +86,7 @@ typedef struct {
 	menutext_s		inserver;
 #else
 	menutext_s		restart;
+	menutext_s		startnew;
 	menutext_s		addbots;
 	menutext_s		removebots;
 #endif
@@ -185,6 +188,10 @@ void InGame_Event( void *ptr, int notification ) {
 	case ID_RESTART:
 		UI_ConfirmMenu( "RESTART ARENA?", 0, InGame_RestartAction );
 		break;
+
+	case ID_CREATE:
+		UI_StartServerMenu( qtrue );
+		break;
 #endif
 
 	case ID_QUIT:
@@ -258,11 +265,13 @@ void InGame_MenuInit( void ) {
 	s_ingame.frame.generic.x			= 320-233;//142;
 	s_ingame.frame.generic.y			= 240-166;//118;
 	s_ingame.frame.width				= 466;//359;
+#ifdef TA_MISC // INGAME_SERVER_MENU
 	s_ingame.frame.height				= 332;//256;
 
-#ifdef TA_MISC // INGAME_SERVER_MENU
 	y = 88+INGAME_MENU_VERTICAL_SPACING/2;
 #else
+	s_ingame.frame.height				= 356;//256;
+
 	if (UI_MaxSplitView() > 1) {
 		y = 88;
 	} else {
@@ -530,7 +539,22 @@ void InGame_MenuInit( void ) {
 	}
 #endif
 
-#ifndef TA_MISC
+#ifndef TA_MISC // INGAME_SERVER_MENU
+	y += INGAME_MENU_VERTICAL_SPACING;
+	s_ingame.startnew.generic.type			= MTYPE_PTEXT;
+	s_ingame.startnew.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_ingame.startnew.generic.x				= 320;
+	s_ingame.startnew.generic.y				= y;
+	s_ingame.startnew.generic.id				= ID_CREATE;
+	s_ingame.startnew.generic.callback		= InGame_Event; 
+	s_ingame.startnew.string					= "START NEW ARENA";
+	s_ingame.startnew.color					= text_big_color;
+	s_ingame.startnew.style					= UI_CENTER|UI_SMALLFONT;
+	if( !trap_Cvar_VariableValue( "sv_running" ) ) {
+		s_ingame.startnew.generic.flags |= QMF_GRAYED;
+	}
+
+
 	y += INGAME_MENU_VERTICAL_SPACING;
 	s_ingame.resume.generic.type			= MTYPE_PTEXT;
 	s_ingame.resume.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -598,6 +622,7 @@ void InGame_MenuInit( void ) {
 	Menu_AddItem( &s_ingame.menu, &s_ingame.server );
 #ifndef TA_MISC // INGAME_SERVER_MENU
 	Menu_AddItem( &s_ingame.menu, &s_ingame.restart );
+	Menu_AddItem( &s_ingame.menu, &s_ingame.startnew );
 #endif
 #ifndef TA_MISC
 	Menu_AddItem( &s_ingame.menu, &s_ingame.resume );

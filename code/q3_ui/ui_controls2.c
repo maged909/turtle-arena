@@ -177,6 +177,7 @@ enum {
 	ID_ALWAYSRUN,
 #endif
 #ifndef TA_WEAPSYS_EX
+	ID_CYCLEPASTGAUNTLET,
 	ID_AUTOSWITCH,
 #endif
 	ID_MOUSESPEED,
@@ -300,6 +301,7 @@ typedef struct
 #endif
 	menuaction_s		showscores;
 #ifndef TA_WEAPSYS_EX
+	menuradiobutton_s	cyclepastgauntlet;
 	menuradiobutton_s	autoswitch;
 #endif
 #ifdef TA_MISC // DROP_FLAG
@@ -428,7 +430,7 @@ static bind_t g_bindings[] =
 #ifdef TA_WEAPSYS_EX
 	{"+dropweapon",		"drop weapon",		ID_WEAPDROP,	ANIM_IDLE,		'e',			';',	-1, -1},
 #else
-	{"weapprev",		"prev weapon",		ID_WEAPPREV,	ANIM_IDLE,		'[',			-1,		-1, -1},
+	{"weapprev",		"previous weapon",	ID_WEAPPREV,	ANIM_IDLE,		'[',			-1,		-1, -1},
 	{"weapnext", 		"next weapon",		ID_WEAPNEXT,	ANIM_IDLE,		']',			-1,		-1, -1},
 #endif
 #ifdef IOQ3ZTM
@@ -723,6 +725,10 @@ static configcvar_t g_configcvars[] =
 #endif
 	{"m_pitch",			0,					0},
 #ifndef TA_WEAPSYS_EX
+	{"cg_cyclePastGauntlet",0,				0},
+	{"2cg_cyclePastGauntlet",0,				0},
+	{"3cg_cyclePastGauntlet",0,				0},
+	{"4cg_cyclePastGauntlet",0,				0},
 	{"cg_autoswitch",	0,					0},
 	{"2cg_autoswitch",	0,					0},
 	{"3cg_autoswitch",	0,					0},
@@ -772,6 +778,7 @@ static menucommon_s *g_weapons_controls[] = {
 #else
 	(menucommon_s *)&s_controls.nextweapon,
 	(menucommon_s *)&s_controls.prevweapon,
+	(menucommon_s *)&s_controls.cyclepastgauntlet,
 	(menucommon_s *)&s_controls.autoswitch,    
 	(menucommon_s *)&s_controls.gauntlet,         
 	(menucommon_s *)&s_controls.machinegun,
@@ -1504,6 +1511,7 @@ static void Controls_GetConfig( void )
 	s_controls.alwaysrun.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) ) );
 #endif
 #ifndef TA_WEAPSYS_EX
+	s_controls.cyclepastgauntlet.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ) ) );
 	s_controls.autoswitch.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) ) );
 #endif
 	s_controls.joyanalog.curvalue = Com_Clamp( 0, 1, Controls_GetCvarValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ) ) );
@@ -1546,6 +1554,7 @@ static void Controls_SetConfig( void )
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ), s_controls.alwaysrun.curvalue );
 #endif
 #ifndef TA_WEAPSYS_EX
+		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ), s_controls.cyclepastgauntlet.curvalue );
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
 #endif
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystickUseAnalog" ), s_controls.joyanalog.curvalue );
@@ -1563,6 +1572,7 @@ static void Controls_SetConfig( void )
 	trap_Cvar_SetValue( "cl_run", s_controls.alwaysrun.curvalue );
 #endif
 #ifndef TA_WEAPSYS_EX
+	trap_Cvar_SetValue( "cg_cyclePastGauntlet", s_controls.cyclepastgauntlet.curvalue );
 	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
 #endif
 	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
@@ -1609,6 +1619,7 @@ static void Controls_SetDefaults( void )
 		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cl_run" ) );
 #endif
 #ifndef TA_WEAPSYS_EX
+		s_controls.cyclepastgauntlet.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_cyclePastGauntlet" ) );
 		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "cg_autoswitch" ) );
 #endif
 		trap_Cvar_SetValue(Com_LocalPlayerCvarName(s_controls.localPlayerNum, "in_joystick"), 0);
@@ -1624,6 +1635,7 @@ static void Controls_SetDefaults( void )
 	s_controls.alwaysrun.curvalue    = Controls_GetCvarDefault( "cl_run" );
 #endif
 #ifndef TA_WEAPSYS_EX
+	s_controls.cyclepastgauntlet.curvalue   = Controls_GetCvarDefault( "cg_cyclePastGauntlet" );
 	s_controls.autoswitch.curvalue   = Controls_GetCvarDefault( "cg_autoswitch" );
 #endif
 	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
@@ -1922,6 +1934,7 @@ static void Controls_MenuEvent( void* ptr, int event )
 		case ID_ALWAYSRUN:
 #endif
 #ifndef TA_WEAPSYS_EX
+		case ID_CYCLEPASTGAUNTLET:
 		case ID_AUTOSWITCH:
 #endif
 		case ID_JOYANALOG:
@@ -2481,6 +2494,14 @@ static void Controls_MenuInit( int localPlayerNum )
 #endif
 
 #ifndef TA_WEAPSYS_EX
+	s_controls.cyclepastgauntlet.generic.type      = MTYPE_RADIOBUTTON;
+	s_controls.cyclepastgauntlet.generic.flags     = QMF_SMALLFONT;
+	s_controls.cyclepastgauntlet.generic.x         = SCREEN_WIDTH/2;
+	s_controls.cyclepastgauntlet.generic.name      = "skip gauntlet";
+	s_controls.cyclepastgauntlet.generic.id        = ID_CYCLEPASTGAUNTLET;
+	s_controls.cyclepastgauntlet.generic.callback  = Controls_MenuEvent;
+	s_controls.cyclepastgauntlet.generic.statusbar = Controls_StatusBar;
+
 	s_controls.autoswitch.generic.type      = MTYPE_RADIOBUTTON;
 	s_controls.autoswitch.generic.flags	    = QMF_SMALLFONT;
 	s_controls.autoswitch.generic.x	        = SCREEN_WIDTH/2;
@@ -2698,6 +2719,7 @@ static void Controls_MenuInit( int localPlayerNum )
 #else
 	Menu_AddItem( &s_controls.menu, &s_controls.nextweapon );
 	Menu_AddItem( &s_controls.menu, &s_controls.prevweapon );
+	Menu_AddItem( &s_controls.menu, &s_controls.cyclepastgauntlet );
 	Menu_AddItem( &s_controls.menu, &s_controls.autoswitch );
 	Menu_AddItem( &s_controls.menu, &s_controls.gauntlet );
 	Menu_AddItem( &s_controls.menu, &s_controls.machinegun );

@@ -243,7 +243,8 @@ typedef struct {
 } playerEntity_t;
 
 
-#define MAX_CG_SKIN_SURFACES 32
+// skin surfaces array shouldn't be dynamically allocated because players reuse the same skin structure when changing models
+#define MAX_CG_SKIN_SURFACES 100
 typedef struct {
 	int numSurfaces;
 	qhandle_t surfaces[MAX_CG_SKIN_SURFACES];
@@ -904,6 +905,7 @@ typedef struct {
 #endif
 	int			weaponAnimation;
 	int			weaponAnimationTime;
+	int			weaponToggledFrom;
 
 	// blend blobs
 	float		damageTime;
@@ -946,6 +948,11 @@ typedef struct {
 #endif
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
+
+	// orbit camera around player
+	float cameraOrbit;			// angles per second to orbit, forces third person.
+	float cameraOrbitAngle;
+	float cameraOrbitRange;
 
 	vec3_t		lastViewPos;
 	vec3_t		lastViewAngles;
@@ -1032,7 +1039,7 @@ typedef struct {
 	// view rendering
 	refdef_t	refdef;
 	vec3_t		refdefViewAngles;		// will be converted to refdef.viewaxis
-	float		fov;					// either range checked cg_fov or forced value
+	float		viewWeaponFov;			// either range checked cg_weaponFov or forced value
 
 	// first person view pos, set even when rendering third person view
 	vec3_t		firstPersonViewOrg;
@@ -1130,9 +1137,6 @@ typedef struct {
 	float		bobfracsin;
 	int			bobcycle;
 	float		xyspeed;
-#ifndef IOQ3ZTM // NEW_CAM
-	int     	nextOrbitTime;
-#endif
 
 	// development tool
 	refEntity_t		testModelEntity;
@@ -1827,8 +1831,8 @@ extern	vmCvar_t		cg_simpleItems;
 extern	vmCvar_t		cg_fov;
 #ifndef TURTLEARENA // NOZOOM
 extern	vmCvar_t		cg_zoomFov;
-
 #endif
+extern	vmCvar_t		cg_weaponFov;
 extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_splitviewThirdEqual;
 extern	vmCvar_t		cg_splitviewTextScale;
@@ -1862,10 +1866,6 @@ extern	vmCvar_t		pmove_overbounce;
 extern	vmCvar_t		pmove_fixed;
 extern	vmCvar_t		pmove_msec;
 //extern	vmCvar_t		cg_pmove_fixed;
-extern	vmCvar_t		cg_cameraOrbit;
-#ifndef IOQ3ZTM // NEW_CAM
-extern	vmCvar_t		cg_cameraOrbitDelay;
-#endif
 extern	vmCvar_t		cg_timescaleFadeEnd;
 extern	vmCvar_t		cg_timescaleFadeSpeed;
 extern	vmCvar_t		cg_timescale;
@@ -1924,6 +1924,18 @@ extern vmCvar_t			cg_2dmode;
 extern vmCvar_t			cg_2dmodeOverride;
 #endif
 
+extern	vmCvar_t		cg_defaultModelGender;
+extern	vmCvar_t		cg_defaultMaleModel;
+extern	vmCvar_t		cg_defaultMaleHeadModel;
+extern	vmCvar_t		cg_defaultFemaleModel;
+extern	vmCvar_t		cg_defaultFemaleHeadModel;
+
+extern	vmCvar_t		cg_defaultTeamModelGender;
+extern	vmCvar_t		cg_defaultMaleTeamModel;
+extern	vmCvar_t		cg_defaultMaleTeamHeadModel;
+extern	vmCvar_t		cg_defaultFemaleTeamModel;
+extern	vmCvar_t		cg_defaultFemaleTeamHeadModel;
+
 extern	vmCvar_t		cg_color1[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_color2[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_handicap[MAX_SPLITVIEW];
@@ -1931,6 +1943,7 @@ extern	vmCvar_t		cg_teamtask[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_teampref[MAX_SPLITVIEW];
 #ifndef TA_WEAPSYS_EX
 extern	vmCvar_t		cg_autoswitch[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_cyclePastGauntlet[MAX_SPLITVIEW];
 #endif
 extern	vmCvar_t		cg_drawGun[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
@@ -2107,6 +2120,7 @@ screenPlacement_e CG_GetScreenVerticalPlacement(void);
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h );
 void CG_FillRect( float x, float y, float width, float height, const float *color );
 void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
+void CG_DrawPicColor( float x, float y, float width, float height, qhandle_t hShader, const float *color );
 void CG_DrawNamedPic( float x, float y, float width, float height, const char *picname );
 void CG_SetClipRegion( float x, float y, float w, float h );
 void CG_ClearClipRegion( void );
@@ -2228,7 +2242,7 @@ int CG_Text_Height( const char *text, float scale, int limit );
 
 
 //
-// cg_player.c
+// cg_players.c
 //
 void CG_Player( centity_t *cent );
 void CG_ResetPlayerEntity( centity_t *cent );
@@ -2237,6 +2251,8 @@ qhandle_t CG_AddSkinToFrame( const cgSkin_t *skin );
 qboolean CG_RegisterSkin( const char *name, cgSkin_t *skin, qboolean append );
 void CG_NewPlayerInfo( int playerNum );
 sfxHandle_t	CG_CustomSound( int playerNum, const char *soundName );
+void CG_CachePlayerSounds( const char *modelName );
+void CG_CachePlayerModels( const char *modelName, const char *headModelName );
 void CG_PlayerColorFromIndex( int val, vec3_t color );
 
 //
@@ -2288,6 +2304,7 @@ void CG_Holdable_f( int localPlayerNum );
 void CG_NextWeapon_f( int localPlayerNum );
 void CG_PrevWeapon_f( int localPlayerNum );
 void CG_Weapon_f( int localPlayerNum );
+void CG_WeaponToggle_f( int localPlayerNum );
 #endif
 
 #ifdef TURTLEARENA // HOLD_SHURIKEN
