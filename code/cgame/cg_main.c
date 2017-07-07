@@ -222,6 +222,7 @@ vmCvar_t	cg_fov;
 #ifndef TURTLEARENA // NOZOOM
 vmCvar_t	cg_zoomFov;
 #endif
+vmCvar_t	cg_weaponFov;
 vmCvar_t	cg_splitviewVertical;
 vmCvar_t	cg_splitviewThirdEqual;
 vmCvar_t	cg_splitviewTextScale;
@@ -260,10 +261,6 @@ vmCvar_t	pmove_fixed;
 vmCvar_t	pmove_msec;
 vmCvar_t	cg_pmove_msec;
 vmCvar_t	cg_cameraMode;
-vmCvar_t	cg_cameraOrbit;
-#ifndef IOQ3ZTM // NEW_CAM
-vmCvar_t	cg_cameraOrbitDelay;
-#endif
 vmCvar_t	cg_timescaleFadeEnd;
 vmCvar_t	cg_timescaleFadeSpeed;
 vmCvar_t	cg_timescale;
@@ -325,6 +322,18 @@ vmCvar_t	cg_2dmode;
 vmCvar_t	cg_2dmodeOverride;
 #endif
 
+vmCvar_t	cg_defaultModelGender;
+vmCvar_t	cg_defaultMaleModel;
+vmCvar_t	cg_defaultMaleHeadModel;
+vmCvar_t	cg_defaultFemaleModel;
+vmCvar_t	cg_defaultFemaleHeadModel;
+
+vmCvar_t	cg_defaultTeamModelGender;
+vmCvar_t	cg_defaultMaleTeamModel;
+vmCvar_t	cg_defaultMaleTeamHeadModel;
+vmCvar_t	cg_defaultFemaleTeamModel;
+vmCvar_t	cg_defaultFemaleTeamHeadModel;
+
 vmCvar_t	cg_color1[MAX_SPLITVIEW];
 vmCvar_t	cg_color2[MAX_SPLITVIEW];
 vmCvar_t	cg_handicap[MAX_SPLITVIEW];
@@ -332,6 +341,7 @@ vmCvar_t	cg_teamtask[MAX_SPLITVIEW];
 vmCvar_t	cg_teampref[MAX_SPLITVIEW];
 #ifndef TA_WEAPSYS_EX
 vmCvar_t	cg_autoswitch[MAX_SPLITVIEW];
+vmCvar_t	cg_cyclePastGauntlet[MAX_SPLITVIEW];
 #endif
 vmCvar_t	cg_drawGun[MAX_SPLITVIEW];
 vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
@@ -385,8 +395,10 @@ static cvarTable_t cgameCvarTable[] = {
 #endif
 #ifdef TURTLEARENA // FOV
 	{ &cg_fov, "cg_fov", "70", CVAR_ARCHIVE, RANGE_FLOAT(1, 160) },
+	{ &cg_weaponFov, "cg_weaponFov", "70", CVAR_ARCHIVE, RANGE_FLOAT( 0, 160 ) },
 #else
 	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE, RANGE_FLOAT(1, 160) },
+	{ &cg_weaponFov, "cg_weaponFov", "90", CVAR_ARCHIVE, RANGE_FLOAT( 0, 160 ) },
 #endif
 	{ &cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE, RANGE_INT( 30, 100 ) },
 	{ &cg_shadows, "cg_shadows", "1", CVAR_ARCHIVE, RANGE_ALL  },
@@ -524,10 +536,6 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE, RANGE_ALL },
 #endif
 #endif
-	{ &cg_cameraOrbit, "cg_cameraOrbit", "0", CVAR_CHEAT, RANGE_ALL },
-#ifndef IOQ3ZTM // NEW_CAM
-	{ &cg_cameraOrbitDelay, "cg_cameraOrbitDelay", "50", CVAR_ARCHIVE, RANGE_ALL },
-#endif
 	{ &cg_timescaleFadeEnd, "cg_timescaleFadeEnd", "1", 0, RANGE_ALL },
 	{ &cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0, RANGE_ALL },
 	{ &cg_timescale, "timescale", "1", 0, RANGE_ALL },
@@ -575,6 +583,16 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
 	{ &cg_drawGrappleHook, "cg_drawGrappleHook", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
+	{ &cg_defaultModelGender, "default_model_gender", DEFAULT_MODEL_GENDER, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultMaleModel, "default_male_model", DEFAULT_MODEL_MALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultMaleHeadModel, "default_male_headmodel", DEFAULT_HEAD_MALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultFemaleModel, "default_female_model", DEFAULT_MODEL_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultFemaleHeadModel, "default_female_headmodel", DEFAULT_HEAD_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultTeamModelGender, "default_team_model_gender", DEFAULT_TEAM_MODEL_GENDER, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultMaleTeamModel, "default_male_team_model", DEFAULT_TEAM_MODEL_MALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultMaleTeamHeadModel, "default_male_team_headmodel", DEFAULT_TEAM_HEAD_MALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultFemaleTeamModel, "default_female_team_model", DEFAULT_TEAM_MODEL_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_defaultFemaleTeamHeadModel, "default_female_team_headmodel", DEFAULT_TEAM_HEAD_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
@@ -601,6 +619,7 @@ static userCvarTable_t userCvarTable[] = {
 
 #ifndef TA_WEAPSYS_EX
 	{ cg_autoswitch, "cg_autoswitch", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ cg_cyclePastGauntlet, "cg_cyclePastGauntlet", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
 #ifdef TURTLEARENA
 	{ cg_drawGun, "cg_drawViewWeapons", "1", CVAR_ARCHIVE, RANGE_BOOL },
@@ -1591,32 +1610,11 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.hgrenb2aSound = trap_S_RegisterSound("sound/weapons/grenade/hgrenb2a.wav", qfalse);
 #endif
 
-#if defined MISSIONPACK && !defined TA_DATA // Don't percache sounds we don't use.
-	trap_S_RegisterSound("sound/player/james/death1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/death2.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/death3.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/jump1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/pain25_1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/pain75_1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/pain100_1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/falling1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/gasp.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/drown.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/fall1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/james/taunt.wav", qfalse );
-
-	trap_S_RegisterSound("sound/player/janet/death1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/death2.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/death3.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/jump1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/pain25_1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/pain75_1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/pain100_1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/falling1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/gasp.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/drown.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/fall1.wav", qfalse );
-	trap_S_RegisterSound("sound/player/janet/taunt.wav", qfalse );
+#if defined MISSIONPACK && !defined TA_DATA // Don't precache default team player sounds.
+	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
+		CG_CachePlayerSounds( cg_defaultMaleTeamModel.string );
+		CG_CachePlayerSounds( cg_defaultFemaleTeamModel.string );
+	}
 #endif
 
 }
@@ -2090,17 +2088,14 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.flagShaders[2] = trap_R_RegisterShaderNoMip("ui/assets/statusbar/flag_missing.tga");
 #endif
 
-#ifndef TA_DATA // Don't percache models we don't have.
-	trap_R_RegisterModel( "models/players/james/lower.md3" );
-	trap_R_RegisterModel( "models/players/james/upper.md3" );
-	trap_R_RegisterModel( "models/players/heads/james/james.md3" );
-
-	trap_R_RegisterModel( "models/players/janet/lower.md3" );
-	trap_R_RegisterModel( "models/players/janet/upper.md3" );
-	trap_R_RegisterModel( "models/players/heads/janet/janet.md3" );
+#ifndef TA_DATA // Don't precache default team models.
+	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
+		CG_CachePlayerModels( cg_defaultMaleTeamModel.string, cg_defaultMaleTeamHeadModel.string );
+		CG_CachePlayerModels( cg_defaultFemaleTeamModel.string, cg_defaultFemaleTeamHeadModel.string );
+	}
+#endif
 #endif
 
-#endif
 	CG_ClearParticles ();
 #ifdef IOQ3ZTM // Particles
 	// In GAME call G_ParticleAreaIndex(str) to add a paritcle area.
@@ -2139,6 +2134,8 @@ void CG_LocalPlayerAdded(int localPlayerNum, int playerNum) {
 		return;
 
 	cg.localPlayers[localPlayerNum].playerNum = playerNum;
+
+	CG_LoadDeferredPlayers();
 }
 
 /*
@@ -2494,12 +2491,13 @@ qboolean CG_Load_Menu(char **p) {
 	while ( 1 ) {
 
 		token = COM_ParseExt(p, qtrue);
-		if ( !token[0] ) {
-			return qfalse;
-		}
 
 		if (Q_stricmp(token, "}") == 0) {
 			return qtrue;
+		}
+
+		if ( !token[0] ) {
+			return qfalse;
 		}
 
 		CG_ParseMenu(token); 
@@ -2547,7 +2545,7 @@ void CG_LoadMenus(const char *menuFile) {
 
 	while ( 1 ) {
 		token = COM_ParseExt( &p, qtrue );
-		if ( !token[0] ) {
+		if (!token[0]) {
 			break;
 		}
 
@@ -2793,6 +2791,7 @@ CG_LoadHudMenu();
 void CG_LoadHudMenu( void ) {
 	char buff[1024];
 	const char *hudSet;
+	menuDef_t *menu;
 
 	cgDC.registerShaderNoMip = &trap_R_RegisterShaderNoMip;
 	cgDC.setColor = &trap_R_SetColor;
@@ -2858,7 +2857,29 @@ void CG_LoadHudMenu( void ) {
 	CG_LoadMenus(hudSet);
 
 	// make voice chat head stick to left side in widescreen
-	Menu_SetScreenPlacement( Menus_FindByName( "voiceMenu" ), PLACE_LEFT, PLACE_TOP );
+	menu = Menus_FindByName( "voiceMenu" );
+	if ( menu && !menu->forceScreenPlacement ) {
+		Menu_SetScreenPlacement( menu, PLACE_LEFT, PLACE_TOP );
+	}
+
+	// Make vertical power up area stick to the left or right side in widescreen.
+	// Team Arena has it on the right side but also handle custom huds that use left side.
+	menu = Menus_FindByName( "powerup area" );
+	if ( menu && !menu->forceScreenPlacement ) {
+		itemDef_t *item = Menu_FindItemByName( menu, "powerupArea" );
+
+		if ( item && item->window.ownerDraw == CG_AREA_POWERUP && item->alignment == HUD_VERTICAL ) {
+			screenPlacement_e hpos;
+
+			if ( item->window.rect.x > SCREEN_WIDTH*0.5f ) {
+				hpos = PLACE_RIGHT;
+			} else {
+				hpos = PLACE_LEFT;
+			}
+
+			Menu_SetScreenPlacement( menu, hpos, PLACE_CENTER );
+		}
+	}
 }
 
 void CG_AssetCache( void ) {
@@ -2923,6 +2944,9 @@ void CG_ClearState( qboolean everything, int maxSplitView ) {
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 		cg.localPlayers[i].playerNum = -1;
 	}
+
+	// get the rendering configuration from the client system
+	CG_UpdateGlconfig( qtrue );
 }
 
 /*
@@ -2971,9 +2995,6 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	cgs.media.whiteDynamicShader= trap_R_RegisterShaderEx( "white", LIGHTMAP_NONE, qtrue );
 
 	CG_TextInit();
-
-	// get the rendering configuration from the client system
-	CG_UpdateGlconfig( qtrue );
 
 	CG_ConsoleInit();
 
@@ -3220,6 +3241,8 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	}
 
 	if ( !cg_dedicated.integer && state == CA_DISCONNECTED && !UI_IsFullscreen() ) {
+		// if disconnected, bring up the menu
+		// ZTM: TODO: call trap_S_StopAllSounds() here. Currently it's done in cl_main.c
 		UI_SetActiveMenu( UIMENU_MAIN );
 	}
 
