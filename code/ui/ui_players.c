@@ -874,7 +874,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	refEntity_t		torso = {0};
 	refEntity_t		head = {0};
 #ifdef TA_WEAPSYS
-	refEntity_t		gun[MAX_HANDS] = {0};
+	refEntity_t		gun[MAX_HANDS] = {{0}};
 #else
 	refEntity_t		gun = {0};
 #endif
@@ -1038,7 +1038,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	// add the gun
 	//
 	if ( pi->currentWeapon != WP_NONE ) {
-
 #ifdef TA_WEAPSYS
 		// get hands from cent
 		for (i = 0; i < MAX_HANDS; i++)
@@ -1071,7 +1070,6 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 				// Failed to find tag
 				continue;
 			}
-
 
 			CG_AddRefEntityWithMinLight( &gun[i] );
 		}
@@ -1109,9 +1107,13 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 #ifdef TA_WEAPSYS
 		barrel.hModel = pi->barrelModel[i];
 		VectorClear(angles);
-		if (bg_weapongroupinfo[pi->realWeapon].weapon[0]->barrelSpin != BS_NONE)
+		if (bg_weapongroupinfo[pi->realWeapon].weapon[i]->barrelSpin != BS_NONE)
 		{
-			angles[bg_weapongroupinfo[pi->realWeapon].weapon[0]->barrelSpin]
+			if (i & 1)
+				angles[bg_weapongroupinfo[pi->realWeapon].weapon[i]->barrelSpin]
+						= 360-UI_MachinegunSpinAngle( pi );
+			else
+				angles[bg_weapongroupinfo[pi->realWeapon].weapon[i]->barrelSpin]
 						= UI_MachinegunSpinAngle( pi );
 		}
 #else
@@ -1155,7 +1157,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 
 			// make a dlight for the flash
 			if ( *flashDlightColor[0] || *flashDlightColor[1] || *flashDlightColor[2] ) {
-				trap_R_AddLightToScene( flash.origin, 200 + (rand()&31), 1.0f, *flashDlightColor[0],
+				trap_R_AddJuniorLightToScene( flash.origin, 200 + (rand()&31), 1.0f, *flashDlightColor[0],
 					*flashDlightColor[1], *flashDlightColor[2] );
 			}
 		}
@@ -1511,7 +1513,7 @@ qboolean UI_RegisterPlayerModelname( uiPlayerInfo_t *pi, const char *modelSkinNa
 		return qfalse;
 	}
 
-	if (headModelName[0] == '*' ) {
+	if ( headModelName[0] == '*' ) {
 		Com_sprintf( filename, sizeof( filename ), "models/players/heads/%s/%s.md3", &headModelName[1], &headModelName[1] );
 	}
 	else {
@@ -1523,7 +1525,7 @@ qboolean UI_RegisterPlayerModelname( uiPlayerInfo_t *pi, const char *modelSkinNa
 		pi->headModel = trap_R_RegisterModel( filename );
 	}
 
-	if (!pi->headModel) {
+	if ( !pi->headModel ) {
 		Com_Printf( "Failed to load model file %s\n", filename );
 		return qfalse;
 	}

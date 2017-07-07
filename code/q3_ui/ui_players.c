@@ -875,7 +875,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	refEntity_t		torso = {0};
 	refEntity_t		head = {0};
 #ifdef TA_WEAPSYS
-	refEntity_t		gun[MAX_HANDS] = {0};
+	refEntity_t		gun[MAX_HANDS] = {{0}};
 #else
 	refEntity_t		gun = {0};
 #endif
@@ -1135,7 +1135,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	if ( dp_realtime <= pi->muzzleFlashTime ) {
 #ifdef TA_WEAPSYS
 		vec3_t *flashDlightColor;
-		
+
 		for (i = 0; i < MAX_HANDS; i++)
 		{
 			memset( &flash, 0, sizeof(flash) );
@@ -1153,7 +1153,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 
 			// make a dlight for the flash
 			if ( *flashDlightColor[0] || *flashDlightColor[1] || *flashDlightColor[2] ) {
-				trap_R_AddLightToScene( flash.origin, 200 + (rand()&31), *flashDlightColor[0],
+				trap_R_AddJuniorLightToScene( flash.origin, 200 + (rand()&31), 1.0f, *flashDlightColor[0],
 					*flashDlightColor[1], *flashDlightColor[2] );
 			}
 		}
@@ -1180,7 +1180,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, uiPlayerInfo_t *pi, int 
 	// add the chat icon
 	//
 	if ( pi->chat ) {
-#ifdef TA_DATA
+#ifdef TA_DATA // shaders
 		UI_PlayerFloatSprite( pi, torso.origin, trap_R_RegisterShaderNoMip( "sprites/talkBalloon" ) );
 #else
 		UI_PlayerFloatSprite( pi, torso.origin, trap_R_RegisterShaderNoMip( "sprites/balloon3" ) );
@@ -1442,8 +1442,7 @@ static qboolean UI_ParseAnimationFile( const char *filename, animation_t *animat
 
 	return qtrue;
 }
-#endif
-
+#endif // TA_PLAYERSYS
 
 /*
 ==========================
@@ -1485,6 +1484,12 @@ qboolean UI_RegisterPlayerModelname( uiPlayerInfo_t *pi, const char *modelSkinNa
 		Q_strncpyz( headSkinName, slash + 1, sizeof( skinName ) );
 		*slash = '\0';
 	}
+
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+	if (!headModelName[0]) {
+		Q_strncpyz( headModelName, modelName, sizeof( headModelName ) );
+	}
+#endif
 
 	// load cmodels before models so filecache works
 
@@ -1529,7 +1534,7 @@ qboolean UI_RegisterPlayerModelname( uiPlayerInfo_t *pi, const char *modelSkinNa
 
 	// load the animations
 #ifdef TA_PLAYERSYS
-	return BG_LoadPlayerCFGFile(&pi->playercfg, modelName, modelName);
+	return BG_LoadPlayerCFGFile(&pi->playercfg, modelName, headModelName);
 #else
 	Com_sprintf( filename, sizeof( filename ), "models/players/%s/animation.cfg", modelName );
 	if ( !UI_ParseAnimationFile( filename, pi->animations ) ) {
@@ -1725,9 +1730,9 @@ void UI_PlayerInfo_SetInfo( uiPlayerInfo_t *pi, int legsAnim, int torsoAnim, vec
 	}
 	else if ( ( currentAnim == TORSO_GESTURE ||
 #ifdef TA_WEAPSYS
-	BG_PlayerAttackAnim(currentAnim)
+		BG_PlayerAttackAnim(currentAnim)
 #else
-	currentAnim == TORSO_ATTACK
+		currentAnim == TORSO_ATTACK
 #endif
 	) && ( torsoAnim != currentAnim ) ) {
 		pi->pendingTorsoAnim = torsoAnim;
