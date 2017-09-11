@@ -558,7 +558,7 @@ static void ArenaServers_UpdateMenu( void ) {
 			// show progress
 			Com_sprintf( g_arenaservers.status.string, MAX_STATUSLENGTH, "Pinged %d of %d Servers.", g_arenaservers.currentping, g_arenaservers.numqueriedservers);
 #ifdef IOQ3ZTM // Stop server loading like team arena ui, escape
-			g_arenaservers.statusbar.string  = "Click cancel or press ESC to stop";
+			g_arenaservers.statusbar.string  = "Click Cancel or Press ESC to Stop";
 #else
 			g_arenaservers.statusbar.string  = "Press SPACE to Stop";
 #endif
@@ -598,7 +598,7 @@ static void ArenaServers_UpdateMenu( void ) {
 		if( g_arenaservers.refreshservers ) {
 			strcpy( g_arenaservers.status.string,"Scanning For Servers." );
 #ifdef IOQ3ZTM // Stop server loading like team arena ui, escape
-			g_arenaservers.statusbar.string  = "Click cancel or press ESC to stop";
+			g_arenaservers.statusbar.string  = "Click Cancel or Press ESC to Stop";
 #else
 			g_arenaservers.statusbar.string = "Press SPACE to Stop";
 #endif
