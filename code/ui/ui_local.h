@@ -73,6 +73,7 @@ extern vmCvar_t	ui_browserGameType;
 extern vmCvar_t	ui_browserShowFull;
 extern vmCvar_t	ui_browserShowEmpty;
 extern vmCvar_t	ui_browserShowBots;
+extern vmCvar_t	ui_browserSeparateMasters;
 
 extern vmCvar_t	ui_brassTime;
 extern vmCvar_t	ui_drawCrosshair;
@@ -142,6 +143,7 @@ extern vmCvar_t	ui_bigFont;
 extern vmCvar_t ui_serverStatusTimeOut;
 extern vmCvar_t ui_defaultMaleTeamModel;
 extern vmCvar_t ui_defaultFemaleTeamModel;
+extern vmCvar_t ui_menuFont;
 
 
 extern sfxHandle_t	menu_in_sound;
@@ -212,6 +214,9 @@ typedef struct {
 	bg_playercfg_t	playercfg;
 #else
 	animation_t		animations[MAX_TOTALANIMATIONS];
+
+	qboolean		fixedlegs;		// true if legs yaw is always the same as torso yaw
+	qboolean		fixedtorso;		// true if torso never changes yaw
 #endif
 
 #ifdef TA_WEAPSYS

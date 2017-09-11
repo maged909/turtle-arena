@@ -397,7 +397,7 @@ static void Action_Init( menuaction_s *a )
 	int	len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( a->generic.name, UI_BIGFONT );
+	len = UI_DrawStrlen( a->generic.name, UI_BIGFONT );
 
 	// left justify text
 	a->generic.left   = a->generic.x; 
@@ -460,7 +460,7 @@ static void RadioButton_Init( menuradiobutton_s *rb )
 	int	len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( rb->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( rb->generic.name, UI_SMALLFONT );
 
 #ifdef IOQ3ZTM
 	if (rb->generic.flags & QMF_LEFT_JUSTIFY) {
@@ -603,7 +603,7 @@ static void Slider_Init( menuslider_s *s )
 	int len;
 
 	// calculate bounds
-	len = CG_DrawStrlen( s->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( s->generic.name, UI_SMALLFONT );
 
 	s->generic.left   = s->generic.x - len - SMALLCHAR_WIDTH;
 	s->generic.right  = s->generic.x + (SLIDER_RANGE+2+1)*SMALLCHAR_WIDTH;
@@ -820,7 +820,7 @@ static void SpinControl_Init( menulist_s *s ) {
 	qboolean foundItem = qfalse;
 #endif
 
-	len = CG_DrawStrlen( s->generic.name, UI_SMALLFONT );
+	len = UI_DrawStrlen( s->generic.name, UI_SMALLFONT );
 
 #ifdef IOQ3ZTM
 	if (s->generic.flags & QMF_LEFT_JUSTIFY) {
@@ -833,7 +833,7 @@ static void SpinControl_Init( menulist_s *s ) {
 	len = s->numitems = 0;
 	while ( (str = s->itemnames[s->numitems]) != 0 )
 	{
-		l = CG_DrawStrlen( str, UI_SMALLFONT );
+		l = UI_DrawStrlen( str, UI_SMALLFONT );
 		if (l > len)
 			len = l;
 
@@ -1908,26 +1908,23 @@ Menu_Cache
 */
 void Menu_Cache( void )
 {
-#ifdef TA_DATA
-	if ( !CG_InitTrueTypeFont( "fonts/mplus-1c-bold.ttf", PROP_HEIGHT, 0, &uis.fontProp ) ) {
+	if ( !CG_InitTrueTypeFont( ui_menuFont.string, SMALLCHAR_HEIGHT, 0, &uis.smallFont ) ) {
+		CG_InitBitmapFont( &uis.smallFont, SMALLCHAR_HEIGHT, SMALLCHAR_WIDTH );
+	}
+	if ( !CG_InitTrueTypeFont( ui_menuFont.string, BIGCHAR_HEIGHT, 0, &uis.textFont ) ) {
+		CG_InitBitmapFont( &uis.textFont, BIGCHAR_HEIGHT, BIGCHAR_WIDTH );
+	}
+
+	if ( !CG_InitTrueTypeFont( ui_menuFontProp.string, PROP_HEIGHT, 0, &uis.fontProp ) ) {
 		UI_InitPropFont( &uis.fontProp, qfalse );
 	}
-	if ( CG_InitTrueTypeFont( "fonts/mplus-2p-black.ttf", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
-		uis.bannerNumbers = qtrue;
-		Vector4Copy( ttf_banner_color, text_banner_color );
-	} else {
-		uis.bannerNumbers = qfalse;
-		Vector4Copy( bitmap_banner_color, text_banner_color );
-		UI_InitBannerFont( &uis.fontPropB );
-	}
-#else
-	if ( !CG_InitTrueTypeFont( "fonts/font1_prop", PROP_HEIGHT, 0, &uis.fontProp ) ) {
-		UI_InitPropFont( &uis.fontProp, qfalse );
-	}
-	if ( !CG_InitTrueTypeFont( "fonts/font1_prop_glo", PROP_HEIGHT, 0, &uis.fontPropGlow ) ) {
+#ifndef TA_DATA
+	if ( !CG_InitTrueTypeFont( ui_menuFontProp.string, PROP_HEIGHT, 0, &uis.fontPropGlow ) ) {
 		UI_InitPropFont( &uis.fontPropGlow, qtrue );
 	}
-	if ( CG_InitTrueTypeFont( "fonts/font2_prop", PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
+#endif
+
+	if ( CG_InitTrueTypeFont( ui_menuFontBanner.string, PROPB_HEIGHT, 0, &uis.fontPropB ) ) {
 		uis.bannerNumbers = qtrue;
 		Vector4Copy( ttf_banner_color, text_banner_color );
 	} else {
@@ -1935,7 +1932,6 @@ void Menu_Cache( void )
 		Vector4Copy( bitmap_banner_color, text_banner_color );
 		UI_InitBannerFont( &uis.fontPropB );
 	}
-#endif
 
 	uis.cursor          = trap_R_RegisterShaderNoMip( "menu/art/3_cursor2" );
 	uis.rb_on           = trap_R_RegisterShaderNoMip( "menu/art/switch_on" );

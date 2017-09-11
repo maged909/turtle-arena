@@ -50,6 +50,7 @@ GAME OPTIONS MENU
 enum {
 #ifndef TURTLEARENA
 	ID_CROSSHAIR,
+	ID_CROSSHAIRHEALTH,
 	ID_VIEWBOB,
 #endif
 	ID_SIMPLEITEMS,
@@ -67,7 +68,6 @@ enum {
 	ID_SPLITVERTICAL,
 	ID_SPLITTEXTSIZE,
 	ID_THIRDSIZE,
-	ID_ATMEFFECTS,
 
 #ifdef IOQ3ZTM // CONTENT_FILTERING
 #ifndef NOBLOOD
@@ -101,6 +101,7 @@ typedef struct {
 
 #ifndef TURTLEARENA
 	menulist_s			crosshair;
+	menuradiobutton_s	crosshairhealth;
 	menuradiobutton_s	viewbob;
 #endif
 	menuradiobutton_s	simpleitems;
@@ -118,7 +119,6 @@ typedef struct {
 	menulist_s			splitvertical;
 	menulist_s			splittextsize;
 	menulist_s			thirdsize;
-	menulist_s			atmeffects;
 #ifdef IOQ3ZTM // CONTENT_FILTERING
 #ifndef NOBLOOD
 	menuradiobutton_s	showblood;
@@ -162,16 +162,8 @@ static const char *splittextsize_names[] =
 
 static const char *thirdsize_names[] =
 {
-	"half",
-	"quarter",
-	NULL
-};
-
-static const char *atmeffects_names[] =
-{
-	"off",
-	"low",
-	"high",
+	"half of screen",
+	"quarter of screen",
 	NULL
 };
 
@@ -180,6 +172,7 @@ static void Preferences_SetMenuItems( void ) {
 
 #ifndef TURTLEARENA
 	s_preferences.crosshair.curvalue		= (int)trap_Cvar_VariableValue( "cg_drawCrosshair" ) % NUM_CROSSHAIRS;
+	s_preferences.crosshairhealth.curvalue	= trap_Cvar_VariableValue( "cg_crosshairHealth" ) != 0;
 	s_preferences.viewbob.curvalue			= trap_Cvar_VariableValue( "cg_viewbob" ) != 0;
 #endif
 	s_preferences.simpleitems.curvalue		= trap_Cvar_VariableValue( "cg_simpleItems" ) != 0;
@@ -211,12 +204,6 @@ static void Preferences_SetMenuItems( void ) {
 
 	s_preferences.thirdsize.curvalue		= trap_Cvar_VariableValue( "cg_splitviewThirdEqual" ) != 0;
 
-	s_preferences.atmeffects.curvalue		= 2*trap_Cvar_VariableValue( "cg_atmosphericEffects" );
-	if (s_preferences.atmeffects.curvalue < 0)
-		s_preferences.atmeffects.curvalue = 0;
-	else if (s_preferences.atmeffects.curvalue > 2)
-		s_preferences.atmeffects.curvalue = 2;
-
 #ifdef IOQ3ZTM // CONTENT_FILTERING
 #ifndef NOBLOOD
 	s_preferences.showblood.curvalue	= trap_Cvar_VariableValue( "com_blood" ) != 0;
@@ -237,6 +224,10 @@ static void Preferences_Event( void* ptr, int notification ) {
 #ifndef TURTLEARENA
 	case ID_CROSSHAIR:
 		trap_Cvar_SetValue( "cg_drawCrosshair", s_preferences.crosshair.curvalue );
+		break;
+
+	case ID_CROSSHAIRHEALTH:
+		trap_Cvar_SetValue( "cg_crosshairHealth", s_preferences.crosshairhealth.curvalue );
 		break;
 
 	case ID_VIEWBOB:
@@ -306,10 +297,6 @@ static void Preferences_Event( void* ptr, int notification ) {
 		trap_Cvar_SetValue( "cg_splitviewThirdEqual", s_preferences.thirdsize.curvalue );
 		break;
 
-	case ID_ATMEFFECTS:
-		trap_Cvar_SetValue( "cg_atmosphericEffects", (float)s_preferences.atmeffects.curvalue/2.0f );
-		break;
-
 #ifdef IOQ3ZTM // CONTENT_FILTERING
 #ifndef NOBLOOD
 	case ID_SHOWBLOOD:
@@ -342,6 +329,7 @@ static void Crosshair_Draw( void *self ) {
 	int			x, y;
 	int			style;
 	qboolean	focus;
+	vec4_t		crosshairColor;
 
 	s = (menulist_s *)self;
 	x = s->generic.x;
@@ -376,7 +364,16 @@ static void Crosshair_Draw( void *self ) {
 	if( !s->curvalue ) {
 		return;
 	}
-	CG_DrawPic( x + SMALLCHAR_WIDTH, y - 4, 24, 24, s_preferences.crosshairShader[s->curvalue] );
+
+	// draw crosshair red if crosshair health is enabled and selected
+	if ( s_preferences.crosshairhealth.curvalue && s->generic.parent->cursor == s_preferences.crosshairhealth.generic.menuPosition ) {
+		VectorSet( crosshairColor, 1, 0, 0 );
+	} else {
+		VectorSet( crosshairColor, 1, 1, 1 );
+	}
+	crosshairColor[3] = 1;
+
+	CG_DrawPicColor( x + SMALLCHAR_WIDTH, y - 4, 24, 24, s_preferences.crosshairShader[s->curvalue], crosshairColor );
 }
 #endif
 
@@ -426,11 +423,20 @@ static void Preferences_MenuInit( void ) {
 	s_preferences.crosshair.generic.id			= ID_CROSSHAIR;
 	s_preferences.crosshair.generic.top			= y - 4;
 	s_preferences.crosshair.generic.bottom		= y + 20;
-	s_preferences.crosshair.generic.left		= PREFERENCES_X_POS - CG_DrawStrlen( s_preferences.crosshair.generic.name, UI_SMALLFONT ) - SMALLCHAR_WIDTH;
+	s_preferences.crosshair.generic.left		= PREFERENCES_X_POS - UI_DrawStrlen( s_preferences.crosshair.generic.name, UI_SMALLFONT ) - SMALLCHAR_WIDTH;
 	s_preferences.crosshair.generic.right		= PREFERENCES_X_POS + 48;
 	s_preferences.crosshair.numitems			= NUM_CROSSHAIRS;
 
 	y += BIGCHAR_HEIGHT+2+4;
+	s_preferences.crosshairhealth.generic.type     = MTYPE_RADIOBUTTON;
+	s_preferences.crosshairhealth.generic.name	   = "Crosshair Health:";
+	s_preferences.crosshairhealth.generic.flags	   = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_preferences.crosshairhealth.generic.callback = Preferences_Event;
+	s_preferences.crosshairhealth.generic.id       = ID_CROSSHAIRHEALTH;
+	s_preferences.crosshairhealth.generic.x	       = PREFERENCES_X_POS;
+	s_preferences.crosshairhealth.generic.y	       = y;
+
+	y += BIGCHAR_HEIGHT+2;
 	s_preferences.viewbob.generic.type            = MTYPE_RADIOBUTTON;
 	s_preferences.viewbob.generic.name	          = "View Bobbing:";
 	s_preferences.viewbob.generic.flags	          = QMF_PULSEIFFOCUS|QMF_SMALLFONT;
@@ -559,23 +565,13 @@ static void Preferences_MenuInit( void ) {
 
 	y += BIGCHAR_HEIGHT+2;
 	s_preferences.thirdsize.generic.type			= MTYPE_SPINCONTROL;
-	s_preferences.thirdsize.generic.name			= "Third view size:";
+	s_preferences.thirdsize.generic.name			= "Third Player View:";
 	s_preferences.thirdsize.generic.flags			= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 	s_preferences.thirdsize.generic.callback		= Preferences_Event;
 	s_preferences.thirdsize.generic.id				= ID_SPLITVERTICAL;
 	s_preferences.thirdsize.generic.x				= PREFERENCES_X_POS;
 	s_preferences.thirdsize.generic.y				= y;
 	s_preferences.thirdsize.itemnames				= thirdsize_names;
-
-	y += BIGCHAR_HEIGHT+2;
-	s_preferences.atmeffects.generic.type		= MTYPE_SPINCONTROL;
-	s_preferences.atmeffects.generic.name		= "Snow/Rain:";
-	s_preferences.atmeffects.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
-	s_preferences.atmeffects.generic.callback	= Preferences_Event;
-	s_preferences.atmeffects.generic.id			= ID_ATMEFFECTS;
-	s_preferences.atmeffects.generic.x			= PREFERENCES_X_POS;
-	s_preferences.atmeffects.generic.y			= y;
-	s_preferences.atmeffects.itemnames			= atmeffects_names;
 
 #ifdef IOQ3ZTM // CONTENT_FILTERING
 #ifndef NOBLOOD
@@ -617,6 +613,7 @@ static void Preferences_MenuInit( void ) {
 
 #ifndef TURTLEARENA
 	Menu_AddItem( &s_preferences.menu, &s_preferences.crosshair );
+	Menu_AddItem( &s_preferences.menu, &s_preferences.crosshairhealth );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.viewbob );
 #endif
 	Menu_AddItem( &s_preferences.menu, &s_preferences.simpleitems );
@@ -634,7 +631,6 @@ static void Preferences_MenuInit( void ) {
 	Menu_AddItem( &s_preferences.menu, &s_preferences.splitvertical );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.splittextsize );
 	Menu_AddItem( &s_preferences.menu, &s_preferences.thirdsize );
-	Menu_AddItem( &s_preferences.menu, &s_preferences.atmeffects );
 #ifdef IOQ3ZTM // CONTENT_FILTERING
 #ifndef NOBLOOD
 	Menu_AddItem( &s_preferences.menu, &s_preferences.showblood );

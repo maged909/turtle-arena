@@ -578,6 +578,7 @@ void StopFollowing( gentity_t *ent );
 void BroadcastTeamChange( gplayer_t *player, int oldTeam );
 void SetTeam( gentity_t *ent, const char *s );
 void Cmd_FollowCycle_f( gentity_t *ent, int dir );
+void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 #ifdef IOQ3ZTM // PEAKING
 qboolean G_AllowPeaking(void);
 #endif
@@ -863,6 +864,7 @@ void G_SetMiscAnim(gentity_t *ent, int anim);
 //
 void DeathmatchScoreboardMessage( gentity_t *ent );
 char *ConcatArgs( int start );
+qboolean StringIsInteger( const char * s );
 
 //
 // g_main.c

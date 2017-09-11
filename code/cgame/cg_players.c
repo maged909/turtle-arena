@@ -3192,8 +3192,18 @@ void CG_Player( centity_t *cent ) {
 	CG_PlayerAnimation( cent, &legs.oldframe, &legs.frame, &legs.backlerp,
 		 &torso.oldframe, &torso.frame, &torso.backlerp );
 
-	if ( cent->currentState.number != playerNum && ( cent->currentState.contents & CONTENTS_CORPSE ) ) {
+	if ( cent->currentState.number != playerNum && ( ( cent->currentState.contents & CONTENTS_CORPSE )
+#ifndef NOTRATEDM // No gibs.
+			|| ( cent->currentState.eFlags & EF_GIBBED )
+#endif
+			) ) {
 		CG_Corpse( cent, playerNum, &bodySinkOffset, &shadowAlpha );
+
+		// if the corpse is for a local player use the unsnapped origin to avoid
+		// player moving when switching from player state to corpse entity state.
+		if ( ( cent->currentState.eFlags & EF_MOVER_STOP ) && CG_LocalPlayerState( playerNum ) ) {
+			VectorCopy (cent->currentState.origin2, cent->lerpOrigin);
+		}
 	} else {
 		bodySinkOffset = 0;
 		shadowAlpha = 1;

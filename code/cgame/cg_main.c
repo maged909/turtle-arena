@@ -231,8 +231,10 @@ vmCvar_t	cg_drawLagometer;
 vmCvar_t	cg_drawAttacker;
 vmCvar_t	cg_synchronousClients;
 vmCvar_t	cg_singlePlayer;
+#ifndef MISSIONPACK_HUD
 vmCvar_t 	cg_teamChatTime;
 vmCvar_t 	cg_teamChatHeight;
+#endif
 vmCvar_t 	cg_stats;
 vmCvar_t 	cg_buildScript;
 #ifndef TURTLEARENA // NO_CGFORCEMODLE
@@ -264,9 +266,13 @@ vmCvar_t	cg_cameraMode;
 vmCvar_t	cg_timescaleFadeEnd;
 vmCvar_t	cg_timescaleFadeSpeed;
 vmCvar_t	cg_timescale;
+#ifdef MISSIONPACK_HUD
 vmCvar_t	cg_smallFont;
 vmCvar_t	cg_bigFont;
+#endif
+#ifdef MISSIONPACK
 vmCvar_t	cg_noTaunt;
+#endif
 vmCvar_t	cg_noProjectileTrail;
 vmCvar_t	cg_oldRail;
 vmCvar_t	cg_oldRocket;
@@ -286,13 +292,19 @@ vmCvar_t	cg_coronas;
 vmCvar_t	cg_fovAspectAdjust;
 vmCvar_t	cg_fadeExplosions;
 vmCvar_t	cg_skybox;
+#ifndef MISSIONPACK_HUD
 vmCvar_t	cg_drawScores;
+#endif
+vmCvar_t	cg_drawPickupItems;
 vmCvar_t	cg_oldBubbles;
 vmCvar_t	cg_smoothBodySink;
 vmCvar_t	cg_antiLag;
 vmCvar_t	cg_forceBitmapFonts;
 vmCvar_t	cg_drawGrappleHook;
 vmCvar_t	cg_drawBBox;
+vmCvar_t	cg_consoleFont;
+vmCvar_t	cg_hudFont;
+vmCvar_t	cg_numberFont;
 
 vmCvar_t	cg_introPlayed;
 vmCvar_t	cg_joystickDebug;
@@ -472,6 +484,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_splitviewThirdEqual, "cg_splitviewThirdEqual", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 	{ &cg_hudTextScale, "cg_hudTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
+#ifndef MISSIONPACK_HUD
 #ifdef IOQ3ZTM // TEAM_CHAT_CON // con_notifytime
 	{ &cg_teamChatTime, "cg_teamChatTime", "5", CVAR_ARCHIVE, RANGE_ALL },
 #else
@@ -481,6 +494,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "8", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
 #else
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE, RANGE_INT( 0, TEAMCHAT_HEIGHT ) },
+#endif
 #endif
 #ifndef TURTLEARENA // NO_CGFORCEMODLE
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE, RANGE_BOOL },
@@ -545,11 +559,16 @@ static cvarTable_t cgameCvarTable[] = {
 
 	{ &pmove_overbounce, "pmove_overbounce", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
 	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
+//	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL },
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, RANGE_ALL },
-	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE, RANGE_BOOL },
+#ifdef MISSIONPACK_HUD
 	{ &cg_smallFont, "ui_smallFont", "0.25", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_bigFont, "ui_bigFont", "0.4", CVAR_ARCHIVE, RANGE_ALL },
+#endif
+#ifdef MISSIONPACK
+	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE, RANGE_BOOL },
+#endif
+	{ &cg_noProjectileTrail, "cg_noProjectileTrail", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_oldRail, "cg_oldRail", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #ifdef TURTLEARENA // WEAPONS
@@ -572,7 +591,12 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_fadeExplosions, "cg_fadeExplosions", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_skybox, "cg_skybox", "1", CVAR_ARCHIVE, RANGE_INT( 0, 2 ) },
-	{ &cg_drawScores, "cg_drawScores", "1", 0, RANGE_BOOL },
+#ifdef MISSIONPACK_HUD
+	{ &cg_drawPickupItems, "cg_drawPickupItems", "0", CVAR_ARCHIVE, RANGE_BOOL },
+#else
+	{ &cg_drawScores, "cg_drawScores", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_drawPickupItems, "cg_drawPickupItems", "1", CVAR_ARCHIVE, RANGE_BOOL },
+#endif
 #ifdef TURTLEARENA // enable new bubble effects by default
 	{ &cg_oldBubbles, "cg_oldBubbles", "0", CVAR_ARCHIVE, RANGE_BOOL },
 #else
@@ -583,6 +607,16 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_forceBitmapFonts, "cg_forceBitmapFonts", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_BOOL },
 	{ &cg_drawGrappleHook, "cg_drawGrappleHook", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
+#ifdef TA_DATA // changed font names
+	{ &cg_consoleFont, "cg_consoleFont", "fonts/mplus-1mn-regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_hudFont, "cg_hudFont", "fonts/mplus-1c-regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_numberFont, "cg_numberFont", "fonts/mplus-1c-bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+#else
+	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_hudFont, "cg_hudFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_numberFont, "cg_numberFont", "", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+#endif
+
 	{ &cg_defaultModelGender, "default_model_gender", DEFAULT_MODEL_GENDER, CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_defaultMaleModel, "default_male_model", DEFAULT_MODEL_MALE, CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_defaultMaleHeadModel, "default_male_headmodel", DEFAULT_HEAD_MALE, CVAR_ARCHIVE, RANGE_ALL },
@@ -593,6 +627,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_defaultMaleTeamHeadModel, "default_male_team_headmodel", DEFAULT_TEAM_HEAD_MALE, CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_defaultFemaleTeamModel, "default_female_team_model", DEFAULT_TEAM_MODEL_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_defaultFemaleTeamHeadModel, "default_female_team_headmodel", DEFAULT_TEAM_HEAD_FEMALE, CVAR_ARCHIVE, RANGE_ALL },
+
 #ifdef TA_WEAPSYS // MELEE_TRAIL
 	{ &cg_drawMeleeWeaponTrails, "cg_drawMeleeWeaponTrails", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #endif
@@ -603,7 +638,6 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_2dmode, "g_2dmode", "0", CVAR_SYSTEMINFO, RANGE_ALL },
 	{ &cg_2dmodeOverride, "cg_2dmodeOverride", "0", 0, RANGE_ALL },
 #endif
-//	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL }
 
 	{ &cg_introPlayed, "com_introPlayed", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_joystickDebug, "in_joystickDebug", "0", CVAR_TEMP, RANGE_BOOL },
@@ -2304,6 +2338,12 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
+			if (cg_hudFont.string[0]) {
+				if (CG_InitTrueTypeFont(cg_hudFont.string, pointSize, 0, &cgDC.Assets.textFont)) {
+					Com_DPrintf("Overriding HUD font '%s' with '%s'\n", tempStr, cg_hudFont.string);
+					continue;
+				}
+			}
 			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.textFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.textFont, pointSize, pointSize / 2);
 			}
@@ -2316,6 +2356,12 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
+			if (cg_hudFont.string[0]) {
+				if (CG_InitTrueTypeFont(cg_hudFont.string, pointSize, 0, &cgDC.Assets.smallFont)) {
+					Com_DPrintf("Overriding HUD smallFont '%s' with '%s'\n", tempStr, cg_hudFont.string);
+					continue;
+				}
+			}
 			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.smallFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.smallFont, pointSize, pointSize / 2);
 			}
@@ -2327,6 +2373,18 @@ qboolean CG_Asset_Parse(int handle) {
 			int pointSize;
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
+			}
+			if (cg_hudFont.string[0]) {
+				// ZTM: HACK: Team Arena hud.menu list bigFont as 20 point but status numbers are drawn at 36 point.
+				if (!strcmp(tempStr, "fonts/bigfont") && pointSize == 20 && CG_InitTrueTypeFont(cg_hudFont.string, 36, 0, &cgDC.Assets.bigFont)) {
+					Com_DPrintf("Overriding HUD bigFont '%s' (%d pt) with '%s' (36 pt)\n", tempStr, pointSize, cg_hudFont.string);
+					continue;
+				}
+
+				if (CG_InitTrueTypeFont(cg_hudFont.string, pointSize, 0, &cgDC.Assets.bigFont)) {
+					Com_DPrintf("Overriding HUD bigFont '%s' with '%s'\n", tempStr, cg_hudFont.string);
+					continue;
+				}
 			}
 			if (!CG_InitTrueTypeFont(tempStr, pointSize, 0, &cgDC.Assets.bigFont)) {
 				CG_InitBitmapFont(&cgDC.Assets.bigFont, pointSize, pointSize / 2);
@@ -2994,8 +3052,6 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 	cgs.media.nodrawShader		= trap_R_RegisterShaderEx( "nodraw", LIGHTMAP_NONE, qtrue );
 	cgs.media.whiteDynamicShader= trap_R_RegisterShaderEx( "white", LIGHTMAP_NONE, qtrue );
 
-	CG_TextInit();
-
 	CG_ConsoleInit();
 
 	if ( cg_dedicated.integer ) {
@@ -3088,6 +3144,8 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	if ( strcmp( s, GAME_VERSION ) ) {
 		CG_Error( "Client/Server game mismatch: %s/%s", GAME_VERSION, s );
 	}
+
+	CG_HudTextInit();
 
 	s = CG_ConfigString( CS_LEVEL_START_TIME );
 	cgs.levelStartTime = atoi( s );
@@ -3916,6 +3974,7 @@ static void CG_UpdateGlconfig( qboolean initial ) {
 	}
 
 	if ( resized ) {
+		CG_ConsoleResized();
 		UI_WindowResized();
 	}
 }

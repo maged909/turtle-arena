@@ -197,32 +197,16 @@ OnSameTeam
 ==============
 */
 qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
-#ifdef TA_SP
-	// Co-op player are on the same "team"
-	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
-		int team1, team2;
-
-		if ( ent1->player)
-			team1 = ent1->player->sess.sessionTeam;
-		else
-			return qfalse;
-
-		if ( ent2->player)
-			team2 = ent2->player->sess.sessionTeam;
-		else
-			return qfalse;
-
-		if ( team1 == team2 ) {
-			return qtrue;
-		}
-	}
-#endif
-
-	if ( !ent1->player || !ent2->player ) {
+	if ( !ent1 || !ent1->player || !ent2 || !ent2->player ) {
 		return qfalse;
 	}
 
+#ifdef TA_SP
+	// Co-op player are on the same "team"
+	if ( g_gametype.integer < GT_TEAM && g_gametype.integer != GT_SINGLE_PLAYER ) {
+#else
 	if ( g_gametype.integer < GT_TEAM ) {
+#endif
 		return qfalse;
 	}
 
@@ -354,6 +338,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 
 #ifdef MISSIONPACK
 	if (g_gametype.integer == GT_1FCTF) {
+		flag_pw = PW_NEUTRALFLAG;
 		enemy_flag_pw = PW_NEUTRALFLAG;
 	} 
 #endif
@@ -409,26 +394,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		!attacker->player->ps.powerups[flag_pw]) {
 		// attacker is on the same team as the flag carrier and
 		// fragged a guy who hurt our flag carrier
-		AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_DANGER_PROTECT_BONUS);
-
-		targ->player->pers.teamState.lasthurtcarrier = 0;
-
-		attacker->player->ps.persistant[PERS_DEFEND_COUNT]++;
-		// add the sprite over the player's head
-#ifdef IOQ3ZTM
-		attacker->player->ps.eFlags &= ~EF_AWARD_BITS;
-#else
-		attacker->player->ps.eFlags &= ~(EF_AWARD_IMPRESSIVE | EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET | EF_AWARD_ASSIST | EF_AWARD_DEFEND | EF_AWARD_CAP );
-#endif
-		attacker->player->ps.eFlags |= EF_AWARD_DEFEND;
-		attacker->player->rewardTime = level.time + REWARD_SPRITE_TIME;
-
-		return;
-	}
-
-	if (targ->player->pers.teamState.lasthurtcarrier &&
-		level.time - targ->player->pers.teamState.lasthurtcarrier < CTF_CARRIER_DANGER_PROTECT_TIMEOUT) {
-		// attacker is on the same team as the skull carrier and
 		AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_DANGER_PROTECT_BONUS);
 
 		targ->player->pers.teamState.lasthurtcarrier = 0;
@@ -531,7 +496,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 
 	if (carrier && carrier != attacker) {
 		VectorSubtract(targ->r.currentOrigin, carrier->r.currentOrigin, v1);
-		VectorSubtract(attacker->r.currentOrigin, carrier->r.currentOrigin, v1);
+		VectorSubtract(attacker->r.currentOrigin, carrier->r.currentOrigin, v2);
 
 		if ( ( ( VectorLength(v1) < CTF_ATTACKER_PROTECT_RADIUS &&
 			trap_InPVS(carrier->r.currentOrigin, targ->r.currentOrigin ) ) ||
@@ -574,6 +539,12 @@ void Team_CheckHurtCarrier(gentity_t *targ, gentity_t *attacker)
 		flag_pw = PW_BLUEFLAG;
 	else
 		flag_pw = PW_REDFLAG;
+
+#ifdef MISSIONPACK
+	if (g_gametype.integer == GT_1FCTF) {
+		flag_pw = PW_NEUTRALFLAG;
+	}
+#endif
 
 	// flags
 	if (targ->player->ps.powerups[flag_pw] &&
@@ -1037,6 +1008,10 @@ gentity_t *Team_GetLocation(gentity_t *ent)
 	gentity_t		*eloc, *best;
 	float			bestlen, len;
 	vec3_t			origin;
+
+	if ( !ent ) {
+		return NULL;
+	}
 
 	best = NULL;
 	bestlen = 3*8192.0*8192.0;

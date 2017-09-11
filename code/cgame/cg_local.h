@@ -46,16 +46,19 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SCREEN_HEIGHT		480
 
 #define TINYCHAR_WIDTH		8
-#define TINYCHAR_HEIGHT		cgs.media.tinyFont.pointSize // default: 8
+#define TINYCHAR_HEIGHT		8
 
 #define SMALLCHAR_WIDTH		8
-#define SMALLCHAR_HEIGHT	cgs.media.smallFont.pointSize // default: 16 (bitmap), 12 (true type)
+#define SMALLCHAR_HEIGHT	16
 
 #define BIGCHAR_WIDTH		16
-#define BIGCHAR_HEIGHT		cgs.media.textFont.pointSize // default: 16
+#define BIGCHAR_HEIGHT		16
 
 #define	GIANTCHAR_WIDTH		32
-#define	GIANTCHAR_HEIGHT	cgs.media.bigFont.pointSize // default: 48 (bitmap), 20 (true type)
+#define	GIANTCHAR_HEIGHT	48
+
+#define	CONCHAR_WIDTH		8
+#define	CONCHAR_HEIGHT		16
 
 #define	POWERUP_BLINKS		5
 
@@ -165,7 +168,7 @@ void	MField_KeyDownEvent( mfield_t *edit, int key );
 void	MField_CharEvent( mfield_t *edit, int ch );
 void	MField_SetText( mfield_t *edit, const char *text );
 const char *MField_Buffer( mfield_t *edit );
-void	MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
+void	MField_Draw( mfield_t *edit, int x, int y, int style, const fontInfo_t *font, vec4_t color, qboolean drawCursor );
 
 //=================================================
 
@@ -1174,6 +1177,7 @@ typedef struct {
 	fontInfo_t	textFont;
 	fontInfo_t	bigFont;
 	fontInfo_t	numberFont; // status bar giant number font
+	fontInfo_t	consoleFont;
 
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
@@ -1719,10 +1723,10 @@ typedef struct {
 	playerInfo_t	playerinfo[MAX_CLIENTS];
 
 	// teamchat width is *3 because of embedded color codes
-	char			teamChatMsgs[TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
-	int				teamChatMsgTimes[TEAMCHAT_HEIGHT];
-	int				teamChatPos;
-	int				teamLastChatPos;
+	char			teamChatMsgs[TEAM_NUM_TEAMS][TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
+	int				teamChatMsgTimes[TEAM_NUM_TEAMS][TEAMCHAT_HEIGHT];
+	int				teamChatPos[TEAM_NUM_TEAMS];
+	int				teamLastChatPos[TEAM_NUM_TEAMS];
 
 	int cursorX;
 	int cursorY;
@@ -1841,8 +1845,10 @@ extern	vmCvar_t		cg_drawLagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
 extern	vmCvar_t		cg_singlePlayer;
+#ifndef MISSIONPACK_HUD
 extern	vmCvar_t		cg_teamChatTime;
 extern	vmCvar_t		cg_teamChatHeight;
+#endif
 extern	vmCvar_t		cg_stats;
 #ifndef TURTLEARENA // NO_CGFORCEMODLE
 extern	vmCvar_t 		cg_forceModel;
@@ -1870,9 +1876,13 @@ extern	vmCvar_t		cg_timescaleFadeEnd;
 extern	vmCvar_t		cg_timescaleFadeSpeed;
 extern	vmCvar_t		cg_timescale;
 extern	vmCvar_t		cg_cameraMode;
+#ifdef MISSIONPACK_HUD
 extern  vmCvar_t		cg_smallFont;
 extern  vmCvar_t		cg_bigFont;
+#endif
+#ifdef MISSIONPACK
 extern	vmCvar_t		cg_noTaunt;
+#endif
 extern	vmCvar_t		cg_noProjectileTrail;
 extern	vmCvar_t		cg_oldRail;
 extern	vmCvar_t		cg_oldRocket;
@@ -1892,13 +1902,19 @@ extern	vmCvar_t		cg_coronas;
 extern	vmCvar_t		cg_fovAspectAdjust;
 extern	vmCvar_t		cg_fadeExplosions;
 extern	vmCvar_t		cg_skybox;
+#ifndef MISSIONPACK_HUD
 extern	vmCvar_t		cg_drawScores;
+#endif
+extern	vmCvar_t		cg_drawPickupItems;
 extern	vmCvar_t		cg_oldBubbles;
 extern	vmCvar_t		cg_smoothBodySink;
 extern	vmCvar_t		cg_antiLag;
 extern	vmCvar_t		cg_forceBitmapFonts;
 extern	vmCvar_t		cg_drawGrappleHook;
 extern	vmCvar_t		cg_drawBBox;
+extern	vmCvar_t		cg_consoleFont;
+extern	vmCvar_t		cg_hudFont;
+extern	vmCvar_t		cg_numberFont;
 extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
@@ -2127,19 +2143,21 @@ void CG_ClearClipRegion( void );
 void CG_LerpColor( const vec4_t a, const vec4_t b, vec4_t c, float t );
 
 void CG_DrawString( int x, int y, const char* str, int style, const vec4_t color );
-void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const vec4_t color, int cursorPos, int cursorChar );
+void CG_DrawStringWithCursor( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, int cursorPos, int cursorChar );
 void CG_DrawStringExt( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset );
-void CG_DrawStringExtWithCursor( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar );
 void CG_DrawStringAutoWrap( int x, int y, const char* str, int style, const vec4_t color, float scale, float shadowOffset, float gradient, float wrapX );
-void CG_DrawStringDirect( int x, int y, const char* str, int style, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX );
+void CG_DrawStringCommon( int x, int y, const char* str, int style, const fontInfo_t *font, const vec4_t color, float scale, int maxChars, float shadowOffset, float gradient, int cursorPos, int cursorChar, float wrapX );
 void CG_DrawBigString( int x, int y, const char *s, float alpha );
 void CG_DrawBigStringColor( int x, int y, const char *s, vec4_t color );
 void CG_DrawSmallString( int x, int y, const char *s, float alpha );
 void CG_DrawSmallStringColor( int x, int y, const char *s, vec4_t color );
 
-float CG_DrawStrlenEx( const char *str, int style, int maxchars );
+float CG_DrawStrlenCommon( const char *str, int style, const fontInfo_t *font, int maxchars );
+float CG_DrawStrlenMaxChars( const char *str, int style, int maxchars );
 float CG_DrawStrlen( const char *str, int style );
 int CG_DrawStringLineHeight( int style );
+
+void CG_MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor );
 
 float	*CG_FadeColor( int startMsec, int totalMsec );
 #ifdef TURTLEARENA // NIGHTS_ITEMS
@@ -2218,7 +2236,7 @@ qboolean CG_AnyScoreboardShowing( void );
 #define GLYPH_OVERSTRIKE 11
 #define GLYPH_ARROW 13
 
-void CG_TextInit( void );
+void CG_HudTextInit( void );
 void CG_InitBitmapFont( fontInfo_t *font, int charHeight, int charWidth );
 void CG_InitBitmapNumberFont( fontInfo_t *font, int charHeight, int charWidth );
 qboolean CG_InitTrueTypeFont( const char *name, int pointSize, float borderWidth, fontInfo_t *font );
@@ -2227,8 +2245,7 @@ fontInfo_t *CG_FontForScale( float scale );
 const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index );
 float Text_Width( const char *text, const fontInfo_t *font, float scale, int limit );
 float Text_Height( const char *text, const fontInfo_t *font, float scale, int limit );
-void Text_PaintChar( float x, float y, float width, float height, float useScale, float s, float t, float s2, float t2, qhandle_t hShader );
-void Text_PaintGlyph( float x, float y, float useScale, const glyphInfo_t *glyph, float *gradientColor );
+void Text_PaintGlyph( float x, float y, float w, float h, const glyphInfo_t *glyph, float *gradientColor );
 void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
 void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
 void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit );
@@ -2497,6 +2514,7 @@ void CG_DrawTourneyScoreboard( void );
 // cg_console.c
 //
 void CG_ConsoleInit( void );
+void CG_ConsoleResized( void );
 void CG_ConsolePrint( const char *text );
 void CG_CloseConsole( void );
 void Con_ClearConsole_f( void );

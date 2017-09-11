@@ -198,7 +198,7 @@ static void PlayerSettings_DrawName( void *self ) {
 	if ( focus ) {
 		style |= UI_FORCECOLOR;
 	}
-	MField_Draw( &f->field, x, y, style, color, focus );
+	UI_MField_Draw( &f->field, x, y, style, color, focus );
 }
 
 

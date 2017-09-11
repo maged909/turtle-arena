@@ -68,6 +68,9 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	SAY_TEAM		1
 #define	SAY_TELL		2
 
+#define CHATPLAYER_SERVER	-1
+#define CHATPLAYER_UNKNOWN	-2
+
 #define	MODELINDEX_BITS		10
 
 // these are networked using the modelindex and/or modelindex2 field, must fit in MODELINDEX_BITS
@@ -2374,6 +2377,7 @@ void	SnapVectorTowards( vec3_t v, vec3_t to );
 #define UI_GIANTFONT	0x00000300
 #define UI_TINYFONT		0x00000400
 #define UI_NUMBERFONT	0x00000500
+#define UI_CONSOLEFONT	0x00000600
 #define UI_FONTMASK		0x00000F00
 
 // other flags

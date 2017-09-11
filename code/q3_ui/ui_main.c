@@ -115,11 +115,13 @@ vmCvar_t	ui_arcadeName;
 #endif
 
 vmCvar_t	ui_browserMaster;
+vmCvar_t	ui_browserGame;
 vmCvar_t	ui_browserGameType;
 vmCvar_t	ui_browserSortKey;
 vmCvar_t	ui_browserShowFull;
 vmCvar_t	ui_browserShowEmpty;
 vmCvar_t	ui_browserShowBots;
+vmCvar_t	ui_browserSeparateMasters;
 
 vmCvar_t	ui_brassTime;
 vmCvar_t	ui_drawCrosshair;
@@ -144,6 +146,10 @@ vmCvar_t	ui_server15;
 vmCvar_t	ui_server16;
 
 vmCvar_t	ui_ioq3;
+
+vmCvar_t	ui_menuFont;
+vmCvar_t	ui_menuFontProp;
+vmCvar_t	ui_menuFontBanner;
 
 static cvarTable_t		cvarTable[] = {
 #ifdef NOTRATEDM // frag to score
@@ -219,11 +225,13 @@ static cvarTable_t		cvarTable[] = {
 #endif
 
 	{ &ui_browserMaster, "ui_browserMaster", "1", CVAR_ARCHIVE },
+	{ &ui_browserGame, "ui_browserGame", "", CVAR_ARCHIVE },
 	{ &ui_browserGameType, "ui_browserGameType", "0", CVAR_ARCHIVE },
 	{ &ui_browserSortKey, "ui_browserSortKey", "4", CVAR_ARCHIVE },
 	{ &ui_browserShowFull, "ui_browserShowFull", "1", CVAR_ARCHIVE },
 	{ &ui_browserShowEmpty, "ui_browserShowEmpty", "1", CVAR_ARCHIVE },
 	{ &ui_browserShowBots, "ui_browserShowBots", "1", CVAR_ARCHIVE },
+	{ &ui_browserSeparateMasters, "ui_browserSeparateMasters", "0", CVAR_ARCHIVE },
 
 	{ &ui_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE },
 #ifdef TA_DATA
@@ -251,7 +259,17 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_server15, "server15", "", CVAR_ARCHIVE },
 	{ &ui_server16, "server16", "", CVAR_ARCHIVE },
 
-	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM }
+	{ &ui_ioq3, "ui_ioq3", "1", CVAR_ROM },
+
+#ifdef TA_DATA // changed font names
+	{ &ui_menuFont, "ui_menuFont", "fonts/mplus-1c-regular.ttf", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_menuFontProp, "ui_menuFontProp", "fonts/mplus-1c-bold.ttf", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_menuFontBanner, "ui_menuFontBanner", "fonts/mplus-2p-black.ttf", CVAR_ARCHIVE | CVAR_LATCH },
+#else
+	{ &ui_menuFont, "ui_menuFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_menuFontProp, "ui_menuFontProp", "", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_menuFontBanner, "ui_menuFontBanner", "", CVAR_ARCHIVE | CVAR_LATCH },
+#endif
 };
 
 static int cvarTableSize = ARRAY_LEN( cvarTable );
