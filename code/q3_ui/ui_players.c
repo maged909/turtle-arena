@@ -810,11 +810,19 @@ static void UI_PlayerAngles( uiPlayerInfo_t *pi, vec3_t legs[3], vec3_t torso[3]
 #endif
 	torsoAngles[PITCH] = pi->torso.pitchAngle;
 
+#ifdef TA_PLAYERSYS
+	if ( pi->playercfg.fixedtorso ) {
+#else
 	if ( pi->fixedtorso ) {
+#endif
 		torsoAngles[PITCH] = 0.0f;
 	}
 
+#ifdef TA_PLAYERSYS
+	if ( pi->playercfg.fixedlegs ) {
+#else
 	if ( pi->fixedlegs ) {
+#endif
 		legsAngles[YAW] = torsoAngles[YAW];
 		legsAngles[PITCH] = 0.0f;
 		legsAngles[ROLL] = 0.0f;
