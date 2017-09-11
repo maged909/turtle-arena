@@ -89,7 +89,7 @@ CG_MessageMode_f
 */
 void CG_MessageMode_f( void ) {
 	Q_strncpyz( cg.messageCommand, "say", sizeof (cg.messageCommand) );
-	Q_strncpyz( cg.messagePrompt, "Say:", sizeof (cg.messagePrompt) );
+	Q_strncpyz( cg.messagePrompt, "Say: ", sizeof (cg.messagePrompt) );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -102,7 +102,7 @@ CG_MessageMode2_f
 */
 void CG_MessageMode2_f( void ) {
 	Q_strncpyz( cg.messageCommand, "say_team", sizeof (cg.messageCommand) );
-	Q_strncpyz( cg.messagePrompt, "Team Say:", sizeof (cg.messagePrompt) );
+	Q_strncpyz( cg.messagePrompt, "Team Say: ", sizeof (cg.messagePrompt) );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 25;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -119,7 +119,7 @@ void CG_MessageMode3_f( void ) {
 		return;
 	}
 	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
-	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s: ", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -136,7 +136,7 @@ void CG_MessageMode4_f( void ) {
 		return;
 	}
 	Com_sprintf( cg.messageCommand, sizeof (cg.messageCommand), "tell %d", playerNum );
-	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s:", cgs.playerinfo[ playerNum ].name );
+	Com_sprintf( cg.messagePrompt, sizeof (cg.messagePrompt), "Tell %s: ", cgs.playerinfo[ playerNum ].name );
 	MField_Clear( &cg.messageField );
 	cg.messageField.widthInChars = 30;
 	Key_SetCatcher( Key_GetCatcher( ) ^ KEYCATCH_MESSAGE );
@@ -663,6 +663,44 @@ static void CG_EditHud_f( void ) {
 
 /*
 ==================
+CG_VstrDown_f
+==================
+*/
+static void CG_VstrDown_f( void ) {
+	const char *cvarName;
+
+	if ( trap_Argc() < 3 ) {
+		Com_Printf( "+vstr <press variable name> <release variable name> : execute a variable command on key press and release\n" );
+		return;
+	}
+
+	cvarName = CG_Argv( 1 );
+	if ( *cvarName ) {
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "vstr %s\n", cvarName ) );
+	}
+}
+
+/*
+==================
+CG_VstrUp_f
+==================
+*/
+static void CG_VstrUp_f( void ) {
+	const char *cvarName;
+
+	if ( trap_Argc() < 3 ) {
+		Com_Printf( "-vstr <press variable name> <release variable name> : execute a variable command on key press and release\n" );
+		return;
+	}
+
+	cvarName = CG_Argv( 2 );
+	if ( *cvarName ) {
+		trap_Cmd_ExecuteText( EXEC_NOW, va( "vstr %s\n", cvarName ) );
+	}
+}
+
+/*
+==================
 CG_StartOrbit_f
 ==================
 */
@@ -959,6 +997,8 @@ void CG_ToggleMenu_f( void ) {
 }
 
 static consoleCommand_t	cg_commands[] = {
+	{ "+vstr", CG_VstrDown_f, 0 },
+	{ "-vstr", CG_VstrUp_f, 0 },
 	{ "testgun", CG_TestGun_f, CMD_INGAME },
 	{ "testmodel", CG_TestModel_f, CMD_INGAME },
 	{ "nextframe", CG_TestModelNextFrame_f, CMD_INGAME },
@@ -1055,6 +1095,8 @@ static playerConsoleCommand_t	playerCommands[] = {
 #endif
 	{ "+forward",IN_ForwardDown, 0 },
 	{ "-forward",IN_ForwardUp, 0 },
+	{ "+gesture",IN_Button3Down, 0 },
+	{ "-gesture",IN_Button3Up, 0 },
 	{ "+left",IN_LeftDown, 0 },
 	{ "-left",IN_LeftUp, 0 },
 #ifdef TURTLEARENA // LOCKON
@@ -1085,6 +1127,8 @@ static playerConsoleCommand_t	playerCommands[] = {
 #endif
 	{ "+strafe", IN_StrafeDown, 0 },
 	{ "-strafe", IN_StrafeUp, 0 },
+	{ "+useitem",IN_Button2Down, 0 },
+	{ "-useitem",IN_Button2Up, 0 },
 #ifndef TURTLEARENA // NOZOOM
 	{ "+zoom", CG_ZoomDown_f, CMD_INGAME },
 	{ "-zoom", CG_ZoomUp_f, CMD_INGAME },

@@ -599,12 +599,58 @@ void UI_DrawProportionalString_AutoWrapped( int x, int y, int xmax, int ystep, c
 
 /*
 =================
+UI_FontForStyle
+=================
+*/
+const fontInfo_t *UI_FontForStyle( int style ) {
+	const fontInfo_t *font;
+
+	switch (style & UI_FONTMASK)
+	{
+		case UI_SMALLFONT:
+			font = &uis.smallFont;
+			break;
+
+		case UI_BIGFONT:
+		default:
+			font = &uis.textFont;
+			break;
+
+		case UI_CONSOLEFONT:
+			font = &cgs.media.consoleFont;
+			break;
+	}
+
+	return font;
+}
+
+/*
+=================
 UI_DrawString
 =================
 */
 void UI_DrawString( int x, int y, const char* str, int style, vec4_t color )
 {
-	CG_DrawString( x, y, str, style, color );
+	CG_DrawStringCommon( x, y, str, style, UI_FontForStyle( style ), color, 0, 0, 0, 0, -1, -1, 0 );
+}
+
+/*
+=================
+UI_DrawStrlen
+=================
+*/
+float UI_DrawStrlen( const char *str, int style )
+{
+	return CG_DrawStrlenCommon( str, style, UI_FontForStyle( style ), 0 );
+}
+
+/*
+=================
+UI_MField_Draw
+=================
+*/
+void UI_MField_Draw( mfield_t *edit, int x, int y, int style, vec4_t color, qboolean drawCursor ) {
+	MField_Draw( edit, x, y, style, UI_FontForStyle( style ), color, drawCursor );
 }
 
 /*

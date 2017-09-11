@@ -2604,6 +2604,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	orientation_t	lerped;
 	playerInfo_t *pi;
 #endif
+	int		anim;
 
 	weaponNum = cent->currentState.weapon;
 
@@ -2712,8 +2713,33 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		// set default flashOrigin
 		if ( !gun[i].hModel || !cg_weapons[weaponGroup->weaponnum[i]].flashModel ) {
 			// use default flash origin when no flash model
-			VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin[i] );
-			nonPredictedCent->pe.flashOrigin[i][2] += DEFAULT_VIEWHEIGHT - 6;
+			if ( ps ) {
+				VectorCopy( cg.firstPersonViewOrg, cg.cur_lc->flashOrigin[i] );
+				VectorMA( cg.cur_lc->flashOrigin[i], -8, cg.firstPersonViewAxis[2], cg.cur_lc->flashOrigin[i] );
+
+				VectorCopy( cg.cur_lc->flashOrigin[i], flash.origin );
+			} else {
+				VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin[i] );
+
+				anim = nonPredictedCent->currentState.legsAnim & ~ANIM_TOGGLEBIT;
+				if ( anim == LEGS_WALKCR || anim == LEGS_IDLECR ) {
+					nonPredictedCent->pe.flashOrigin[i][2] += CROUCH_VIEWHEIGHT - 6;
+				} else {
+					nonPredictedCent->pe.flashOrigin[i][2] += DEFAULT_VIEWHEIGHT - 6;
+				}
+
+				VectorCopy( nonPredictedCent->pe.flashOrigin[i], flash.origin );
+			}
+
+			if ( ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING )
+				&& ( ps || cg.cur_lc->renderingThirdPerson
+						|| cent->currentState.number != cg.cur_lc->predictedPlayerState.playerNum ) ) {
+				if (weaponGroup->weapon[i]->proj->trailType == PT_LIGHTNING
+					&& weaponGroup->weapon[i]->proj->instantDamage) {
+					// add lightning bolt
+					CG_LightningBolt( nonPredictedCent, flash.origin, bg_weapongroupinfo[cent->currentState.weapon].weapon[i]->projnum );
+				}
+			}
 		}
 	}
 
@@ -2721,13 +2747,33 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		return;
 	}
 #else
-#ifdef IOQ3ZTM
 	if ( !weapon->weaponModel || !weapon->flashModel ) {
 		// use default flash origin when no flash model
-		VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin );
-		nonPredictedCent->pe.flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
+		if ( ps ) {
+			VectorCopy( cg.firstPersonViewOrg, cg.cur_lc->flashOrigin );
+			VectorMA( cg.cur_lc->flashOrigin, -8, cg.firstPersonViewAxis[2], cg.cur_lc->flashOrigin );
+
+			VectorCopy( cg.cur_lc->flashOrigin, flash.origin );
+		} else {
+			VectorCopy( cent->lerpOrigin, nonPredictedCent->pe.flashOrigin );
+
+			anim = nonPredictedCent->currentState.legsAnim & ~ANIM_TOGGLEBIT;
+			if ( anim == LEGS_WALKCR || anim == LEGS_IDLECR ) {
+				nonPredictedCent->pe.flashOrigin[2] += CROUCH_VIEWHEIGHT - 6;
+			} else {
+				nonPredictedCent->pe.flashOrigin[2] += DEFAULT_VIEWHEIGHT - 6;
+			}
+
+			VectorCopy( nonPredictedCent->pe.flashOrigin, flash.origin );
+		}
+
+		if ( ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING )
+			&& ( ps || cg.cur_lc->renderingThirdPerson
+					|| cent->currentState.number != cg.cur_lc->predictedPlayerState.playerNum ) ) {
+			// special hack for lightning gun...
+			CG_LightningBolt( nonPredictedCent, flash.origin );
+		}
 	}
-#endif
 
 	gun.hModel = weapon->weaponModel;
 	if (!gun.hModel) {
