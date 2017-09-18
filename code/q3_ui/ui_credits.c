@@ -57,12 +57,10 @@ typedef struct
 
 creditSection_t credits[] = {
 	{"Turtle Arena", { NULL } },
-	{"Designed by", { "Zack Middleton", NULL } },
-	{"Art by", { "Zack Middleton", NULL } },
+	{"Created by", { "Zack Middleton (zturtleman)", NULL } },
 	{"Fonts by", { "M+ Fonts Project", NULL } },
-	{"Sound Effects by", { "Zack Middleton", NULL } },
 	{"Music by", {
-		"Neil Crowe",
+		"Neil Crowe (The Mulletz)",
 		"zero-project",
 		NULL
 	} },
@@ -101,6 +99,14 @@ creditSection_t credits[] = {
 		"OpenArena",
 		NULL
 	} },
+	{"Loading screen photos by", {
+		"MAKY.OREL",
+		"Massimo L.",
+		"Eugene Zelenko",
+		"Diego Delso",
+		"Llann Wé²",
+		NULL
+	} },
 
 	// End of credits
 	{NULL, { NULL } }
@@ -131,7 +137,8 @@ UI_CreditMenu_Draw
 ===============
 */
 static void UI_CreditMenu_Draw( void ) {
-	int i, j, y;
+	int i, j;
+	float y;
 
 	y = 480 - (uis.realtime - s_credits.startTime) / 50.0f;
 
