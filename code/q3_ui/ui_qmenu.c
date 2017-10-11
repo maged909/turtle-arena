@@ -75,11 +75,12 @@ vec4_t text_color_highlight = {1.00f, 1.00f, 0.00f, 1.00f};	// bright yellow
 vec4_t listbar_color        = {1.00f, 0.43f, 0.00f, 0.30f};	// transluscent orange
 vec4_t text_banner_color;
 vec4_t bitmap_banner_color	= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
-vec4_t ttf_banner_color		= {0.70f, 0.00f, 0.00f, 1.00f};	// dark red
 #ifdef TURTLEARENA
+vec4_t ttf_banner_color		= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
 vec4_t text_big_color		= {1.00f, 1.00f, 1.00f, 1.00f};	// bright white
 vec4_t text_small_title_color={1.00f, 0.43f, 0.00f, 1.00f};	// light orange
 #else
+vec4_t ttf_banner_color		= {0.70f, 0.00f, 0.00f, 1.00f};	// dark red
 vec4_t text_big_color		= {1.00f, 0.00f, 0.00f, 1.00f};	// bright red
 vec4_t text_small_title_color={1.00f, 0.00f, 0.00f, 1.00f};	// bright red
 #endif

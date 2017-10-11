@@ -842,7 +842,8 @@ void G_PredictPlayerMove( gentity_t *ent, float frametime );
 //
 // g_svcmds.c
 //
-qboolean	ConsoleCommand( void );
+qboolean	G_ConsoleCommand( void );
+qboolean	G_ConsoleCompleteArgument( int completeArgument );
 void G_RegisterCommands( void );
 void G_ProcessIPBans(void);
 qboolean G_FilterPacket (char *from);
@@ -889,7 +890,7 @@ void G_CvarClearModification( vmCvar_t *vmCvar );
 //
 char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int connectionNum, int localPlayerNum );
 void PlayerUserinfoChanged( int playerNum );
-void PlayerDisconnect( int playerNum );
+qboolean PlayerDisconnect( int playerNum, qboolean force );
 void PlayerBegin( int playerNum );
 void ClientCommand( int connectionNum );
 float PlayerHandicap( gplayer_t *player );
@@ -990,7 +991,14 @@ qboolean G_ReachedPath(gentity_t *ent, qboolean check);
 void G_MoveOnPath(gentity_t *ent);
 #endif
 
+//
+// g_botlib.c
+//
+void G_BotInitBotLib(void);
+
+//
 // ai_main.c
+//
 #define MAX_FILEPATH			144
 
 //bot settings

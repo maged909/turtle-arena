@@ -1970,16 +1970,16 @@ static void CG_DrawTeamInfo( void ) {
 
 	lineHeight = CG_DrawStringLineHeight( UI_TINYFONT );
 
-	if (cgs.teamLastChatPos[team] != cgs.teamChatPos[team]) {
-		if (cg.time - cgs.teamChatMsgTimes[team][cgs.teamLastChatPos[team] % chatHeight] > cg_teamChatTime.integer
+	if (cg.cur_lc->teamLastChatPos != cg.cur_lc->teamChatPos) {
+		if (cg.time - cg.cur_lc->teamChatMsgTimes[cg.cur_lc->teamLastChatPos % chatHeight] > cg_teamChatTime.integer
 #ifdef IOQ3ZTM // TEAM_CHAT_CON
 			*1000
 #endif
 		) {
-			cgs.teamLastChatPos[team]++;
+			cg.cur_lc->teamLastChatPos++;
 		}
 
-		h = (cgs.teamChatPos[team] - cgs.teamLastChatPos[team]) * lineHeight;
+		h = (cg.cur_lc->teamChatPos - cg.cur_lc->teamLastChatPos) * lineHeight;
 
 		if ( team == TEAM_RED ) {
 			hcolor[0] = 1.0f;
@@ -2005,10 +2005,10 @@ static void CG_DrawTeamInfo( void ) {
 		hcolor[0] = hcolor[1] = hcolor[2] = 1.0f;
 		hcolor[3] = 1.0f;
 
-		for (i = cgs.teamChatPos[team] - 1; i >= cgs.teamLastChatPos[team]; i--) {
+		for (i = cg.cur_lc->teamChatPos - 1; i >= cg.cur_lc->teamLastChatPos; i--) {
 			CG_DrawString( CHATLOC_X + TINYCHAR_WIDTH, 
-				CHATLOC_Y - (cgs.teamChatPos[team] - i)*lineHeight,
-				cgs.teamChatMsgs[team][i % chatHeight],
+				CHATLOC_Y - (cg.cur_lc->teamChatPos - i)*lineHeight,
+				cg.cur_lc->teamChatMsgs[i % chatHeight],
 				UI_TINYFONT, hcolor );
 		}
 	}
@@ -3486,6 +3486,7 @@ static void CG_DrawWarmup( void ) {
 	float		scale;
 	playerInfo_t	*ci1, *ci2;
 	const char	*s;
+	int			style;
 
 	sec = cg.warmup;
 	if ( !sec ) {
@@ -3550,19 +3551,24 @@ static void CG_DrawWarmup( void ) {
 	switch ( cg.warmupCount ) {
 	case 0:
 		scale = 28 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	case 1:
 		scale = 24 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	case 2:
 		scale = 20 / 48.0f;
+		style = UI_GIANTFONT;
 		break;
 	default:
 		scale = 16 / 48.0f;
+		// use big font for native 16 point font
+		style = UI_BIGFONT;
 		break;
 	}
 
-	CG_DrawStringExt( SCREEN_WIDTH / 2, 70, s, UI_CENTER|UI_DROPSHADOW|UI_BIGFONT|UI_NOSCALE, NULL, scale, 0, 0 );
+	CG_DrawStringExt( SCREEN_WIDTH / 2, 70, s, UI_CENTER|UI_DROPSHADOW|style, NULL, scale, 0, 0 );
 }
 
 

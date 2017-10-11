@@ -985,6 +985,12 @@ typedef struct {
 	consoleLine_t	consoleLines[ MAX_CONSOLE_LINES ];
 	int				numConsoleLines;
 
+	// teamchat width is *3 because of embedded color codes
+	char			teamChatMsgs[TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
+	int				teamChatMsgTimes[TEAMCHAT_HEIGHT];
+	int				teamChatPos;
+	int				teamLastChatPos;
+
 } localPlayer_t;
  
 #define MAX_SPAWN_VARS          64
@@ -996,6 +1002,7 @@ typedef struct {
 	
 	int			clientFrame;		// incremented each frame
 
+	int			cinematicPlaying;	// playing fullscreen cinematic
 	int			cinematicHandle;	// handle for fullscreen cinematic
 	qboolean	demoPlayback;
 	qboolean	levelShot;			// taking a level menu screenshot
@@ -1722,12 +1729,6 @@ typedef struct {
 
 	playerInfo_t	playerinfo[MAX_CLIENTS];
 
-	// teamchat width is *3 because of embedded color codes
-	char			teamChatMsgs[TEAM_NUM_TEAMS][TEAMCHAT_HEIGHT][TEAMCHAT_WIDTH*3+1];
-	int				teamChatMsgTimes[TEAM_NUM_TEAMS][TEAMCHAT_HEIGHT];
-	int				teamChatPos[TEAM_NUM_TEAMS];
-	int				teamLastChatPos[TEAM_NUM_TEAMS];
-
 	int cursorX;
 	int cursorY;
 	qboolean eventHandling;
@@ -1914,7 +1915,9 @@ extern	vmCvar_t		cg_drawGrappleHook;
 extern	vmCvar_t		cg_drawBBox;
 extern	vmCvar_t		cg_consoleFont;
 extern	vmCvar_t		cg_hudFont;
+extern	vmCvar_t		cg_hudFontBorder;
 extern	vmCvar_t		cg_numberFont;
+extern	vmCvar_t		cg_numberFontBorder;
 extern	vmCvar_t		ui_stretch;
 #if !defined MISSIONPACK && defined IOQ3ZTM // Support MissionPack players.
 extern	vmCvar_t		cg_redTeamName;
@@ -2246,10 +2249,10 @@ const glyphInfo_t *Text_GetGlyph( const fontInfo_t *font, unsigned long index );
 float Text_Width( const char *text, const fontInfo_t *font, float scale, int limit );
 float Text_Height( const char *text, const fontInfo_t *font, float scale, int limit );
 void Text_PaintGlyph( float x, float y, float w, float h, const glyphInfo_t *glyph, float *gradientColor );
-void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
-void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor );
-void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit );
-void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, float xmax, float ystep, int style );
+void Text_Paint( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion );
+void Text_PaintWithCursor( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion );
+void Text_Paint_Limit( float *maxX, float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char* text, float adjust, int limit, qboolean textInMotion );
+void Text_Paint_AutoWrapped( float x, float y, const fontInfo_t *font, float scale, const vec4_t color, const char *str, float adjust, int limit, float shadowOffset, float gradient, qboolean forceColor, qboolean textInMotion, float xmax, float ystep, int style );
 
 void CG_Text_Paint( float x, float y, float scale, const vec4_t color, const char *text, float adjust, int limit, int textStyle );
 void CG_Text_PaintWithCursor( float x, float y, float scale, const vec4_t color, const char *text, int cursorPos, char cursor, int limit, int textStyle );
@@ -2532,9 +2535,11 @@ typedef struct {
 	char	*cmd;
 	void	(*function)(void);
 	int		flags;
+	void	(*complete)(char *, int);
 } consoleCommand_t;
 
 qboolean CG_ConsoleCommand( connstate_t state, int realTime );
+qboolean CG_ConsoleCompleteArgument( connstate_t state, int realTime, int completeArgument );
 void CG_InitConsoleCommands( void );
 
 void CG_StopCinematic_f( void );
