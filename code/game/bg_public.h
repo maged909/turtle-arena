@@ -1798,10 +1798,10 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 
 // For fallback player and gender-specific fallback sounds
 #define DEFAULT_MODEL_GENDER	"male"
-#define DEFAULT_MODEL_MALE		"exa"
-#define DEFAULT_HEAD_MALE		"exa"
-#define DEFAULT_MODEL_FEMALE	"cloe"
-#define DEFAULT_HEAD_FEMALE		"cloe"
+#define DEFAULT_MODEL_MALE		"leo"
+#define DEFAULT_HEAD_MALE		"leo"
+#define DEFAULT_MODEL_FEMALE	"leo"
+#define DEFAULT_HEAD_FEMALE		"leo"
 
 #ifdef TA_DATA
 // no gender-specific fallback sounds
