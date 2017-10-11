@@ -1803,6 +1803,11 @@ void BG_SwingAngles( float destination, float swingTolerance, float clampToleran
 #define DEFAULT_MODEL_FEMALE	"cloe"
 #define DEFAULT_HEAD_FEMALE		"cloe"
 
+#ifdef TA_DATA
+// no gender-specific fallback sounds
+#define DEFAULT_VOICE "male-default"
+#endif
+
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL
 #define DEFAULT_TEAM_HEAD		DEFAULT_HEAD
