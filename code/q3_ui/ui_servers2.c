@@ -123,19 +123,22 @@ MULTIPLAYER MENU (SERVER BROWSER)
 #define SORT_PING			4
 
 #ifdef TURTLEARENA // MP_GAMETYPES
-#define GAMES_ALL			0
-#define GAMES_FFA			1
-#define GAMES_TOURNEY		2
-#define GAMES_COOP			3
-#define GAMES_TEAMPLAY		4
-#define GAMES_CTF			5
+// must match servertype_items
+enum {
+	GAMES_ALL,
+	GAMES_FFA,
+	GAMES_TOURNEY,
+	GAMES_TEAMPLAY,
+	GAMES_CTF,
 #ifdef MISSIONPACK
-#define GAMES_1FCTF			6
-#define GAMES_OBELISK		7
+	GAMES_1FCTF,
+	GAMES_OBELISK,
 #ifdef MISSIONPACK_HARVESTER
-#define GAMES_HARVESTER		8
+	GAMES_HARVESTER,
 #endif // MISSIONPACK_HARVESTER
 #endif // MISSIONPACK
+	GAMES_COOP,
+};
 #else
 #define GAMES_ALL			0
 #define GAMES_FFA			1
@@ -207,7 +210,6 @@ static const char *servertype_items[] = {
 	"Tournament",
 #endif
 #ifdef TURTLEARENA // MP_GAMETYPES
-	"Cooperative",
 	"Team Deathmatch",
 #endif
 	"Capture the Flag",
@@ -218,6 +220,9 @@ static const char *servertype_items[] = {
 	"Harvester",
 #endif // MISSIONPACK_HARVESTER
 #endif // MISSIONPACK
+#ifdef TURTLEARENA // MP_GAMETYPES
+	"Cooperative",
+#endif
 	NULL
 };
 

@@ -119,7 +119,6 @@ static char scoreNames[NUM_ARCADE_SCORES][9] = { "Nobody", "Nobody", "Nobody", "
 
 // Order of gametypes in "gametype select list", must match gametype_items
 static int listToGametype[] = {
-	GT_SINGLE_PLAYER,
 	GT_FFA,
 	GT_TOURNAMENT,
 	GT_TEAM,
@@ -131,27 +130,27 @@ static int listToGametype[] = {
 	GT_HARVESTER,
 #endif
 #endif
+	GT_SINGLE_PLAYER,
 };
 
 // Order of gametype_items, convert GT_* to "gametype select list" index
 static int gametypeToList[] = {
-	1, // GT_FFA
-	2, // GT_TOURNAMENT
-	0, // GT_SINGLE_PLAYER
-	3, // GT_TEAM
-	4, // GT_CTF
+	0, // GT_FFA
+	1, // GT_TOURNAMENT
+	ARRAY_LEN(listToGametype)-1, // GT_SINGLE_PLAYER
+	2, // GT_TEAM
+	3, // GT_CTF
 #ifdef MISSIONPACK
-	5, // GT_1FCTF
-	6, // GT_OBELISK
+	4, // GT_1FCTF
+	5, // GT_OBELISK
 #ifdef MISSIONPACK_HARVESTER
-	7, // GT_HARVESTER
+	6, // GT_HARVESTER
 #endif
 #endif
 };
 
 // Names of gametypes in "gametype select list", can be any gametypes in any order
 static const char *gametype_items[] = {
-	"Cooperative",
 	"Free For All",
 	"Duel", // tornament to duel // "Tournament",
 	"Team Deathmatch",
@@ -163,12 +162,12 @@ static const char *gametype_items[] = {
 	"Harvester",
 #endif
 #endif
+	"Cooperative",
 	NULL
 };
 
 // Don't allow sp/coop in arcade mode
 static const char *arcade_gametype_items[] = {
-	"", // No coop in arcade
 	"Free For All",
 	"Duel", // tornament to duel // "Tournament",
 	"Team Deathmatch",
@@ -180,6 +179,7 @@ static const char *arcade_gametype_items[] = {
 	"Harvester",
 #endif
 #endif
+	"", // No coop in arcade
 	NULL
 };
 
@@ -1178,7 +1178,6 @@ static startserver_t s_startserver;
 #ifdef TURTLEARENA
 // Names of gametypes in "gametype select list", can be any gametypes in any order
 static const char *gametype_items[] = {
-	"Cooperative",
 	"Free For All",
 	"Duel", // tornament to duel // "Tournament",
 	"Team Deathmatch",
@@ -1190,12 +1189,12 @@ static const char *gametype_items[] = {
 	"Harvester",
 #endif
 #endif
+	"Cooperative",
 	NULL
 };
 
 // Order of gametypes in "gametype select list", must match gametype_items
 static int gametype_remap[] = {
-	GT_SINGLE_PLAYER,
 	GT_FFA,
 	GT_TOURNAMENT,
 	GT_TEAM,
@@ -1207,27 +1206,27 @@ static int gametype_remap[] = {
 	,GT_HARVESTER
 #endif
 #endif
+	GT_SINGLE_PLAYER,
 };
 
 // Order of gametype_items, convert GT_* to gametype_items index
 static int gametype_remap2[] = {
-	0,		// Cooperative
-	1,		// Free For All
-	2,		// Duel
-	3,		// Team Deathmatch
-	4		// Capture the Flag
+	0,		// Free For All
+	1,		// Duel
+	ARRAY_LEN(gametype_items)-2, // Cooperative
+	2,		// Team Deathmatch
+	3		// Capture the Flag
 #ifdef MISSIONPACK
-	,5		// 1 Flag CTF
-	,6		// Overload
+	,4		// 1 Flag CTF
+	,5		// Overload
 #ifdef MISSIONPACK_HARVESTER
-	,7		// Harvester
+	,6		// Harvester
 #endif
 #endif
 };
 
 // Don't allow sp/coop in arcade mode
 static const char *arcade_gametype_items[] = {
-	"", // No coop in arcade
 	"Free For All",
 	"Duel", // tornament to duel // "Tournament",
 	"Team Deathmatch",
@@ -1239,6 +1238,7 @@ static const char *arcade_gametype_items[] = {
 	"Harvester",
 #endif
 #endif
+	"", // No coop in arcade
 	NULL
 };
 #else
