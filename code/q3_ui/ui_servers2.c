@@ -177,7 +177,7 @@ static const char *master_items[] = {
 static const char *mod_desc_items[] = {
 	"All",
 #ifdef TURTLEARENA
-	"EBX",
+	"Turtle Arena",
 #else
 	"Quake 3",
 	"Team Arena",
@@ -193,7 +193,7 @@ static const char *mod_desc_items[] = {
 static const char *mod_dir_items[] = {
 	"",
 #ifdef TURTLEARENA
-	"baseebx",
+	"baseturtle",
 #else
 	"baseq3",
 	"missionpack",
