@@ -1060,11 +1060,15 @@ static void CG_LoadPlayerInfo( int playerNum, playerInfo_t *pi ) {
 	dir = pi->modelName;
 	gender = pi->gender;
 #endif
+#ifdef TA_DATA
+	fallback = DEFAULT_VOICE;
+#else
 	if (cgs.gametype >= GT_TEAM) {
 		fallback = (gender == GENDER_FEMALE) ? cg_defaultFemaleTeamModel.string : cg_defaultMaleTeamModel.string;
 	} else {
 		fallback = (gender == GENDER_FEMALE) ? cg_defaultFemaleModel.string : cg_defaultMaleModel.string;
 	}
+#endif
 
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS ; i++ ) {
 		s = cg_customSoundNames[i];
