@@ -112,6 +112,10 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return 0;
 	case CG_SET_ACTIVE_MENU:
 		UI_SetActiveMenu( arg0 );
+		// stop cinematic when disconnect or start demo playback
+		if ( arg0 == UIMENU_NONE && cg.cinematicPlaying ) {
+			CG_StopCinematic_f();
+		}
 		return 0;
 	case CG_JOYSTICK_AXIS_EVENT:
 		CG_JoystickAxisEvent(arg0, arg1, arg2, arg3, arg4);
@@ -133,6 +137,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_UPDATE_GLCONFIG:
 		CG_UpdateGlconfig( qfalse );
 		return 0;
+	case CG_CONSOLE_COMPLETEARGUMENT:
+		return CG_ConsoleCompleteArgument(arg0, arg1, arg2);
 	default:
 		CG_Error( "cgame vmMain: unknown command %i", command );
 		break;
@@ -304,7 +310,9 @@ vmCvar_t	cg_drawGrappleHook;
 vmCvar_t	cg_drawBBox;
 vmCvar_t	cg_consoleFont;
 vmCvar_t	cg_hudFont;
+vmCvar_t	cg_hudFontBorder;
 vmCvar_t	cg_numberFont;
+vmCvar_t	cg_numberFontBorder;
 
 vmCvar_t	cg_introPlayed;
 vmCvar_t	cg_joystickDebug;
@@ -482,7 +490,7 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT, RANGE_ALL },
 	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_splitviewThirdEqual, "cg_splitviewThirdEqual", "1", CVAR_ARCHIVE, RANGE_BOOL },
-	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
+	{ &cg_splitviewTextScale, "cg_splitviewTextScale", "2", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 	{ &cg_hudTextScale, "cg_hudTextScale", "1", CVAR_ARCHIVE, RANGE_FLOAT( 0.1, 5 ) },
 #ifndef MISSIONPACK_HUD
 #ifdef IOQ3ZTM // TEAM_CHAT_CON // con_notifytime
@@ -610,11 +618,15 @@ static cvarTable_t cgameCvarTable[] = {
 #ifdef TA_DATA // changed font names
 	{ &cg_consoleFont, "cg_consoleFont", "fonts/mplus-1mn-regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
 	{ &cg_hudFont, "cg_hudFont", "fonts/mplus-1c-regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_hudFontBorder, "cg_hudFontBorder", "2", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },
 	{ &cg_numberFont, "cg_numberFont", "fonts/mplus-1c-bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_numberFontBorder, "cg_numberFontBorder", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },
 #else
 	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
 	{ &cg_hudFont, "cg_hudFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_hudFontBorder, "cg_hudFontBorder", "2", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },
 	{ &cg_numberFont, "cg_numberFont", "", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_numberFontBorder, "cg_numberFontBorder", "0", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },
 #endif
 
 	{ &cg_defaultModelGender, "default_model_gender", DEFAULT_MODEL_GENDER, CVAR_ARCHIVE, RANGE_ALL },
@@ -1037,12 +1049,47 @@ void CG_AddNotifyText( int realTime, qboolean restoredText ) {
 
 		player = &cg.localPlayers[i];
 
-		if ( player->numConsoleLines == MAX_CONSOLE_LINES ) {
-			CG_RemoveNotifyLine( player );
+		// replace line
+		if ( buffer[0] == '\r' ) {
+			int j, length;
+
+			length = 0;
+			for ( j = 0; j < player->numConsoleLines - 1; j++ )
+				length += player->consoleLines[ j ].length;
+
+			player->consoleText[length] = '\0';
+
+			if ( player->numConsoleLines > 0 ) {
+				player->numConsoleLines--;
+			}
+
+			// free lines until there is enough space to fit buffer
+			while ( strlen( player->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
+				CG_RemoveNotifyLine( player );
+			}
+
+			// skip leading \r
+			Q_strcat( player->consoleText, MAX_CONSOLE_TEXT, buffer + 1 );
+			player->consoleLines[ player->numConsoleLines ].time = cg.time;
+			player->consoleLines[ player->numConsoleLines ].length = bufferLen - 1;
+			player->numConsoleLines++;
+			continue;
 		}
 
 		// free lines until there is enough space to fit buffer
 		while ( strlen( player->consoleText ) + bufferLen > MAX_CONSOLE_TEXT ) {
+			CG_RemoveNotifyLine( player );
+		}
+
+		// append to existing line
+		if ( player->numConsoleLines > 0 && player->consoleText[ strlen( player->consoleText ) - 1] != '\n' ) {
+			Q_strcat( player->consoleText, MAX_CONSOLE_TEXT, buffer );
+			player->consoleLines[ player->numConsoleLines - 1 ].time = cg.time;
+			player->consoleLines[ player->numConsoleLines - 1 ].length += bufferLen;
+			continue;
+		}
+
+		if ( player->numConsoleLines == MAX_CONSOLE_LINES ) {
 			CG_RemoveNotifyLine( player );
 		}
 
@@ -1075,6 +1122,12 @@ void QDECL CG_NotifyPrintf( int localPlayerNum, const char *msg, ... ) {
 	va_start (argptr, msg);
 	Q_vsnprintf (text+prefixLen, sizeof(text)-prefixLen, msg, argptr);
 	va_end (argptr);
+
+	// switch order of [player %d][skipnotify] so skip is first
+	if ( !Q_strncmp( text+prefixLen, "[skipnotify]", 12 ) ) {
+		memmove( text+12, text, prefixLen ); // "[player %d]"
+		memcpy( text, "[skipnotify]", 12 );
+	}
 
 	trap_Print( text );
 }
@@ -2997,8 +3050,6 @@ void CG_ClearState( qboolean everything, int maxSplitView ) {
 #endif
 	memset( cg_items, 0, sizeof(cg_items) );
 
-	cg.cinematicHandle = -1;
-
 	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
 		cg.localPlayers[i].playerNum = -1;
 	}
@@ -3070,7 +3121,7 @@ void CG_Init( connstate_t state, int maxSplitView, int playVideo ) {
 
 	// if the user didn't give any commands, run default action
 	if ( playVideo == 1 ) {
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cinematic idlogo.RoQ\n" );
+		trap_Cmd_ExecuteText( EXEC_NOW, "cinematic idlogo.RoQ\n" );
 		if( !cg_introPlayed.integer ) {
 			trap_Cvar_SetValue( "com_introPlayed", 1 );
 			trap_Cvar_Set( "nextmap", "cinematic intro.RoQ" );
@@ -3278,7 +3329,7 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 	// update cvars
 	CG_UpdateCvars();
 
-	if ( state == CA_CINEMATIC && cg.cinematicHandle >= 0 ) {
+	if ( state == CA_CINEMATIC && cg.cinematicPlaying ) {
 		float x, y, width, height;
 
 		x = 0;
@@ -3300,7 +3351,7 @@ void CG_Refresh( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback
 
 	if ( !cg_dedicated.integer && state == CA_DISCONNECTED && !UI_IsFullscreen() ) {
 		// if disconnected, bring up the menu
-		// ZTM: TODO: call trap_S_StopAllSounds() here. Currently it's done in cl_main.c
+		trap_S_StopAllSounds();
 		UI_SetActiveMenu( UIMENU_MAIN );
 	}
 

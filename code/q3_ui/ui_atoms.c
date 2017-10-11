@@ -360,7 +360,7 @@ void UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color
 	decent = -uis.fontPropB.glyphs[(int)'g'].top + uis.fontPropB.glyphs[(int)'g'].height;
 	y = y + PROPB_HEIGHT - decent * PROPB_HEIGHT / 48.0f * uis.fontPropB.glyphScale;
 
-	Text_Paint( x, y, &uis.fontPropB, PROPB_HEIGHT / 48.0f, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
+	Text_Paint( x, y, &uis.fontPropB, PROPB_HEIGHT / 48.0f, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 }
 
 
@@ -504,12 +504,12 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 		drawcolor[1] = color[1] * 0.7;
 		drawcolor[2] = color[2] * 0.7;
 		drawcolor[3] = color[3];
-		Text_Paint( x, y, &uis.fontProp, scale, drawcolor, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
+		Text_Paint( x, y, &uis.fontProp, scale, drawcolor, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 		return;
 	}
 
 	if ( style & UI_PULSE ) {
-		Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
+		Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 
 #ifdef TURTLEARENA // ZTM: Main menu text drawing.
         // ZTM: hack-ish thing to do?...
@@ -523,14 +523,14 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 #endif
 		drawcolor[3] = 0.5 + 0.5 * sin( uis.realtime / PULSE_DIVISOR );
 #ifdef TA_DATA
-		Text_Paint( x, y, &uis.fontProp, scale, drawcolor, str, 0, 0, 0, 0, qfalse );
+		Text_Paint( x, y, &uis.fontProp, scale, drawcolor, str, 0, 0, 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 #else
-		Text_Paint( x, glowY, &uis.fontPropGlow, scale, drawcolor, str, 0, 0, 0, 0, qfalse );
+		Text_Paint( x, glowY, &uis.fontPropGlow, scale, drawcolor, str, 0, 0, 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 #endif
 		return;
 	}
 
-	Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, qfalse );
+	Text_Paint( x, y, &uis.fontProp, scale, color, str, 0, 0, ( style & UI_DROPSHADOW ) ? 2 : 0, 0, !!( style & UI_FORCECOLOR ), !!( style & UI_INMOTION ) );
 }
 
 /*
