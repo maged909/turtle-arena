@@ -448,7 +448,7 @@ static cvarTable_t cgameCvarTable[] = {
 #endif
 	{ &cg_drawAttacker, "cg_drawAttacker", "1", CVAR_ARCHIVE, RANGE_BOOL },
 #ifdef TA_DATA
-	{ &cg_drawCrosshair, "cg_drawCrosshair", "1", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_drawCrosshair, "cg_drawCrosshair", "0", CVAR_ARCHIVE, RANGE_ALL },
 #else
 	{ &cg_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE, RANGE_ALL },
 #endif
