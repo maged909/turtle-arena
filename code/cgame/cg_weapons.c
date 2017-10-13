@@ -4071,6 +4071,8 @@ void CG_MissileExplode( int weapon, int playerNum, vec3_t origin, vec3_t dir, im
 #endif
 
 #ifdef TA_WEAPSYS
+	sfx = 0;
+
 	// Predicted instant lightning, explosion only (no wallmark or sounds)
 	instantLightningBeam = (soundType == IMPACTSOUND_LIGHTNING_PREDICT);
 

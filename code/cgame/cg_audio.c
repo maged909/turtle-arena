@@ -237,6 +237,8 @@ void CG_SetMusic( const char *constIntro, const char *constLoop )
 
 	Q_strncpyz( intro, constIntro, sizeof ( intro ) );
 	Q_strncpyz( loop, constLoop, sizeof ( loop ) );
+	volume = 1.0f;
+	loopVolume = 1.0f;
 
 	CG_GetMusicForIntro( intro, loop, &volume, &loopVolume );
 
