@@ -327,7 +327,7 @@ typedef struct centity_s {
 //======================================================================
 
 // local entities are created as a result of events or predicted actions,
-// and live independantly from all server transmitted entities
+// and live independently from all server transmitted entities
 
 typedef struct markPoly_s {
 	struct markPoly_s	*prevMark, *nextMark;
@@ -897,7 +897,7 @@ typedef struct {
 
 	int			itemPickup;
 	int			itemPickupTime;
-	int			itemPickupBlendTime;	// the pulse around the crosshair is timed seperately
+	int			itemPickupBlendTime;	// the pulse around the crosshair is timed separately
 
 #ifdef TURTLEARENA // NIGHTS_ITEMS
 	int			scorePickupTime;
@@ -1010,7 +1010,7 @@ typedef struct {
 	qboolean	loading;			// don't defer players at initial startup
 	qboolean	intermissionStarted;	// don't play voice rewards, because game will end shortly
 
-	// there are only one or two snapshot_t that are relevent at a time
+	// there are only one or two snapshot_t that are relevant at a time
 	int			latestSnapshotNum;	// the number of snapshots the client system has received
 	int			latestSnapshotTime;	// the time from latestSnapshotNum, so we don't need to read the snapshot yet
 

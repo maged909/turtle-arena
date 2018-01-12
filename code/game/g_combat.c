@@ -214,7 +214,7 @@ void TossPlayerItems( gentity_t *self ) {
 	if ( weapon != self->player->ps.stats[STAT_DEFAULTWEAPON] )
 #else
 	if ( weapon > WP_MACHINEGUN && weapon != WP_GRAPPLING_HOOK && 
-		self->player->ps.ammo[ weapon ] )
+		self->player->ps.ammo[ weapon ] && !g_instagib.integer )
 #endif
 	{
 		// find the item type for this weapon

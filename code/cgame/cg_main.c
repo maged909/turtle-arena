@@ -404,6 +404,8 @@ typedef struct {
 #define RANGE_FLOAT(min,max) min, max, qfalse
 
 static cvarTable_t cgameCvarTable[] = {
+	{ NULL, "cgameversion", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE, CVAR_ROM, RANGE_ALL },
+
 	{ &con_conspeed, "scr_conspeed", "3", 0, RANGE_FLOAT(0.1, 100) },
 	{ &con_autochat, "con_autochat", "0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &con_autoclear, "con_autoclear", "0", CVAR_ARCHIVE, RANGE_ALL },
@@ -1348,7 +1350,7 @@ static void CG_RegisterItemSounds( int itemNum ) {
 		cgs.media.itemPickupSounds[ itemNum ] = trap_S_RegisterSound( item->pickup_sound, qfalse );
 	}
 
-	// parse the space seperated precache string for other media
+	// parse the space separated precache string for other media
 	s = item->sounds;
 	if (!s || !s[0])
 		return;
@@ -3190,10 +3192,10 @@ void CG_Ingame_Init( int serverMessageNum, int serverCommandSequence, int maxSpl
 	// get the gamestate from the client system
 	trap_GetGameState( &cgs.gameState );
 
-	// check version
-	s = CG_ConfigString( CS_GAME_VERSION );
-	if ( strcmp( s, GAME_VERSION ) ) {
-		CG_Error( "Client/Server game mismatch: %s/%s", GAME_VERSION, s );
+	// check game protocol
+	s = CG_ConfigString( CS_GAME_PROTOCOL );
+	if ( strcmp( s, GAME_PROTOCOL ) ) {
+		CG_Error( "Client/Server game mismatch: %s/%s", GAME_PROTOCOL, s );
 	}
 
 	CG_HudTextInit();

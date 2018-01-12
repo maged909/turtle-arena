@@ -121,6 +121,9 @@ vmCvar_t	g_neutralteam;
 vmCvar_t	g_proxMineTimeout;
 #endif
 vmCvar_t	g_playerCapsule;
+#ifndef TA_WEAPSYS
+vmCvar_t	g_instagib;
+#endif
 #ifdef TA_SP
 vmCvar_t	g_savegameLoading;
 vmCvar_t	g_savegameFilename;
@@ -139,12 +142,15 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_cheats, "sv_cheats", "", 0, 0, RANGE_ALL },
 
 	// noset vars
-	{ NULL, "gameversion", GAME_VERSION , CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
-	{ NULL, "gamedate", PRODUCT_DATE , CVAR_ROM, 0, RANGE_ALL },
+	{ NULL, "gameversion", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE, CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
+	{ NULL, "gameprotocol", GAME_PROTOCOL, CVAR_SERVERINFO | CVAR_ROM, 0, RANGE_ALL },
 	{ &g_restarted, "g_restarted", "0", CVAR_ROM, 0, RANGE_ALL },
 
 	// latched vars
 	{ &g_gametype, "g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH, GCF_DO_RESTART, RANGE_INT(0, GT_MAX_GAME_TYPE-1)  },
+#ifndef TA_WEAPSYS
+	{ &g_instagib, "g_instagib", "0", CVAR_LATCH, GCF_DO_RESTART, RANGE_BOOL },
+#endif
 
 	{ &g_maxplayers, "sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, RANGE_ALL },
 	{ &g_maxGamePlayers, "g_maxGameClients", "0", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, RANGE_INT(0, MAX_CLIENTS-1) },
@@ -499,8 +505,21 @@ void G_RegisterCvars( void ) {
 	}
 #endif
 
-	trap_Cvar_Set( "sv_gametypeName", bg_displayGametypeNames[g_gametype.integer] );
-	trap_Cvar_Set( "sv_gametypeNetName", bg_netGametypeNames[g_gametype.integer] );
+#ifndef TA_WEAPSYS
+	// Don't allow instagib in single player mode.
+	if ( g_singlePlayer.integer && g_instagib.integer) {
+		trap_Cvar_SetValue( "g_instagib", 0 );
+		trap_Cvar_Update( &g_instagib );
+	}
+
+	if ( g_instagib.integer ) {
+		trap_Cvar_Set( "sv_gametypeName", va( "Instagib %s", bg_displayGametypeNames[g_gametype.integer] ) );
+		trap_Cvar_Set( "sv_gametypeNetName", va( "Insta%s", bg_netGametypeNames[g_gametype.integer] ) );
+	} else {
+		trap_Cvar_Set( "sv_gametypeName", bg_displayGametypeNames[g_gametype.integer] );
+		trap_Cvar_Set( "sv_gametypeNetName", bg_netGametypeNames[g_gametype.integer] );
+	}
+#endif
 
 	level.warmupModificationCount = g_warmup.modificationCount;
 }
@@ -578,8 +597,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	int					i, j;
 
 	G_DPrintf ("------- Game Initialization -------\n");
-	G_DPrintf ("gameversion: %s\n", GAME_VERSION);
-	G_DPrintf ("gamedate: %s\n", PRODUCT_DATE);
+	G_DPrintf ("gameversion: %s\n", PRODUCT_NAME " " PRODUCT_VERSION " " PLATFORM_STRING " " PRODUCT_DATE);
+	G_DPrintf ("gameprotocol: %s\n", GAME_PROTOCOL);
 
 	srand( randomSeed );
 

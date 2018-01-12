@@ -11,13 +11,6 @@ env:
 
 script: ./travis-ci-build.sh
 
-notifications:
-  irc:
-    channels:
-      - "irc.freenode.org#turtlearena"
-    on_success: change
-    on_failure: always
-
 sudo: false
 
 addons:

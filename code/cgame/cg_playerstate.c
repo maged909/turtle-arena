@@ -81,6 +81,9 @@ void CG_CheckAmmo( void ) {
 			continue;
 		}
 #endif
+		if ( cg.cur_ps->ammo[i] < 0 ) {
+			continue;
+		}
 #ifdef TA_WEAPSYS
 		total += cg.cur_ps->ammo[i] * bg_weapongroupinfo[i].weapon[0]->attackDelay;
 #else

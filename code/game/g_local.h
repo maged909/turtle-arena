@@ -1080,6 +1080,9 @@ extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
 #endif
 extern	vmCvar_t	g_playerCapsule;
+#ifndef TA_WEAPSYS
+extern	vmCvar_t	g_instagib;
+#endif
 #ifdef TA_SP
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_savegameLoading;
