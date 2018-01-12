@@ -40,7 +40,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
   Respawnable items don't actually go away when picked up, they are
   just made invisible and untouchable.  This allows them to ride
-  movers and respawn apropriately.
+  movers and respawn appropriately.
 */
 
 
@@ -1068,7 +1068,11 @@ void ClearRegisteredItems( void ) {
 	RegisterItem( BG_FindItemForHoldable( HI_SHURIKEN ) );
 #endif
 #ifndef TA_WEAPSYS
-	RegisterItem( BG_FindItemForWeapon( WP_MACHINEGUN ) );
+	if ( g_instagib.integer ) {
+		RegisterItem( BG_FindItemForWeapon( WP_RAILGUN ) );
+	} else {
+		RegisterItem( BG_FindItemForWeapon( WP_MACHINEGUN ) );
+	}
 	RegisterItem( BG_FindItemForWeapon( WP_GAUNTLET ) );
 #endif
 #ifdef MISSIONPACK_HARVESTER

@@ -694,8 +694,16 @@ qboolean CheckGauntletAttack( gentity_t *ent ) {
 		return qfalse;
 	}
 
-	if (ent->player->ps.powerups[PW_QUAD] ) {
+	if ( ent->player->ps.powerups[PW_QUAD] ) {
 		G_AddEvent( ent, EV_POWERUP_QUAD, 0 );
+	}
+
+#ifndef TA_WEAPSYS
+	if ( g_instagib.integer ) {
+		s_quadFactor = 100;
+	} else
+#endif
+	if ( ent->player->ps.powerups[PW_QUAD] ) {
 		s_quadFactor = g_quadfactor.value;
 	} else {
 		s_quadFactor = 1;
@@ -1526,7 +1534,12 @@ void FireWeapon( gentity_t *ent ) {
 	int i;
 #endif
 
-	if (ent->player->ps.powerups[PW_QUAD] ) {
+#ifndef TA_WEAPSYS
+	if ( g_instagib.integer ) {
+		s_quadFactor = 100;
+	} else
+#endif
+	if ( ent->player->ps.powerups[PW_QUAD] ) {
 		s_quadFactor = g_quadfactor.value;
 	} else {
 		s_quadFactor = 1;
@@ -1683,7 +1696,7 @@ static void KamikazeRadiusDamage( vec3_t origin, gentity_t *attacker, float dama
 			continue;
 		}
 
-		// dont hit things we have already hit
+		// don't hit things we have already hit
 		if( ent->kamikazeTime > level.time ) {
 			continue;
 		}
@@ -1743,7 +1756,7 @@ static void KamikazeShockWave( vec3_t origin, gentity_t *attacker, float damage,
 	for ( e = 0 ; e < numListedEntities ; e++ ) {
 		ent = &g_entities[entityList[ e ]];
 
-		// dont hit things we have already hit
+		// don't hit things we have already hit
 		if( ent->kamikazeShockTime > level.time ) {
 			continue;
 		}

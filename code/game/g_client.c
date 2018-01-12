@@ -59,7 +59,7 @@ void SP_info_player_deathmatch( gentity_t *ent ) {
 
 /*QUAKED info_player_start (1 0 0) (-16 -16 -24) (16 16 32)
 #ifndef TA_SP
-equivelant to info_player_deathmatch
+equivalent to info_player_deathmatch
 #endif
 */
 void SP_info_player_start(gentity_t *ent) {
@@ -1319,7 +1319,7 @@ char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int conn
 	}
 	G_ReadSessionData( player );
 
-	// get and distribute relevent paramters
+	// get and distribute relevant parameters
 	G_LogPrintf( "PlayerConnect: %i\n", playerNum );
 	PlayerUserinfoChanged( playerNum );
 
@@ -1717,11 +1717,16 @@ void PlayerSpawn(gentity_t *ent) {
 #endif
 	}
 #else
-	player->ps.stats[STAT_WEAPONS] = ( 1 << WP_MACHINEGUN );
-	if ( g_gametype.integer == GT_TEAM ) {
-		player->ps.ammo[WP_MACHINEGUN] = 50;
+	if ( g_instagib.integer ) {
+		player->ps.stats[STAT_WEAPONS] = ( 1 << WP_RAILGUN );
+		player->ps.ammo[WP_RAILGUN] = 999;
 	} else {
-		player->ps.ammo[WP_MACHINEGUN] = 100;
+		player->ps.stats[STAT_WEAPONS] = ( 1 << WP_MACHINEGUN );
+		if ( g_gametype.integer == GT_TEAM ) {
+			player->ps.ammo[WP_MACHINEGUN] = 50;
+		} else {
+			player->ps.ammo[WP_MACHINEGUN] = 100;
+		}
 	}
 
 	player->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );
