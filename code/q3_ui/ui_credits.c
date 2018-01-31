@@ -190,7 +190,7 @@ static void UI_CreditMenu_Draw_QuitMessage( void ) {
 
 	UI_DrawProportionalString( 320, y, "Turtle Arena (c) 2009-2018 Zack Middleton", UI_CENTER|UI_SMALLFONT, color_white );
 
-	UI_DrawString( 320, 459, "https://turtlearena.com", UI_CENTER|UI_SMALLFONT, color_red );
+	UI_DrawString( 320, 459, "https://clover.moe/turtlearena", UI_CENTER|UI_SMALLFONT, color_red );
 }
 
 /*
