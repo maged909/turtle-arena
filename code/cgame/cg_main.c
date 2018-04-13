@@ -309,6 +309,7 @@ vmCvar_t	cg_forceBitmapFonts;
 vmCvar_t	cg_drawGrappleHook;
 vmCvar_t	cg_drawBBox;
 vmCvar_t	cg_consoleFont;
+vmCvar_t	cg_consoleFontSize;
 vmCvar_t	cg_hudFont;
 vmCvar_t	cg_hudFontBorder;
 vmCvar_t	cg_numberFont;
@@ -619,12 +620,14 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
 #ifdef TA_DATA // changed font names
 	{ &cg_consoleFont, "cg_consoleFont", "fonts/mplus-1mn-regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_consoleFontSize, "cg_consoleFontSize", "8", CVAR_ARCHIVE | CVAR_LATCH, RANGE_INT( 4, 24 ) },
 	{ &cg_hudFont, "cg_hudFont", "fonts/mplus-1c-regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
 	{ &cg_hudFontBorder, "cg_hudFontBorder", "2", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },
 	{ &cg_numberFont, "cg_numberFont", "fonts/mplus-1c-bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
 	{ &cg_numberFontBorder, "cg_numberFontBorder", "4", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },
 #else
-	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Regular.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_consoleFont, "cg_consoleFont", "fonts/LiberationMono-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
+	{ &cg_consoleFontSize, "cg_consoleFontSize", "8", CVAR_ARCHIVE | CVAR_LATCH, RANGE_INT( 4, 24 ) },
 	{ &cg_hudFont, "cg_hudFont", "fonts/LiberationSans-Bold.ttf", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },
 	{ &cg_hudFontBorder, "cg_hudFontBorder", "2", CVAR_ARCHIVE | CVAR_LATCH, RANGE_FLOAT( 0, 10 ) },
 	{ &cg_numberFont, "cg_numberFont", "", CVAR_ARCHIVE | CVAR_LATCH, RANGE_ALL },

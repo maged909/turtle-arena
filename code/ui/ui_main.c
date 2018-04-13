@@ -2755,7 +2755,7 @@ static void UI_Update(const char *name) {
 		switch (val) {
 			case 0:
 				trap_Cvar_SetValue( "r_depthbits", 0 );
-				trap_Cvar_SetValue( "r_stencilbits", 0 );
+				trap_Cvar_Reset( "r_stencilbits" );
 			break;
 			case 16:
 				trap_Cvar_SetValue( "r_depthbits", 16 );
@@ -2763,6 +2763,7 @@ static void UI_Update(const char *name) {
 			break;
 			case 32:
 				trap_Cvar_SetValue( "r_depthbits", 24 );
+				trap_Cvar_SetValue( "r_stencilbits", 8 );
 			break;
 		}
 	} else if (Q_stricmp(name, "r_lodbias") == 0) {
@@ -2786,6 +2787,7 @@ static void UI_Update(const char *name) {
 				trap_Cvar_SetValue( "r_lodbias", 0 );
 				trap_Cvar_SetValue( "r_colorbits", 32 );
 				trap_Cvar_SetValue( "r_depthbits", 24 );
+				trap_Cvar_SetValue( "r_stencilbits", 8 );
 				trap_Cvar_SetValue( "r_picmip", 0 );
 				trap_Cvar_SetValue( "r_mode", 4 );
 				trap_Cvar_SetValue( "r_texturebits", 32 );
@@ -2801,7 +2803,8 @@ static void UI_Update(const char *name) {
 				trap_Cvar_SetValue( "r_vertexlight", 0 );
 				trap_Cvar_SetValue( "r_lodbias", 0 );
 				trap_Cvar_SetValue( "r_colorbits", 0 );
-				trap_Cvar_SetValue( "r_depthbits", 24 );
+				trap_Cvar_SetValue( "r_depthbits", 0 );
+				trap_Cvar_Reset( "r_stencilbits" );
 				trap_Cvar_SetValue( "r_picmip", 1 );
 				trap_Cvar_SetValue( "r_mode", 3 );
 				trap_Cvar_SetValue( "r_texturebits", 0 );
@@ -2818,6 +2821,7 @@ static void UI_Update(const char *name) {
 				trap_Cvar_SetValue( "r_lodbias", 1 );
 				trap_Cvar_SetValue( "r_colorbits", 0 );
 				trap_Cvar_SetValue( "r_depthbits", 0 );
+				trap_Cvar_Reset( "r_stencilbits" );
 				trap_Cvar_SetValue( "r_picmip", 1 );
 				trap_Cvar_SetValue( "r_mode", 3 );
 				trap_Cvar_SetValue( "r_texturebits", 0 );
@@ -2834,6 +2838,7 @@ static void UI_Update(const char *name) {
 				trap_Cvar_SetValue( "r_lodbias", 2 );
 				trap_Cvar_SetValue( "r_colorbits", 16 );
 				trap_Cvar_SetValue( "r_depthbits", 16 );
+				trap_Cvar_SetValue( "r_stencilbits", 0 );
 				trap_Cvar_SetValue( "r_mode", 3 );
 				trap_Cvar_SetValue( "r_picmip", 2 );
 				trap_Cvar_SetValue( "r_texturebits", 16 );
@@ -2941,6 +2946,7 @@ static void UI_RunMenuScript(char **args) {
 			trap_Cvar_SetValue( "com_introPlayed", 1 );
 			trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 		} else if (Q_stricmp(name, "loadArenas") == 0) {
+			UI_LoadArenasIntoMapList();
 			UI_MapCountByGameType(qfalse);
 			Menu_SetFeederSelection(NULL, FEEDER_ALLMAPS, 0, "createserver");
 		} else if (Q_stricmp(name, "saveControls") == 0) {
@@ -5508,8 +5514,8 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE},
 	{ &ui_teamArenaFirstRun, "ui_teamArenaFirstRun", "0", CVAR_ARCHIVE},
 	{ NULL, "g_warmup", "20", CVAR_ARCHIVE},
-	{ NULL, "fraglimit", "20", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
 	{ NULL, "timelimit", "0", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
+	{ NULL, "fraglimit", "20", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
 	{ NULL, "capturelimit", "8", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_NORESTART},
 	{ &ui_serverStatusTimeOut, "ui_serverStatusTimeOut", "7000", CVAR_ARCHIVE},
 	{ &ui_defaultMaleTeamModel, "default_male_team_model", DEFAULT_TEAM_MODEL_MALE, CVAR_ARCHIVE},
