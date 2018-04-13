@@ -162,7 +162,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=0.7
+VERSION=0.8
 endif
 
 ifndef VM_PREFIX
