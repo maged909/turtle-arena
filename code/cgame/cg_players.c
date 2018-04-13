@@ -1062,6 +1062,7 @@ static void CG_LoadPlayerInfo( int playerNum, playerInfo_t *pi ) {
 #endif
 #ifdef TA_DATA
 	fallback = DEFAULT_VOICE;
+	(void)gender; // silence warning
 #else
 	if (cgs.gametype >= GT_TEAM) {
 		fallback = (gender == GENDER_FEMALE) ? cg_defaultFemaleTeamModel.string : cg_defaultMaleTeamModel.string;
