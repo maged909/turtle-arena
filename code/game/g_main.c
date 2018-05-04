@@ -515,11 +515,12 @@ void G_RegisterCvars( void ) {
 	if ( g_instagib.integer ) {
 		trap_Cvar_Set( "sv_gametypeName", va( "Instagib %s", bg_displayGametypeNames[g_gametype.integer] ) );
 		trap_Cvar_Set( "sv_gametypeNetName", va( "Insta%s", bg_netGametypeNames[g_gametype.integer] ) );
-	} else {
+	} else
+#endif
+	{
 		trap_Cvar_Set( "sv_gametypeName", bg_displayGametypeNames[g_gametype.integer] );
 		trap_Cvar_Set( "sv_gametypeNetName", bg_netGametypeNames[g_gametype.integer] );
 	}
-#endif
 
 	level.warmupModificationCount = g_warmup.modificationCount;
 }
