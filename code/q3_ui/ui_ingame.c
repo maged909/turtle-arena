@@ -266,7 +266,7 @@ void InGame_MenuInit( void ) {
 	s_ingame.frame.generic.y			= 240-166;//118;
 	s_ingame.frame.width				= 466;//359;
 #ifdef TA_MISC // INGAME_SERVER_MENU
-	s_ingame.frame.height				= 332;//256;
+	s_ingame.frame.height				= 304;//256;
 
 	y = 88+INGAME_MENU_VERTICAL_SPACING/2;
 #else
