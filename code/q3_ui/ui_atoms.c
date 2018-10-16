@@ -457,6 +457,10 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	float	propScale;
 	float	scale;
 
+	if( !str ) {
+		return;
+	}
+
 	propScale = UI_ProportionalSizeScale( style );
 
 	charh = propScale * PROP_HEIGHT;
@@ -981,6 +985,18 @@ static void UI_LoadGame_f(void) {
 }
 
 /*
+===================
+UI_LoadGameComplete
+===================
+*/
+static void UI_LoadGameComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		// filename for "saves/%s.sav"
+		trap_Field_CompleteFilename( "saves", "sav", qtrue, qtrue );
+	}
+}
+
+/*
 ==================
 UI_Arcade_f
 ==================
@@ -1010,7 +1026,7 @@ static void UI_SPGameOver_f( void ) {
 
 consoleCommand_t	ui_commands[] = {
 #ifdef TA_SP
-	{ "loadgame", UI_LoadGame_f, 0 },
+	{ "loadgame", UI_LoadGame_f, 0, UI_LoadGameComplete },
 	{ "singleplayermenu", UI_SPMenu_f, 0 },
 	{ "arcade", UI_Arcade_f, 0 },
 	{ "sp_complete", UI_SPComplete_f, 0 },

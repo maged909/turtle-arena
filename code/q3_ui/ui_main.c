@@ -64,38 +64,52 @@ typedef struct {
 
 vmCvar_t	ui_ffa_fraglimit;
 vmCvar_t	ui_ffa_timelimit;
+#ifndef TA_WEAPSYS
 vmCvar_t	ui_ffa_instagib;
+#endif
 
 vmCvar_t	ui_tourney_fraglimit;
 vmCvar_t	ui_tourney_timelimit;
+#ifndef TA_WEAPSYS
 vmCvar_t	ui_tourney_instagib;
+#endif
 
 vmCvar_t	ui_team_fraglimit;
 vmCvar_t	ui_team_timelimit;
 vmCvar_t	ui_team_friendly;
+#ifndef TA_WEAPSYS
 vmCvar_t	ui_team_instagib;
+#endif
 
 vmCvar_t	ui_ctf_capturelimit;
 vmCvar_t	ui_ctf_timelimit;
 vmCvar_t	ui_ctf_friendly;
+#ifndef TA_WEAPSYS
 vmCvar_t	ui_ctf_instagib;
+#endif
 
 #ifdef MISSIONPACK
 vmCvar_t	ui_1flag_capturelimit;
 vmCvar_t	ui_1flag_timelimit;
 vmCvar_t	ui_1flag_friendly;
+#ifndef TA_WEAPSYS
 vmCvar_t	ui_1flag_instagib;
+#endif
 
 vmCvar_t	ui_obelisk_capturelimit;
 vmCvar_t	ui_obelisk_timelimit;
 vmCvar_t	ui_obelisk_friendly;
+#ifndef TA_WEAPSYS
 vmCvar_t	ui_obelisk_instagib;
+#endif
 
 #ifdef MISSIONPACK_HARVESTER
 vmCvar_t	ui_harvester_capturelimit;
 vmCvar_t	ui_harvester_timelimit;
 vmCvar_t	ui_harvester_friendly;
+#ifndef TA_WEAPSYS
 vmCvar_t	ui_harvester_instagib;
+#endif
 #endif
 #endif
 
@@ -165,7 +179,9 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_ffa_fraglimit, "ui_ffa_fraglimit", "20", CVAR_ARCHIVE },
 #endif
 	{ &ui_ffa_timelimit, "ui_ffa_timelimit", "0", CVAR_ARCHIVE },
+#ifndef TA_WEAPSYS
 	{ &ui_ffa_instagib, "ui_ffa_instagib", "0", CVAR_ARCHIVE },
+#endif
 
 #ifdef NOTRATEDM // frag to score
 	{ &ui_tourney_fraglimit, "ui_tourney_scorelimit", "0", CVAR_ARCHIVE },
@@ -173,7 +189,9 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_tourney_fraglimit, "ui_tourney_fraglimit", "0", CVAR_ARCHIVE },
 #endif
 	{ &ui_tourney_timelimit, "ui_tourney_timelimit", "15", CVAR_ARCHIVE },
+#ifndef TA_WEAPSYS
 	{ &ui_tourney_instagib, "ui_tourney_instagib", "0", CVAR_ARCHIVE },
+#endif
 
 #ifdef NOTRATEDM // frag to score
 	{ &ui_team_fraglimit, "ui_team_scorelimit", "0", CVAR_ARCHIVE },
@@ -182,7 +200,9 @@ static cvarTable_t		cvarTable[] = {
 #endif
 	{ &ui_team_timelimit, "ui_team_timelimit", "20", CVAR_ARCHIVE },
 	{ &ui_team_friendly, "ui_team_friendly",  "1", CVAR_ARCHIVE },
+#ifndef TA_WEAPSYS
 	{ &ui_team_instagib, "ui_team_instagib", "0", CVAR_ARCHIVE },
+#endif
 
 #ifdef TA_MISC
 	{ &ui_ctf_capturelimit, "ui_ctf_capturelimit", "5", CVAR_ARCHIVE },
@@ -191,24 +211,32 @@ static cvarTable_t		cvarTable[] = {
 #endif
 	{ &ui_ctf_timelimit, "ui_ctf_timelimit", "30", CVAR_ARCHIVE },
 	{ &ui_ctf_friendly, "ui_ctf_friendly",  "0", CVAR_ARCHIVE },
+#ifndef TA_WEAPSYS
 	{ &ui_ctf_instagib, "ui_ctf_instagib", "0", CVAR_ARCHIVE },
+#endif
 
 #ifdef MISSIONPACK
 	{ &ui_1flag_capturelimit, "ui_1flag_capturelimit", "5", CVAR_ARCHIVE },
 	{ &ui_1flag_timelimit, "ui_1flag_timelimit", "30", CVAR_ARCHIVE },
 	{ &ui_1flag_friendly, "ui_1flag_friendly",  "0", CVAR_ARCHIVE },
+#ifndef TA_WEAPSYS
 	{ &ui_1flag_instagib, "ui_1flag_instagib", "0", CVAR_ARCHIVE },
+#endif
 
 	{ &ui_obelisk_capturelimit, "ui_obelisk_capturelimit", "5", CVAR_ARCHIVE },
 	{ &ui_obelisk_timelimit, "ui_obelisk_timelimit", "20", CVAR_ARCHIVE },
 	{ &ui_obelisk_friendly, "ui_obelisk_friendly",  "0", CVAR_ARCHIVE },
+#ifndef TA_WEAPSYS
 	{ &ui_obelisk_instagib, "ui_obelisk_instagib", "0", CVAR_ARCHIVE },
+#endif
 
 #ifdef MISSIONPACK_HARVESTER
 	{ &ui_harvester_capturelimit, "ui_harvester_capturelimit", "5", CVAR_ARCHIVE },
 	{ &ui_harvester_timelimit, "ui_harvester_timelimit", "30", CVAR_ARCHIVE },
 	{ &ui_harvester_friendly, "ui_harvester_friendly",  "0", CVAR_ARCHIVE },
+#ifndef TA_WEAPSYS
 	{ &ui_harvester_instagib, "ui_harvester_instagib", "0", CVAR_ARCHIVE },
+#endif
 #endif
 #endif
 
