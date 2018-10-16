@@ -244,9 +244,10 @@ void CG_SetModel_f( int localPlayerNum ) {
 		trap_Cvar_Set( Com_LocalPlayerCvarName( localPlayerNum, "headmodel"), arg );
 	} else {
 #ifdef IOQ3ZTM // BLANK_HEADMODEL
+		Com_Printf("Usage: player <model> <head model>\n");
 		trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName( localPlayerNum, "model"), name, sizeof(name) );
 		trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName( localPlayerNum, "headmodel"), head, sizeof(head) );
-		if (Q_stricmp(name, head) == 0) {
+		if (head[0] == '\0' || Q_stricmp(name, head) == 0) {
 			Com_Printf("player model is set to %s\n", name);
 		} else {
 			Com_Printf("player model is set to %s, player head model is set to %s\n", name, head);
@@ -258,6 +259,7 @@ void CG_SetModel_f( int localPlayerNum ) {
 	}
 }
 
+#ifndef IOQ3ZTM // BLANK_HEADMODEL
 /*
 =============
 CG_SetHeadmodel_f
@@ -278,6 +280,7 @@ void CG_SetHeadmodel_f( int localPlayerNum ) {
 		Com_Printf("%s is set to %s\n", cvarName, name);
 	}
 }
+#endif
 
 #ifndef IOQ3ZTM_NO_TEAM_MODEL
 /*
@@ -538,8 +541,14 @@ static void CG_ModelComplete( int localPlayerNum, char *args, int argNum ) {
 	if ( argNum == 2 ) {
 		CG_Field_CompletePlayerModel( argNum, qfalse, "default", TEAM_FREE );
 	}
+#ifdef IOQ3ZTM // BLANK_HEADMODEL
+	else if ( argNum == 3 ) {
+		CG_Field_CompletePlayerModel( argNum, qtrue, "default", TEAM_FREE );
+	}
+#endif
 }
 
+#ifndef IOQ3ZTM // BLANK_HEADMODEL
 /*
 ==================
 CG_HeadmodelComplete
@@ -550,6 +559,7 @@ static void CG_HeadmodelComplete( int localPlayerNum, char *args, int argNum ) {
 		CG_Field_CompletePlayerModel( argNum, qtrue, "default", TEAM_FREE );
 	}
 }
+#endif
 
 #ifndef IOQ3ZTM_NO_TEAM_MODEL
 /*
@@ -1829,7 +1839,9 @@ static playerConsoleCommand_t	playerCommands[] = {
 #endif
 	{ "centerecho", CG_CenterEcho_f, CMD_INGAME },
 	{ "centerview", IN_CenterView, 0 },
+#ifndef IOQ3ZTM // BLANK_HEADMODEL
 	{ "headmodel", CG_SetHeadmodel_f, 0, CG_HeadmodelComplete },
+#endif
 #ifdef TA_HOLDSYS/*2*/
 	{ "holdnext", CG_NextHoldable_f, CMD_INGAME },
 	{ "holdprev", CG_PrevHoldable_f, CMD_INGAME },
