@@ -1639,11 +1639,17 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		arg2RangeMax = 1;
 	} else {
 		trap_SendServerCommand( ent-g_entities, "print \"Invalid vote string.\n\"" );
+		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <playernum>, g_doWarmup <boolean>, timelimit <time>"
 #ifdef NOTRATEDM // frag to score
-		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <playernum>, g_doWarmup <boolean>, timelimit <time>, scorelimit <score>, capturelimit <captures>, g_instagib <boolean>.\n\"" );
+		", scorelimit <score>"
 #else
-		trap_SendServerCommand( ent-g_entities, "print \"Vote commands are: map_restart, nextmap, map <mapname>, g_gametype <n>, kick <player>, kicknum <playernum>, g_doWarmup <boolean>, timelimit <time>, fraglimit <frags>, capturelimit <captures>, g_instagib <boolean>.\n\"" );
+		", fraglimit <frags>"
 #endif
+		", capturelimit <captures>"
+#ifndef TA_WEAPSYS
+		", g_instagib <boolean>"
+#endif
+		".\n\"" );
 		return;
 	}
 

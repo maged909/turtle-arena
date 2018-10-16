@@ -1620,7 +1620,19 @@ CG_CallVoteComplete
 */
 static void CG_CallVoteComplete( int localPlayerNum, char *args, int argNum ) {
 	if ( argNum == 2 ) {
-		trap_Field_CompleteList( "capturelimit\0fraglimit\0g_doWarmup\0g_gametype\0g_instagib\0kick\0kicknum\0map\0map_restart\0nextmap\0timelimit\0" );
+		trap_Field_CompleteList( "capturelimit\0"
+#ifndef NOTRATEDM // frag to score
+		"fraglimit\0"
+#endif
+		"g_doWarmup\0g_gametype\0"
+#ifndef TA_WEAPSYS
+		"g_instagib\0"
+#endif
+		"kick\0kicknum\0map\0map_restart\0nextmap\0"
+#ifdef NOTRATEDM // frag to score
+		"scorelimit\0"
+#endif
+		"timelimit\0" );
 	}
 	if ( argNum == 3 && !Q_stricmp( CG_Argv( 1 ), "kick" ) ) {
 		CG_Field_CompletePlayerName( -1, qfalse, qfalse );
