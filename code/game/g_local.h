@@ -947,6 +947,7 @@ void G_CheckBotSpawn( void );
 void G_RemoveQueuedBotBegin( int playerNum );
 qboolean G_BotConnect( int playerNum, qboolean restart );
 void Svcmd_AddBot_f( void );
+void Svcmd_AddBotComplete( char *args, int argNum );
 void Svcmd_BotList_f( void );
 void BotInterbreedEndMatch( void );
 #ifdef IOQ3ZTM // MAP_ROTATION

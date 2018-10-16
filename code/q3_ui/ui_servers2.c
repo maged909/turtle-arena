@@ -113,6 +113,7 @@ MULTIPLAYER MENU (SERVER BROWSER)
 #define UIAS_GLOBAL4			5
 #define UIAS_GLOBAL5			6
 #define UIAS_FAVORITES			7
+#define UIAS_NUM_SOURCES		8
 
 #define UI_MAX_MASTER_SERVERS	6
 
@@ -121,6 +122,7 @@ MULTIPLAYER MENU (SERVER BROWSER)
 #define SORT_CLIENTS		2
 #define SORT_GAMETYPE		3
 #define SORT_PING			4
+#define SORT_NUM_SORTS		5
 
 #ifdef TURTLEARENA // MP_GAMETYPES
 // must match servertype_items
@@ -138,6 +140,7 @@ enum {
 #endif // MISSIONPACK_HARVESTER
 #endif // MISSIONPACK
 	GAMES_COOP,
+	GAMES_NUM_GAMES
 };
 #else
 #define GAMES_ALL			0
@@ -150,7 +153,12 @@ enum {
 #define GAMES_OBELISK		6
 #ifdef MISSIONPACK_HARVESTER
 #define GAMES_HARVESTER		7
+#define GAMES_NUM_GAMES		8
+#else
+#define GAMES_NUM_GAMES		7
 #endif // MISSIONPACK_HARVESTER
+#else
+#define GAMES_NUM_GAMES		5
 #endif // MISSIONPACK
 #endif
 
@@ -1263,7 +1271,7 @@ int ArenaServers_SetType( int type )
 		char masterstr[2], cvarname[sizeof("sv_master1")];
 		int direction;
 		
-		if (type == g_servertype || type == ((g_servertype+1) % (ARRAY_LEN(master_items)-1))) {
+		if (type == g_servertype || type == ((g_servertype+1) % UIAS_NUM_SOURCES)) {
 			direction = 1;
 		} else {
 			direction = -1;
@@ -1927,7 +1935,7 @@ static void ArenaServers_MenuInit( void ) {
 	
 	ArenaServers_LoadFavorites();
 
-	g_arenaservers.master.curvalue = g_servertype = Com_Clamp( 0, 6, ui_browserMaster.integer );
+	g_arenaservers.master.curvalue = g_servertype = Com_Clamp( 0, UIAS_NUM_SOURCES-1, ui_browserMaster.integer );
 
 	g_arenaservers.game.curvalue = g_gameIndex = 0;
 	for ( i = 0; mod_dir_items[i]; i++ ) {
@@ -1937,10 +1945,10 @@ static void ArenaServers_MenuInit( void ) {
 		}
 	}
 
-	g_gametype = Com_Clamp( 0, 4, ui_browserGameType.integer );
+	g_gametype = Com_Clamp( 0, GAMES_NUM_GAMES-1, ui_browserGameType.integer );
 	g_arenaservers.gametype.curvalue = g_gametype;
 
-	g_sortkey = Com_Clamp( 0, 4, ui_browserSortKey.integer );
+	g_sortkey = Com_Clamp( 0, SORT_NUM_SORTS-1, ui_browserSortKey.integer );
 	g_arenaservers.sortkey.curvalue = g_sortkey;
 
 	g_fullservers = Com_Clamp( 0, 1, ui_browserShowFull.integer );

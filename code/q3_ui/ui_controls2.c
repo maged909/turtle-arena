@@ -56,13 +56,6 @@ typedef struct {
 	int		bind2;
 } bind_t;
 
-typedef struct
-{
-	char*	name;
-	float	defaultvalue;
-	float	value;	
-} configcvar_t;
-
 #define SAVE_NOOP		0
 #define SAVE_YES		1
 #define SAVE_NO			2
@@ -374,7 +367,7 @@ static bind_t g_bindings[] =
 #ifdef TURTLEARENA // ALWAYS_RUN // NO_SPEED_KEY
 	{"+forward", 		"forward",			ID_FORWARD,		ANIM_RUN,		K_UPARROW,		-1,		-1, -1},
 #else
-	{"+speed", 			"run / walk",		ID_SPEED,		ANIM_RUN,		K_SHIFT,		-1,		-1,	-1},
+	{"+speed", 			"run / walk",		ID_SPEED,		ANIM_RUN,		K_LEFTSHIFT,	K_RIGHTSHIFT, -1, -1},
 	{"+forward", 		"walk forward",		ID_FORWARD,		ANIM_WALK,		K_UPARROW,		-1,		-1, -1},
 #endif
 	{"+back", 			"backpedal",		ID_BACKPEDAL,	ANIM_BACK,		K_DOWNARROW,	-1,		-1, -1},
@@ -391,7 +384,7 @@ static bind_t g_bindings[] =
 #endif
 	{"+left", 			"turn left",		ID_LEFT,		ANIM_TURNLEFT,	K_LEFTARROW,	-1,		-1, -1},
 	{"+right", 			"turn right",		ID_RIGHT,		ANIM_TURNRIGHT,	K_RIGHTARROW,	-1,		-1, -1},
-	{"+strafe", 		"sidestep / turn",	ID_STRAFE,		ANIM_IDLE,		K_ALT,			-1,		-1, -1},
+	{"+strafe", 		"sidestep / turn",	ID_STRAFE,		ANIM_IDLE,		K_LEFTALT,		K_RIGHTALT, -1, -1},
 	{"+lookup", 		"look up",			ID_LOOKUP,		ANIM_LOOKUP,	K_PGDN,			-1,		-1, -1},
 	{"+lookdown", 		"look down",		ID_LOOKDOWN,	ANIM_LOOKDOWN,	K_DEL,			-1,		-1, -1},
 #ifdef IOQ3ZTM
@@ -401,7 +394,7 @@ static bind_t g_bindings[] =
 #endif
 	{"centerview", 		"center view",		ID_CENTERVIEW,	ANIM_IDLE,		K_END,			-1,		-1, -1},
 #ifdef TURTLEARENA // LOCKON
-	{"+lockon", 		"lock-on",			ID_LOCKON,		ANIM_IDLE,		K_SHIFT,		-1,		-1, -1},
+	{"+lockon", 		"lock-on",			ID_LOCKON,		ANIM_IDLE,		K_LEFTSHIFT,	K_RIGHTSHIFT, -1, -1},
 #endif
 #ifndef TURTLEARENA // NOZOOM
 	{"+zoom", 			"zoom view",		ID_ZOOMVIEW,	ANIM_IDLE,		-1,				-1,		-1, -1},
@@ -423,9 +416,9 @@ static bind_t g_bindings[] =
 #endif
 #endif
 #ifdef IOQ3ZTM
-	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_CTRL,		K_MOUSE1,	-1, -1},
+	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_LEFTCTRL,		K_MOUSE1,	-1, -1},
 #else
-	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_CTRL,			-1,		-1, -1},
+	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_LEFTCTRL,		K_RIGHTCTRL, -1, -1},
 #endif
 #ifdef TA_WEAPSYS_EX
 	{"+dropweapon",		"drop weapon",		ID_WEAPDROP,	ANIM_IDLE,		'e',			';',	-1, -1},
@@ -715,39 +708,6 @@ bind_t *g_bindings_list[MAX_SPLITVIEW] =
 	g_bindings4
 };
 
-static configcvar_t g_configcvars[] =
-{
-#ifndef TURTLEARENA // ALWAYS_RUN
-	{"cl_run",			0,					0},
-	{"2cl_run",			0,					0},
-	{"3cl_run",			0,					0},
-	{"4cl_run",			0,					0},
-#endif
-	{"m_pitch",			0,					0},
-#ifndef TA_WEAPSYS_EX
-	{"cg_cyclePastGauntlet",0,				0},
-	{"2cg_cyclePastGauntlet",0,				0},
-	{"3cg_cyclePastGauntlet",0,				0},
-	{"4cg_cyclePastGauntlet",0,				0},
-	{"cg_autoswitch",	0,					0},
-	{"2cg_autoswitch",	0,					0},
-	{"3cg_autoswitch",	0,					0},
-	{"4cg_autoswitch",	0,					0},
-#endif
-	{"sensitivity",		0,					0},
-	{"in_joystickUseAnalog",	0,			0},
-	{"2in_joystickUseAnalog",	0,			0},
-	{"3in_joystickUseAnalog",	0,			0},
-	{"4in_joystickUseAnalog",	0,			0},
-	{"in_joystickThreshold",	0,			0},
-	{"2in_joystickThreshold",	0,			0},
-	{"3in_joystickThreshold",	0,			0},
-	{"4in_joystickThreshold",	0,			0},
-	{"m_filter",		0,					0},
-	{"cl_freelook",		0,					0},
-	{NULL,				0,					0}
-};
-
 static menucommon_s *g_movement_controls[] =
 {
 #ifdef TURTLEARENA // LOCKON
@@ -932,53 +892,16 @@ static menucommon_s **g_mini_controls[] = {
 
 /*
 =================
-Controls_InitCvars
-=================
-*/
-static void Controls_InitCvars( void )
-{
-	int				i;
-	configcvar_t*	cvarptr;
-
-	cvarptr = g_configcvars;
-	for (i=0; ;i++,cvarptr++)
-	{
-		if (!cvarptr->name)
-			break;
-
-		// get current value
-		cvarptr->value = trap_Cvar_VariableValue( cvarptr->name );
-
-		// get default value
-		trap_Cvar_Reset( cvarptr->name );
-		cvarptr->defaultvalue = trap_Cvar_VariableValue( cvarptr->name );
-
-		// restore current value
-		trap_Cvar_SetValue( cvarptr->name, cvarptr->value );
-	}
-}
-
-/*
-=================
 Controls_GetCvarDefault
 =================
 */
 static float Controls_GetCvarDefault( char* name )
 {
-	configcvar_t*	cvarptr;
-	int				i;
+	char defaultvaluebuf[MAX_CVAR_VALUE_STRING];
 
-	cvarptr = g_configcvars;
-	for (i=0; ;i++,cvarptr++)
-	{
-		if (!cvarptr->name)
-			return (0);
+	trap_Cvar_DefaultVariableStringBuffer( name, defaultvaluebuf, sizeof( defaultvaluebuf ) );
 
-		if (!strcmp(cvarptr->name,name))
-			break;
-	}
-
-	return (cvarptr->defaultvalue);
+	return atof( defaultvaluebuf );
 }
 
 /*
@@ -988,20 +911,7 @@ Controls_GetCvarValue
 */
 static float Controls_GetCvarValue( char* name )
 {
-	configcvar_t*	cvarptr;
-	int				i;
-
-	cvarptr = g_configcvars;
-	for (i=0; ;i++,cvarptr++)
-	{
-		if (!cvarptr->name)
-			return (0);
-
-		if (!strcmp(cvarptr->name,name))
-			break;
-	}
-
-	return (cvarptr->value);
+	return trap_Cvar_VariableValue( name );
 }
 
 
@@ -2751,9 +2661,6 @@ static void Controls_MenuInit( int localPlayerNum )
 	trap_Cvar_VariableStringBuffer( Com_LocalPlayerCvarName(s_controls.localPlayerNum, "name"), s_controls.name.string, 16 );
 	Q_CleanStr( s_controls.name.string );
 #endif
-
-	// initialize the configurable cvars
-	Controls_InitCvars();
 
 	// initialize the current config
 	Controls_GetConfig();
