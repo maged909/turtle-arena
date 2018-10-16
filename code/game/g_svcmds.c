@@ -591,6 +591,18 @@ void Svcmd_Savegame_f(void) {
 
 	G_SaveGame(savegame);
 }
+
+/*
+===================
+Svcmd_SavegameComplete
+===================
+*/
+void Svcmd_SavegameComplete( char *args, int argNum ) {
+	if ( argNum == 2 ) {
+		// filename for "saves/%s.sav"
+		trap_Field_CompleteFilename( "saves", "sav", qtrue, qtrue );
+	}
+}
 #endif
 
 /*
@@ -672,7 +684,7 @@ struct svcmd
   { "listip", qfalse, Svcmd_ListIPs_f },
   { "removeip", qfalse, Svcmd_RemoveIP_f },
 #ifdef TA_SP
-  { "savegame", qfalse, Svcmd_Savegame_f },
+  { "savegame", qfalse, Svcmd_Savegame_f, Svcmd_SavegameComplete },
 #endif
   { "say", qtrue, Svcmd_Say_f },
   { "teleport", qfalse, Svcmd_Teleport_f, Svcmd_TeleportComplete },
