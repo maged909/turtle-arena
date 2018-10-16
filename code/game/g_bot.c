@@ -36,9 +36,11 @@ Suite 120, Rockville, Maryland 20850 USA.
 static int		g_numBots;
 static char		*g_botInfos[MAX_BOTS];
 
+#ifndef TA_DATA // No missionpack team bots
 #ifdef MISSIONPACK
 static int		g_numTeamBots;
 static char		*g_teamBotInfos[MAX_BOTS];
+#endif
 #endif
 
 
@@ -360,11 +362,13 @@ char *G_SelectRandomBotInfo( int team ) {
 	int		numBots;
 	char	**botInfos;
 
+#ifndef TA_DATA // No missionpack team bots
 #ifdef MISSIONPACK
 	if ( g_gametype.integer >= GT_TEAM ) {
 		numBots = g_numTeamBots;
 		botInfos = g_teamBotInfos;
 	} else
+#endif
 #endif
 	{
 		numBots = g_numBots;
@@ -1184,6 +1188,7 @@ char *G_GetBotInfoByName( const char *name ) {
 	return NULL;
 }
 
+#ifndef TA_DATA // No missionpack team bots
 #ifdef MISSIONPACK
 /*
 ===============
@@ -1316,6 +1321,7 @@ static void G_ParseTeamInfo( const char *filename ) {
 	}
 }
 #endif
+#endif // TA_DATA
 
 /*
 ===============
@@ -1337,8 +1343,10 @@ void G_InitBots( qboolean restart ) {
 #ifndef IOQ3ZTM // MAP_ROTATION
 	G_LoadArenas();
 #endif
+#ifndef TA_DATA // No missionpack team bots
 #ifdef MISSIONPACK
 	G_ParseTeamInfo( "teaminfo.txt" );
+#endif
 #endif
 
 	trap_Cvar_Register( &bot_minplayers, "bot_minplayers", "0", CVAR_SERVERINFO );
