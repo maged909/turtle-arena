@@ -9,7 +9,7 @@ To use this you'll need the [Spearmint engine](https://github.com/zturtleman/spe
 
 If you put both projects in the same directory you can launch the game using;
 
-    spearmint/build/release-mingw32-x86/spearmint_x86.exe +set fs_basepath "turtle-arena-code/build/release-mingw32-x86/" +set fs_game "baseturtle"
+    spearmint/build/release-mingw32-x86/spearmint_x86.exe +set fs_basepath "turtle-arena/build/release-mingw32-x86/" +set fs_game "baseturtle"
 
 On Linux and OS X you'll need to put `./` before the command and substitute the correct platform and architecture (look in the build directory).
 
